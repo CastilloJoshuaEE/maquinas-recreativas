@@ -11,7 +11,7 @@ header("Content-Type: application/json"); // Indica que todas las respuestas ser
  * 2. Elimina el path base y 'index.php' para obtener la ruta limpia de la API
  */
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); // Ej: '/maquinas-recreativas/backend/public/api/usuario/login'
-$basePath = '/maquinas-recreativas/backend/public'; // Ruta base de tu aplicación
+$basePath = '/U3-S13-Tarea-1-maquinas-recreativas/backend/public'; // Ruta base de tu aplicación
 $apiRoute = str_replace("$basePath/index.php", '', $requestUri); // Elimina el path base
 
 // Incluye el archivo de rutas y pasa el control al enrutador principal:

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="bootstrap.php"> <!-- Primero ejecuta bootstrap.php -->
+<phpunit bootstrap="bootstrap.php">
   <testsuites>
     <testsuite name="Unit Tests">
-      <directory>./Unit</directory> <!-- Busca pruebas en la carpeta Unit -->
+      <directory>./Unit</directory>
+    </testsuite>
+      <testsuite name="Integration Tests">
+      <directory>./Integration</directory>
     </testsuite>
   </testsuites>
 </phpunit>

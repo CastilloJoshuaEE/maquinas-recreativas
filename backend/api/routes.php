@@ -1,3 +1,4 @@
+// backend/api/routes.php
 <?php
 /**
  * API propia (es decir, una API REST personalizada).

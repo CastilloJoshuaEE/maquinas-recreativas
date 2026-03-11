@@ -18,24 +18,17 @@ class UsuarioModelTest extends TestCase {
      * Prepara el entorno para cada caso de prueba individual.
      */
     protected function setUp(): void {
-        // Crear una nueva instancia del modelo para cada prueba:
         $this->model = new UsuarioModel();
         
-        // Inyectar la conexión de prueba en el modelo usando Reflection.
-        // Esto es necesario para reemplazar la conexión a BD real por la de prueba.
+        // Inyectar la conexión de prueba en el modelo
         $reflection = new ReflectionClass($this->model);
         $property = $reflection->getProperty('db');
         $property->setAccessible(true);
         $property->setValue($this->model, self::$testDb);
         
-        /*
-        // Opcional: Limpiar tablas antes de cada prueba
-        // Útil si no se recrea la BD completa en cada ejecución
+        // Limpiar datos antes de cada prueba
         $conn = self::$testDb->getConnection();
-        $conn->query("TRUNCATE TABLE Tecnico");
-        $conn->query("TRUNCATE TABLE Logistica");
-        $conn->query("TRUNCATE TABLE usuario");
-        */
+        $conn->query("DELETE FROM usuario WHERE email = 'jean@admin.com'");
     }
 
     /***********************/
@@ -193,10 +186,10 @@ class UsuarioModelTest extends TestCase {
         // 2. Verificar que devuelve un false:
         $this->assertFalse($userId);
     }
-    /*
+    
     // Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba:
     public static function tearDownAfterClass(): void {
         // Eliminar la base de datos de prueba:
         self::$testDb->cleanUp();
-    }*/
+    }
 }
