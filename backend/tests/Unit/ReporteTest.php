@@ -188,8 +188,9 @@ class ReporteTest extends TestCase {
         $this->assertIsArray($chat);
         $this->assertCount(3, $chat); // 2 nuevos + 1 creado en crearDatosPrueba()
     }
-
+/*
     public static function tearDownAfterClass(): void {
         self::$testDb->cleanUp();
     }
+        */
 }

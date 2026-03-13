@@ -157,8 +157,9 @@ class ComentarioTest extends TestCase {
         $this->assertIsArray($comentarios);
         $this->assertEmpty($comentarios);
     }
-
+/*
     public static function tearDownAfterClass(): void {
         self::$testDb->cleanUp();
     }
+        */
 }

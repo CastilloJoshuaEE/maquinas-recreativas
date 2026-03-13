@@ -142,7 +142,9 @@ class UsuarioTest extends TestCase {
     /**
      * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
      */
+    /*
     public static function tearDownAfterClass(): void {
         self::$testDb->cleanUp();
     }
+        */
 }

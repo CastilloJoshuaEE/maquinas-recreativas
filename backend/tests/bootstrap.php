@@ -15,10 +15,11 @@
     require_once __DIR__.'/../models/ComponenteModel.php';
     require_once __DIR__.'/../models/InformeModel.php';
     require_once __DIR__.'/../models/DistribucionModel.php';
-
-
+require_once __DIR__.'/exceptions/ValidacionDatosException.php';
     // Preparar la base de datos de prueba:
     require_once __DIR__.'/TestDatabase.php';
+
+
     $testDb = new TestDatabase();
     $conn = $testDb->getConnection();
 
@@ -126,7 +127,7 @@
 
     // Tabla: componente
     $conn->query("CREATE TABLE IF NOT EXISTS componente (
-        ID_Componente INT NOT NULL AUTO_INCREMENT PRIMARY KEY,        tipo VARCHAR(10) NOT NULL,
+        ID_Componente INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
         tipo ENUM('Ensamblador', 'Comprobador', 'Mantenimiento') NOT NULL,
         nombre VARCHAR(50) NOT NULL,
         precio DECIMAL(10,2) DEFAULT 10.00,

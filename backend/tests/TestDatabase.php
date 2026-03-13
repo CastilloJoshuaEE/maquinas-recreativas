@@ -17,9 +17,10 @@ class TestDatabase extends Database {
     public function getConnection() {
         return $this->conn;
     }
-
+/*
     public function cleanUp() {
         $this->conn->query("DROP DATABASE IF EXISTS {$this->db_name}");
         $this->conn->close();
     }
+        */
 }

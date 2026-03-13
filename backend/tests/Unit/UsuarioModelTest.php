@@ -187,9 +187,11 @@ class UsuarioModelTest extends TestCase {
         $this->assertFalse($userId);
     }
     
+    /*
     // Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba:
     public static function tearDownAfterClass(): void {
         // Eliminar la base de datos de prueba:
         self::$testDb->cleanUp();
     }
+        */
 }
