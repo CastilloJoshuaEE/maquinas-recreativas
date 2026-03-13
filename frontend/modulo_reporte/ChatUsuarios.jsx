@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../src/context/AuthContext';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import '../css/modulo_reporte/chatUsuarios.css';
+import api from '../src/utils/api';
 
 const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
     const { reporteId, emisorId, destinatarioId } = useParams();
@@ -31,8 +32,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
             try {
                 setLoading(true);
                 
-                const resUsuarios = await fetch(`/api/reportes/usuarios-chat?userId=${userId}`);
-                const usuariosData = await resUsuarios.json();
+                const { data: usuariosData } = await api.get(`/reportes/usuarios-chat?userId=${userId}`);
                 
                 if (!usuariosData.success) {
                     throw new Error(usuariosData.message || 'Error al cargar usuarios');
@@ -41,8 +41,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
                 setUsuariosChat(usuariosData.usuarios);
 
                 if (reporteId) {
-                    const resReporte = await fetch(`/api/reportes/${reporteId}`);
-                    const reporteData = await resReporte.json();
+                    const { data: reporteData } = await api.get(`/reportes/${reporteId}`);
                     
                     if (reporteData.success) {
                         const reporte = reporteData.reporte;
@@ -73,8 +72,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
 
     const cargarComentariosReporte = async (idReporte) => {
         try {
-            const res = await fetch(`/api/comentarios/reporte/${idReporte}`);
-            const data = await res.json();
+            const { data } = await api.get(`/comentarios/reporte/${idReporte}`);
             
             if (data.success) {
                 setComentarios(data.data || []);
@@ -89,8 +87,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
 
     const cargarReportesUsuario = async (userId) => {
         try {
-            const res = await fetch(`/api/reportes/usuario/${userId}`);
-            const data = await res.json();
+            const { data } = await api.get(`/reportes/usuario/${userId}`);
             
             if (data.success) {
                 setReportes(data.reportes);
@@ -102,33 +99,26 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
 
     const handleEnviarComentario = async (e) => {
         e.preventDefault();
-        await fetch('/api/historial-actividades', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-                descripcion: `El usuario tuvo una conversación`
-            })
+        
+        const token = localStorage.getItem('token');
+        await api.post('/historial-actividades', {
+            descripcion: `El usuario tuvo una conversación`
+        }, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+        
         if (!nuevoComentario.trim()) return;
 
         try {
             let idReporte = selectedReporte?.ID_Reporte;
             
             if (!idReporte && destinatario) {
-                const res = await fetch('/api/reportes/crear', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ID_Usuario_Emisor: userId,
-                        ID_Usuario_Destinatario: destinatario.ID_Usuario,
-                        descripcion: `Chat con ${destinatario.nombre} ${destinatario.apellido}`
-                    })
+                const { data } = await api.post('/reportes/crear', {
+                    ID_Usuario_Emisor: userId,
+                    ID_Usuario_Destinatario: destinatario.ID_Usuario,
+                    descripcion: `Chat con ${destinatario.nombre} ${destinatario.apellido}`
                 });
                 
-                const data = await res.json();
                 if (data.success) {
                     idReporte = data.reporteId;
                     setSelectedReporte({ ID_Reporte: idReporte });
@@ -136,17 +126,11 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
                 }
             }
 
-            const resComentario = await fetch('/api/comentarios', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ID_Reporte: idReporte,
-                    ID_Usuario_Emisor: userId,
-                    comentario: nuevoComentario
-                })
+            const { data: comentarioData } = await api.post('/comentarios', {
+                ID_Reporte: idReporte,
+                ID_Usuario_Emisor: userId,
+                comentario: nuevoComentario
             });
-            
-            const comentarioData = await resComentario.json();
             
             if (comentarioData.success) {
                 await cargarComentariosReporte(idReporte);
@@ -162,10 +146,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
             setDestinatario(usuario);
             setLoading(true);
             
-            const res = await fetch(
-                `/api/reportes/chat/${userId}/${usuario.ID_Usuario}`
-            );
-            const data = await res.json();
+            const { data } = await api.get(`/reportes/chat/${userId}/${usuario.ID_Usuario}`);
             
             if (data.success && data.reportes.length > 0) {
                 setReportes(data.reportes);
@@ -209,14 +190,14 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
                             const esSeleccionado = destinatario?.ID_Usuario === usuario.ID_Usuario;
                             return (
                                 <li
-                                key={usuario.ID_Usuario}
-                                onClick={() => handleSeleccionarUsuario(usuario)}
-                                className={`usuario-chat-item ${esSeleccionado ? 'activo' : ''}`}
-                                style={{ cursor: 'pointer' , color: 'black'}}
+                                    key={usuario.ID_Usuario}
+                                    onClick={() => handleSeleccionarUsuario(usuario)}
+                                    className={`usuario-chat-item ${esSeleccionado ? 'activo' : ''}`}
+                                    style={{ cursor: 'pointer', color: 'black' }}
                                 >
-                                <div className="usuario-info">
-                                    <strong>{usuario.nombre} {usuario.apellido}</strong> {usuario.tipo}, [{usuario.email}]
-                                </div>
+                                    <div className="usuario-info">
+                                        <strong>{usuario.nombre} {usuario.apellido}</strong> {usuario.tipo}, [{usuario.email}]
+                                    </div>
                                 </li>
                             );
                         })}

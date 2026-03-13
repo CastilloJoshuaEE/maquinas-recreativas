@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../src/utils/api';
 export default function EliminarUsuario() {
   const { uuid } = useParams();
   const navigate = useNavigate();
@@ -5,32 +8,22 @@ export default function EliminarUsuario() {
   useEffect(() => {
     const eliminarUsuario = async () => {
       try {
-        const response = await fetch(`/api/administrador/usuarios/${uuid}`, {
-          method: 'DELETE',
+        const token = localStorage.getItem('token');
+        const { response, data } = await api.delete(`/administrador/usuarios/${uuid}`, {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error al eliminar usuario');
+          throw new Error(data.message || 'Error al eliminar usuario');
         }
 
-        const data = await response.json();
-
         if (data.success) {
-          // Registrar actividad
-          await fetch('/api/historial-actividades', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              descripcion: `El usuario eliminó los datos de un usuario`
-            })
+          await api.post('/historial-actividades', {
+            descripcion: `El usuario eliminó los datos de un usuario`
+          }, {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
 
           alert('Usuario eliminado correctamente');
@@ -38,7 +31,7 @@ export default function EliminarUsuario() {
         }
       } catch (err) {
         console.error('Error al eliminar usuario:', err);
-        alert(err.message); // Muestra el mensaje de error específico
+        alert(err.message);
         navigate('/admin/gestion-usuarios/consultar-usuarios');
       }
     };

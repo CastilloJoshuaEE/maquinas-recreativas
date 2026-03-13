@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
 import '../css/modulo_administrador/mainAdministrador.css';
 import NotificacionesPanel from '../modulo_reporte/NotificacionesPanel';
 import GestionReportes from '../modulo_reporte/GestionReportes';
 import ChatUsuarios from '../modulo_reporte/ChatUsuarios';
+import api from '../src/utils/api';
+
 export function AdminHeader({ showReportesButton = true, showChatButton = true, showNotificacionesButton = true }) {
     const { currentUser, logout } = useAuth();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -13,37 +15,32 @@ export function AdminHeader({ showReportesButton = true, showChatButton = true, 
     const [showNotificaciones, setShowNotificaciones] = useState(false);
     const navigate = useNavigate();
 
-const handleLogout = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || !user.ID_Usuario) {
-      navigate('/');
-      return;
-    }
+    const handleLogout = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || !user.ID_Usuario) {
+                navigate('/');
+                return;
+            }
 
-    // Validar UUID correctamente
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(user.ID_Usuario)) {
-      throw new Error('ID de usuario no válido');
-    }
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(user.ID_Usuario)) {
+                throw new Error('ID de usuario no válido');
+            }
 
-    const response = await fetch('/api/usuario/logout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ID_Usuario: user.ID_Usuario })
-    });
+            const { response } = await api.post('/usuario/logout', { ID_Usuario: user.ID_Usuario });
 
-    if (!response.ok) {
-      throw new Error('Error al cerrar sesión');
-    }
+            if (!response.ok) {
+                throw new Error('Error al cerrar sesión');
+            }
 
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    navigate('/');
-  } catch (err) {
-    console.error('Error al cerrar sesión:', err);
-  }
-};
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            navigate('/');
+        } catch (err) {
+            console.error('Error al cerrar sesión:', err);
+        }
+    };
 
     return (
         <header className="admin-header">
@@ -110,9 +107,9 @@ const handleLogout = async () => {
                 </div>
             )}
             {showNotificaciones && (
-            <div className="modal-panel">
-                <NotificacionesPanel currentUser={currentUser} />
-            </div>
+                <div className="modal-panel">
+                    <NotificacionesPanel currentUser={currentUser} />
+                </div>
             )}
             {showReportes && (
                 <div className="modal-panel">

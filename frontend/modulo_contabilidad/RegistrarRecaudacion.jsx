@@ -3,6 +3,8 @@ import { AdminHeader } from '../modulo_usuario/AdminHeader';
 import '../css/modulo_contabilidad/recaudacion.css';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
+import api from '../src/utils/api';
+
 Modal.setAppElement('#root');
 
 export default function RegistrarRecaudacion() {
@@ -24,7 +26,7 @@ export default function RegistrarRecaudacion() {
   const [loadingMaquinas, setLoadingMaquinas] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState('');
- const [showComponents, setShowComponents] = useState(false);
+  const [showComponents, setShowComponents] = useState(false);
   const [machineComponents, setMachineComponents] = useState([]);
   const [showInformeModal, setShowInformeModal] = useState(false);
   const [informeData, setInformeData] = useState(null);
@@ -36,10 +38,10 @@ export default function RegistrarRecaudacion() {
   const [hasRecaudacion, setHasRecaudacion] = useState(false);
 
   const navigate = useNavigate();
-    const fetchMachineComponents = async (idMaquina) => {
+
+  const fetchMachineComponents = async (idMaquina) => {
     try {
-      const response = await fetch(`/api/maquina/componentes/${idMaquina}`);
-      const data = await response.json();
+      const { data } = await api.get(`/maquina/componentes/${idMaquina}`);
       if (data.success) {
         setMachineComponents(data.componentes);
       } else {
@@ -60,83 +62,66 @@ export default function RegistrarRecaudacion() {
     setShowComponents(!showComponents);
   };
 
-   const generateInformeData = async () => {
-  if (!formData.ID_Maquina || !formData.ID_Comercio) {
-    setError('Seleccione una máquina y un comercio primero');
-    return;
-  }
-
-  try {
-    // Obtener datos de la máquina
-    const maquinaRes = await fetch(`/api/contabilidad/maquina-recaudacion/${formData.ID_Maquina}`);
-    if (!maquinaRes.ok) throw new Error('Error al obtener datos de la máquina');
-    const maquinaData = await maquinaRes.json();
-    
-    // Obtener datos del comercio
-    const comercioRes = await fetch(`/api/contabilidad/comercio-recaudacion/${formData.ID_Comercio}`);
-    if (!comercioRes.ok) throw new Error('Error al obtener datos del comercio');
-    const comercioData = await comercioRes.json();
-
-    // Obtener técnicos asociados
-    const ensambladorRes = await fetch(`/api/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Ensamblador}`);
-    const comprobadorRes = await fetch(`/api/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Comprobador}`);
-    
-    const ensamblador = await ensambladorRes.json();
-    const comprobador = await comprobadorRes.json();
-    
-    let mantenimiento = null;
-    if (maquinaData.maquina.ID_Tecnico_Mantenimiento) {
-      const mantenimientoRes = await fetch(`/api/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Mantenimiento}`);
-      mantenimiento = await mantenimientoRes.json();
+  const generateInformeData = async () => {
+    if (!formData.ID_Maquina || !formData.ID_Comercio) {
+      setError('Seleccione una máquina y un comercio primero');
+      return;
     }
 
-    // Obtener componentes de la máquina
-    const componentesRes = await fetch(`/api/maquina/componentes/${formData.ID_Maquina}`);
-    const componentesData = await componentesRes.json();
+    try {
+      const { data: maquinaData } = await api.get(`/contabilidad/maquina-recaudacion/${formData.ID_Maquina}`);
+      
+      const { data: comercioData } = await api.get(`/contabilidad/comercio-recaudacion/${formData.ID_Comercio}`);
 
-    setTecnicos({
-      ensamblador: ensamblador.usuario,
-      comprobador: comprobador.usuario,
-      mantenimiento: mantenimiento?.usuario || null
-    });
+      const { data: ensamblador } = await api.get(`/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Ensamblador}`);
+      const { data: comprobador } = await api.get(`/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Comprobador}`);
+      
+      let mantenimiento = null;
+      if (maquinaData.maquina.ID_Tecnico_Mantenimiento) {
+        const { data: mantenimientoData } = await api.get(`/usuario/perfil/${maquinaData.maquina.ID_Tecnico_Mantenimiento}`);
+        mantenimiento = mantenimientoData;
+      }
 
-    setMachineComponents(componentesData.componentes || []);
+      const { data: componentesData } = await api.get(`/maquina/componentes/${formData.ID_Maquina}`);
 
-    const informe = {
-      nombreMaquina: maquinaData.maquina.Nombre_Maquina,
-      nombreComercio: comercioData.comercio.Nombre,
-      direccionComercio: comercioData.comercio.Direccion,
-      telefonoComercio: comercioData.comercio.Telefono,
-      tipoComercio: comercioData.comercio.Tipo,
-      montoTotal: formData.Monto_Total,
-      fecha: formData.fecha
-    };
+      setTecnicos({
+        ensamblador: ensamblador.usuario,
+        comprobador: comprobador.usuario,
+        mantenimiento: mantenimiento?.usuario || null
+      });
 
-    setInformeData(informe);
-    setShowInformeModal(true);
-  } catch (error) {
-    console.error('Error generating report:', error);
-    setError('Error al generar datos del informe: ' + error.message);
-  }
-};
+      setMachineComponents(componentesData.componentes || []);
+
+      const informe = {
+        nombreMaquina: maquinaData.maquina.Nombre_Maquina,
+        nombreComercio: comercioData.comercio.Nombre,
+        direccionComercio: comercioData.comercio.Direccion,
+        telefonoComercio: comercioData.comercio.Telefono,
+        tipoComercio: comercioData.comercio.Tipo,
+        montoTotal: formData.Monto_Total,
+        fecha: formData.fecha
+      };
+
+      setInformeData(informe);
+      setShowInformeModal(true);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setError('Error al generar datos del informe: ' + error.message);
+    }
+  };
 
   const handlePrintInforme = () => {
     window.print();
   };
 
- const handleSaveInforme = async () => {
-  try {
-    if (!formData.ID_Recaudacion) {
-      setError('Primero debe registrar una recaudación');
-      return;
-    }
+  const handleSaveInforme = async () => {
+    try {
+      if (!formData.ID_Recaudacion) {
+        setError('Primero debe registrar una recaudación');
+        return;
+      }
 
-    const response = await fetch('/api/contabilidad/guardar-informe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+      const { data } = await api.post('/contabilidad/guardar-informe', {
         ID_Recaudacion: formData.ID_Recaudacion,
         CI_Usuario: user.ci,
         Nombre_Maquina: informeData.nombreMaquina,
@@ -148,51 +133,48 @@ export default function RegistrarRecaudacion() {
         Pago_Comprobador: 400.00,
         Pago_Mantenimiento: tecnicos.mantenimiento ? 400.00 : 0.00,
         componentes: machineComponents
-      })
-    });
+      });
 
-    const data = await response.json();
-    if (data.success) {
-      setSuccess('Informe guardado correctamente');
-      setShowInformeModal(false);
-      // Actualizar el estado para indicar que ya tiene una recaudación
-      setHasRecaudacion(true);
-    } else {
-      setError(data.message || 'Error al guardar el informe');
+      if (data.success) {
+        setSuccess('Informe guardado correctamente');
+        setShowInformeModal(false);
+        setHasRecaudacion(true);
+      } else {
+        setError(data.message || 'Error al guardar el informe');
+      }
+    } catch (error) {
+      console.error('Error saving report:', error);
+      setError('Error al guardar el informe');
     }
-  } catch (error) {
-    console.error('Error saving report:', error);
-    setError('Error al guardar el informe');
-  }
-};
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) setUser(JSON.parse(stored));
     
-    fetch('/api/comercio/all')
-      .then(r => {
-        if (!r.ok) throw new Error('Error al cargar comercios');
-        return r.json();
-      })
-      .then(d => {
-        if (d.success && d.comercios) {
-          setComercios(d.comercios);
-        } else {
-          throw new Error(d.message || 'Datos de comercios no válidos');
+    const fetchComercios = async () => {
+      try {
+        const { data } = await api.get('/comercio/all');
+        if (data.success && data.comercios) {
+          setComercios(data.comercios);
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error:', err);
         setError('Error al cargar la lista de comercios');
-      });
+      }
+    };
 
-    fetch('/api/contabilidad/resumen-recaudaciones?limit=2')
-      .then(r => {
-        if (!r.ok) throw new Error('Error al cargar resumen');
-        return r.json();
-      })
-      .then(d => setResumenRecaudaciones(d.resumen || []))
-      .catch(err => console.error('Error:', err));
+    const fetchResumen = async () => {
+      try {
+        const { data } = await api.get('/contabilidad/resumen-recaudaciones?limit=2');
+        setResumenRecaudaciones(data.resumen || []);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    };
+
+    fetchComercios();
+    fetchResumen();
   }, []);
 
   useEffect(() => {
@@ -206,7 +188,7 @@ export default function RegistrarRecaudacion() {
       return;
     }
 
-const comercioSeleccionado = comercios.find(c => c.ID_Comercio === formData.ID_Comercio);
+    const comercioSeleccionado = comercios.find(c => c.ID_Comercio === formData.ID_Comercio);
     if (!comercioSeleccionado) return;
 
     setFormData(prev => ({
@@ -218,29 +200,29 @@ const comercioSeleccionado = comercios.find(c => c.ID_Comercio === formData.ID_C
     setLoadingMaquinas(true);
     setError(null);
     
-fetch(`/api/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=${encodeURIComponent(comercioSeleccionado.ID_Comercio)}`)
-      .then(r => {
-        if (!r.ok) throw new Error('Error al cargar máquinas');
-        return r.json();
-      })
-      .then(d => {
-        if (d.success) {
-          setMaquinas(d.maquinas || []);
-          if (!d.maquinas || d.maquinas.length === 0) {
+    const fetchMaquinas = async () => {
+      try {
+        const { data } = await api.get(`/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=${encodeURIComponent(comercioSeleccionado.ID_Comercio)}`);
+        
+        if (data.success) {
+          setMaquinas(data.maquinas || []);
+          if (!data.maquinas || data.maquinas.length === 0) {
             setError('No hay máquinas operativas en etapa de recaudación para este comercio');
           }
         } else {
           setMaquinas([]);
-          setError(d.message || 'Error al obtener máquinas');
+          setError(data.message || 'Error al obtener máquinas');
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Error al cargar máquinas:', err);
         setMaquinas([]);
         setError('Error al cargar las máquinas del comercio');
-      })
-      .finally(() => setLoadingMaquinas(false));
-       console.log("ID_Comercio seleccionado:", formData.ID_Comercio);
+      } finally {
+        setLoadingMaquinas(false);
+      }
+    };
+
+    fetchMaquinas();
   }, [formData.ID_Comercio, comercios]);
 
   useEffect(() => {
@@ -276,7 +258,6 @@ fetch(`/api/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=${encodeUR
     setError('');
     setSuccess('');
     
-    // Validaciones
     if (!formData.ID_Comercio) {
       setError('Seleccione un comercio');
       return;
@@ -305,61 +286,40 @@ fetch(`/api/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=${encodeUR
       Monto_Empresa: parseFloat(formData.Monto_Empresa)
     };
 
-     try {
-        const res = await fetch('/api/contabilidad/registrar-recaudacion', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-            credentials: 'include'
-        });
-        
-        // Primero clonar la respuesta para poder leerla múltiples veces si es necesario
-        const responseClone = res.clone();
-        
-        try {
-            // Intentar parsear como JSON
-            const data = await res.json();
-            
-            if (!res.ok) {
-                throw new Error(data.message || 'Error al registrar recaudación');
-            }
-            
-            setSuccess('Recaudación registrada con éxito');
-            
-            // Resetear formulario
-            setFormData({
-                ID_Comercio: '',
-                ID_Maquina: '',
-                Tipo_Comercio: '',
-                Porcentaje_Comercio: 20,
-                Monto_Total: '',
-                Monto_Comercio: '',
-                Monto_Empresa: '',
-                fecha: '',
-                detalle: ''
-            });
-            
-            // Actualizar resumen
-            try {
-                const resResumen = await fetch('/api/contabilidad/resumen-recaudaciones?limit=2');
-                if (!resResumen.ok) throw new Error('Error al actualizar resumen');
-                const dataResumen = await resResumen.json();
-                setResumenRecaudaciones(dataResumen.resumen || []);
-            } catch (updateError) {
-                console.error('Error al actualizar resumen:', updateError);
-            }
-        } catch (jsonError) {
-            // Si falla el parseo JSON, leer como texto
-            const text = await responseClone.text();
-            throw new Error(text || 'Error en el servidor');
-        }
+    try {
+      const { response, data } = await api.post('/contabilidad/registrar-recaudacion', payload, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al registrar recaudación');
+      }
+      
+      setSuccess('Recaudación registrada con éxito');
+      
+      setFormData({
+        ID_Comercio: '',
+        ID_Maquina: '',
+        Tipo_Comercio: '',
+        Porcentaje_Comercio: 20,
+        Monto_Total: '',
+        Monto_Comercio: '',
+        Monto_Empresa: '',
+        fecha: '',
+        detalle: ''
+      });
+      
+      try {
+        const { data: dataResumen } = await api.get('/contabilidad/resumen-recaudaciones?limit=2');
+        setResumenRecaudaciones(dataResumen.resumen || []);
+      } catch (updateError) {
+        console.error('Error al actualizar resumen:', updateError);
+      }
     } catch (err) {
-        console.error('Error completo:', err);
-        setError(err.message || 'Error al registrar recaudación. Por favor intente nuevamente.');
+      console.error('Error completo:', err);
+      setError(err.message || 'Error al registrar recaudación. Por favor intente nuevamente.');
     }
-};
+  };
 
   return (
     <div className="recaudacion-container">
@@ -545,11 +505,10 @@ fetch(`/api/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=${encodeUR
             Registrar Recaudación
           </button>
           <button onClick={() => navigate(-1)}>Regresar</button>
-
           <button 
             type="button" 
             className="btn btn-secondary"
-            onClick={() => window.location.href = '/contabilidad/consultar-recaudaciones'}
+            onClick={() => navigate('/contabilidad/consultar-recaudaciones')}
           >
             Ver Todas las Recaudaciones
           </button>

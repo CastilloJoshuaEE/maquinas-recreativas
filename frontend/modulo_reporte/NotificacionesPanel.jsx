@@ -2,24 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../src/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import '../css/modulo_reporte/gestionReportes.css';
-//Este componente React muestra un panel de notificaciones para el usuario autenticado. 
-// Se conecta a una API para cargar notificaciones, permite marcarlas como leídas individual o masivamente, y ofrece acceso a un chat relacionado con cada notificación. 
+import api from '../src/utils/api';
+
 const NotificacionesPanel = ({ currentUser }) => {
     const [notificaciones, setNotificaciones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [unreadCount, setUnreadCount] = useState(0);
     const navigate = useNavigate();
-{/**Función asíncrona que obtiene las notificaciones del usuario desde /api/notificaciones/:id.
 
-Calcula cuántas no han sido leídas (leida === 0) y actualiza los estados correspondientes. */}
     const cargarNotificaciones = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/notificaciones/${currentUser.ID_Usuario}`);
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
-            
-            const data = await response.json();
+            const { data } = await api.get(`/notificaciones/${currentUser.ID_Usuario}`);
             
             if (!data.success) {
                 throw new Error(data.message || 'Error al cargar notificaciones');
@@ -34,21 +29,16 @@ Calcula cuántas no han sido leídas (leida === 0) y actualiza los estados corre
             setLoading(false);
         }
     };
-//Usa useEffect para actualizar automáticamente cada 30 segundos.
     
     useEffect(() => {
         cargarNotificaciones();
         const intervalo = setInterval(cargarNotificaciones, 30000);
         return () => clearInterval(intervalo);
     }, [currentUser]);
-{/**Marca una notificación como leída llamando a la API (/api/notificaciones/:id/marcarla-leida) por POST.
-Actualiza visualmente el estado de la notificación marcad
-    */}
+
     const marcarComoLeida = async (notificacionId) => {
         try {
-            const response = await fetch(`/api/notificaciones/${notificacionId}/marcarla-leida`, {
-                method: 'POST'
-            });
+            const { response } = await api.post(`/notificaciones/${notificacionId}/marcarla-leida`, {});
             
             if (!response.ok) {
                 const errorData = await response.json();
@@ -65,14 +55,10 @@ Actualiza visualmente el estado de la notificación marcad
             setError(err.message);
         }
     };
-{/**Llama a /api/notificaciones/marcarla-todas-leidas por POST para marcar todas como leídas.
 
-Actualiza todas las notificaciones en el estado local a leida: 1. */}
     const marcarTodasComoLeidas = async () => {
         try {
-            const response = await fetch('/api/notificaciones/marcarla-todas-leidas', {
-                method: 'POST'
-            });
+            const { response } = await api.post('/notificaciones/marcarla-todas-leidas', {});
             
             if (!response.ok) {
                 const errorData = await response.json();
@@ -87,10 +73,11 @@ Actualiza todas las notificaciones en el estado local a leida: 1. */}
             setError(err.message);
         }
     };
-{/**Navega a una ruta de chat relacionada usando useNavigate, pasando el reporteId y el ID del usuario como parámetros de búsqueda (query params). */}
+
     const handleVerReporte = (reporteId) => {
         navigate(`/reportes/chat?reporteId=${reporteId}&currentUserId=${currentUser.ID_Usuario}`);
     };
+
     if (loading) {
         return (
             <div className="loading">
@@ -109,10 +96,7 @@ Actualiza todas las notificaciones en el estado local a leida: 1. */}
             </div>
         );
     }
-{/**Muestra la cantidad total y no leída de notificaciones.
-Lista las notificaciones con botones para:
-Marcar como leída
-Ver chat relacionado si la notificación tiene ID_Reporte. */}
+
     return (
         <div className="notificaciones-container">
             <h2>

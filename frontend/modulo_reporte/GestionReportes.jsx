@@ -3,8 +3,8 @@ import { useAuth } from '../src/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../css/modulo_reporte/gestionReportes.css';
 import Modal from 'react-modal';
+import api from '../src/utils/api';
 
-// Solo configurar el appElement si estamos en el cliente (navegador)
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }
@@ -31,9 +31,8 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
     const location = useLocation();
 
     useEffect(() => {
-        // Inicializar el modal solo cuando se monta el componente
         if (onClose) {
-        setModalIsOpen(true);
+            setModalIsOpen(true);
         }
         
         if (location.state?.message) {
@@ -55,9 +54,7 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
 
     const cargarReportes = async () => {
         try {
-            const response = await fetch(`/api/reportes/usuario/${currentUser.ID_Usuario}`);
-            if (!response.ok) throw new Error('Error al cargar reportes');
-            const data = await response.json();
+            const { data } = await api.get(`/reportes/usuario/${currentUser.ID_Usuario}`);
             setReportes(data.reportes);
         } catch (err) {
             setError(err.message);
@@ -68,8 +65,7 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
 
     const cargarAdministradores = async () => {
         try {
-            const response = await fetch(`/api/usuarios/por-tipo?tipo=Administrador&emisorId=${currentUser.ID_Usuario}`);
-            const data = await response.json();
+            const { data } = await api.get(`/usuarios/por-tipo?tipo=Administrador&emisorId=${currentUser.ID_Usuario}`);
             if (data.success) {
                 setUsuarios(data.usuarios);
                 if (isDisabledUser && data.usuarios.length > 0) {
@@ -88,27 +84,23 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
     };
 
     const cerrarModal = () => {
-    if (modalIsOpen) {
-        setModalIsOpen(false);
-        if (onClose) {
-        onClose();
+        if (modalIsOpen) {
+            setModalIsOpen(false);
+            if (onClose) {
+                onClose();
+            }
         }
-    }
     };
 
-    // Manejar el foco cuando el modal se abre
     useEffect(() => {
         if (modalIsOpen && modalRef.current) {
-            // Enfocar el modal cuando se abre
             modalRef.current.focus();
         }
     }, [modalIsOpen]);
 
     const cargarUsuariosPorTipo = async (tipo) => {
         try {
-            const response = await fetch(`/api/usuarios/por-tipo?tipo=${encodeURIComponent(tipo)}&emisorId=${currentUser.ID_Usuario}`);
-            if (!response.ok) throw new Error('Error al cargar usuarios');
-            const data = await response.json();
+            const { data } = await api.get(`/usuarios/por-tipo?tipo=${encodeURIComponent(tipo)}&emisorId=${currentUser.ID_Usuario}`);
             setUsuarios(data.usuarios);
         } catch (err) {
             console.error('Error al cargar usuarios:', err);
@@ -132,17 +124,12 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
                     ? `[USUARIO RESTRINGIDO] ${nuevoReporte.descripcion}`
                     : nuevoReporte.descripcion;
 
-            const response = await fetch('/api/reportes/crear', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ID_Usuario_Emisor: currentUser.ID_Usuario,
-                    ID_Usuario_Destinatario: nuevoReporte.destinatario,
-                    descripcion: descripcionFinal
-                })
+            const { response, data } = await api.post('/reportes/crear', {
+                ID_Usuario_Emisor: currentUser.ID_Usuario,
+                ID_Usuario_Destinatario: nuevoReporte.destinatario,
+                descripcion: descripcionFinal
             });
 
-            const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Error al crear reporte');
 
             if (!adminMode && !isDisabledUser) {
@@ -150,15 +137,12 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
             }
 
             alert('Reporte enviado correctamente.');
-            await fetch('/api/historial-actividades', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    descripcion: `El usuario envió un reporte`
-                })
+            
+            const token = localStorage.getItem('token');
+            await api.post('/historial-actividades', {
+                descripcion: `El usuario envió un reporte`
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             
             setNuevoReporte({ destinatario: '', descripcion: '', tipoDestinatario: '' });
@@ -186,27 +170,19 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
 
     const handleActualizarEstado = async (reporteId, nuevoEstado) => {
         try {
-            const response = await fetch(`/api/reportes/${reporteId}/estado`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ estado: nuevoEstado })
-            });
+            const { data } = await api.put(`/reportes/${reporteId}/estado`, { estado: nuevoEstado });
 
-            const data = await response.json();
             if (data.success) {
                 const updatedReportes = reportes.map(reporte =>
                     reporte.ID_Reporte === reporteId ? { ...reporte, estado: nuevoEstado } : reporte
                 );
                 setReportes(updatedReportes);
-                await fetch('/api/historial-actividades', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        descripcion: `El usuario actualizó el estado de un reporte`
-                    })
+                
+                const token = localStorage.getItem('token');
+                await api.post('/historial-actividades', {
+                    descripcion: `El usuario actualizó el estado de un reporte`
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
             } else {
                 throw new Error(data.message || 'Error al actualizar estado');
@@ -227,11 +203,10 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
     if (loading) return <div className="loading">Cargando...</div>;
     if (error) return <div className="error">{error}</div>;
 
-    // Contenido del componente
     const contenido = (
         <div className={`gestion-reportes-container ${adminMode ? 'admin-mode' : ''} ${isDisabledUser ? 'disabled-user-mode' : ''}`}
              ref={modalRef}
-             tabIndex="-1" // Para permitir el enfoque
+             tabIndex="-1"
         >
             {statusMessage && (
                 <div className="status-message">
@@ -417,14 +392,12 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
         </div>
     );
 
-    // Si el componente se usa como modal (tiene prop onClose)
     if (onClose) {
         return (
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={cerrarModal}
                 onAfterOpen={() => {
-                    // Enfocar el modal cuando está completamente abierto
                     if (modalRef.current) {
                         modalRef.current.focus();
                     }
@@ -459,7 +432,6 @@ const GestionReportes = ({ adminMode = false, onClose }) => {
         );
     }
 
-    // Si no tiene prop onClose, renderiza normalmente
     return contenido;
 };
 

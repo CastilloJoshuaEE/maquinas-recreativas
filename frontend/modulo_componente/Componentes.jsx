@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdminHeader } from "../modulo_usuario/AdminHeader";
 import "../css/modulo_componente/componente.css";
+import api from "../src/utils/api";
 
 export default function Componentes() {
   const [componentes, setComponentes] = useState([]);
@@ -23,25 +24,22 @@ export default function Componentes() {
 
   const fetchComponentesEnUso = async (userId, machineId = null) => {
     try {
-      let url = `/api/componentes/en-uso/${userId}`;
+      let url = `/componentes/en-uso/${userId}`;
       if (machineId) {
         url += `?id_maquina=${machineId}`;
       }
 
-      const res = await fetch(url);
-      const data = await res.json();
+      const { response, data } = await api.get(url);
 
-      if (!res.ok || !data.success) {
+      if (!response.ok || !data.success) {
         console.error("Error al cargar componentes:", data.message);
         return [];
       }
 
-      // Asegurarnos de que siempre trabajamos con un array
       const componentesData = Array.isArray(data.componentes)
         ? data.componentes
         : [];
 
-      // Filtrar por máquina si es necesario
       return componentesData.filter((comp) => {
         const isNotLiberado = comp.estado_uso !== "Liberado";
         const matchesMachine = !machineId || comp.ID_Maquina == machineId;
@@ -68,10 +66,9 @@ export default function Componentes() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `/api/componentes?tipo=${localUser.Especialidad}&limit=${pagination.itemsPerPage}&page=${pagination.currentPage}`
+        const { data } = await api.get(
+          `/componentes?tipo=${localUser.Especialidad}&limit=${pagination.itemsPerPage}&page=${pagination.currentPage}`
         );
-        const data = await res.json();
 
         if (data.success) {
           setComponentes(data.componentes);
@@ -107,31 +104,21 @@ export default function Componentes() {
         return;
       }
 
-      const response = await fetch("/api/componentes/usar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ID_Componente: idComponente,
-          ID_Usuario: user.ID_Usuario,
-          ID_Maquina: selectedMachine.ID_Maquina,
-        }),
+      const { response, data } = await api.post("/componentes/usar", {
+        ID_Componente: idComponente,
+        ID_Usuario: user.ID_Usuario,
+        ID_Maquina: selectedMachine.ID_Maquina,
       });
-
-      const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Error al usar componente");
       }
 
-      // Actualizar la lista de componentes en uso
       const updatedComponentesEnUso = await fetchComponentesEnUso(
         user.ID_Usuario
       );
       setComponentesEnUso(updatedComponentesEnUso);
 
-      // Actualizar la lista de componentes disponibles
       setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error("Error al usar componente:", err);
@@ -141,34 +128,23 @@ export default function Componentes() {
 
   const handleLiberarComponente = async (idComponente) => {
     try {
-      const response = await fetch("/api/componentes/liberar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ID_Componente: idComponente,
-          ID_Usuario: user.ID_Usuario,
-        }),
+      const { response, data } = await api.post("/componentes/liberar", {
+        ID_Componente: idComponente,
+        ID_Usuario: user.ID_Usuario,
       });
-
-      const data = await response.json();
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Error al liberar componente");
       }
 
-      // Actualizar la lista de componentes en uso
       const updatedComponentesEnUso = await fetchComponentesEnUso(
         user.ID_Usuario,
         selectedMachine?.ID_Maquina
       );
       setComponentesEnUso(updatedComponentesEnUso);
 
-      // Actualizar la lista de componentes disponibles
       setRefreshKey((prev) => prev + 1);
 
-      // Mostrar mensaje de éxito
       alert(data.message || "Componente liberado correctamente");
     } catch (err) {
       console.error("Error al liberar componente:", err);

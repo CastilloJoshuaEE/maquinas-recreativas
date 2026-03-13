@@ -1,6 +1,6 @@
 // frontend/src/pages/form/ComercioForm.jsx
 import { useState, useEffect } from "react";
-
+import api from "../../utils/api";
 export default function ComercioForm({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     nombre: "",
@@ -29,8 +29,7 @@ export default function ComercioForm({ onClose, onSuccess }) {
       [name]: value,
     });
   };
-
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid) return;
 
@@ -38,20 +37,11 @@ export default function ComercioForm({ onClose, onSuccess }) {
     setError("");
 
     try {
-      const response = await fetch("/api/comercio/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
+      const { data } = await api.post("/comercio/register", formData);
 
       if (data.success) {
         onSuccess();
       } else {
-        // Show duplicate name in error message if it's a duplicate entry error
         if (data.message && data.message.includes("Duplicate entry")) {
           setError(`El comercio "${formData.nombre}" ya está registrado`);
         } else {
@@ -64,7 +54,6 @@ export default function ComercioForm({ onClose, onSuccess }) {
       setLoading(false);
     }
   };
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">

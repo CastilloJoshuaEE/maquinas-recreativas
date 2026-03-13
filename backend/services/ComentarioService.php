@@ -1,5 +1,3 @@
-// backend/services/ComentarioService.php
-
 <?php
 require_once __DIR__ . '/../models/ComentarioModel.php';
 require_once __DIR__ . '/../models/NotificacionModel.php';

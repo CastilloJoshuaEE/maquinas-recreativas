@@ -1,4 +1,3 @@
-// backend/api/routes.php
 <?php
 /**
  * API propia (es decir, una API REST personalizada).
@@ -8,28 +7,18 @@
  */
 
 // =============================================
-// CONFIGURACIÓN CORS (Cross-Origin Resource Sharing)
-// =============================================
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Access-Control-Allow-Credentials: true"); 
-header("Content-Type: application/json");
-
-// =============================================
 // INCLUIR CONTROLADORES
 // =============================================
-require_once __DIR__ . '/../controllers/UsuarioController.php';
-require_once __DIR__ . '/../controllers/ComercioController.php';
-require_once __DIR__ . '/../controllers/MaquinaController.php';
-require_once __DIR__ . '/../controllers/NotificacionController.php';
-require_once __DIR__ . '/../controllers/AdministradorController.php';
-require_once __DIR__ . '/../controllers/ReporteController.php';
-require_once __DIR__ . '/../controllers/ComentarioController.php';
-require_once __DIR__ . '/../controllers/InformeController.php';
-require_once __DIR__ . '/../controllers/DistribucionController.php';
-require_once __DIR__ . '/../controllers/ComponenteController.php';
-
+require_once __DIR__ . '/controllers/UsuarioController.php';
+require_once __DIR__ . '/controllers/ComercioController.php';
+require_once __DIR__ . '/controllers/MaquinaController.php';
+require_once __DIR__ . '/controllers/NotificacionController.php';
+require_once __DIR__ . '/controllers/AdministradorController.php';
+require_once __DIR__ . '/controllers/ReporteController.php';
+require_once __DIR__ . '/controllers/ComentarioController.php';
+require_once __DIR__ . '/controllers/InformeController.php';
+require_once __DIR__ . '/controllers/DistribucionController.php';
+require_once __DIR__ . '/controllers/ComponenteController.php';
 // =============================================
 // FUNCIÓN PRINCIPAL DE ENRUTAMIENTO
 // =============================================

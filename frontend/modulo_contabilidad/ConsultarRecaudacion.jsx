@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/modulo_contabilidad/Consultar_Recaudacion.css';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
 export default function ConsultarRecaudacion() {
   const [filters, setFilters] = useState({
@@ -16,24 +17,22 @@ export default function ConsultarRecaudacion() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
- useEffect(() => {
+  useEffect(() => {
     fetchMachines();
     fetchRecaudaciones();
   }, []);
 
-  // Efecto separado para manejar cambios en los filtros
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchRecaudaciones();
-    }, 300); // Pequeño delay para evitar múltiples llamadas rápidas
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [filters]);
 
   const fetchMachines = async () => {
     try {
-      const response = await fetch('/api/contabilidad/maquinas-recaudacion');
-      const data = await response.json();
+      const { data } = await api.get('/contabilidad/maquinas-recaudacion');
       if (data.success) {
         setMaquinas(data.maquinas);
       }
@@ -48,38 +47,54 @@ export default function ConsultarRecaudacion() {
   };
 
   const fetchRecaudaciones = async () => {
-  setLoading(true);
-  try {
-    const queryParams = new URLSearchParams();
-    
-    if (filters.fecha_inicio) queryParams.append('fecha_inicio', filters.fecha_inicio);
-    if (filters.fecha_fin) queryParams.append('fecha_fin', filters.fecha_fin);
-    if (filters.ID_Maquina) queryParams.append('ID_Maquina', filters.ID_Maquina);
-    if (filters.Tipo_Comercio) queryParams.append('Tipo_Comercio', filters.Tipo_Comercio);
-    
-    const response = await fetch(`/api/contabilidad/recaudaciones?${queryParams.toString()}`);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Error al obtener recaudaciones');
-    }
-    
-    if (data.success) {
-      // Ordenar por fecha descendente
-      const sortedData = data.recaudaciones.sort((a, b) => 
-        new Date(b.fecha) - new Date(a.fecha)
-      );
-      setRecaudaciones(sortedData || []);
-    } else {
+    setLoading(true);
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (filters.fecha_inicio) queryParams.append('fecha_inicio', filters.fecha_inicio);
+      if (filters.fecha_fin) queryParams.append('fecha_fin', filters.fecha_fin);
+      if (filters.ID_Maquina) queryParams.append('ID_Maquina', filters.ID_Maquina);
+      if (filters.Tipo_Comercio) queryParams.append('Tipo_Comercio', filters.Tipo_Comercio);
+      
+      const { response, data } = await api.get(`/contabilidad/recaudaciones?${queryParams.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener recaudaciones');
+      }
+      
+      if (data.success) {
+        const sortedData = data.recaudaciones.sort((a, b) => 
+          new Date(b.fecha) - new Date(a.fecha)
+        );
+        setRecaudaciones(sortedData || []);
+      } else {
+        setRecaudaciones([]);
+      }
+    } catch (error) {
       setRecaudaciones([]);
+      console.error('Error al obtener recaudaciones:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setRecaudaciones([]);
-    console.error('Error al obtener recaudaciones:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  const handleDelete = async (idRecaudacion) => {
+    if (!confirm('¿Está seguro de eliminar esta recaudación?')) return;
+    
+    try {
+      const { response, data } = await api.delete(`/contabilidad/eliminar-recaudacion/${idRecaudacion}`);
+      
+      if (data.success) {
+        setRecaudaciones(prev => prev.filter(x => x.ID_Recaudacion !== idRecaudacion));
+        alert('Recaudación eliminada correctamente');
+      } else {
+        alert(data.message || 'Error al eliminar');
+      }
+    } catch (error) {
+      console.error('Error al eliminar:', error);
+      alert('Error al eliminar la recaudación');
+    }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-ES', { 
@@ -144,15 +159,15 @@ export default function ConsultarRecaudacion() {
           </select>
         </div>
         <button 
-        onClick={() => setFilters({
-          fecha_inicio: '',
-          fecha_fin: '',
-          ID_Maquina: '',
-          Tipo_Comercio: ''
-        })}
-      >
-        Limpiar Filtros
-      </button>
+          onClick={() => setFilters({
+            fecha_inicio: '',
+            fecha_fin: '',
+            ID_Maquina: '',
+            Tipo_Comercio: ''
+          })}
+        >
+          Limpiar Filtros
+        </button>
         <button onClick={fetchRecaudaciones} disabled={loading}>
           {loading ? 'Buscando...' : 'Buscar'}
         </button>
@@ -186,7 +201,7 @@ export default function ConsultarRecaudacion() {
                   <td>{r.detalle}</td>
                   <td>
                     {r.ID_Informe ? (
-                      <button onClick={() => window.location.href = `/contabilidad/informe/${r.ID_Recaudacion}`}>
+                      <button onClick={() => navigate(`/contabilidad/informe/${r.ID_Recaudacion}`)}>
                         Ver Informe
                       </button>
                     ) : (
@@ -197,10 +212,7 @@ export default function ConsultarRecaudacion() {
                     <button onClick={() => navigate(`/contabilidad/actualizar-recaudacion/${r.ID_Recaudacion}`)}>
                       Editar
                     </button>
-                    <button onClick={() => {
-                      fetch(`/api/contabilidad/eliminar-recaudacion/${r.ID_Recaudacion}`, { method: 'DELETE' })
-                        .then(() => setRecaudaciones(prev => prev.filter(x => x.ID_Recaudacion !== r.ID_Recaudacion)));
-                    }}>
+                    <button onClick={() => handleDelete(r.ID_Recaudacion)}>
                       Eliminar
                     </button>
                   </td>

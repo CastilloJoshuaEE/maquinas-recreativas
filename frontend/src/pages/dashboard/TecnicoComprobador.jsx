@@ -6,7 +6,7 @@ import NotificacionesList from "../../components/NotificacionesList";
 import MaquinaList from "../../components/MaquinaList";
 import { AdminHeader } from "../../../modulo_usuario/AdminHeader";
 import "../../../css/dashboards.css";
-
+import api from "../../utils/api";
 export default function TecnicoComprobador() {
   const [user, setUser] = useState(null);
   const [notificaciones, setNotificaciones] = useState([]);
@@ -41,67 +41,52 @@ export default function TecnicoComprobador() {
     loadData();
   }, [navigate]);
 
-  const loadData = async () => {
-    try {
-      const notifResponse = await fetch(
-        `/api/notificaciones_maquina/${
-          JSON.parse(localStorage.getItem("user")).ID_Usuario
-        }`
-      );
-      const notifData = await notifResponse.json();
-      if (notifData.success) setNotificaciones(notifData.notificaciones);
+ const loadData = async () => {
+  try {
+    const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
+    
+    const { data: notifData } = await api.get(`/notificaciones_maquina/${userId}`);
+    if (notifData.success) setNotificaciones(notifData.notificaciones);
 
-      const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
-
-      const compResponse = await fetch(`/api/maquina/comprobador/${userId}`);
-      const compData = await compResponse.json();
-      if (compData.success) setMaquinasComprobando(compData.maquinas);
-    } catch (err) {
-      console.error("Error loading data:", err);
-    }
-  };
-
+    const { data: compData } = await api.get(`/maquina/comprobador/${userId}`);
+    if (compData.success) setMaquinasComprobando(compData.maquinas);
+  } catch (err) {
+    console.error("Error loading data:", err);
+  }
+};
   const handleAccion = async () => {
     if (!selectedMaquina || !accion) return;
 
     try {
       let endpoint = "";
       if (accion === "distribucion") {
-        endpoint = "/api/maquina/mandar-distribucion";
+        endpoint = "/maquina/mandar-distribucion";
       } else {
-        endpoint = "/api/maquina/mandar-reensamblar";
+        endpoint = "/maquina/mandar-reensamblar";
       }
+ const { data } = await api.post(endpoint, {
+      idMaquina: selectedMaquina.ID_Maquina,
+      idRemitente: user.ID_Usuario,
+      mensaje: mensaje,
+    });
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idMaquina: selectedMaquina.ID_Maquina,
-          idRemitente: user.ID_Usuario,
-          mensaje: mensaje,
-        }),
+    if (data.success) {
+      loadData();
+      setSelectedMaquina(null);
+      setMostrarMensaje(false);
+      setMensaje("");
+      setAccion("");
+      setMostrarChecklist(false);
+      setChecklist({
+        placaFuncional: false,
+        carcasaBuenEstado: false,
+        experienciaJuegoAcorde: false,
       });
-
-      const data = await response.json();
-      if (data.success) {
-        loadData();
-        setSelectedMaquina(null);
-        setMostrarMensaje(false);
-        setMensaje("");
-        setAccion("");
-        setMostrarChecklist(false);
-        setChecklist({
-          placaFuncional: false,
-          carcasaBuenEstado: false,
-          experienciaJuegoAcorde: false,
-        });
-      }
-    } catch (err) {
-      console.error("Error al realizar accion:", err);
     }
-  };
+  } catch (err) {
+    console.error("Error al realizar accion:", err);
+  }
+};
 
   const handleSelectMaquina = (maquina) => {
     setSelectedMaquina(maquina);

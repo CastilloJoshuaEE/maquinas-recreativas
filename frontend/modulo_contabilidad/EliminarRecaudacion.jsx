@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../css/modulo_contabilidad/Consultar_Recaudacion.css';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
 export default function EliminarRecaudacion() {
   const { id } = useParams();
@@ -13,8 +14,7 @@ export default function EliminarRecaudacion() {
   useEffect(() => {
     const fetchRecaudacion = async () => {
       try {
-        const response = await fetch(`/api/contabilidad/recaudaciones?ID_Recaudacion=${id}`);
-        const data = await response.json();
+        const { data } = await api.get(`/contabilidad/recaudaciones?ID_Recaudacion=${id}`);
         
         if (data.success && data.recaudaciones.length > 0) {
           setRecaudacion(data.recaudaciones[0]);
@@ -36,11 +36,8 @@ export default function EliminarRecaudacion() {
     
     setLoading(true);
     try {
-      const response = await fetch(`/api/contabilidad/eliminar-recaudacion/${id}`, {
-        method: 'DELETE'
-      });
+      const { response, data } = await api.delete(`/contabilidad/eliminar-recaudacion/${id}`);
       
-      const data = await response.json();
       if (data.success) {
         setMessage('Recaudación eliminada correctamente');
         setTimeout(() => navigate('/contabilidad/consultar-recaudaciones'), 1500);

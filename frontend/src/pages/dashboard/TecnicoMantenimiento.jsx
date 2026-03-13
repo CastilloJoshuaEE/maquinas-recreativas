@@ -1,6 +1,7 @@
 // frontend/src/pages/dashboard/TecnicoMantenimiento.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../utils/api";
 import ProfileSection from "../../components/ProfileSection";
 import NotificacionesList from "../../components/NotificacionesList";
 import MaquinaList from "../../components/MaquinaList";
@@ -47,73 +48,51 @@ export default function TecnicoMantenimiento() {
   }, [navigate]);
   {
     /**Carga:
-Las notificaciones para el usuario técnico (/api/notificaciones_maquina/:id)
-Las máquinas asignadas para mantenimiento (/api/maquina/mantenimiento/:id)
+Las notificaciones para el usuario técnico (/notificaciones_maquina/:id)
+Las máquinas asignadas para mantenimiento (/maquina/mantenimiento/:id)
   */
   }
-  const loadData = async () => {
-    try {
-      const notifResponse = await fetch(
-        `/api/notificaciones_maquina/${
-          JSON.parse(localStorage.getItem("user")).ID_Usuario
-        }`
-      );
-      const notifData = await notifResponse.json();
-      if (notifData.success) setNotificaciones(notifData.notificaciones);
+ const loadData = async () => {
+  try {
+    const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
+    
+    const { data: notifData } = await api.get(`/notificaciones_maquina/${userId}`);
+    if (notifData.success) setNotificaciones(notifData.notificaciones);
 
-      const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
-      const mantResponse = await fetch(`/api/maquina/mantenimiento/${userId}`);
-      const mantData = await mantResponse.json();
-      if (mantData.success) setMaquinasMantenimiento(mantData.maquinas);
-    } catch (err) {
-      console.error("Error loading data:", err);
+    const { data: mantData } = await api.get(`/maquina/mantenimiento/${userId}`);
+    if (mantData.success) setMaquinasMantenimiento(mantData.maquinas);
+  } catch (err) {
+    console.error("Error loading data:", err);
+  }
+};
+ const handleAccion = async () => {
+  if (!selectedMaquina || !accion) return;
+
+  try {
+    const { response, data } = await api.post("/maquina/finalizar-mantenimiento", {
+      idMaquina: selectedMaquina.ID_Maquina,
+      idRemitente: user.ID_Usuario,
+      exito: accion === "operativa",
+      mensaje: mensaje,
+    });
+
+    if (!response.ok) {
+      throw new Error(data.message || "Error en la solicitud");
     }
-  };
 
-  const handleAccion = async () => {
-    if (!selectedMaquina || !accion) return;
-
-    try {
-      const response = await fetch("/api/maquina/finalizar-mantenimiento", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idMaquina: selectedMaquina.ID_Maquina,
-          idRemitente: user.ID_Usuario,
-          exito: accion === "operativa",
-          mensaje: mensaje,
-        }),
-      });
-
-      // Verificar si la respuesta es JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        throw new Error(`Respuesta inesperada: ${text}`);
-      }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Error en la solicitud");
-      }
-
-      if (data.success) {
-        loadData();
-        setSelectedMaquina(null);
-        setMostrarMensaje(false);
-        setMensaje("");
-        setAccion("");
-      } else {
-        console.error("Error del servidor:", data.message);
-      }
-    } catch (err) {
-      console.error("Error al finalizar mantenimiento:", err);
-      // Mostrar mensaje de error al usuario
+    if (data.success) {
+      loadData();
+      setSelectedMaquina(null);
+      setMostrarMensaje(false);
+      setMensaje("");
+      setAccion("");
+    } else {
+      console.error("Error del servidor:", data.message);
     }
-  };
+  } catch (err) {
+    console.error("Error al finalizar mantenimiento:", err);
+  }
+};
   {
     /**Si se activa una acción (alta o baja), aparece un modal para ingresar un mensaje y confirmar o cancelar la operación. */
   }

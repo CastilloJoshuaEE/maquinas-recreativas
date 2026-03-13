@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../css/modulo_usuario/registrar_usuario.css";
-// proporciona un formulario de registro para nuevos usuarios. Los usuarios pueden ingresar su nombre, apellido, cédula, correo electrónico, nombre de usuario asignado, contraseña y el área en la que desean trabajar. Después de completar el formulario, los datos se envían al servidor para registrar al nuevo usuario.
+import api from '../src/utils/api';
+
 export default function RegistrarUsuario() {
     const [formData, setFormData] = useState({
         nombre: '',
@@ -25,48 +26,28 @@ export default function RegistrarUsuario() {
     };
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!window.confirm('Seguro desea registrarse?')) {
-        return;
-    }
-    try {
-        const response = await fetch('/api/usuario/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-
-        // Verificar el tipo de contenido
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Respuesta inesperada: ${text}`);
+        e.preventDefault();
+        if (!window.confirm('Seguro desea registrarse?')) {
+            return;
         }
+        try {
+            const { response, data } = await api.post('/usuario/register', formData);
 
-        const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            }
 
-        if (!response.ok) {
-            throw new Error(data.message || 'Error en la respuesta del servidor');
+            if (data.success) {
+                setSuccess(true);
+                setTimeout(() => navigate('/login'), 2000);
+            } else {
+                setError(data.message || 'Error al registrar usuario');
+            }
+        } catch (err) {
+            setError(err.message || 'Error de conexión con el servidor');
         }
+    };
 
-        if (data.success) {
-            setSuccess(true);
-            setTimeout(() => navigate('/login'), 2000);
-        } else {
-            setError(data.message || 'Error al registrar usuario');
-        }
-    } catch (err) {
-        setError(err.message || 'Error de conexión con el servidor');
-    }
-};
-{/**El formulario recopila la información del nuevo usuario.
-Antes de enviar la solicitud, se solicita confirmación de que el usuario desea registrarse.
-Los datos del formulario se envían al servidor para registrar al nuevo usuario.
-Si el registro es exitoso, se muestra un mensaje de éxito y el usuario es redirigido a la página de inicio de sesión.
-Si hay un error, se muestra un mensaje indicando el problema, como un error en la conexión o en el registro del usuario.
- */}
     return (
         <div className="register-container">
             <h2>Formulario de Registro</h2>
@@ -116,7 +97,7 @@ Si hay un error, se muestra un mensaje indicando el problema, como un error en l
                 >
                     <option value="">Seleccione una área donde hay vacantes</option>
                     <option value="Contabilidad">Área de Contabilidad</option>
-                    <option value="Logística">Área de Logística</option>
+                    <option value="Logistica">Área de Logística</option>
                     <option value="Administrador">Administrador del sistema</option>
                 </select>
                 

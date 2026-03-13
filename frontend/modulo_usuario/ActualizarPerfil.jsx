@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import "../css/modulo_usuario/perfil.css";
 import { AdminHeader } from './AdminHeader';
 import { useAuth } from '../src/context/AuthContext';
+import api from '../src/utils/api';
 
 export default function ActualizarPerfil() {
     const { currentUser } = useAuth();
@@ -22,26 +23,20 @@ export default function ActualizarPerfil() {
                     return;
                 }
 
-                const response = await fetch(`/api/usuario/perfil?id=${currentUser.uuid}`);
+                const token = localStorage.getItem('token');
+                const { data } = await api.get(`/usuario/perfil?id=${currentUser.uuid}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-                if (!response.ok) throw new Error('Error al obtener perfil');
-                
-                const data = await response.json();
                 if (data.success) {
                     setUsuario(data.usuario);
                     setTipo(data.usuario.tipo || '');
                     setEspecialidad(data.usuario.Especialidad || '');
                     
-                    // Registrar actividad
-                    await fetch('/api/historial-actividades', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            descripcion: `El usuario accedió a actualizar su perfil`
-                        })
+                    await api.post('/historial-actividades', {
+                        descripcion: `El usuario accedió a actualizar su perfil`
+                    }, {
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
                 } else {
                     setError(data.message);
@@ -63,6 +58,7 @@ export default function ActualizarPerfil() {
         }
 
         try {
+            const token = localStorage.getItem('token');
             const formData = {
                 id: currentUser.uuid,
                 nombre: e.target.nombre.value,
@@ -74,30 +70,17 @@ export default function ActualizarPerfil() {
                 especialidad: tipo === 'Tecnico' ? especialidad : null
             };
 
-            // Solo procesar contraseña si se proporciona y no está vacía
             const nuevaContrasena = e.target.contrasena.value.trim();
             if (nuevaContrasena !== '') {
                 formData.contrasena = nuevaContrasena;
             }
 
-            const response = await fetch('/api/usuario/actualizar-perfil', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(formData)
+            const { data } = await api.post('/usuario/actualizar-perfil', formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error en la respuesta del servidor');
-            }
-            
-            const result = await response.json();
-            if (result.success) {
+            if (data.success) {
                 setSuccess(true);
-                // Actualizar datos en el contexto de autenticación
                 const updatedUser = {
                     ...currentUser,
                     nombre: formData.nombre,
@@ -108,7 +91,7 @@ export default function ActualizarPerfil() {
 
                 setTimeout(() => navigate(-1), 2000);
             } else {
-                setError(result.message || 'Error al actualizar el perfil');
+                setError(data.message || 'Error al actualizar el perfil');
             }
         } catch (err) {
             console.error('Error al actualizar perfil:', err);

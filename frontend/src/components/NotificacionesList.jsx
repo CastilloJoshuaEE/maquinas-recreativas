@@ -1,5 +1,6 @@
 // frontend/src/components/NotificacionesList.jsx
 import { useState, useEffect } from "react";
+import api from '../utils/api';
 
 export default function NotificacionesList({
   notificaciones,
@@ -11,20 +12,12 @@ export default function NotificacionesList({
   const [noLeidas, setNoLeidas] = useState(0);
 
   useEffect(() => {
-    const fetchNoLeidas = async () => {
+     const fetchNoLeidas = async () => {
       if (!user || !user.ID_Usuario) return;
 
       try {
-        const response = await fetch(`/api/notificaciones/no-leidas/${user.ID_Usuario}`);
+        const { data } = await api.get(`/notificaciones/no-leidas/${user.ID_Usuario}`);
         
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await response.text();
-          console.error("Respuesta inesperada (no es JSON):", text);
-          throw new Error("Respuesta no válida del servidor (no es JSON)");
-        }
-
-        const data = await response.json();
         if (data.success) {
           setNoLeidas(parseInt(data.total, 10));
         }
@@ -38,11 +31,8 @@ export default function NotificacionesList({
 
   const handleMarcarLeida = async (id) => {
     try {
-      await fetch("/api/notificaciones/marcar-leida", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idNotificacion: id }),
-      });
+      await api.post("/notificaciones/marcar-leida", { idNotificacion: id });
+
       setNoLeidas((prev) => (prev > 0 ? prev - 1 : 0));
     } catch (error) {
       console.error("Error marking notification as read:", error);
