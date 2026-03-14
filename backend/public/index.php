@@ -4,7 +4,8 @@ $allowedOrigins = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:8000',
-    'https://recreasys.infinityfree.me'
+    'https://recreasys.infinityfree.me',
+'https://prototipo-maquinas.vercel.app'
 ];
 
 if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowedOrigins)) {
