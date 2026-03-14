@@ -8,26 +8,20 @@ class ComercioModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
+  
 
     public function registrarComercio($nombre, $tipo, $direccion, $telefono) {
         $conn = $this->db->getConnection();
         
         try {
-            $idComercio = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO comercio (ID_Comercio, nombre, tipo, direccion, telefono, Cantidad_Maquinas) 
-                    VALUES (?, ?, ?, ?, ?, 0)";
+            $sql = "INSERT INTO comercio (nombre, tipo, direccion, telefono, Cantidad_Maquinas) 
+                    VALUES ( ?, ?, ?, ?, 0)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssss", $idComercio, $nombre, $tipo, $direccion, $telefono);
+            $stmt->bind_param("ssss", $nombre, $tipo, $direccion, $telefono);
             
             if ($stmt->execute()) {
-                return $idComercio;
+                return true;
             }
             return false;
 

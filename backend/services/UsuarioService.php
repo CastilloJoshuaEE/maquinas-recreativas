@@ -40,34 +40,37 @@ class UsuarioService {
     }
         
     public function login($usuario_asignado, $contrasena) {
-        try {
-            $usuario = $this->model->login($usuario_asignado);
-            
-            if (!$usuario) {
-                return ['success' => false, 'message' => 'Credenciales inválidas'];
-            }
-            
-            if (!password_verify($contrasena, $usuario['contrasena'])) {
-                return ['success' => false, 'message' => 'Credenciales inválidas'];
-            }
-             
-            $this->model->registrarInicioSesion(
-                $usuario['ID_Usuario'],
-                $usuario['usuario_asignado'],
-                $usuario['contrasena']
-            );
-            
-            return [
-                'success' => true,
-                'message' => 'Inicio de sesión exitoso',
-                'usuario' => $usuario
-            ];
-        } catch (Exception $e) {
-            error_log("Error en login: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error al iniciar sesión'];
+    try {
+        $usuario = $this->model->login($usuario_asignado);
+        
+        if (!$usuario) {
+            return ['success' => false, 'message' => 'Credenciales inválidas'];
         }
+        
+        if (!password_verify($contrasena, $usuario['contrasena'])) {
+            return ['success' => false, 'message' => 'Credenciales inválidas'];
+        }
+        
+        // Registrar inicio de sesión
+        $this->model->registrarInicioSesion(
+            $usuario['ID_Usuario'],
+            $usuario['usuario_asignado'],
+            $usuario['contrasena']
+        );
+        
+        // No enviar la contraseña en la respuesta
+        unset($usuario['contrasena']);
+        
+        return [
+            'success' => true,
+            'message' => 'Inicio de sesión exitoso',
+            'usuario' => $usuario
+        ];
+    } catch (Exception $e) {
+        error_log("Error en login service: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error al iniciar sesión'];
     }
-
+}
     public function logout($userId) {
         try {
             $result = $this->model->registrarLogout($userId);

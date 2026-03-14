@@ -1,9 +1,9 @@
-const API_BASE_URL = "/api";
+const API_BASE_URL = "/api/public";
 export const API_ENDPOINTS = {
   LOGIN: `/usuario/login`,
   REGISTER: `/usuario/register`,
   LOGOUT: `/usuario/logout`,
-  USERS: `/api/administrador/usuarios`,
+  USERS: `/administrador/usuarios`,
   USER_PROFILE: (id) => `/usuario/profile/${id}`,
   NOTIFICACIONES: (id) => `/notificaciones_maquina/${id}`,
   MAQUINAS_ENSAMBLADOR: (id) => `/maquina/ensamblador/${id}`,

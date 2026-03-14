@@ -44,11 +44,10 @@ class DistribucionModel {
                 return $updateStmt->execute();
             } else {
                 // Crear nuevo
-                $idInforme = $this->generateUUID($conn);
-                $insertSql = "INSERT INTO informe_distribucion (ID_Informe_Distribucion, ID_Maquina, ID_Usuario, ID_Comercio, fecha_creacion, estado_maquina) 
-                              VALUES (?, ?, ?, ?, NOW(), 'Operativa')";
+                $insertSql = "INSERT INTO informe_distribucion ( ID_Maquina, ID_Usuario, ID_Comercio, fecha_creacion, estado_maquina) 
+                              VALUES (?, ?, ?, NOW(), 'Operativa')";
                 $insertStmt = $conn->prepare($insertSql);
-                $insertStmt->bind_param("ssss", $idInforme, $idMaquina, $idUsuario, $idComercio);
+                $insertStmt->bind_param("sss", $idMaquina, $idUsuario, $idComercio);
                 return $insertStmt->execute();
             }
 
@@ -120,11 +119,5 @@ class DistribucionModel {
         return $informes;
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
 }
 ?>

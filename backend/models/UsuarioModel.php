@@ -9,12 +9,7 @@ class UsuarioModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
+
 public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
         $conn = $this->db->getConnection();
         
@@ -66,14 +61,14 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
                 return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
             }
 
-            $id_usuario = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Activo')";
+$sql = "INSERT INTO usuario 
+(nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')";
+
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "ssssssss", 
-                $id_usuario,
+                "sssssss", 
                 $nombre,
                 $apellido,
                 $ciEncriptado,
@@ -87,6 +82,18 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
                 $conn->rollback();
                 return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
             }
+$getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+$getIdStmt = $conn->prepare($getIdSql);
+$getIdStmt->bind_param("s", $usuario_asignado);
+$getIdStmt->execute();
+$result = $getIdStmt->get_result();
+$row = $result->fetch_assoc();
+
+if (!$row) {
+    throw new Exception("No se pudo obtener el ID del usuario");
+}
+
+$id_usuario = $row['ID_Usuario'];
 
             // Si es técnico, insertar en tabla Tecnico
             if ($tipo === 'Tecnico' && $especialidad !== null) {
@@ -116,43 +123,60 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
         }
     }
-    public function login($usuario_asignado) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT u.*, t.especialidad FROM usuario u 
-                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+    /**
+ * Busca un usuario por su nombre de usuario para el login
+ * 
+ * @param string $usuario_asignado Nombre de usuario
+ * @return array|false Datos del usuario o false si no existe
+ */
+public function login($usuario_asignado) {
+    $conn = $this->db->getConnection();
+    
+    try {
+        // Buscar usuario por usuario_asignado
+        $sql = "SELECT u.*, t.Especialidad 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
                 WHERE u.usuario_asignado = ?";
+        
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $usuario_asignado);
         $stmt->execute();
         
         $result = $stmt->get_result();
         
-        if ($result->num_rows > 0) {
-            $usuario = $result->fetch_assoc();
-            if (isset($usuario['email'])) {
-                $usuario['email'] = CifradoHelper::desencriptar($usuario['email']);
-            }
-            if (isset($usuario['ci'])) {
-                $usuario['ci'] = CifradoHelper::desencriptar($usuario['ci']);
-            }
-            return $usuario;
+        if ($result->num_rows === 0) {
+            return false;
         }
         
+        $usuario = $result->fetch_assoc();
+        
+        // Desencriptar datos sensibles
+        if (isset($usuario['email'])) {
+            $usuario['email'] = CifradoHelper::desencriptar($usuario['email']);
+        }
+        if (isset($usuario['ci'])) {
+            $usuario['ci'] = CifradoHelper::desencriptar($usuario['ci']);
+        }
+        
+        return $usuario;
+        
+    } catch (Exception $e) {
+        error_log("Error en login: " . $e->getMessage());
         return false;
     }
+}
 
     public function registrarInicioSesion($userId, $usuarioAsignado, $contrasenaHash) {
         $conn = $this->db->getConnection();
         
         try {
-            $idSesion = $this->generateUUID($conn);
             
             // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
-            $sql = "INSERT INTO inicio_sesion (ID_Inicio_Sesion, ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
-                    VALUES (?, ?, ?, ?, NOW())";
+            $sql = "INSERT INTO inicio_sesion (ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
+                    VALUES ( ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssss", $idSesion, $userId, $usuarioAsignado, $contrasenaHash);
+            $stmt->bind_param("sss", $userId, $usuarioAsignado, $contrasenaHash);
             
             return $stmt->execute();
 
@@ -460,13 +484,12 @@ public function incrementarActividadesTecnico($idTecnico) {
         $conn = $this->db->getConnection();
         
         try {
-            $idActividad = $this->generateUUID($conn);
             
             // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
-            $sql = "INSERT INTO historial_actividades (ID_Historial_Actividades, ID_Usuario, descripcion, fecha_registro) 
-                    VALUES (?, ?, ?, NOW())";
+            $sql = "INSERT INTO historial_actividades ( ID_Usuario, descripcion, fecha_registro) 
+                    VALUES ( ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $idActividad, $idUsuario, $descripcion);
+            $stmt->bind_param("ss", $idUsuario, $descripcion);
             
             return $stmt->execute();
 
