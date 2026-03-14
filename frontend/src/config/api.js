@@ -1,10 +1,6 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD
-    ? ""
-    : "http://localhost:8000");
+const API_BASE_URL = "/api";
 export const API_ENDPOINTS = {
-  LOGIN: `/api/usuario/login`,
+  LOGIN: `/usuario/login`,
   REGISTER: `/usuario/register`,
   LOGOUT: `/usuario/logout`,
   USERS: `/api/administrador/usuarios`,
