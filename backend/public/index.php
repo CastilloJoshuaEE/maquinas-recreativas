@@ -4,6 +4,7 @@ $allowedOrigins = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:8000',
+    'https://recreasys.infinityfree.me'
 ];
 
 if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowedOrigins)) {
@@ -35,10 +36,7 @@ $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // Cuando usas php -S localhost:8000 -t public, la raíz es /, no /maquinas-recreativas/backend/public
 $basePath = ''; // Vacío porque el servidor PHP sirve desde la raíz
 
-// Si estás usando XAMPP, necesitas ajustar esto
-if (strpos($requestUri, '/maquinas-recreativas/backend/public') !== false) {
-    $basePath = '/maquinas-recreativas/backend/public';
-}
+$basePath = '/api/public';
 
 $apiRoute = str_replace($basePath, '', $requestUri);
 $apiRoute = str_replace('/index.php', '', $apiRoute);

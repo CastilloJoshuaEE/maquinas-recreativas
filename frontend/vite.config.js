@@ -5,12 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: {
-      "/api": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "/api"),
-      },
-    },
+    // Eliminar el proxy - ahora usamos URL directa
+    // El proxy estaba añadiendo /api a las peticiones
   },
 });

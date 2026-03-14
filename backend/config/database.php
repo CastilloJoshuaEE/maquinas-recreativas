@@ -1,9 +1,16 @@
 <?php
+$envPath = __DIR__ . '/../.env';
+
+if (!file_exists($envPath)) {
+    die("Archivo .env no encontrado");
+}
+
+$env = parse_ini_file($envPath);
 // Definición de constantes para la configuración de la base de datos
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'bd_recrea_sys');
+define('DB_HOST', $env['DB_HOST']);
+define('DB_USER', $env['DB_USER']);
+define('DB_PASS', $env['DB_PASS']);
+define('DB_NAME', $env['DB_NAME']);
 
 require_once __DIR__ . '/../helper/CifradoHelper.php';
 require_once __DIR__ . '/Inserter.php'; // Asegúrate de que la ruta sea correcta

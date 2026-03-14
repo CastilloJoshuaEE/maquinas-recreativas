@@ -5,7 +5,6 @@
  * solicitudes HTTP entrantes y las dirige a los
  * controladores adecuados.
  */
-
 // =============================================
 // INCLUIR CONTROLADORES
 // =============================================
@@ -23,11 +22,22 @@ require_once __DIR__ . '/controllers/ComponenteController.php';
 // FUNCIÓN PRINCIPAL DE ENRUTAMIENTO
 // =============================================
 function routeRequest($apiRoute, $requestMethod) {
+    // Depuración - quitar en producción
+    error_log("Ruta solicitada: " . $apiRoute . " Método: " . $requestMethod);
+    
     switch ($apiRoute) {
-        // --------------------------------
+          // ENDPOINT DE SALUD
+        case '/health':
+        echo json_encode([
+            "status" => "ok",
+            "message" => "Backend funcionando",
+            "time" => date("Y-m-d H:i:s")
+        ]);
+        break;    
+    // --------------------------------
         // ENDPOINTS DE USUARIO
         // --------------------------------
-        case '/api/usuario/register':
+        case '/usuario/register':
             if ($requestMethod === 'POST') {
                 $input = json_decode(file_get_contents('php://input'), true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -37,14 +47,15 @@ function routeRequest($apiRoute, $requestMethod) {
                 $controller->register();
             }
             break;
-        case '/api/usuario/buscar-email':
+            
+        case '/usuario/buscar-email':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $controller->buscarPorEmail();
             }
             break;
 
-        case '/api/usuario/login':
+        case '/usuario/login':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $controller->login();
@@ -54,7 +65,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case (preg_match('/\/api\/usuario\/profile\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/usuario\/profile\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new UsuarioController();
                 $controller->getProfile($matches[1]);
@@ -64,7 +75,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case (preg_match('/\/api\/usuario\/tecnicos\/(\w+)/', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/usuario\/tecnicos\/(\w+)/', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new UsuarioController();
                 $controller->obtenerTecnicos($matches[1]);
@@ -77,7 +88,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE COMERCIO
         // --------------------------------
-        case '/api/comercio/register':
+        case '/comercio/register':
             if ($requestMethod === 'POST') {
                 $controller = new ComercioController();
                 $controller->register();
@@ -87,7 +98,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/comercio/all':
+        case '/comercio/all':
             if ($requestMethod === 'GET') {
                 $controller = new ComercioController();
                 $controller->obtenerComercios();
@@ -100,7 +111,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE MÁQUINAS RECREATIVAS
         // --------------------------------
-        case '/api/maquina/register':
+        case '/maquina/register':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->register();
@@ -110,77 +121,77 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/maquina/mandar-comprobacion':
+        case '/maquina/mandar-comprobacion':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->mandarAComprobacion();
             }
             break;
 
-        case '/api/maquina/mandar-reensamblar':
+        case '/maquina/mandar-reensamblar':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->mandarAReensamblar();
             }
             break;
 
-        case '/api/maquina/mandar-distribucion':
+        case '/maquina/mandar-distribucion':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->mandarADistribucion();
             }
             break;
 
-        case '/api/maquina/poner-operativa':
+        case '/maquina/poner-operativa':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->ponerOperativa();
             }
             break;
 
-        case (preg_match('/\/api\/maquina\/ensamblador\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/maquina\/ensamblador\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new MaquinaController();
                 $controller->obtenerPorTecnicoEnsamblador($matches[1]);
             }
             break;
 
-        case (preg_match('/\/api\/maquina\/comprobador\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/maquina\/comprobador\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new MaquinaController();
                 $controller->obtenerPorTecnicoComprobador($matches[1]);
             }
             break;
 
-        case (preg_match('/\/api\/maquina\/mantenimiento\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/maquina\/mantenimiento\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new MaquinaController();
                 $controller->obtenerPorTecnicoMantenimiento($matches[1]);
             }
             break;
 
-        case '/api/maquina/dar-mantenimiento':
+        case '/maquina/dar-mantenimiento':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->darMantenimiento();
             }
             break;
 
-        case '/api/maquina/finalizar-mantenimiento':
+        case '/maquina/finalizar-mantenimiento':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->finalizarMantenimiento();
             }
             break;
 
-        case (preg_match('/\/api\/maquina\/estado\/(\w+)/', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/maquina\/estado\/(\w+)/', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new MaquinaController();
                 $controller->obtenerPorEstado($matches[1]);
             }
             break;
         
-        case (preg_match('/\/api\/maquina\/etapa\/(\w+)/', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/maquina\/etapa\/(\w+)/', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new MaquinaController();
                 $controller->obtenerPorEtapa($matches[1]);
@@ -190,34 +201,35 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE NOTIFICACIONES
         // --------------------------------
-        case (preg_match('/\/api\/notificaciones_maquina\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/notificaciones_maquina\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new NotificacionController();
                 $controller->obtenerPorUsuario($matches[1]);
             }
             break;
 
-        case (preg_match('/\/api\/notificaciones\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/notificaciones\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new NotificacionController();
                 $controller->getByUser($matches[1]);
             }
             break;
-        case '/api/notificaciones/create':
+            
+        case '/notificaciones/create':
             if ($requestMethod === 'POST') {
                 $controller = new NotificacionController();
                 $controller->create();
             }
             break;
 
-        case '/api/notificaciones/marcar-leida':
+        case '/notificaciones/marcar-leida':
             if ($requestMethod === 'POST') {
                 $controller = new NotificacionController();
                 $controller->marcarComoLeida();
             }
             break;
 
-        case (preg_match('/\/api\/notificaciones\/no-leidas\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/notificaciones\/no-leidas\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new NotificacionController();
                 $controller->obtenerNoLeidas($matches[1]);
@@ -227,7 +239,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // PERFIL DE USUARIO ENDPOINTS
         // --------------------------------
-        case '/api/usuario/perfil':
+        case '/usuario/perfil':
             if ($requestMethod === 'GET') {
                 $controller = new UsuarioController();
                 $id = isset($_GET['id']) ? $_GET['id'] : null;
@@ -235,13 +247,14 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case '/api/usuario/recuperar-contrasena':
+        case '/usuario/recuperar-contrasena':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $controller->resetPassword();
             }
             break;
-        case '/api/usuario/recuperar-usuario':
+            
+        case '/usuario/recuperar-usuario':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $controller->updateUsername();
@@ -251,7 +264,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case (preg_match('#^/api/administrador/usuarios/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+        case (preg_match('#^/administrador/usuarios/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
             $controller = new AdministradorController();
             $userId = $matches[1];
             
@@ -272,7 +285,7 @@ function routeRequest($apiRoute, $requestMethod) {
             break;
 
         // Luego la ruta SIN UUID
-        case '/api/administrador/usuarios':
+        case '/administrador/usuarios':
             $controller = new AdministradorController();
             if ($requestMethod === 'GET') {
                 $filters = $_GET;
@@ -286,7 +299,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/usuario/logout':
+        case '/usuario/logout':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $controller->logout();
@@ -296,7 +309,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/usuario/actualizar-perfil':
+        case '/usuario/actualizar-perfil':
             if ($requestMethod === 'POST') {
                 $controller = new UsuarioController();
                 $input = json_decode(file_get_contents('php://input'), true);
@@ -304,7 +317,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case '/api/usuarios/por-tipo':
+        case '/usuarios/por-tipo':
             if ($requestMethod === 'GET') {
                 $controller = new UsuarioController();
                 $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : null;
@@ -316,7 +329,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case '/api/historial-actividades':
+        case '/historial-actividades':
             session_start();
 
             if ($requestMethod === 'GET') {
@@ -332,7 +345,7 @@ function routeRequest($apiRoute, $requestMethod) {
                     echo json_encode(['success' => false, 'message' => 'ID de usuario no válido']);
                     break;
                 }
-                // Validar permiso si el rol es administrador
+                
                 if ($_SESSION['rol'] === 'Administrador') {
                     $controller = new AdministradorController();
                     $controller->obtenerHistorialActividades($usuarioId);
@@ -365,7 +378,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE REPORTES
         // --------------------------------
-        case '/api/reportes/crear':
+        case '/reportes/crear':
             if ($requestMethod === 'POST') {
                 (new ReporteController())->create();
             } else {
@@ -374,7 +387,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case (preg_match('#^/api/reportes/usuario/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/reportes/usuario/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'GET') {
                 (new ReporteController())->getByUser($m[1]);
             } else {
@@ -383,7 +396,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case (preg_match('#^/api/reportes/chat/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/reportes/chat/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'GET') {
                 (new ReporteController())->getChat($m[1], $m[2]);
             } else {
@@ -392,13 +405,13 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case (preg_match('#^/api/reportes/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/estado$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/reportes/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/estado$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'PUT') {
                 (new ReporteController())->updateStatus($m[1]);
             }
             break;
             
-        case '/api/reportes/usuarios-chat':
+        case '/reportes/usuarios-chat':
             if ($requestMethod === 'GET') {
                 $userId = $_GET['userId'] ?? null;
                 if (!$userId) {
@@ -410,7 +423,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case '/api/reportes/chat-completo':
+        case '/reportes/chat-completo':
             if ($requestMethod === 'GET') {
                 $emisorId = $_GET['emisorId'] ?? null;
                 $destinatarioId = $_GET['destinatarioId'] ?? null;
@@ -429,7 +442,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE COMENTARIOS
         // --------------------------------
-        case '/api/comentarios':
+        case '/comentarios':
             if ($requestMethod === 'POST') {
                 (new ComentarioController())->create();
             } else {
@@ -438,7 +451,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case (preg_match('#^/api/comentarios/reporte/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/comentarios/reporte/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'GET') {
                 (new ComentarioController())->getByReporte($m[1]);
             }
@@ -447,13 +460,13 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE LOGISTICA Y MANTENIMIENTO 
         // --------------------------------
-        case '/api/maquina/distribucion':
+        case '/maquina/distribucion':
             if ($requestMethod === 'GET') {
                 (new MaquinaController())->obtenerMaquinasParaDistribucion();
             }
             break;
 
-        case '/api/distribucion/informes':
+        case '/distribucion/informes':
             if ($requestMethod === 'GET') {
                 (new DistribucionController())->obtenerInformesDistribucion();
             }
@@ -462,7 +475,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE NOTIFICACIONES 
         // --------------------------------
-        case (preg_match('#^/api/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new NotificacionController();
                 $controller->getByUser($m[1]);
@@ -470,7 +483,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
    
-        case (preg_match('#^/api/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/marcarla-leida$#i', $apiRoute, $m) ? true : false):
+        case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/marcarla-leida$#i', $apiRoute, $m) ? true : false):
             if ($requestMethod === 'POST') {
                 (new NotificacionController())->marcarComoLeidaNotificacion($m[1]);
             } else {
@@ -479,7 +492,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/notificaciones/marcarla-todas-leidas':
+        case '/notificaciones/marcarla-todas-leidas':
             if ($requestMethod === 'POST') {
                 (new NotificacionController())->marcarTodasComoLeidas();
             } else {
@@ -491,7 +504,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE COMPONENTES
         // --------------------------------
-        case '/api/componentes':
+        case '/componentes':
             if ($requestMethod === 'GET') {
                 $controller = new ComponenteController();
                 $tipo = $_GET['tipo'] ?? null;
@@ -499,7 +512,7 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
             
-        case '/api/componentes/disponibles':
+        case '/componentes/disponibles':
             if ($requestMethod === 'GET') {
                 $controller = new ComponenteController();
                 $tipo = $_GET['tipo'] ?? null;
@@ -507,42 +520,42 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/maquina/generar-placa':
+        case '/maquina/generar-placa':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->generarPlaca();
             }
             break;
             
-        case '/api/componentes/usar':
+        case '/componentes/usar':
             if ($requestMethod === 'POST') {
                 $controller = new ComponenteController();
                 $controller->usarComponente();
             }
             break;
 
-        case '/api/componentes/liberar':
+        case '/componentes/liberar':
             if ($requestMethod === 'POST') {
                 $controller = new ComponenteController();
                 $controller->liberarComponente();
             }
             break;
             
-        case '/api/componentes/asignar-carcasa':
+        case '/componentes/asignar-carcasa':
             if ($requestMethod === 'POST') {
                 $controller = new ComponenteController();
                 $controller->asignarCarcasa();
             }
             break;
             
-        case (preg_match('/\/api\/componentes\/en-uso\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+        case (preg_match('/\/componentes\/en-uso\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 $controller = new ComponenteController();
                 $controller->obtenerComponentesEnUso($matches[1]);
             }
             break;
             
-        case '/api/componentes/liberar-cancelacion':
+        case '/componentes/liberar-cancelacion':
             if ($requestMethod === 'POST') {
                 $controller = new ComponenteController();
                 $controller->liberarComponentesCancelacion();
@@ -552,7 +565,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         // ENDPOINTS DE INFORMES DE CONTABILIDAD
         // --------------------------------
-        case '/api/contabilidad/registrar-recaudacion':
+        case '/contabilidad/registrar-recaudacion':
             if ($requestMethod === 'POST') {
                 (new InformeController())->registrarRecaudacion();
             } else {
@@ -561,85 +574,78 @@ function routeRequest($apiRoute, $requestMethod) {
             }
             break;
 
-        case '/api/contabilidad/recaudaciones':
+        case '/contabilidad/recaudaciones':
             if ($requestMethod === 'GET') {
                 (new InformeController())->obtenerRecaudaciones();
             }
             break;
 
-        case '/api/contabilidad/resumen-recaudaciones':
+        case '/contabilidad/resumen-recaudaciones':
             if ($requestMethod === 'GET') {
                 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 2;
                 (new InformeController())->obtenerResumenRecaudaciones($limit);
             }
             break;
 
-        case '/api/contabilidad/actualizar-recaudacion':
+        case '/contabilidad/actualizar-recaudacion':
             if ($requestMethod === 'PUT') {
                 (new InformeController())->actualizarRecaudacion();
             }
             break;
 
-        case (preg_match('#^/api/contabilidad/eliminar-recaudacion/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+        case (preg_match('#^/contabilidad/eliminar-recaudacion/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'DELETE') {
                 (new InformeController())->eliminarRecaudacion($matches[1]);
             }
             break;
 
-        case '/api/contabilidad/maquinas-recaudacion':
+        case '/contabilidad/maquinas-recaudacion':
             if ($requestMethod === 'GET') {
                 (new InformeController())->obtenerMaquinasRecaudacion();
             }
             break;
             
-        case '/api/contabilidad/maquinas-operativas-por-comercio':
+        case '/contabilidad/maquinas-operativas-por-comercio':
             if ($requestMethod === 'GET' && isset($_GET['ID_Comercio'])) {
                 (new InformeController())->obtenerMaquinasOperativasPorComercio();
             }
             break;
-            /*
-        case (preg_match('#^/api/maquina/componentes/([a-f0-9\-]{36})$#i', $apiRoute, $matches) ? true : false):
 
-            if ($requestMethod === 'GET') {
-                (new MaquinaController())->obtenerComponentesMaquina($matches[1]);
-            }
-            break;
-            */
-        case (preg_match('#^/api/maquina/componentes/([a-f0-9\-]{36})$#i', $apiRoute, $matches) ? true : false):
-
+        case (preg_match('#^/maquina/componentes/([a-f0-9\-]{36})$#i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 (new MaquinaController())->obtenerComponentesPorMaquina($matches[1]);
             }
             break;
-        case '/api/contabilidad/guardar-informe':
+            
+        case '/contabilidad/guardar-informe':
             if ($requestMethod === 'POST') {
                 (new InformeController())->guardarInforme();
             }
             break;
+            
         // Obtener recaudación específica
-        case (preg_match('#^/api/contabilidad/recaudaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+        case (preg_match('#^/contabilidad/recaudaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 (new InformeController())->obtenerRecaudacion($matches[1]);
             }
             break;
 
         // Obtener máquina
-        case '/api/contabilidad/maquina-recaudacion':
+        case '/contabilidad/maquina-recaudacion':
             if ($requestMethod === 'GET') {
                 (new InformeController())->obtenerMaquinaRecaudacion();
             }
             break;
 
         // Obtener comercio
-        case (preg_match('#^/api/contabilidad/comercio-recaudacion/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+        case (preg_match('#^/contabilidad/comercio-recaudacion/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
                 (new InformeController())->obtenerComercioRecaudacion($matches[1]);
             }
             break;
 
-            
         // ENDPOINT DE MONTAJE
-        case '/api/maquina/registrar-montaje':
+        case '/maquina/registrar-montaje':
             if ($requestMethod === 'POST') {
                 $controller = new MaquinaController();
                 $controller->registrarMontaje();
@@ -651,7 +657,7 @@ function routeRequest($apiRoute, $requestMethod) {
         // --------------------------------
         default:
             http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Endpoint no encontrado']);
+            echo json_encode(['success' => false, 'message' => 'Endpoint no encontrado: ' . $apiRoute]);
             break;
     }
 }

@@ -1,0 +1,3 @@
+.env
+.env.production
+.usuarios_iniciales.lock

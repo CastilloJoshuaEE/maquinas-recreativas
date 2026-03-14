@@ -68,7 +68,6 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
 
             $id_usuario = $this->generateUUID($conn);
             
-            // CORRECCIÓN: Eliminado fecha_registro
             $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Activo')";
             $stmt = $conn->prepare($sql);
@@ -149,7 +148,8 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         try {
             $idSesion = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO sesiones_usuario (ID_Sesion, ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
+            // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
+            $sql = "INSERT INTO inicio_sesion (ID_Inicio_Sesion, ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
                     VALUES (?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssss", $idSesion, $userId, $usuarioAsignado, $contrasenaHash);
@@ -165,8 +165,9 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
     public function registrarLogout($userId) {
         $conn = $this->db->getConnection();
         
-        $sql = "UPDATE sesiones_usuario SET fecha_fin = NOW() 
-                WHERE ID_Usuario = ? AND fecha_fin IS NULL 
+        // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion'
+        $sql = "UPDATE inicio_sesion SET fecha_ultima_sesion = NOW() 
+                WHERE ID_Usuario = ? AND fecha_ultima_sesion IS NULL 
                 ORDER BY fecha_inicio DESC LIMIT 1";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $userId);
@@ -187,10 +188,11 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         return $row['estado'] ?? null;
     }
 
-    public function incrementarActividadesTecnico($idTecnico) {
+public function incrementarActividadesTecnico($idTecnico) {
         $conn = $this->db->getConnection();
         
-        $sql = "UPDATE tecnico SET actividades_realizadas = actividades_realizadas + 1 
+        // CORRECCIÓN: Usar el nombre correcto de la columna 'Cantidad_Actividades'
+        $sql = "UPDATE Tecnico SET Cantidad_Actividades = Cantidad_Actividades + 1 
                 WHERE ID_Tecnico = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $idTecnico);
@@ -201,8 +203,8 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
     public function obtenerUsuarioPorId($id) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT u.*, t.especialidad FROM usuario u 
-                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+        $sql = "SELECT u.*, t.Especialidad FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
                 WHERE u.ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $id);
@@ -280,9 +282,9 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             }
 
             // Actualizar especialidad si es técnico
-            if ($data['tipo'] === 'tecnico') {
-                // Verificar si ya existe en tabla tecnico
-                $checkSql = "SELECT ID_Tecnico FROM tecnico WHERE ID_Tecnico = ?";
+            if ($data['tipo'] === 'Tecnico') {
+                // Verificar si ya existe en tabla Tecnico
+                $checkSql = "SELECT ID_Tecnico FROM Tecnico WHERE ID_Tecnico = ?";
                 $checkStmt = $conn->prepare($checkSql);
                 $checkStmt->bind_param("s", $idUsuario);
                 $checkStmt->execute();
@@ -290,22 +292,22 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
 
                 if ($checkResult->num_rows > 0) {
                     if ($especialidad !== null) {
-                        $updateTecSql = "UPDATE tecnico SET especialidad = ? WHERE ID_Tecnico = ?";
+                        $updateTecSql = "UPDATE Tecnico SET Especialidad = ? WHERE ID_Tecnico = ?";
                         $updateTecStmt = $conn->prepare($updateTecSql);
                         $updateTecStmt->bind_param("ss", $especialidad, $idUsuario);
                         $updateTecStmt->execute();
                     }
                 } else {
                     if ($especialidad !== null) {
-                        $insertTecSql = "INSERT INTO tecnico (ID_Tecnico, especialidad) VALUES (?, ?)";
+                        $insertTecSql = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
                         $insertTecStmt = $conn->prepare($insertTecSql);
                         $insertTecStmt->bind_param("ss", $idUsuario, $especialidad);
                         $insertTecStmt->execute();
                     }
                 }
             } else {
-                // Si ya no es técnico, eliminar de tabla tecnico
-                $deleteTecSql = "DELETE FROM tecnico WHERE ID_Tecnico = ?";
+                // Si ya no es técnico, eliminar de tabla Tecnico
+                $deleteTecSql = "DELETE FROM Tecnico WHERE ID_Tecnico = ?";
                 $deleteTecStmt = $conn->prepare($deleteTecSql);
                 $deleteTecStmt->bind_param("s", $idUsuario);
                 $deleteTecStmt->execute();
@@ -383,15 +385,15 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
     public function obtenerTecnicosPorEspecialidad($especialidad, $soloActivos = true) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT u.*, t.especialidad 
+        $sql = "SELECT u.*, t.Especialidad 
                 FROM usuario u
-                JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                WHERE t.especialidad = ?";
+                JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                WHERE t.Especialidad = ?";
         $params = [$especialidad];
         $types = "s";
 
         if ($soloActivos) {
-            $sql .= " AND u.estado = 'activo'";
+            $sql .= " AND u.estado = 'Activo'";
         }
 
         $sql .= " ORDER BY u.nombre ASC";
@@ -419,8 +421,8 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
     public function obtenerUsuariosPorTipo($tipo, $excluirId = null) {
         $conn = $this->db->getConnection();
 
-        $sql = "SELECT u.*, t.especialidad FROM usuario u 
-                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
+        $sql = "SELECT u.*, t.Especialidad FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
                 WHERE u.tipo = ?";
         $params = [$tipo];
         $types = "s";
@@ -453,13 +455,15 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         return $usuarios;
     }
 
-    public function registrarActividad($idUsuario, $descripcion) {
+
+     public function registrarActividad($idUsuario, $descripcion) {
         $conn = $this->db->getConnection();
         
         try {
             $idActividad = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO actividad_usuario (ID_Actividad, ID_Usuario, descripcion, fecha) 
+            // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+            $sql = "INSERT INTO historial_actividades (ID_Historial_Actividades, ID_Usuario, descripcion, fecha_registro) 
                     VALUES (?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("sss", $idActividad, $idUsuario, $descripcion);
@@ -475,9 +479,10 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
     public function obtenerHistorialActividades($usuarioId) {
         $conn = $this->db->getConnection();
         
-        $sql = "SELECT * FROM actividad_usuario 
+        // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+        $sql = "SELECT * FROM historial_actividades 
                 WHERE ID_Usuario = ? 
-                ORDER BY fecha DESC 
+                ORDER BY fecha_registro DESC 
                 LIMIT 50";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $usuarioId);
@@ -497,8 +502,8 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         $conn = $this->db->getConnection();
         $emailEncriptado = CifradoHelper::encriptar($email);
 
-        $sql = "SELECT u.*, t.especialidad FROM usuario u 
-                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
+        $sql = "SELECT u.*, t.Especialidad FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
                 WHERE u.email = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $emailEncriptado);
@@ -514,6 +519,5 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
 
         return ['success' => false, 'message' => 'Usuario no encontrado'];
     }
-
 }
 ?>
