@@ -34,6 +34,13 @@ function routeRequest($apiRoute, $requestMethod) {
             "time" => date("Y-m-d H:i:s")
         ]);
         break;    
+        case '/test-db':
+    $db = new Database();
+    echo json_encode([
+        "success" => true,
+        "message" => "Conexión a DB exitosa"
+    ]);
+break;
     // --------------------------------
         // ENDPOINTS DE USUARIO
         // --------------------------------
