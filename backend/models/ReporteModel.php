@@ -9,35 +9,69 @@ class ReporteModel {
         $this->db = new Database();
     }
 
+    private function generateUUID($conn) {
+        $sql = "SELECT UUID() as uuid";
+        $result = $conn->query($sql);
+        $row = $result->fetch_assoc();
+        return $row['uuid'];
+    }
+
     public function crearReporte($emisorId, $destinatarioId, $descripcion) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_crear_reporte(?, ?, ?, @p_id_reporte)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $emisorId, $destinatarioId, $descripcion);
-        
-        if ($stmt->execute()) {
-            $result = $conn->query("SELECT @p_id_reporte as id");
-            $row = $result->fetch_assoc();
-            return $row['id'];
+        try {
+            // Verificar que los usuarios existen
+            $checkEmisor = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$emisorId'");
+            if ($checkEmisor->num_rows == 0) {
+                throw new Exception("El usuario emisor no existe");
+            }
+            
+            if ($destinatarioId) {
+                $checkDestinatario = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$destinatarioId'");
+                if ($checkDestinatario->num_rows == 0) {
+                    throw new Exception("El usuario destinatario no existe");
+                }
+            }
+
+            $idReporte = $this->generateUUID($conn);
+            
+            $sql = "INSERT INTO reporte (ID_Reporte, ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado) 
+                    VALUES (?, ?, ?, ?, NOW(), 'Pendiente')";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssss", $idReporte, $emisorId, $destinatarioId, $descripcion);
+            
+            if ($stmt->execute()) {
+                return $idReporte;
+            }
+            
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error en crearReporte: " . $e->getMessage());
+            return false;
         }
-        
-        return false;
     }
 
     public function obtenerReportesPorUsuario($userId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_reportes_por_usuario(?)";
+        // CORRECCIÓN: Usar los nombres correctos de columnas
+        $sql = "SELECT r.*, 
+                       e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
+                       d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
+                FROM reporte r
+                JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
+                LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario
+                WHERE r.ID_Usuario_Emisor = ? OR r.ID_Usuario_Destinatario = ?
+                ORDER BY r.fecha_hora DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $userId);
+        $stmt->bind_param("ss", $userId, $userId);
         $stmt->execute();
         
         $result = $stmt->get_result();
         $reportes = [];
         
         while ($row = $result->fetch_assoc()) {
-            // Decrypt emails if they exist
             if (isset($row['emisor_email'])) {
                 $row['emisor_email'] = CifradoHelper::desencriptar($row['emisor_email']);
             }
@@ -53,7 +87,13 @@ class ReporteModel {
     public function obtenerReportePorId($reporteId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_reporte_por_id(?)";
+        $sql = "SELECT r.*, 
+                       e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
+                       d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
+                FROM reporte r
+                JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
+                LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario
+                WHERE r.ID_Reporte = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $reporteId);
         $stmt->execute();
@@ -62,7 +102,6 @@ class ReporteModel {
         $reporte = $result->fetch_assoc();
         
         if ($reporte) {
-            // Decrypt emails if they exist
             if (isset($reporte['emisor_email'])) {
                 $reporte['emisor_email'] = CifradoHelper::desencriptar($reporte['emisor_email']);
             }
@@ -77,9 +116,9 @@ class ReporteModel {
     public function actualizarEstadoReporte($reporteId, $estado) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_actualizar_estado_reporte(?, ?)";
+        $sql = "UPDATE reporte SET estado = ? WHERE ID_Reporte = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $reporteId, $estado);
+        $stmt->bind_param("ss", $estado, $reporteId);
         
         return $stmt->execute();
     }
@@ -87,16 +126,23 @@ class ReporteModel {
     public function obtenerChat($emisorId, $destinatarioId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_chat(?, ?)";
+        $sql = "SELECT r.*, 
+                       e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
+                       d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
+                FROM reporte r
+                JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
+                LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario
+                WHERE (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
+                   OR (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
+                ORDER BY r.fecha_hora ASC";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $emisorId, $destinatarioId);
+        $stmt->bind_param("ssss", $emisorId, $destinatarioId, $destinatarioId, $emisorId);
         $stmt->execute();
         
         $result = $stmt->get_result();
         $reportes = [];
         
         while ($row = $result->fetch_assoc()) {
-            // Decrypt emails if they exist
             if (isset($row['emisor_email'])) {
                 $row['emisor_email'] = CifradoHelper::desencriptar($row['emisor_email']);
             }
@@ -112,16 +158,22 @@ class ReporteModel {
     public function obtenerUsuariosChat($userId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_usuarios_chat(?)";
+        $sql = "SELECT DISTINCT u.* FROM usuario u
+                WHERE u.ID_Usuario IN (
+                    SELECT DISTINCT ID_Usuario_Emisor FROM reporte WHERE ID_Usuario_Destinatario = ?
+                    UNION
+                    SELECT DISTINCT ID_Usuario_Destinatario FROM reporte WHERE ID_Usuario_Emisor = ?
+                )
+                AND u.ID_Usuario != ?
+                ORDER BY u.nombre ASC";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $userId);
+        $stmt->bind_param("sss", $userId, $userId, $userId);
         $stmt->execute();
         
         $result = $stmt->get_result();
         $usuarios = [];
         
         while ($row = $result->fetch_assoc()) {
-            // Decrypt email if it exists
             if (isset($row['email'])) {
                 $row['email'] = CifradoHelper::desencriptar($row['email']);
             }

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="bootstrap.php">
+<phpunit bootstrap="bootstrap.php" colors="true">
   <testsuites>
     <testsuite name="Unit Tests">
       <directory>./Unit</directory>
     </testsuite>
-      <testsuite name="Integration Tests">
+    <testsuite name="Integration Tests">
       <directory>./Integration</directory>
     </testsuite>
   </testsuites>
+  <php>
+    <ini name="display_errors" value="1"/>
+    <ini name="error_reporting" value="E_ALL &amp; ~E_DEPRECATED"/>
+  </php>
 </phpunit>

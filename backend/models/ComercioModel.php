@@ -8,17 +8,31 @@ class ComercioModel {
         $this->db = new Database();
     }
 
+    private function generateUUID($conn) {
+        $sql = "SELECT UUID() as uuid";
+        $result = $conn->query($sql);
+        $row = $result->fetch_assoc();
+        return $row['uuid'];
+    }
+
     public function registrarComercio($nombre, $tipo, $direccion, $telefono) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_registrar_comercio(?, ?, ?, ?, @id_comercio)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssss", $nombre, $tipo, $direccion, $telefono);
-        
-        if ($stmt->execute()) {
-            $result = $conn->query("SELECT @id_comercio as id");
-            return $result->fetch_assoc()['id'];
-        } else {
+        try {
+            $idComercio = $this->generateUUID($conn);
+            
+            $sql = "INSERT INTO comercio (ID_Comercio, nombre, tipo, direccion, telefono, Cantidad_Maquinas) 
+                    VALUES (?, ?, ?, ?, ?, 0)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssss", $idComercio, $nombre, $tipo, $direccion, $telefono);
+            
+            if ($stmt->execute()) {
+                return $idComercio;
+            }
+            return false;
+
+        } catch (Exception $e) {
+            error_log("Error en registrarComercio: " . $e->getMessage());
             return false;
         }
     }
@@ -26,7 +40,7 @@ class ComercioModel {
     public function obtenerComercios() {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_comercios()";
+        $sql = "SELECT * FROM comercio ORDER BY nombre ASC";
         $result = $conn->query($sql);
         $comercios = [];
         
@@ -40,26 +54,26 @@ class ComercioModel {
     public function obtenerComercioPorId($id) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_comercio_por_id(?)";
+        $sql = "SELECT * FROM comercio WHERE ID_Comercio = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $id); // Changed from "i" to "s" for UUID
+        $stmt->bind_param("s", $id);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($result->num_rows > 0) {
             return $result->fetch_assoc();
-        } else {
-            return false;
         }
+        return false;
     }
 
     public function incrementarMaquinasComercio($idComercio) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_incrementar_maquinas_comercio(?)";
+        $sql = "UPDATE comercio SET Cantidad_Maquinas= Cantidad_Maquinas+ 1 WHERE ID_Comercio = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $idComercio); // Changed from "i" to "s" for UUID
+        $stmt->bind_param("s", $idComercio);
         
         return $stmt->execute();
     }
 }
+?>

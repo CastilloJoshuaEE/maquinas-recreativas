@@ -31,40 +31,29 @@ class UsuarioModelTest extends TestCase {
         $conn->query("DELETE FROM usuario WHERE email = 'jean@admin.com'");
     }
 
-    /***********************/
-    // PRUEBAS UNITARIAS
-    /**********************/
-
-    // PRUEBAS PARA EL MÉTODO registrarUsuario()
-
     /**
      * CP-001
      * Prueba el registro exitoso de un usuario de tipo Administrador.
      * Verifica que: Se crea correctamente en la tabla usuario.
      */
-    public function testRegistrarUsuarioAdministrador() {
-        // 1. Ejecutar el método a probar con datos de prueba
+     public function testRegistrarUsuarioAdministrador() {
         $userId = $this->model->registrarUsuario(
-            'Jean',            // nombre
-            'Castro',          // apellido
-            '0909090909',      // ci
-            'jean@test.com',   // email
-            'jean',            // usuario_asignado
-            '12345678',        // contrasena
-            'Administrador'    // tipo
+            'Jean',
+            'Castro',
+            '0909090909',
+            'jean@test.com',
+            'jean',
+            '12345678',
+            'Administrador'
         );
         
-        // 2. Verificar que devuelve un ID válido:
-        $this->assertIsInt($userId);
+        $this->assertIsString($userId);
+        $this->assertNotEmpty($userId);
         
-        // Obtener conexión para verificar en la BD:
         $conn = self::$testDb->getConnection();
-        
-        // 3. Verificar que existe en la tabla usuario:
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se creó en la tabla usuario');
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
     }
-    
     /**
      * CP-002
      * Prueba el registro exitoso de un usuario de tipo Logistica.
@@ -72,31 +61,27 @@ class UsuarioModelTest extends TestCase {
      * 1. Se crea correctamente en la tabla usuario.
      * 2. Se registra en la tabla Logistica.
      */
-    public function testRegistrarUsuarioLogistica() {
-        // 1. Ejecutar el método a probar con datos de prueba:
+   public function testRegistrarUsuarioLogistica() {
         $userId = $this->model->registrarUsuario(
-            'Edú',          // nombre
-            'Sabando',      // apellido
-            '1316789914',   // ci
-            'esb@test.com', // email
-            'esb',          // usuario_asignado
-            '12345678',     // contrasena
-            'Logistica'     // tipo
+            'Edú',
+            'Sabando',
+            '1316789914',
+            'esb@test.com',
+            'esb',
+            '12345678',
+            'Logistica'
         );
         
-        // 2. Verificar que devuelve un ID válido:
-        $this->assertIsInt($userId);
+        $this->assertIsString($userId);
+        $this->assertNotEmpty($userId);
         
-        // Obtener conexión para verificar en la BD:
         $conn = self::$testDb->getConnection();
         
-        // 3. Verificar que existe en la tabla usuario:
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se creó en la tabla usuario');
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
         
-        // 4. Verificar que existe en la tabla Logistica:
-        $result = $conn->query("SELECT * FROM Logistica WHERE ID_Logistica = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se registró en Logistica');
+        $result = $conn->query("SELECT * FROM Logistica WHERE ID_Logistica = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
     }
     
     /**
@@ -106,36 +91,32 @@ class UsuarioModelTest extends TestCase {
      * 1. Se crea correctamente en la tabla usuario.
      * 2. Se registra en la tabla Tecnico con la especialidad correcta.
      */
+     
     public function testRegistrarUsuarioTecnicoEnsamblador() {
-        // 1. Ejecutar el método a probar con datos de prueba
         $userId = $this->model->registrarUsuario(
-            'Joshúa',          // nombre
-            'Castillo',        // apellido
-            '0808080808',      // ci
-            'joshua@test.com', // email
-            'joshua',          // usuario_asignado
-            '12345678',        // contrasena
-            'Tecnico',         // tipo
-            'Ensamblador'      // Especialidad
+            'Joshúa',
+            'Castillo',
+            '0808080808',
+            'joshua@test.com',
+            'joshua',
+            '12345678',
+            'Tecnico',
+            'Ensamblador'
         );
         
-        // 2. Verificar que devuelve un ID válido:
-        $this->assertIsInt($userId);
+        $this->assertIsString($userId);
+        $this->assertNotEmpty($userId);
         
-        // Obtener conexión para verificar en la BD:
         $conn = self::$testDb->getConnection();
         
-        // 3. Verificar que existe en la tabla usuario:
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se creó en la tabla usuario');
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
         
-        // 4. Verificar que existe en la tabla Tecnico con la especialidad correcta:
-        $result = $conn->query("SELECT * FROM Tecnico WHERE ID_Tecnico = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se registró en Tecnico');
+        $result = $conn->query("SELECT * FROM Tecnico WHERE ID_Tecnico = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
         
-        // 5. Verificar la especialidad:
         $row = $result->fetch_assoc();
-        $this->assertEquals('Ensamblador', $row['Especialidad'], 'La especialidad no coincide');
+        $this->assertEquals('Ensamblador', $row['Especialidad']);
     }
 
     /**
@@ -143,27 +124,23 @@ class UsuarioModelTest extends TestCase {
      * Prueba el registro exitoso de un usuario de tipo Contabilidad.
      * Verifica que: Se crea correctamente en la tabla usuario.
      */
-    public function testRegistrarUsuarioContabilidad() {
-        // 1. Ejecutar el método a probar con datos de prueba
+        public function testRegistrarUsuarioContabilidad() {
         $userId = $this->model->registrarUsuario(
-            'Joel',            // nombre
-            'Gabino',          // apellido
-            '0707070707',      // ci
-            'joel@test.com',   // email
-            'joel',            // usuario_asignado
-            '12345678',        // contrasena
-            'Contabilidad'     // tipo
+            'Joel',
+            'Gabino',
+            '0707070707',
+            'joel@test.com',
+            'joel',
+            '12345678',
+            'Contabilidad'
         );
         
-        // 2. Verificar que devuelve un ID válido:
-        $this->assertIsInt($userId);
+        $this->assertIsString($userId);
+        $this->assertNotEmpty($userId);
         
-        // Obtener conexión para verificar en la BD:
         $conn = self::$testDb->getConnection();
-        
-        // 3. Verificar que existe en la tabla usuario:
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = $userId");
-        $this->assertEquals(1, $result->num_rows, 'El usuario no se creó en la tabla usuario');
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $this->assertEquals(1, $result->num_rows);
     }
 
     /**
@@ -172,19 +149,31 @@ class UsuarioModelTest extends TestCase {
      * Verifica que: userId devuelve false.
      */
     public function testRegistrarUsuarioAdministradorFallido() {
-        // 1. Ejecutar el método a probar con datos existente:
+        // Primero registrar un usuario
         $userId = $this->model->registrarUsuario(
-            'Jean',            // nombre
-            'Castro',          // apellido
-            '0909090909',      // ci
-            'jean@test.com',   // email
-            'jean',            // usuario_asignado
-            '12345678',        // contrasena
-            'Administrador'    // tipo
+            'Jean',
+            'Castro',
+            '0909090909',
+            'jean@test.com',
+            'jean',
+            '12345678',
+            'Administrador'
         );
         
-        // 2. Verificar que devuelve un false:
-        $this->assertFalse($userId);
+        // Intentar registrar el mismo usuario
+        $result = $this->model->registrarUsuario(
+            'Jean',
+            'Castro',
+            '0909090909',
+            'jean@test.com',
+            'jean',
+            '12345678',
+            'Administrador'
+        );
+        
+        $this->assertIsArray($result);
+        $this->assertFalse($result['success']);
+        $this->assertEquals('El correo electrónico ya está registrado', $result['message']);
     }
     
     /*
