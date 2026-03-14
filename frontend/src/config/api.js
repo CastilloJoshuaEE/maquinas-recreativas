@@ -4,10 +4,10 @@ const API_BASE_URL =
     ? ""
     : "http://localhost:8000");
 export const API_ENDPOINTS = {
-  LOGIN: `/usuario/login`,
+  LOGIN: `/api/usuario/login`,
   REGISTER: `/usuario/register`,
   LOGOUT: `/usuario/logout`,
-  USERS: `/administrador/usuarios`,
+  USERS: `/api/administrador/usuarios`,
   USER_PROFILE: (id) => `/usuario/profile/${id}`,
   NOTIFICACIONES: (id) => `/notificaciones_maquina/${id}`,
   MAQUINAS_ENSAMBLADOR: (id) => `/maquina/ensamblador/${id}`,
