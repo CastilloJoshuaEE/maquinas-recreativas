@@ -1,47 +1,53 @@
 <?php
-// Permitir el origen específico del frontend
+// ---------------------------
+// CONFIGURACIÓN CORS
+// ---------------------------
 $allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:8000',
-'https://prototipo-maquinas.vercel.app'
+    'https://prototipo-maquinas.vercel.app'
 ];
 
-if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowedOrigins)) {
-    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: " . $origin);
 }
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept");
+header("Content-Type: application/json");
 
+// ---------------------------
+// RESPONDER PRE-FLIGHT OPTIONS
+// ---------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
+    http_response_code(204);
     exit();
 }
 
-header("Content-Type: application/json");
+// ---------------------------
+// ENRUTAMIENTO
+// ---------------------------
 
-/**
- * Procesamiento de la URL
- */
+// Obtener la ruta de la solicitud
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// CORRECCIÓN: La ruta base depende de cómo se ejecuta el servidor
-// Cuando usas php -S localhost:8000 -t public, la raíz es /, no /maquinas-recreativas/backend/public
-$basePath = ''; // Vacío porque el servidor PHP sirve desde la raíz
-
+// Ajusta la base de tu API según el despliegue
+// Por ejemplo, en InfinityFree: https://tu-dominio.com/api/public/...
 $basePath = '/api/public';
-
 $apiRoute = str_replace($basePath, '', $requestUri);
 $apiRoute = str_replace('/index.php', '', $apiRoute);
 
-// Si la ruta está vacía, establecer como '/'
+// Si la ruta queda vacía, poner "/"
 if (empty($apiRoute)) {
     $apiRoute = '/';
 }
 
-// CORRECCIÓN: Usar __DIR__ para construir la ruta absoluta
+// ---------------------------
+// CARGAR ROUTES
+// ---------------------------
 $routesFile = __DIR__ . '/../routes.php';
-
 if (!file_exists($routesFile)) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Archivo routes.php no encontrado: ' . $routesFile]);
@@ -49,4 +55,8 @@ if (!file_exists($routesFile)) {
 }
 
 require $routesFile;
+
+// ---------------------------
+// EJECUTAR RUTA
+// ---------------------------
 routeRequest($apiRoute, $_SERVER['REQUEST_METHOD']);
