@@ -59,7 +59,7 @@ export default function Login() {
     }
 
     try {
-      const { response, data } = await api.post('/usuario/login', {
+      const { response, data } = await api.post('/api/usuario/login', {
         usuario_asignado: formData.usuario_asignado.trim(),
         contrasena: formData.contrasena,
       });
