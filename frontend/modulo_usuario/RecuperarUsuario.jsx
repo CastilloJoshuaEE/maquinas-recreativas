@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../css/modulo_usuario/recuperacion.css";
-// Permite a los usuarios recuperar su nombre de usuario asignado a través de su correo electrónico registrado. 
-// El formulario solicita un correo electrónico y un nuevo nombre de usuario, y luego realiza una solicitud a una API para actualizar la información en el servidor.
+import api from '../src/utils/api';
+
 export default function RecuperarUsuario() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -14,23 +14,11 @@ export default function RecuperarUsuario() {
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             
-            const response = await fetch('/api/usuario/recuperar-usuario', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: data.correo,
-                    usuario_asignado: data.nuevo_usuario
-                })
+            const { response, data: result } = await api.post('/usuario/recuperar-usuario', {
+                email: data.correo,
+                usuario_asignado: data.nuevo_usuario
             });
 
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                throw new Error(`Respuesta inesperada del servidor: ${text}`);
-            }
-
-            const result = await response.json();
-            
             if (!response.ok) {
                 throw new Error(result.message || 'Error en la respuesta del servidor');
             }

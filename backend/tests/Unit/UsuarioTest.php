@@ -54,13 +54,13 @@ class UsuarioTest extends TestCase {
         $this->expectExceptionCode(1200);
 
         $this->usuarioModel->registrarUsuario(
-            'Edú',                  // nombre
-            'Barberan',             // apellido 
-            '0016789914',           // ci
-            'esbsabando@gmail.com',  // email
-            'esbbarberan',          // usuario_asignado
-            '1234',                 // contraseña corta
-            'Contabilidad'          // tipo
+            'Edú',
+            'Barberan',
+            '0016789914',
+            'esbsabando@gmail.com',
+            'esbbarberan',
+            '1234',
+            'Contabilidad'
         );
     }
     /**
@@ -69,8 +69,10 @@ class UsuarioTest extends TestCase {
      * Debe fallar exitosamente cuando se encuentra un usuario con dependencias muy fuertes como lo son los tecnicos
      * Debe esperarse un: OK (3 tests, 6 assertions)
      */
-    public function testEliminarUsuarioConDependencias() {
-        // Crear un comercio de prueba
+     public function testEliminarUsuarioConDependencias() {
+        $conn = self::$testDb->getConnection();
+        
+        // Crear comercio
         $idComercio = $this->comercioModel->registrarComercio(
             "Comercio Test",
             "Minorista",
@@ -78,7 +80,8 @@ class UsuarioTest extends TestCase {
             "0999999999"
         );
 
-        $this->assertIsInt($idComercio);
+        $this->assertIsString($idComercio);
+        $this->assertNotEmpty($idComercio);
 
         // Crear usuario técnico ensamblador
         $idUsuarioEnsamblador = $this->administradorModel->registrarUsuarioAdmin([
@@ -106,7 +109,7 @@ class UsuarioTest extends TestCase {
             'especialidad' => 'Comprobador'
         ]);
 
-        // Registrar máquina asignada al técnico
+        // Registrar máquina
         $idMaquina = $this->maquinaModel->registrarMaquina(
             'Máquina de prueba',
             'Tipo prueba',
@@ -115,16 +118,10 @@ class UsuarioTest extends TestCase {
             $idComercio
         );
 
-        // Esperamos que se lance la excepción
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se puede eliminar el usuario porque tiene máquinas asignadas');
         
-        // Intentar eliminar el usuario (debería lanzar excepción)
         $this->administradorModel->eliminarUsuario($idUsuarioEnsamblador);
-        
-        // Verificar que aún existe en BD (esto no se ejecutará si se lanzó la excepción)
-        $usuarioRegistrado = $this->usuarioModel->obtenerUsuarioPorId($idUsuarioEnsamblador);
-        $this->assertNotEmpty($usuarioRegistrado);
     }
     /**
      * CP-007
@@ -133,7 +130,7 @@ class UsuarioTest extends TestCase {
      * Prueba obtener un usuario inexistente.
      */    
     public function testObtenerUsuarioInexistente() {
-        $idInexistente = 9999;
+        $idInexistente = '00000000-0000-0000-0000-000000000000';
         $usuario = $this->usuarioModel->obtenerUsuarioPorId($idInexistente);
         
         $this->assertFalse($usuario);
@@ -142,7 +139,9 @@ class UsuarioTest extends TestCase {
     /**
      * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
      */
+    /*
     public static function tearDownAfterClass(): void {
         self::$testDb->cleanUp();
     }
+        */
 }

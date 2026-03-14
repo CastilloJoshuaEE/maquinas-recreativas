@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ProfileSection from "../../components/ProfileSection";
 import ComercioForm from "../forms/ComercioForm";
 import MaquinaForm from "../forms/MaquinaForm";
+import api from "../../utils/api";
 import NotificacionesList from "../../components/NotificacionesList";
 import MaquinaList from "../../components/MaquinaList";
 import { AdminHeader } from "../../../modulo_usuario/AdminHeader";
@@ -48,101 +49,72 @@ export default function Logistico() {
   }, [navigate]);
   //Realiza solicitudes fetch a varias rutas de la API para cargar los datos de las notificaciones, máquinas en diferentes estados (Distribucion, Operativa, Retirada), y luego actualiza el estado correspondiente con los datos obtenidos.
   const loadData = async () => {
-    try {
-      const userId = JSON.parse(localStorage.getItem("user"))?.ID_Usuario;
+  try {
+    const userId = JSON.parse(localStorage.getItem("user"))?.ID_Usuario;
 
-      // Helper para validar contenido y parsear JSON seguro
-      const fetchJSON = async (url) => {
-        const response = await fetch(url);
-        const contentType = response.headers.get("content-type");
+    // Notificaciones
+    const { data: notifData } = await api.get(`/notificaciones_maquina/${userId}`);
+    if (notifData.success) setNotificaciones(notifData.notificaciones);
 
-        if (!response.ok) throw new Error(`Error en ${url}`);
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await response.text();
-          console.error("Respuesta no válida:", text);
-          throw new Error(`Respuesta no válida de la API en ${url}`);
-        }
+    // Distribución
+    const { data: distData } = await api.get("/maquina/etapa/Distribucion");
+    if (distData.success) setMaquinasDistribucion(distData.maquinas);
 
-        return await response.json();
-      };
+    // Operativas
+    const { data: opData } = await api.get("/maquina/estado/Operativa");
+    if (opData.success) setMaquinasOperativas(opData.maquinas);
 
-      // Notificaciones
-      const notifData = await fetchJSON(
-        `/api/notificaciones_maquina/${userId}`
-      );
-      if (notifData.success) setNotificaciones(notifData.notificaciones);
-
-      // Distribución
-      const distData = await fetchJSON("/api/maquina/etapa/Distribucion");
-      if (distData.success) setMaquinasDistribucion(distData.maquinas);
-
-      // Operativas
-      const opData = await fetchJSON("/api/maquina/estado/Operativa");
-      if (opData.success) setMaquinasOperativas(opData.maquinas);
-
-      // Retiradas
-      const retData = await fetchJSON("/api/maquina/estado/Retirada");
-      if (retData.success) setMaquinasRetiradas(retData.maquinas);
-    } catch (err) {
-      console.error("Error loading data:", err);
-    }
-  };
+    // Retiradas
+    const { data: retData } = await api.get("/maquina/estado/Retirada");
+    if (retData.success) setMaquinasRetiradas(retData.maquinas);
+  } catch (err) {
+    console.error("Error loading data:", err);
+  }
+};
   //Permite cambiar el estado de una máquina a "Operativa". Se envía una solicitud POST a la API con el ID_Maquina de la máquina seleccionada.
   const handlePonerOperativa = async () => {
-    if (!selectedMaquina) return;
+  if (!selectedMaquina) return;
 
-    try {
-      const response = await fetch("/api/maquina/poner-operativa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idMaquina: selectedMaquina.ID_Maquina }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        loadData();
-        setSelectedMaquina(null);
-      }
-    } catch (err) {
-      console.error("Error al poner operativa:", err);
+  try {
+    const { data } = await api.post("/maquina/poner-operativa", { 
+      idMaquina: selectedMaquina.ID_Maquina 
+    });
+    
+    if (data.success) {
+      loadData();
+      setSelectedMaquina(null);
     }
-  };
+  } catch (err) {
+    console.error("Error al poner operativa:", err);
+  }
+};
+
   //Permite enviar un mensaje de mantenimiento para una máquina seleccionada
-  const handleDarMantenimiento = async () => {
-    if (!selectedMaquina || !mensajeMantenimiento) return;
+ const handleDarMantenimiento = async () => {
+  if (!selectedMaquina || !mensajeMantenimiento) return;
 
-    setErrorMantenimiento("");
+  setErrorMantenimiento("");
 
-    try {
-      const response = await fetch("/api/maquina/dar-mantenimiento", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idMaquina: selectedMaquina.ID_Maquina,
-          mensaje: mensajeMantenimiento,
-          idLogistica: user.ID_Usuario,
-        }),
-      });
+  try {
+    const { data } = await api.post("/maquina/dar-mantenimiento", {
+      idMaquina: selectedMaquina.ID_Maquina,
+      mensaje: mensajeMantenimiento,
+      idLogistica: user.ID_Usuario,
+    });
 
-      const data = await response.json();
-      if (data.success) {
-        loadData();
-        setSelectedMaquina(null);
-        setMensajeMantenimiento("");
-        setMostrarMensajeMantenimiento(false);
-      } else {
-        setErrorMantenimiento("No hay técnicos de mantenimiento");
-      }
-    } catch (err) {
-      console.error("Error al dar mantenimiento:", err);
+    if (data.success) {
+      loadData();
+      setSelectedMaquina(null);
+      setMensajeMantenimiento("");
+      setMostrarMensajeMantenimiento(false);
+    } else {
       setErrorMantenimiento("No hay técnicos de mantenimiento");
     }
-  };
-
+  } catch (err) {
+    console.error("Error al dar mantenimiento:", err);
+    setErrorMantenimiento("No hay técnicos de mantenimiento");
+  }
+};
   return (
     <div className="dashboard-container">
       <AdminHeader />

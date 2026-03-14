@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../css/modulo_contabilidad/Consultar_Recaudacion.css';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
 export default function ActualizarRecaudacion() {
-  const { uuid  } = useParams();
+  const { uuid } = useParams();
   const [formData, setFormData] = useState({
     ID_Recaudacion: uuid,
     ID_Maquina: '',
@@ -27,27 +28,22 @@ export default function ActualizarRecaudacion() {
       try {
         setLoading(true);
         const [machinesRes, recaudacionRes] = await Promise.all([
-          fetch('/api/contabilidad/maquinas-recaudacion'),
-          fetch(`/api/contabilidad/recaudaciones?ID_Recaudacion=${uuid}`)
+          api.get('/contabilidad/maquinas-recaudacion'),
+          api.get(`/contabilidad/recaudaciones?ID_Recaudacion=${uuid}`)
         ]);
 
-        if (!machinesRes.ok || !recaudacionRes.ok) {
+        if (!machinesRes.response.ok || !recaudacionRes.response.ok) {
           throw new Error('Error al cargar datos');
         }
 
-        const [machinesData, recaudacionData] = await Promise.all([
-          machinesRes.json(),
-          recaudacionRes.json()
-        ]);
-
-        if (machinesData.success) {
-          setMaquinas(machinesData.maquinas);
+        if (machinesRes.data.success) {
+          setMaquinas(machinesRes.data.maquinas);
         } else {
-          throw new Error(machinesData.message || 'Error al cargar máquinas');
+          throw new Error(machinesRes.data.message || 'Error al cargar máquinas');
         }
 
-        if (recaudacionData.success && recaudacionData.recaudaciones.length > 0) {
-          const rec = recaudacionData.recaudaciones[0];
+        if (recaudacionRes.data.success && recaudacionRes.data.recaudaciones.length > 0) {
+          const rec = recaudacionRes.data.recaudaciones[0];
           setFormData({
             ID_Recaudacion: rec.ID_Recaudacion,
             ID_Maquina: rec.ID_Maquina.toString(),
@@ -60,7 +56,7 @@ export default function ActualizarRecaudacion() {
             Porcentaje_Comercio: rec.Porcentaje_Comercio || (rec.Tipo_Comercio === 'Mayorista' ? 20 : 0)
           });
         } else {
-          setMessage(recaudacionData.message || 'No se encontró la recaudación');
+          setMessage(recaudacionRes.data.message || 'No se encontró la recaudación');
         }
       } catch (error) {
         setMessage(error.message || 'Error al cargar datos');
@@ -128,10 +124,9 @@ export default function ActualizarRecaudacion() {
 
       const fechaFormateada = fechaObj.toISOString().slice(0, 19).replace('T', ' ');
 
-      // Preparar datos para enviar según tipo de comercio
       const dataToSend = {
         ID_Recaudacion: formData.ID_Recaudacion,
-        ID_Maquina:  formData.ID_Maquina, 
+        ID_Maquina: formData.ID_Maquina, 
         Tipo_Comercio: formData.Tipo_Comercio,
         Monto_Total: parseFloat(formData.Monto_Total),
         Monto_Empresa: parseFloat(formData.Monto_Empresa),
@@ -143,23 +138,17 @@ export default function ActualizarRecaudacion() {
           : 0
       };
 
-      const response = await fetch('/api/contabilidad/actualizar-recaudacion', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
-      });
-
-      const result = await response.json();
+      const { response, data } = await api.put('/contabilidad/actualizar-recaudacion', dataToSend);
 
       if (!response.ok) {
-        throw new Error(result.message || 'Error en la base de datos');
+        throw new Error(data.message || 'Error en la base de datos');
       }
 
-      if (result.success) {
+      if (data.success) {
         setMessage('Recaudación actualizada correctamente');
         setTimeout(() => navigate('/contabilidad/consultar-recaudaciones'), 1500);
       } else {
-        setMessage(result.message || 'Error al actualizar recaudación');
+        setMessage(data.message || 'Error al actualizar recaudación');
       }
     } catch (error) {
       console.error('Error al actualizar recaudación:', error);

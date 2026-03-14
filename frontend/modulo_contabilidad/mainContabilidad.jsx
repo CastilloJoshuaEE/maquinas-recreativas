@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../css/modulo_contabilidad/mainContabilidad.css";
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
 export default function Contabilidad() {
   const [loading, setLoading] = useState(true);
@@ -12,13 +13,8 @@ export default function Contabilidad() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch financial summary
-        const summaryRes = await fetch('/api/contabilidad/resumen-recaudaciones');
-        const summaryData = await summaryRes.json();
-        
-        // Fetch recent transactions
-        const transactionsRes = await fetch('/api/contabilidad/recaudaciones?limit=5');
-        const transactionsData = await transactionsRes.json();
+        const { data: summaryData } = await api.get('/contabilidad/resumen-recaudaciones');
+        const { data: transactionsData } = await api.get('/contabilidad/recaudaciones?limit=5');
         
         if (summaryData.success) setSummary(summaryData.resumen);
         if (transactionsData.success) setRecentTransactions(transactionsData.recaudaciones);
@@ -54,20 +50,20 @@ export default function Contabilidad() {
           <div className="contabilidad-card">
             <h3>Resumen Financiero</h3>
             {summary ? (
-            <div className="summary-content">
-              {summary.map((item, index) => (
-                <div key={index} className="summary-item">
-                  <h4>{item.Tipo_Comercio}</h4>
-                  <p>Recaudaciones: {item.TotalRecaudaciones}</p>
-                  <p>Total: ${Number(item.TotalRecaudado || 0).toFixed(2)}</p>
-                  <p>Empresa: ${Number(item.TotalEmpresa || 0).toFixed(2)}</p>
-                  <p>Comercio: ${Number(item.TotalComercio || 0).toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No hay datos disponibles</p>
-          )}
+              <div className="summary-content">
+                {summary.map((item, index) => (
+                  <div key={index} className="summary-item">
+                    <h4>{item.Tipo_Comercio}</h4>
+                    <p>Recaudaciones: {item.TotalRecaudaciones}</p>
+                    <p>Total: ${Number(item.TotalRecaudado || 0).toFixed(2)}</p>
+                    <p>Empresa: ${Number(item.TotalEmpresa || 0).toFixed(2)}</p>
+                    <p>Comercio: ${Number(item.TotalComercio || 0).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No hay datos disponibles</p>
+            )}
           </div>
           
           <div className="contabilidad-card">

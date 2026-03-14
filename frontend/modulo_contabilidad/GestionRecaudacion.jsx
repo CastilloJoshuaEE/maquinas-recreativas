@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/modulo_contabilidad/mainContabilidad.css';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
 export default function GestionRecaudacion() {
   const [loading, setLoading] = useState(false);
@@ -10,15 +11,11 @@ export default function GestionRecaudacion() {
 
   const registrarActividad = async () => {
     try {
-      await fetch('/api/historial-actividades', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-            descripcion: `El usuario accedió a la gestión de recaudaciones`
-        })
+      const token = localStorage.getItem('token');
+      await api.post('/historial-actividades', {
+        descripcion: `El usuario accedió a la gestión de recaudaciones`
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
     } catch (err) {
       console.error('Error al registrar actividad:', err);

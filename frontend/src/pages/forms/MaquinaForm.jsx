@@ -1,9 +1,8 @@
-// frontend/src/pages/forms/MaquinaForm.jsx
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import api from "../../utils/api";
 
 export default function MaquinaForm({ onClose, onSuccess }) {
-  const [step, setStep] = useState(1); // 1: Create components, 2: Register machine
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     nombre: "",
     tipo: "",
@@ -27,28 +26,19 @@ export default function MaquinaForm({ onClose, onSuccess }) {
   const [placaData, setPlacaData] = useState(null);
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Cargar comercios
-        const comerciosRes = await fetch("/api/comercio/all");
-        const comerciosData = await comerciosRes.json();
+        const { data: comerciosData } = await api.get("/comercio/all");
         if (comerciosData.success) setComercios(comerciosData.comercios);
 
-        // Cargar tecnicos ensambladores
-        const ensRes = await fetch("/api/usuario/tecnicos/Ensamblador");
-        const ensData = await ensRes.json();
+        const { data: ensData } = await api.get("/usuario/tecnicos/Ensamblador");
         if (ensData.success) setEnsambladores(ensData.tecnicos);
 
-        // Cargar tecnicos comprobadores
-        const compRes = await fetch("/api/usuario/tecnicos/Comprobador");
-        const compData = await compRes.json();
+        const { data: compData } = await api.get("/usuario/tecnicos/Comprobador");
         if (compData.success) setComprobadores(compData.tecnicos);
 
-        // Cargar carcasas disponibles
-        const carcasasRes = await fetch("/api/componentes?tipo=Logistico");
-        const carcasasData = await carcasasRes.json();
+        const { data: carcasasData } = await api.get("/componentes?tipo=Logistico");
         if (carcasasData.success) {
           setCarcasasDisponibles(
             carcasasData.componentes.filter(c => c.nombre.includes('Carcasa'))
@@ -69,61 +59,36 @@ export default function MaquinaForm({ onClose, onSuccess }) {
       [name]: value,
     });
   };
-const handleCancel = async () => {
-  if (idPlaca && idCarcasa) {
-    try {
-      const response = await fetch('/api/componentes/liberar-cancelacion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ID_Placa: idPlaca,
-          ID_Carcasa: idCarcasa,
+
+  const handleCancel = async () => {
+    if (placaData?.id_componente && componentesCreados.carcasa) {
+      try {
+        await api.post('/componentes/liberar-cancelacion', {
+          ID_Placa: placaData.id_componente,
+          ID_Carcasa: componentesCreados.carcasa,
           ID_Usuario: user.ID_Usuario
-        })
-      });
-      
-      const data = await response.json();
-      if (!data.success) {
-        console.error('Error al liberar componentes:', data.message);
+        });
+      } catch (err) {
+        console.error('Error al liberar componentes:', err);
       }
-    } catch (err) {
-      console.error('Error al liberar componentes:', err);
     }
-  }
-  
-  onClose();
-};
+    onClose();
+  };
+
   const crearComponenteLogistico = async (tipoComponente) => {
     try {
       setLoading(true);
       setError("");
       setComponentErrors(prev => ({...prev, [tipoComponente]: ""}));
 
-      let response;
-      let data;
-
       if (tipoComponente === "placa") {
         if (!user?.ID_Usuario) {
           throw new Error("No se pudo identificar al usuario actual");
         }
         
-        response = await fetch("/api/maquina/generar-placa", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ID_Usuario: user.ID_Usuario
-          }),
+        const { data } = await api.post("/maquina/generar-placa", {
+          ID_Usuario: user.ID_Usuario
         });
-        
-        data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || "Error al crear placa");
-        }
         
         setPlacaData(data);
         setComponentesCreados(prev => ({
@@ -136,19 +101,12 @@ const handleCancel = async () => {
           throw new Error("Debe seleccionar una carcasa");
         }
         
-        // Registrar solo en componente_usuario por ahora
-        response = await fetch('/api/componentes/asignar-carcasa', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            ID_Componente: selectedCarcasa,
-            ID_Usuario: user.ID_Usuario
-          })
+        const { data } = await api.post('/componentes/asignar-carcasa', {
+          ID_Componente: selectedCarcasa,
+          ID_Usuario: user.ID_Usuario
         });
 
-        data = await response.json();
-        
-        if (!response.ok || !data.success) {
+        if (!data.success) {
           throw new Error(data.message || "Error al asignar carcasa");
         }
 
@@ -168,63 +126,50 @@ const handleCancel = async () => {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (
-    !formData.nombre ||
-    !formData.tipo ||
-    !formData.idComercio ||
-    !placaData ||
-    !componentesCreados.carcasa
-  ) {
-    setError("Complete todos los campos antes de registrar");
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (
+      !formData.nombre ||
+      !formData.tipo ||
+      !formData.idComercio ||
+      !placaData ||
+      !componentesCreados.carcasa
+    ) {
+      setError("Complete todos los campos antes de registrar");
+      return;
+    }
 
-  if (ensambladores.length === 0 || comprobadores.length === 0) {
-    setError("No hay técnicos disponibles para asignar");
-    return;
-  }
+    if (ensambladores.length === 0 || comprobadores.length === 0) {
+      setError("No hay técnicos disponibles para asignar");
+      return;
+    }
 
-  setLoading(true);
-  setError("");
+    setLoading(true);
+    setError("");
 
-  try {
-    // Registrar la máquina (el backend manejará el registro de montajes)
-    const response = await fetch("/api/maquina/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const { data } = await api.post("/maquina/register", {
         nombre: formData.nombre,
         tipo: formData.tipo,
         idComercio: formData.idComercio,
         idUsuarioLogistica: user.ID_Usuario,
         idPlaca: placaData.id_componente,
         idCarcasa: componentesCreados.carcasa,
-      }),
-    });
+      });
 
-    if (!response.ok) {
-      throw new Error("Error en la respuesta del servidor");
+      if (data.success) {
+        onSuccess();
+      } else {
+        setError(data.message || "Error al registrar máquina");
+      }
+    } catch (err) {
+      console.error("Error en handleSubmit:", err);
+      setError(err.message || "Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-
-    if (data.success) {
-      onSuccess(); // Cerrar el modal o reiniciar el formulario
-    } else {
-      setError(data.message || "Error al registrar máquina");
-    }
-  } catch (err) {
-    console.error("Error en handleSubmit:", err);
-    setError(err.message || "Error de conexión con el servidor");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleNextStep = () => {
     if (!componentesCreados.placa || !componentesCreados.carcasa) {
@@ -299,7 +244,7 @@ const handleSubmit = async (e) => {
               >
                 Siguiente
               </button>
-              <button type="button" onClick={onClose}>
+              <button type="button" onClick={handleCancel}>
                 Cancelar
               </button>
             </div>
@@ -398,7 +343,7 @@ const handleSubmit = async (e) => {
               >
                 {loading ? "Registrando..." : "Registrar"}
               </button>
-              <button type="button" onClick={onClose}>
+              <button type="button" onClick={handleCancel}>
                 Cancelar
               </button>
             </div>

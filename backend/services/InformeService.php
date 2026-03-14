@@ -1,4 +1,3 @@
-// backend/services/InformeService.php
 <?php
 require_once __DIR__ . '/../models/InformeModel.php';
 require_once __DIR__ . '/../models/MaquinaModel.php';

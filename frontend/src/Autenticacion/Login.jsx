@@ -1,13 +1,10 @@
-// frontend/src/Autenticacion/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../../css/modulo_usuario/main.css";
 import Chatbot from "../components/Chatbot";
-// Este componente React maneja el proceso de inicio de sesión de usuarios.
-// Realiza validaciones básicas del formulario, envía una solicitud de autenticación al servidor y redirige al usuario según su tipo y estado.
+import api from "../utils/api";
 
-// Excepción personalizada para credenciales incorrectas:
 class CredencialesIncorrectasError extends Error {
   constructor(message = "¡Credenciales incorrectas OwO!") {
     super(message);
@@ -44,19 +41,11 @@ export default function Login() {
     }));
   };
 
-  {
-    /**valida los campos del formulario, envía los datos al backend (/api/usuario/login), y según la respuesta:
-     * Guarda los datos del usuario en localStorage.
-     * Actualiza el contexto con setCurrentUser.
-     * Redirige al dashboard correspondiente con navigate, según el tipo y estado del usuario (Tecnico, Logistica, Administrador del sistema, etc.). */
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Validaciones iniciales
     if (!formData.usuario_asignado || formData.usuario_asignado.length > 15) {
       setError("Usuario inválido (máximo 15 caracteres)");
       setLoading(false);
@@ -70,64 +59,50 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("/api/usuario/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usuario_asignado: formData.usuario_asignado.trim(),
-          contrasena: formData.contrasena,
-        }),
-        credentials: "include",
+      const { response, data } = await api.post('/usuario/login', {
+        usuario_asignado: formData.usuario_asignado.trim(),
+        contrasena: formData.contrasena,
       });
 
-      const result = await response.json();
-
       if (!response.ok) {
-        if (result.message === "Usuario o contraseña incorrectos") {
+        if (data.message === "Usuario o contraseña incorrectos") {
           throw new CredencialesIncorrectasError();
         }
-        throw new Error(result.message || "Error al iniciar sesión");
+        throw new Error(data.message || "Error al iniciar sesión");
       }
 
-      if (!result.success) {
-        if (result.message === "Usuario o contraseña incorrectos") {
+      if (!data.success) {
+        if (data.message === "Usuario o contraseña incorrectos") {
           throw new CredencialesIncorrectasError();
         }
-        throw new Error(result.message || "Error desconocido");
+        throw new Error(data.message || "Error desconocido");
       }
 
       const userData = {
-        ...result.usuario,
-        ID_Usuario: result.usuario.ID_Usuario,
-        fecha_inicio: result.fecha_inicio,
+        ...data.usuario,
+        ID_Usuario: data.usuario.ID_Usuario,
+        fecha_inicio: data.fecha_inicio,
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
       setCurrentUser(userData);
 
       if (userData.estado === "Pendiente de asignacion") {
-        // For pending assignment, create automatic report and redirect
         await createInactiveUserReport(userData);
-
         navigate("/reportes", {
           state: {
             userData,
-            message:
-              "Su cuenta está pendiente de asignación. Por favor contacte al administrador.",
+            message: "Su cuenta está pendiente de asignación. Por favor contacte al administrador.",
           },
         });
       } else if (userData.estado === "Inhabilitado") {
         navigate("/reportes/gestion", {
           state: {
             userData,
-            //message: "Su cuenta está inhabilitada. Por favor redacte un mensaje al administrador solicitando la reactivación de su cuenta.",
-            isDisabledUser: true, // Flag to indicate this is a disabled user flow
+            isDisabledUser: true,
           },
         });
       } else {
-        // Active users proceed normally
         redirectUser(userData);
       }
     } catch (err) {
@@ -141,26 +116,18 @@ export default function Login() {
       setLoading(false);
     }
   };
+
   const createInactiveUserReport = async (userData) => {
     try {
-      // Only create report for pending users, not for disabled users
       if (userData.estado === "Pendiente de asignacion") {
-        const adminsResponse = await fetch(
-          "/api/usuarios/por-tipo?tipo=Administrador"
-        );
-        const adminsData = await adminsResponse.json();
+        const { data } = await api.get("/usuarios/por-tipo?tipo=Administrador");
 
-        if (adminsData.success && adminsData.usuarios.length > 0) {
-          const admin = adminsData.usuarios[0]; // Get first admin
-
-          await fetch("/api/reportes/crear", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ID_Usuario_Emisor: userData.ID_Usuario,
-              ID_Usuario_Destinatario: admin.ID_Usuario,
-              descripcion: `Usuario con estado ${userData.estado} intentó iniciar sesión. Por favor revisar.`,
-            }),
+        if (data.success && data.usuarios.length > 0) {
+          const admin = data.usuarios[0];
+          await api.post("/reportes/crear", {
+            ID_Usuario_Emisor: userData.ID_Usuario,
+            ID_Usuario_Destinatario: admin.ID_Usuario,
+            descripcion: `Usuario con estado ${userData.estado} intentó iniciar sesión. Por favor revisar.`,
           });
         }
       }
@@ -168,6 +135,7 @@ export default function Login() {
       console.error("Error creating report:", error);
     }
   };
+
   const redirectUser = (userData) => {
     const userType = userData.tipo === "Técnico" ? "Tecnico" : userData.tipo;
 
@@ -184,7 +152,7 @@ export default function Login() {
         } else {
           navigate("/dashboard/tecnico", {
             state: { userId: userData.ID_Usuario },
-          }); // fallback
+          });
         }
         break;
       case "Contabilidad":
@@ -205,7 +173,6 @@ export default function Login() {
     }
   };
 
-  // Redirige a la página de registro (/register):
   const handleWorkWithUs = () => {
     navigate("/register");
   };

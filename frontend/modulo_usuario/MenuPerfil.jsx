@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import '../css/modulo_usuario/menu_perfil.css';
 import { AdminHeader } from './AdminHeader';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
+import api from '../src/utils/api';
 
 export default function MenuPerfil() {
   const { currentUser, logout } = useAuth();
@@ -11,7 +12,6 @@ export default function MenuPerfil() {
   const [error, setError] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -22,40 +22,28 @@ export default function MenuPerfil() {
           return;
         }
 
-        // Validar UUID
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(user.uuid)) {
           throw new Error('ID de usuario no válido');
         }
 
-        const response = await fetch(`/api/usuario/perfil?id=${user.uuid}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        const token = localStorage.getItem('token');
+        const { data } = await api.get(`/usuario/perfil?id=${user.uuid}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!response.ok) throw new Error('Error al obtener perfil');
-        
-        const data = await response.json();
         if (data.success && data.usuario) {
-          // Verificar datos esenciales
           if (!data.usuario.ci || !data.usuario.email) {
             throw new Error('Datos de usuario incompletos');
           }
           
-          // Asumimos que el backend ya envía los datos desencriptados
           setProfile(data.usuario);
           
-          await fetch('/api/historial-actividades', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              ID_Usuario: user.uuid,
-              descripcion: "El usuario estuvo en su perfil"
-            })
+          await api.post('/historial-actividades', {
+            ID_Usuario: user.uuid,
+            descripcion: "El usuario estuvo en su perfil"
+          }, {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
         } else {
           setError(data.message || 'Error al cargar el perfil');
@@ -173,7 +161,7 @@ export default function MenuPerfil() {
           </select>
           <div id="historial"></div>
         </form>
-          <button
+        <button
             onClick={() => navigate(`/usuario/actualizar-perfil?id=${currentUser.uuid}`)}
           >
             Editar Perfil

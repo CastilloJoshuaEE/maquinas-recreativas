@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../css/modulo_usuario/recuperacion.css";
-//permite a los usuarios recuperar su contraseña. Los usuarios deben proporcionar su correo electrónico y la nueva contraseña (que debe coincidir con la repetición). Si los datos son correctos, una solicitud a la API actualiza la contraseña del usuario. Si la actualización es exitosa, el usuario es redirigido a la página de inicio de sesión
+import api from '../src/utils/api';
 
 export default function RecuperarContrasena() {
     const [error, setError] = useState('');
@@ -16,28 +16,15 @@ export default function RecuperarContrasena() {
             
             if (data.nueva !== data.repetir) {
                 setError('Las contraseñas no coinciden');
-                setTimeout(() => window.location.reload(), 2000); // recarga tras 2 segundos
-
+                setTimeout(() => window.location.reload(), 2000);
                 return;
             }
             
-            const response = await fetch('/api/usuario/recuperar-contrasena', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: data.correo,
-                    nueva_contrasena: data.nueva
-                })
+            const { response, data: result } = await api.post('/usuario/recuperar-contrasena', {
+                email: data.correo,
+                nueva_contrasena: data.nueva
             });
 
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                throw new Error(`Respuesta inesperada: ${text}`);
-            }
-
-            const result = await response.json();
-            
             if (!response.ok) {
                 throw new Error(result.message || 'Error en la respuesta del servidor');
             }

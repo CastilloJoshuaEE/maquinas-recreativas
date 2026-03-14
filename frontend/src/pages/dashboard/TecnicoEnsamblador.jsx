@@ -6,6 +6,7 @@ import NotificacionesList from "../../components/NotificacionesList";
 import MaquinaList from "../../components/MaquinaList";
 import { AdminHeader } from "../../../modulo_usuario/AdminHeader";
 import "../../../css/dashboards.css";
+import api from "../../utils/api";
 // es un componente React funcional que representa la vista de dashboard para un usuario con especialidad de "Ensamblador". Este usuario puede ver su perfil, notificaciones y listas de máquinas recreativas que están en proceso de ensamblado o reensamblado. Además, permite seleccionar una máquina y enviarla a "comprobación".
 export default function TecnicoEnsamblador() {
   const [user, setUser] = useState(null);
@@ -45,66 +46,55 @@ Cargar los datos iniciales (notificaciones y máquinas). */
 Las notificaciones del usuario.
 Las máquinas que están "Ensamblándose" y "Reensamblándose". */
   }
-  const loadData = async () => {
-    try {
-      const notifResponse = await fetch(
-        `/api/notificaciones_maquina/${
-          JSON.parse(localStorage.getItem("user")).ID_Usuario
-        }`
+ 
+const loadData = async () => {
+  try {
+    const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
+    
+    const { data: notifData } = await api.get(`/notificaciones_maquina/${userId}`);
+    if (notifData.success) setNotificaciones(notifData.notificaciones);
+
+    const { data: ensData } = await api.get(`/maquina/ensamblador/${userId}`);
+    if (ensData.success)
+      setMaquinasEnsamblando(
+        ensData.maquinas.filter((m) => m.Estado === "Ensamblandose")
       );
-      const notifData = await notifResponse.json();
-      if (notifData.success) setNotificaciones(notifData.notificaciones);
 
-      const userId = JSON.parse(localStorage.getItem("user")).ID_Usuario;
+    const { data: reensData } = await api.get(`/maquina/ensamblador/${userId}`);
+    if (reensData.success)
+      setMaquinasReensamblando(
+        reensData.maquinas.filter((m) => m.Estado === "Reensamblandose")
+      );
+  } catch (err) {
+    console.error("Error loading data:", err);
+  }
+};
 
-      const ensResponse = await fetch(`/api/maquina/ensamblador/${userId}`);
-      const ensData = await ensResponse.json();
-      if (ensData.success)
-        setMaquinasEnsamblando(
-          ensData.maquinas.filter((m) => m.Estado === "Ensamblandose")
-        );
-
-      const reensResponse = await fetch(`/api/maquina/ensamblador/${userId}`);
-      const reensData = await reensResponse.json();
-      if (reensData.success)
-        setMaquinasReensamblando(
-          reensData.maquinas.filter((m) => m.Estado === "Reensamblandose")
-        );
-    } catch (err) {
-      console.error("Error loading data:", err);
-    }
-  };
   {
     /**Enviar una máquina seleccionada a comprobación.
-Acción: Envía un POST con el ID de la máquina, ID del usuario y un mensaje al endpoint /api/maquina/mandar-comprobacion. */
+Acción: Envía un POST con el ID de la máquina, ID del usuario y un mensaje al endpoint /maquina/mandar-comprobacion. */
   }
-  const handleMandarComprobacion = async () => {
-    if (!selectedMaquina) return;
+  
+const handleMandarComprobacion = async () => {
+  if (!selectedMaquina) return;
 
-    try {
-      const response = await fetch("/api/maquina/mandar-comprobacion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          idMaquina: selectedMaquina.ID_Maquina,
-          idRemitente: user.ID_Usuario,
-          mensaje: mensaje,
-        }),
-      });
+  try {
+    const { data } = await api.post("/maquina/mandar-comprobacion", {
+      idMaquina: selectedMaquina.ID_Maquina,
+      idRemitente: user.ID_Usuario,
+      mensaje: mensaje,
+    });
 
-      const data = await response.json();
-      if (data.success) {
-        loadData();
-        setSelectedMaquina(null);
-        setMostrarMensaje(false);
-        setMensaje("");
-      }
-    } catch (err) {
-      console.error("Error al mandar a comprobacion:", err);
+    if (data.success) {
+      loadData();
+      setSelectedMaquina(null);
+      setMostrarMensaje(false);
+      setMensaje("");
     }
-  };
+  } catch (err) {
+    console.error("Error al mandar a comprobacion:", err);
+  }
+};
 
   return (
     <div className="dashboard-container">

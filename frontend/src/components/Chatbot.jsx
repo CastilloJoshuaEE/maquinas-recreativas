@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../Autenticacion/chatbot.css';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
@@ -60,22 +61,18 @@ const Chatbot = () => {
     setInputValue('');
     setShowOptions(false);
 
-    if (collectingInfo === "buscar-email") {
+  if (collectingInfo === "buscar-email") {
       const correo = inputValue.trim();
       setInputValue('');
       try {
-        const res = await fetch("/api/usuario/buscar-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: correo })
-        });
-        const data = await res.json();
+        const { data } = await api.post("/usuario/buscar-email", { email: correo });
 
         if (!data.success) {
           setMessages(prev => [...prev, { text: "No se encontró ningún usuario con ese correo.", sender: 'bot' }]);
           setCollectingInfo(null);
           return;
         }
+
 
         const userData = data.usuario;
 
@@ -126,8 +123,7 @@ const Chatbot = () => {
 
         try {
           // Obtener administrador
-          const res = await fetch('/api/usuarios/por-tipo?tipo=Administrador');
-          const data = await res.json();
+    const { data } = await api.get('/usuarios/por-tipo?tipo=Administrador');
           
           if (!data.usuarios || data.usuarios.length === 0) {
             throw new Error('No se encontró ningún administrador');
@@ -135,44 +131,26 @@ const Chatbot = () => {
           
           const admin = data.usuarios[0];
 
-          // Registrar usuario
-          const regRes = await fetch('/api/usuario/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              nombre: userInfo.nombres,
-              apellido: userInfo.apellidos,
-              email: userInfo.email,
-              ci: userInfo.ci || Date.now().toString(),
-              usuario_asignado: 'Aun no tiene',
-              contrasena: 'Aun no tiene',
-              tipo: 'Usuario'
-            })
+          const { data: usuarioData } = await api.post('/usuario/register', {
+            nombre: userInfo.nombres,
+            apellido: userInfo.apellidos,
+            email: userInfo.email,
+            ci: userInfo.ci || Date.now().toString(),
+            usuario_asignado: 'Aun no tiene',
+            contrasena: 'Aun no tiene',
+            tipo: 'Usuario'
           });
-
-          const usuarioData = await regRes.json();
           
           if (!usuarioData.success) {
             throw new Error(usuarioData.message || 'Error al registrar usuario');
           }
 
-          // Crear reporte
-          const reporteRes = await fetch('/api/reportes/crear', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ID_Usuario_Emisor: usuarioData.idUsuario || usuarioData.userId,
-              ID_Usuario_Destinatario: admin.ID_Usuario,
-              descripcion: `Nuevo reporte desde chatbot (${currentFlowText}):\nNombre: ${userInfo.nombres} ${userInfo.apellidos}\nEmail: ${userInfo.email}\nTeléfono: ${userInfo.telefono}`,
-              estado: 'Pendiente'
-            })
+          await api.post('/reportes/crear', {
+            ID_Usuario_Emisor: usuarioData.idUsuario || usuarioData.userId,
+            ID_Usuario_Destinatario: admin.ID_Usuario,
+            descripcion: `Nuevo reporte desde chatbot (${currentFlowText}):\nNombre: ${userInfo.nombres} ${userInfo.apellidos}\nEmail: ${userInfo.email}\nTeléfono: ${userInfo.telefono}`,
+            estado: 'Pendiente'
           });
-
-          const reporteData = await reporteRes.json();
-          
-          if (!reporteData.success) {
-            throw new Error(reporteData.message || 'Error al crear reporte');
-          }
 
         } catch (error) {
           console.error("Error enviando datos:", error);

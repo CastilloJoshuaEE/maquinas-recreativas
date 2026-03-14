@@ -1,5 +1,6 @@
 // frontend/src/Autenticacion/Registrar.jsx
 import React, { useState } from 'react';
+import api from '../utils/api';
 import { useNavigate, Link } from 'react-router-dom';
 //Este componente permite registrar un nuevo usuario a través de un formulario. 
 // Recoge los datos del formulario, los valida y los envía al servidor para crear un nuevo registro.
@@ -48,15 +49,11 @@ export default function RegistrarUsuario() {
                 payload.especialidad = formData.especialidad;
             }
 
-            const response = await fetch('/api/usuario/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
+            const { response, data } = await api.post('/usuario/register', payload);
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            }
 
             if (data.success) {
                 setSuccess(true);
@@ -66,7 +63,7 @@ export default function RegistrarUsuario() {
                 setError(data.message || 'Error al registrar usuario');
             }
         } catch (err) {
-            setError('Error de conexión con el servidor');
+            setError(err.message || 'Error de conexión con el servidor');
         }
     };
     const handleFileChange = (e) => {

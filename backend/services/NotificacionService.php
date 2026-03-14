@@ -1,4 +1,3 @@
-// backend/services/NotificacionService.php
 <?php
 require_once __DIR__ . '/../models/NotificacionModel.php';
 /**

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "../css/modulo_usuario/recuperacion.css";
-//Este componente React permite a un usuario actualizar su asignación de usuario y correo electrónico. Utiliza el hook useState para gestionar los estados de éxito, error, y el envío de datos. Además, emplea el hook useNavigate de react-router-dom para redirigir a otras vistas. 
-// El formulario envía los datos del correo y usuario asignado a la API para su actualización, y en caso de éxito, registra la actividad del usuario en el historial.
+import api from '../src/utils/api';
+
 export default function ActualizarUsuario() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -17,37 +17,30 @@ export default function ActualizarUsuario() {
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             
-            const response = await fetch('/api/usuario/actualizar-usuario', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: data.correo,
-                    usuario_asignado: data.usuario_asignado
-                })
+            const { response, data: result } = await api.post('/usuario/actualizar-usuario', {
+                email: data.correo,
+                usuario_asignado: data.usuario_asignado
             });
 
-            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Error en la respuesta del servidor');
+            }
             
             if (result.success) {
-                await fetch('/api/historial-actividades', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        descripcion: `El usuario actualizó un nuevo usuario`
-                    })
+                const token = localStorage.getItem('token');
+                await api.post('/historial-actividades', {
+                    descripcion: `El usuario actualizó un nuevo usuario`
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
+                
                 setSuccess(true);
                 setTimeout(() => navigate('/login'), 2000);
             } else {
                 setError(result.message || 'Error al actualizar el usuario');
             }
         } catch (err) {
-            setError('Error de conexión con el servidor');
+            setError(err.message || 'Error de conexión con el servidor');
         }
     };
 
@@ -69,4 +62,4 @@ export default function ActualizarUsuario() {
             <a href="/">Volver al inicio</a>
         </div>
     );
-} 
+}

@@ -9,67 +9,120 @@ class UsuarioModel {
         $this->db = new Database();
     }
 
-    public function registrarUsuario($data) {
+    private function generateUUID($conn) {
+        $sql = "SELECT UUID() as uuid";
+        $result = $conn->query($sql);
+        $row = $result->fetch_assoc();
+        return $row['uuid'];
+    }
+public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
         $conn = $this->db->getConnection();
         
-        $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
-        foreach ($required as $field) {
-            if (empty($data[$field])) {
-                return ['success' => false, 'message' => "El campo $field es requerido"];
-            }
+        if (empty($nombre) || empty($apellido) || empty($ci) || empty($email) || empty($usuario_asignado) || empty($contrasena) || empty($tipo)) {
+            return ['success' => false, 'message' => 'Todos los campos son requeridos'];
+        }
+
+        // Validar longitud de contraseña
+        if (strlen($contrasena) < 6) {
+            throw new ValidacionDatosException(
+                "La contraseña debe tener al menos 6 caracteres",
+                1200,
+                ['min_length' => 6]
+            );
         }
 
         try {
-            $especialidad = $data['especialidad'] ?? null;
-            $hashedPassword = password_hash($data['contrasena'], PASSWORD_DEFAULT);
-            $ciEncriptado = CifradoHelper::encriptar($data['ci']);
-            $emailEncriptado = CifradoHelper::encriptar($data['email']);
+            $hashedPassword = password_hash($contrasena, PASSWORD_DEFAULT);
+            $ciEncriptado = CifradoHelper::encriptar($ci);
+            $emailEncriptado = CifradoHelper::encriptar($email);
             
-            $sql = "CALL sp_registrar_usuario(?, ?, ?, ?, ?, ?, ?, ?, @p_id_usuario)";
+            $conn->begin_transaction();
+
+            // Verificar duplicados
+            $checkEmailSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
+            $checkEmailStmt = $conn->prepare($checkEmailSql);
+            $checkEmailStmt->bind_param("s", $emailEncriptado);
+            $checkEmailStmt->execute();
+            if ($checkEmailStmt->get_result()->num_rows > 0) {
+                $conn->rollback();
+                return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
+            }
+
+            $checkCiSql = "SELECT ID_Usuario FROM usuario WHERE ci = ?";
+            $checkCiStmt = $conn->prepare($checkCiSql);
+            $checkCiStmt->bind_param("s", $ciEncriptado);
+            $checkCiStmt->execute();
+            if ($checkCiStmt->get_result()->num_rows > 0) {
+                $conn->rollback();
+                return ['success' => false, 'message' => 'La cédula ya está registrada'];
+            }
+
+            $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+            $checkUserStmt = $conn->prepare($checkUserSql);
+            $checkUserStmt->bind_param("s", $usuario_asignado);
+            $checkUserStmt->execute();
+            if ($checkUserStmt->get_result()->num_rows > 0) {
+                $conn->rollback();
+                return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
+            }
+
+            $id_usuario = $this->generateUUID($conn);
+            
+            // CORRECCIÓN: Eliminado fecha_registro
+            $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Activo')";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
                 "ssssssss", 
-                $data['nombre'],
-                $data['apellido'],
+                $id_usuario,
+                $nombre,
+                $apellido,
                 $ciEncriptado,
                 $emailEncriptado,
-                $data['usuario_asignado'],
+                $usuario_asignado,
                 $hashedPassword,
-                $data['tipo'],
-                $especialidad
+                $tipo
             );
 
-            if ($stmt->execute()) {
-                $result = $conn->query("SELECT @p_id_usuario as id");
-                $row = $result->fetch_assoc();
-                
-                if ($row['id']) {
-                    return [
-                        'success' => true,
-                        'message' => 'Usuario registrado correctamente',
-                        'userId' => $row['id']
-                    ];
-                }
+            if (!$stmt->execute()) {
+                $conn->rollback();
+                return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
             }
-            
-            return ['success' => false, 'message' => 'Error al registrar el usuario'];
+
+            // Si es técnico, insertar en tabla Tecnico
+            if ($tipo === 'Tecnico' && $especialidad !== null) {
+                $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
+                $stmtTec = $conn->prepare($sqlTec);
+                $stmtTec->bind_param("ss", $id_usuario, $especialidad);
+                $stmtTec->execute();
+            }
+
+            // Si es Logistica, insertar en tabla Logistica
+            if ($tipo === 'Logistica') {
+                $sqlLog = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
+                $stmtLog = $conn->prepare($sqlLog);
+                $stmtLog->bind_param("s", $id_usuario);
+                $stmtLog->execute();
+            }
+
+            $conn->commit();
+
+            return $id_usuario;
+
+        } catch (ValidacionDatosException $e) {
+            throw $e;
         } catch (Exception $e) {
-            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                if (strpos($e->getMessage(), 'email') !== false) {
-                    return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
-                } elseif (strpos($e->getMessage(), 'ci') !== false) {
-                    return ['success' => false, 'message' => 'La cédula ya está registrada'];
-                } 
-            }
-            
+            $conn->rollback();
+            error_log("Error en registrarUsuario: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
         }
     }
-
     public function login($usuario_asignado) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_login(?)";
+        $sql = "SELECT u.*, t.especialidad FROM usuario u 
+                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.usuario_asignado = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $usuario_asignado);
         $stmt->execute();
@@ -93,17 +146,28 @@ class UsuarioModel {
     public function registrarInicioSesion($userId, $usuarioAsignado, $contrasenaHash) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_registrar_inicio_sesion(?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $userId, $usuarioAsignado, $contrasenaHash);
-        
-        return $stmt->execute();
+        try {
+            $idSesion = $this->generateUUID($conn);
+            
+            $sql = "INSERT INTO sesiones_usuario (ID_Sesion, ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
+                    VALUES (?, ?, ?, ?, NOW())";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssss", $idSesion, $userId, $usuarioAsignado, $contrasenaHash);
+            
+            return $stmt->execute();
+
+        } catch (Exception $e) {
+            error_log("Error en registrarInicioSesion: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function registrarLogout($userId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_registrar_logout(?)";
+        $sql = "UPDATE sesiones_usuario SET fecha_fin = NOW() 
+                WHERE ID_Usuario = ? AND fecha_fin IS NULL 
+                ORDER BY fecha_inicio DESC LIMIT 1";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $userId);
         
@@ -113,20 +177,21 @@ class UsuarioModel {
     public function obtenerEstadoUsuario($userId) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_estado_usuario(?, @p_estado)";
+        $sql = "SELECT estado FROM usuario WHERE ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $userId);
         $stmt->execute();
         
-        $result = $conn->query("SELECT @p_estado as estado");
+        $result = $stmt->get_result();
         $row = $result->fetch_assoc();
-        return $row['estado'];
+        return $row['estado'] ?? null;
     }
 
     public function incrementarActividadesTecnico($idTecnico) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_incrementar_actividades_tecnico(?)";
+        $sql = "UPDATE tecnico SET actividades_realizadas = actividades_realizadas + 1 
+                WHERE ID_Tecnico = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $idTecnico);
         
@@ -136,7 +201,9 @@ class UsuarioModel {
     public function obtenerUsuarioPorId($id) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_usuario_por_id(?)";
+        $sql = "SELECT u.*, t.especialidad FROM usuario u 
+                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $id);
         $stmt->execute();
@@ -156,81 +223,103 @@ class UsuarioModel {
         
         return false;
     }
-public function actualizarPerfil($data) {
-    $conn = $this->db->getConnection();
 
-    // Usar ID_Usuario como en el resto del sistema
-    $idUsuario = $data['ID_Usuario'] ?? $data['id'] ?? null;
+    public function actualizarPerfil($data) {
+        $conn = $this->db->getConnection();
 
-    if (!isset($idUsuario, $data['nombre'], $data['apellido'], $data['email'], $data['ci'], $data['tipo'], $data['estado'])) {
-        error_log("Datos faltantes en actualizarPerfil: " . print_r($data, true));
-        return false;
-    }
+        $idUsuario = $data['ID_Usuario'] ?? $data['id'] ?? null;
 
-    $especialidad = $data['especialidad'] ?? null;
-    $contrasena = $data['contrasena'] ?? null;
+        if (!isset($idUsuario, $data['nombre'], $data['apellido'], $data['email'], $data['ci'], $data['tipo'], $data['estado'])) {
+            error_log("Datos faltantes en actualizarPerfil: " . print_r($data, true));
+            return false;
+        }
 
-    $emailEncriptado = CifradoHelper::encriptar($data['email']);
-    $ciEncriptado = CifradoHelper::encriptar($data['ci']);
+        $especialidad = $data['especialidad'] ?? null;
+        $contrasena = $data['contrasena'] ?? null;
 
-    try {
-        $conn->begin_transaction();
+        $emailEncriptado = CifradoHelper::encriptar($data['email']);
+        $ciEncriptado = CifradoHelper::encriptar($data['ci']);
 
-        // 1. Actualizar contraseña si se proporciona
-        if (!empty($contrasena)) {
-            $contrasenaHash = password_hash($contrasena, PASSWORD_DEFAULT);
-            $sql = "UPDATE usuario SET contrasena = ? WHERE ID_Usuario = ?";
-            $stmt = $conn->prepare($sql);
-            if (!$stmt) throw new Exception("Error preparando contraseña: " . $conn->error);
-            $stmt->bind_param("ss", $contrasenaHash, $idUsuario);
-            if (!$stmt->execute()) {
-                throw new Exception("Error al actualizar contraseña: " . $stmt->error);
+        try {
+            $conn->begin_transaction();
+
+            // Actualizar contraseña si se proporciona
+            if (!empty($contrasena)) {
+                $contrasenaHash = password_hash($contrasena, PASSWORD_DEFAULT);
+                $sql = "UPDATE usuario SET contrasena = ? WHERE ID_Usuario = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ss", $contrasenaHash, $idUsuario);
+                if (!$stmt->execute()) {
+                    throw new Exception("Error al actualizar contraseña: " . $stmt->error);
+                }
             }
+
+            // Actualizar datos principales
+            $sql = "UPDATE usuario SET 
+                    nombre = ?,
+                    apellido = ?,
+                    email = ?,
+                    ci = ?,
+                    tipo = ?,
+                    estado = ?
+                    WHERE ID_Usuario = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param(
+                "sssssss",
+                $data['nombre'],
+                $data['apellido'],
+                $emailEncriptado,
+                $ciEncriptado,
+                $data['tipo'],
+                $data['estado'],
+                $idUsuario
+            );
+
+            if (!$stmt->execute()) {
+                throw new Exception("Error al actualizar usuario: " . $stmt->error);
+            }
+
+            // Actualizar especialidad si es técnico
+            if ($data['tipo'] === 'tecnico') {
+                // Verificar si ya existe en tabla tecnico
+                $checkSql = "SELECT ID_Tecnico FROM tecnico WHERE ID_Tecnico = ?";
+                $checkStmt = $conn->prepare($checkSql);
+                $checkStmt->bind_param("s", $idUsuario);
+                $checkStmt->execute();
+                $checkResult = $checkStmt->get_result();
+
+                if ($checkResult->num_rows > 0) {
+                    if ($especialidad !== null) {
+                        $updateTecSql = "UPDATE tecnico SET especialidad = ? WHERE ID_Tecnico = ?";
+                        $updateTecStmt = $conn->prepare($updateTecSql);
+                        $updateTecStmt->bind_param("ss", $especialidad, $idUsuario);
+                        $updateTecStmt->execute();
+                    }
+                } else {
+                    if ($especialidad !== null) {
+                        $insertTecSql = "INSERT INTO tecnico (ID_Tecnico, especialidad) VALUES (?, ?)";
+                        $insertTecStmt = $conn->prepare($insertTecSql);
+                        $insertTecStmt->bind_param("ss", $idUsuario, $especialidad);
+                        $insertTecStmt->execute();
+                    }
+                }
+            } else {
+                // Si ya no es técnico, eliminar de tabla tecnico
+                $deleteTecSql = "DELETE FROM tecnico WHERE ID_Tecnico = ?";
+                $deleteTecStmt = $conn->prepare($deleteTecSql);
+                $deleteTecStmt->bind_param("s", $idUsuario);
+                $deleteTecStmt->execute();
+            }
+
+            $conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $conn->rollback();
+            error_log("Error en actualizarPerfil: " . $e->getMessage());
+            return false;
         }
-
-        // 2. Actualizar CI (siempre)
-        $sqlCi = "UPDATE usuario SET ci = ? WHERE ID_Usuario = ?";
-        $stmtCi = $conn->prepare($sqlCi);
-        if (!$stmtCi) throw new Exception("Error preparando CI: " . $conn->error);
-        $stmtCi->bind_param("ss", $ciEncriptado, $idUsuario);
-        if (!$stmtCi->execute()) {
-            throw new Exception("Error al actualizar CI: " . $stmtCi->error);
-        }
-
-        // 3. Llamar al procedimiento para los demás campos
-        $sql = "CALL sp_actualizar_perfil(?, ?, ?, ?, ?, ?, ?, ?, @p_resultado)";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) throw new Exception("Error preparando SP: " . $conn->error);
-        
-        if (!$stmt->bind_param("ssssssss", 
-            $idUsuario,
-            $data['nombre'],
-            $data['apellido'],
-            $emailEncriptado,
-            $ciEncriptado,
-            $data['tipo'],
-            $data['estado'],
-            $especialidad
-        )) {
-            throw new Exception("Error en bind_param: " . $stmt->error);
-        }
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error al ejecutar SP: " . $stmt->error);
-        }
-
-        $result = $conn->query("SELECT @p_resultado as resultado");
-        $row = $result->fetch_assoc();
-        
-        $conn->commit();
-        return (bool)$row['resultado'];
-
-    } catch (Exception $e) {
-        $conn->rollback();
-        error_log("Error en actualizarPerfil: " . $e->getMessage());
-        return false;
     }
-}
 
     public function actualizarUsuarioAsignado($data) {
         $conn = $this->db->getConnection();
@@ -241,35 +330,22 @@ public function actualizarPerfil($data) {
 
         try {
             $emailEncriptado = CifradoHelper::encriptar($data['email']);
-            $sql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
+            
+            $sql = "UPDATE usuario SET usuario_asignado = ? WHERE email = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("s", $emailEncriptado);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $stmt->bind_param("ss", $data['usuario_asignado'], $emailEncriptado);
             
-            if ($result->num_rows === 0) {
-                return ['success' => false, 'message' => 'Correo electrónico no encontrado'];
-            }
-            
-            $user = $result->fetch_assoc();
-            $userId = $user['ID_Usuario'];
-
-            $sql = "CALL sp_actualizar_usuario_asignado(?, ?, @p_resultado)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $userId, $data['usuario_asignado']);
-            
-            if ($stmt->execute()) {
-                $result = $conn->query("SELECT @p_resultado as resultado");
-                $row = $result->fetch_assoc();
-                
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
                 return [
-                    'success' => (bool)$row['resultado'],
-                    'message' => $row['resultado'] ? 'Usuario actualizado correctamente' : 'No se pudo actualizar el usuario'
+                    'success' => true,
+                    'message' => 'Usuario actualizado correctamente'
                 ];
             }
             
-            return ['success' => false, 'message' => 'Error al ejecutar la consulta'];
+            return ['success' => false, 'message' => 'Correo electrónico no encontrado'];
+
         } catch (Exception $e) {
+            error_log("Error en actualizarUsuarioAsignado: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
         }
     }
@@ -285,22 +361,21 @@ public function actualizarPerfil($data) {
             $contrasenaHash = password_hash($data['nueva_contrasena'], PASSWORD_DEFAULT);
             $emailEncriptado = CifradoHelper::encriptar($data['email']);
             
-            $sql = "CALL sp_recuperar_contrasena(?, ?, @p_resultado)";
+            $sql = "UPDATE usuario SET contrasena = ? WHERE email = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $emailEncriptado, $contrasenaHash);
+            $stmt->bind_param("ss", $contrasenaHash, $emailEncriptado);
             
-            if ($stmt->execute()) {
-                $result = $conn->query("SELECT @p_resultado as resultado");
-                $row = $result->fetch_assoc();
-                
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
                 return [
-                    'success' => (bool)$row['resultado'],
-                    'message' => $row['resultado'] ? 'Contraseña actualizada correctamente' : 'No se pudo actualizar la contraseña'
+                    'success' => true,
+                    'message' => 'Contraseña actualizada correctamente'
                 ];
             }
             
-            return ['success' => false, 'message' => 'Error al ejecutar la consulta'];
+            return ['success' => false, 'message' => 'Correo electrónico no encontrado'];
+
         } catch (Exception $e) {
+            error_log("Error en recuperarContrasena: " . $e->getMessage());
             return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
         }
     }
@@ -308,9 +383,21 @@ public function actualizarPerfil($data) {
     public function obtenerTecnicosPorEspecialidad($especialidad, $soloActivos = true) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_obtener_tecnicos_por_especialidad(?, ?)";
+        $sql = "SELECT u.*, t.especialidad 
+                FROM usuario u
+                JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                WHERE t.especialidad = ?";
+        $params = [$especialidad];
+        $types = "s";
+
+        if ($soloActivos) {
+            $sql .= " AND u.estado = 'activo'";
+        }
+
+        $sql .= " ORDER BY u.nombre ASC";
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $especialidad, $soloActivos);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         
         $result = $stmt->get_result();
@@ -332,9 +419,22 @@ public function actualizarPerfil($data) {
     public function obtenerUsuariosPorTipo($tipo, $excluirId = null) {
         $conn = $this->db->getConnection();
 
-        $sql = "CALL sp_obtener_usuarios_por_tipo(?, ?)";
+        $sql = "SELECT u.*, t.especialidad FROM usuario u 
+                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                WHERE u.tipo = ?";
+        $params = [$tipo];
+        $types = "s";
+
+        if ($excluirId) {
+            $sql .= " AND u.ID_Usuario != ?";
+            $params[] = $excluirId;
+            $types .= "s";
+        }
+
+        $sql .= " ORDER BY u.nombre ASC";
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $tipo, $excluirId);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
 
         $result = $stmt->get_result();
@@ -356,22 +456,29 @@ public function actualizarPerfil($data) {
     public function registrarActividad($idUsuario, $descripcion) {
         $conn = $this->db->getConnection();
         
-        $sql = "CALL sp_registrar_actividad(?, ?, @p_resultado)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $idUsuario, $descripcion);
-        
-        if ($stmt->execute()) {
-            $result = $conn->query("SELECT @p_resultado as resultado");
-            $row = $result->fetch_assoc();
-            return (bool)$row['resultado'];
+        try {
+            $idActividad = $this->generateUUID($conn);
+            
+            $sql = "INSERT INTO actividad_usuario (ID_Actividad, ID_Usuario, descripcion, fecha) 
+                    VALUES (?, ?, ?, NOW())";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sss", $idActividad, $idUsuario, $descripcion);
+            
+            return $stmt->execute();
+
+        } catch (Exception $e) {
+            error_log("Error en registrarActividad: " . $e->getMessage());
+            return false;
         }
-        
-        return false;
     }
 
     public function obtenerHistorialActividades($usuarioId) {
         $conn = $this->db->getConnection();
-        $sql = "CALL sp_obtener_historial_actividades(?)";
+        
+        $sql = "SELECT * FROM actividad_usuario 
+                WHERE ID_Usuario = ? 
+                ORDER BY fecha DESC 
+                LIMIT 50";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $usuarioId);
         $stmt->execute();
@@ -385,11 +492,14 @@ public function actualizarPerfil($data) {
 
         return $actividades;
     }
+
     public function buscarPorEmail($email) {
         $conn = $this->db->getConnection();
         $emailEncriptado = CifradoHelper::encriptar($email);
 
-        $sql = "CALL sp_buscar_usuario_por_email(?)";
+        $sql = "SELECT u.*, t.especialidad FROM usuario u 
+                LEFT JOIN tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                WHERE u.email = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $emailEncriptado);
         $stmt->execute();

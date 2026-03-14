@@ -1,4 +1,3 @@
-// backend/services/AdministradorService.php
 <?php
 require_once __DIR__ . '/../models/AdministradorModel.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';

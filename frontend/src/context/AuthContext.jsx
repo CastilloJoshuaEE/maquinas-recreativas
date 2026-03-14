@@ -1,5 +1,6 @@
 // frontend/src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../utils/api';
 
 const AuthContext = createContext();
 
@@ -9,13 +10,8 @@ export function AuthProvider({ children }) {
 
 const login = async (credentials) => {
   try {
-    const response = await fetch('/api/usuario/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials)
-    });
+ const { response,data } = await api.post('/usuario/login', credentials);
     
-    const data = await response.json();
     
     if (data.success && data.usuario) {
       // Asegurarse de que el UUID viene del backend
@@ -43,12 +39,7 @@ const login = async (credentials) => {
 
     const logout = async () => {
         try {
-            const response = await fetch('/api/usuario/logout', { 
-                method: 'POST',
-                credentials: 'include'
-            });
-            
-            const data = await response.json();
+            const { data } = await api.post('/usuario/logout', {});
             
             if (data.success) {
                 localStorage.removeItem('user');
@@ -62,7 +53,6 @@ const login = async (credentials) => {
             return { success: false, message: 'Error al cerrar sesión' };
         }
     };
-// En AuthContext.jsx
 useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) {

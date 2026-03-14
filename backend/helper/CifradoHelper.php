@@ -1,4 +1,3 @@
-// backend/helper/CifradoHelper.php
 <?php
     define('ENCRYPT_METHOD', 'AES-256-CBC');
     define('SECRET_KEY', 'clave_super_segura');

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
 import '../css/modulo_contabilidad/Consultar_Recaudacion.css';
+import api from '../src/utils/api';
 
 export default function ConsultarInformeDistribucion() {
   const [filters, setFilters] = useState({
@@ -21,6 +22,7 @@ export default function ConsultarInformeDistribucion() {
 
   useEffect(() => {
     fetchMachines();
+    fetchComercios();
   }, []);
 
   useEffect(() => {
@@ -33,13 +35,23 @@ export default function ConsultarInformeDistribucion() {
 
   const fetchMachines = async () => {
     try {
-      const response = await fetch('/api/maquina/distribucion');
-      const data = await response.json();
+      const { data } = await api.get('/maquina/distribucion');
       if (data.success) {
         setMaquinas(data.maquinas);
       }
     } catch (error) {
       console.error('Error fetching machines:', error);
+    }
+  };
+
+  const fetchComercios = async () => {
+    try {
+      const { data } = await api.get('/comercio/all');
+      if (data.success) {
+        setComercios(data.comercios);
+      }
+    } catch (error) {
+      console.error('Error fetching comercios:', error);
     }
   };
 
@@ -59,8 +71,7 @@ export default function ConsultarInformeDistribucion() {
         if (filters.estado) queryParams.append('estado', filters.estado);
         if (filters.ID_Comercio) queryParams.append('ID_Comercio', filters.ID_Comercio);
         
-        const response = await fetch(`/api/distribucion/informes?${queryParams.toString()}`);
-        const data = await response.json();
+        const { response, data } = await api.get(`/distribucion/informes?${queryParams.toString()}`);
         
         console.log('Datos recibidos:', data); 
         
@@ -80,7 +91,7 @@ export default function ConsultarInformeDistribucion() {
     } finally {
         setLoading(false);
     }
-};
+  };
 
   const formatDateTime = (dateTime) => {
     if (!dateTime) return 'No se ha dado de baja';
@@ -144,20 +155,26 @@ export default function ConsultarInformeDistribucion() {
             <option value="No operativa">No operativa</option>
           </select>
         </div>
-        <select name="ID_Comercio" value={filters.ID_Comercio} onChange={handleFilterChange}>
-          <option value="">Todos los comercios</option>
-          {comercios.map(c => (
-            <option key={c.ID_Comercio} value={c.ID_Comercio}>
-              {c.Nombre}
-            </option>
-          ))}
-        </select>
+        
+        <div className="filter-group">
+          <label>Comercio</label>
+          <select name="ID_Comercio" value={filters.ID_Comercio} onChange={handleFilterChange}>
+            <option value="">Todos los comercios</option>
+            {comercios.map(c => (
+              <option key={c.ID_Comercio} value={c.ID_Comercio}>
+                {c.Nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        
         <button 
           onClick={() => setFilters({
             fecha_inicio: '',
             fecha_fin: '',
             ID_Maquina: '',
-            estado: ''
+            estado: '',
+            ID_Comercio: ''
           })}
         >
           Limpiar Filtros

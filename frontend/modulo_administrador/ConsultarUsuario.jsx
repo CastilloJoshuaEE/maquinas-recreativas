@@ -3,70 +3,50 @@ import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 import '../css/modulo_administrador/consultar_usuarios.css';
 import { AdminHeader } from '../modulo_usuario/AdminHeader';
+import api from '../src/utils/api';
 
-// Ajustar el elemento app para accesibilidad
 Modal.setAppElement('#root');
 
 export default function ConsultarUsuarios() {
-  // Lista de usuarios obtenidos desde el servidor.
   const [usuarios, setUsuarios] = useState([]);
-  // Indica si los datos aún están cargando.
   const [loading, setLoading] = useState(true);
-  // Almacena mensajes de error para mostrar al usuario.
   const [error, setError] = useState('');
-  // Almacena los valores actuales de los filtros aplicados a la búsqueda de usuarios.
   const [filtros, setFiltros] = useState({
     ci: '',
     estado: '',
     tipo: '',
     rango_fecha: ''
   });
-// Controla si el modal de historial de usuario está abierto o cerrado.
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  // Lista de actividades del usuario seleccionado.
   const [historialUsuario, setHistorialUsuario] = useState([]);
-  // Usuario actualmente seleccionado para ver su historial.
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
-  // Permite redireccionar a otras rutas del sistema.
   const navigate = useNavigate();
-  // Registrar actividad y cargar usuarios al montar
-  // Se ejecuta una sola vez al cargar el componente: carga los usuarios y registra actividad.
+
   useEffect(() => {
-    cargarUsuarios();  
-
+    cargarUsuarios();
   }, []);
-  // Envía una descripción de la actividad del administrador al backend para mantener el historial.
 
-  
-  // Carga lista de usuarios con filtros
   const cargarUsuarios = async () => {
     setLoading(true);
     setError('');
   
     try {
       const params = new URLSearchParams();
-      if (filtros.ci)          params.append('ci', filtros.ci);
-      if (filtros.estado)      params.append('estado', filtros.estado);
-      if (filtros.tipo)        params.append('tipo', filtros.tipo);
+      if (filtros.ci) params.append('ci', filtros.ci);
+      if (filtros.estado) params.append('estado', filtros.estado);
+      if (filtros.tipo) params.append('tipo', filtros.tipo);
       if (filtros.rango_fecha) params.append('rango', filtros.rango_fecha);
   
-      const res = await fetch(`/api/administrador/usuarios?${params.toString()}`, {
+      const token = localStorage.getItem('token');
+      const { response, data } = await api.get(`/administrador/usuarios?${params.toString()}`, {
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
   
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error('Respuesta no válida del servidor: ' + text);
-      }
-  
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || `Error ${res.status}`);
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || `Error ${response.status}`);
       }
   
       setUsuarios(data.usuarios);
@@ -78,93 +58,81 @@ export default function ConsultarUsuarios() {
     }
   };
   
-// Obtiene del servidor el historial de actividades del usuario seleccionado.
   const cargarHistorialUsuario = async (idUsuario) => {
-      setError('');
-      try {
-        const res = await fetch(`/api/historial-actividades?usuarioId=${idUsuario}`, {
-          headers: { 
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          }
-        });
-    
-        // Leer como texto y parsear, para atrapar cualquier HTML inesperado
-        const text = await res.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch {
-          throw new Error('Respuesta no válida del servidor: ' + text);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const { response, data } = await api.get(`/historial-actividades?usuarioId=${idUsuario}`, {
+        headers: { 
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` 
         }
-    
-        if (!res.ok || !data.success) {
-          throw new Error(data.message || `Error ${res.status}`);
-        }
-        setHistorialUsuario(data.historial);
-      } catch (err) {
-        console.error('Error al cargar el historial de actividades:', err);
-        setError(err.message);
-      }
-    };
+      });
   
-// Abre el modal y carga el historial del usuario.
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || `Error ${response.status}`);
+      }
+      setHistorialUsuario(data.historial);
+    } catch (err) {
+      console.error('Error al cargar el historial de actividades:', err);
+      setError(err.message);
+    }
+  };
+  
   const abrirModalHistorial = (usuario) => {
     setUsuarioSeleccionado(usuario);
     cargarHistorialUsuario(usuario.ID_Usuario);
     setModalIsOpen(true);
   };
-// Cierra el modal y limpia el historial mostrado.
+
   const cerrarModal = () => {
     setModalIsOpen(false);
     setHistorialUsuario([]);
     setUsuarioSeleccionado(null);
   };
-// Actualiza el estado de filtros cada vez que se modifica un campo del formulario de búsqueda.
+
   const handleFiltroChange = (e) => {
     const { name, value } = e.target;
     setFiltros(prev => ({ ...prev, [name]: value }));
   };
-// Redirige a la página de edición de usuario.
+
   const handleActualizarUsuario = (uuid) => navigate(`/admin/gestion-usuarios/editar-usuario/${uuid}`);
-  // Redirige a la página para cambiar el estado del usuario.
+  
   const handleEditarEstadoUsuario = (uuid) => navigate(`/admin/gestion-usuarios/editar-estado-usuario/${uuid}`);
-// Elimina al usuario después de una confirmación y actualiza la lista.
- const handleEliminarUsuario = async (uuid) => {
-  if (!uuid) {
-    console.error('UUID no proporcionado');
-    return;
-  }
-  
-  if (!window.confirm('¿Está seguro de eliminar este usuario?')) return;
-  
-  try {
-    const res = await fetch(`/api/administrador/usuarios/${uuid}`, {
-      method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || `Error ${res.status}`);
+  const handleEliminarUsuario = async (uuid) => {
+    if (!uuid) {
+      console.error('UUID no proporcionado');
+      return;
     }
-
-    const data = await res.json();
     
-    if (data.success) {
-      setUsuarios(us => us.filter(u => u.ID_Usuario !== uuid)); // o .uuid según lo que uses
-      alert('Usuario eliminado correctamente');
+    if (!window.confirm('¿Está seguro de eliminar este usuario?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const { response, data } = await api.delete(`/administrador/usuarios/${uuid}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(data.message || `Error ${response.status}`);
+      }
+    
+      if (data.success) {
+        setUsuarios(us => us.filter(u => u.ID_Usuario !== uuid));
+        alert('Usuario eliminado correctamente');
+      }
+    } catch (err) {
+      console.error('Error al eliminar usuario:', err);
+      alert(err.message);
     }
-  } catch (err) {
-    console.error('Error al eliminar usuario:', err);
-    alert(err.message);
-  }
-};
+  };
+
   if (loading) return <div className="loading">Cargando usuarios...</div>;
-  if (error)   return <div className="error">{error}</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="consultar-usuarios-container">
@@ -231,7 +199,7 @@ export default function ConsultarUsuarios() {
           </tbody>
         </table>
       </div>
-{/** Muestra el historial de actividades del usuario seleccionado en una ventana emergente.*/}
+
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={cerrarModal}
