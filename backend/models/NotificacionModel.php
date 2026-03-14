@@ -8,24 +8,17 @@ class NotificacionModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
 
     public function crearNotificacion($idRemitente, $idDestinatario, $idMaquina, $tipo, $mensaje) {
         $conn = $this->db->getConnection();
         
         try {
-            $idNotificacion = $this->generateUUID($conn);
             
             // CORRECCIÓN: Usar el nombre correcto de la tabla (NotificacionMaquinaRecreativa)
-            $sql = "INSERT INTO NotificacionMaquinaRecreativa (ID_Notificacion, ID_Remitente, ID_Destinatario, ID_Maquina, Tipo, Mensaje, Fecha, Estado) 
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), 'No leido')";
+            $sql = "INSERT INTO NotificacionMaquinaRecreativa (ID_Remitente, ID_Destinatario, ID_Maquina, Tipo, Mensaje, Fecha, Estado) 
+                    VALUES ( ?, ?, ?, ?, ?, NOW(), 'No leido')";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssss", $idNotificacion, $idRemitente, $idDestinatario, $idMaquina, $tipo, $mensaje);
+            $stmt->bind_param("sssss", $idRemitente, $idDestinatario, $idMaquina, $tipo, $mensaje);
             
             return $stmt->execute();
 

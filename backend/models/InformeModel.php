@@ -8,53 +8,47 @@ class InformeModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
 
     public function registrarRecaudacion($data) {
-        $conn = $this->db->getConnection();
-        
-        $detalle = $data['detalle'] ?? '';
-        $porcentaje = $data['Porcentaje_Comercio'] ?? 0;
-        
-        try {
-            $idRecaudacion = $this->generateUUID($conn);
-            
-            $sql = "INSERT INTO recaudacion (
-                        ID_Recaudacion, Tipo_Comercio, ID_Maquina, ID_Usuario, 
-                        Monto_Total, Monto_Empresa, Monto_Comercio, fecha, 
-                        detalle, Porcentaje_Comercio
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            
-            $stmt->bind_param(
-                "ssssddddss",
-                $idRecaudacion,
-                $data['Tipo_Comercio'],
-                $data['ID_Maquina'],
-                $data['ID_Usuario'],
-                $data['Monto_Total'],
-                $data['Monto_Empresa'],
-                $data['Monto_Comercio'],
-                $data['fecha'],
-                $detalle,
-                $porcentaje
-            );
+    $conn = $this->db->getConnection();
+    
+    $detalle = $data['detalle'] ?? '';
+    $porcentaje = $data['Porcentaje_Comercio'] ?? 0;
+    
+    try {
 
-            if ($stmt->execute()) {
-                return $idRecaudacion;
-            }
-            return false;
+        $sql = "INSERT INTO recaudacion (
+                    Tipo_Comercio, ID_Maquina, ID_Usuario,
+                    Monto_Total, Monto_Empresa, Monto_Comercio, fecha,
+                    detalle, Porcentaje_Comercio
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        } catch (Exception $e) {
-            error_log("Error en registrarRecaudacion: " . $e->getMessage());
-            return false;
+        $stmt = $conn->prepare($sql);
+
+        $stmt->bind_param(
+            "sssdddsss",
+            $data['Tipo_Comercio'],
+            $data['ID_Maquina'],
+            $data['ID_Usuario'],
+            $data['Monto_Total'],
+            $data['Monto_Empresa'],
+            $data['Monto_Comercio'],
+            $data['fecha'],
+            $detalle,
+            $porcentaje
+        );
+
+        if ($stmt->execute()) {
+            return true;
         }
+
+        return false;
+
+    } catch (Exception $e) {
+        error_log("Error en registrarRecaudacion: " . $e->getMessage());
+        return false;
     }
+}
 
     public function obtenerRecaudaciones($filters) {
         $conn = $this->db->getConnection();
@@ -220,20 +214,18 @@ class InformeModel {
         $conn = $this->db->getConnection();
         
         try {
-            $idInforme = $this->generateUUID($conn);
             
             $sql = "INSERT INTO informe_principal (
-                        ID_Informe_Principal, ID_Recaudacion, CI_Usuario, 
+                        ID_Recaudacion, CI_Usuario, 
                         Nombre_Maquina, ID_Comercio, Nombre_Comercio, 
                         Direccion_Comercio, Telefono_Comercio, Pago_Ensamblador, 
                         Pago_Comprobador, Pago_Mantenimiento, empresa_nombre, 
                         empresa_descripcion
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             
             $stmt->bind_param(
-                "ssssssssdddss",
-                $idInforme,
+                "sssssssdddss",
                 $data['ID_Recaudacion'],
                 $data['CI_Usuario'],
                 $data['Nombre_Maquina'],
@@ -249,7 +241,7 @@ class InformeModel {
             );
 
             if ($stmt->execute()) {
-                return $idInforme;
+                return true;
             }
             
             error_log("Error en guardarInformePrincipal: " . $stmt->error);
@@ -265,12 +257,11 @@ class InformeModel {
         $conn = $this->db->getConnection();
         
         try {
-            $idDetalle = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO detalle_componente_informe (ID_Detalle, ID_Informe_Principal, ID_Componente) 
-                    VALUES (?, ?, ?)";
+            $sql = "INSERT INTO detalle_componente_informe (ID_Informe_Principal, ID_Componente) 
+                    VALUES ( ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $idDetalle, $idInforme, $idComponente);
+            $stmt->bind_param("ss", $idInforme, $idComponente);
             
             return $stmt->execute();
 

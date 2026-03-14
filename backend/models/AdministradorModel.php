@@ -234,15 +234,13 @@ class AdministradorModel {
         try {
             $conn->begin_transaction();
 
-            $id_usuario = $this->generateUUID($conn);
 
             // CORRECCIÓN: Eliminado fecha_registro
-            $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO usuario (nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+                    VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssssssss",
-                $id_usuario,
+                "ssssssss",
                 $data['nombre'],
                 $data['apellido'],
                 $ciEncriptado,
@@ -333,11 +331,6 @@ class AdministradorModel {
         return $stmt->execute();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
+
 }
 ?>

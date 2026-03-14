@@ -8,12 +8,7 @@ class MaquinaModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
+ 
 
     private function verificarTecnico($idTecnico) {
         $conn = $this->db->getConnection();
@@ -38,20 +33,19 @@ class MaquinaModel {
             $this->verificarTecnico($idEnsamblador);
             $this->verificarTecnico($idComprobador);
             
-            $idMaquina = $this->generateUUID($conn);
             
             // CORRECCIÓN: Usar MaquinaRecreativa y Nombre_Maquina
-            $sql = "INSERT INTO MaquinaRecreativa (ID_Maquina, Nombre_Maquina, Tipo, Fecha_Registro, Estado, Etapa, ID_Comercio, ID_Tecnico_Ensamblador, ID_Tecnico_Comprobador) 
-                    VALUES (?, ?, ?, CURDATE(), 'Ensamblandose', 'Montaje', ?, ?, ?)";
+            $sql = "INSERT INTO MaquinaRecreativa ( Nombre_Maquina, Tipo, Fecha_Registro, Estado, Etapa, ID_Comercio, ID_Tecnico_Ensamblador, ID_Tecnico_Comprobador) 
+                    VALUES ( ?, ?, CURDATE(), 'Ensamblandose', 'Montaje', ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssss", $idMaquina, $nombre, $tipo, $idComercio, $idEnsamblador, $idComprobador);
+            $stmt->bind_param("sssss",  $nombre, $tipo, $idComercio, $idEnsamblador, $idComprobador);
 
             if (!$stmt->execute()) {
                 throw new Exception("Error al registrar máquina: " . $stmt->error);
             }
 
             $conn->commit();
-            return $idMaquina;
+            return true;
 
         } catch (Exception $e) {
             $conn->rollback();

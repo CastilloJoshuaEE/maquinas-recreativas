@@ -9,13 +9,7 @@ class ReporteModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
-
+ 
     public function crearReporte($emisorId, $destinatarioId, $descripcion) {
         $conn = $this->db->getConnection();
         
@@ -33,15 +27,14 @@ class ReporteModel {
                 }
             }
 
-            $idReporte = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO reporte (ID_Reporte, ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado) 
-                    VALUES (?, ?, ?, ?, NOW(), 'Pendiente')";
+            $sql = "INSERT INTO reporte ( ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado) 
+                    VALUES ( ?, ?, ?, NOW(), 'Pendiente')";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssss", $idReporte, $emisorId, $destinatarioId, $descripcion);
+            $stmt->bind_param("sss", $emisorId, $destinatarioId, $descripcion);
             
             if ($stmt->execute()) {
-                return $idReporte;
+                return true;
             }
             
             return false;

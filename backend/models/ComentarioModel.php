@@ -9,27 +9,20 @@ class ComentarioModel {
         $this->db = new Database();
     }
 
-    private function generateUUID($conn) {
-        $sql = "SELECT UUID() as uuid";
-        $result = $conn->query($sql);
-        $row = $result->fetch_assoc();
-        return $row['uuid'];
-    }
 
     public function crearComentario($reporteId, $emisorId, $comentario) {
         $conn = $this->db->getConnection();
         
         try {
-            $idComentario = $this->generateUUID($conn);
             
             // CORRECCIÓN: Usar los nombres correctos de columnas según bootstrap.php
-            $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
+            $sql = "INSERT INTO comentario (ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
                     VALUES (?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssss", $idComentario, $reporteId, $emisorId, $comentario);
+            $stmt->bind_param("sss", $reporteId, $emisorId, $comentario);
             
             if ($stmt->execute()) {
-                return $idComentario;
+                return true;
             }
             
             return false;
