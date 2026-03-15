@@ -106,7 +106,8 @@
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #f1f3f5;
+  color:black;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -165,6 +166,7 @@
 
 .comentario-item p {
   margin: 0 0 6px 0;
+  color: black;
 }
 
 .comentario-item small {

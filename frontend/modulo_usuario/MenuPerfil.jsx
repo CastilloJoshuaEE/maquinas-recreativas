@@ -1,3 +1,4 @@
+// En MenuPerfil.jsx - CORREGIR
 import { useState, useEffect } from 'react';
 import '../css/modulo_usuario/menu_perfil.css';
 import { AdminHeader } from './AdminHeader';
@@ -10,25 +11,30 @@ export default function MenuPerfil() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || !user.uuid) {
+        // Usar currentUser del contexto en lugar de localStorage
+        if (!currentUser) {
           navigate('/login');
           return;
         }
 
+        const userId = currentUser.uuid || currentUser.ID_Usuario;
+        
+        if (!userId) {
+          throw new Error('ID de usuario no disponible');
+        }
+
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(user.uuid)) {
+        if (!uuidRegex.test(userId)) {
           throw new Error('ID de usuario no válido');
         }
 
         const token = localStorage.getItem('token');
-        const { data } = await api.get(`/usuario/perfil?id=${user.uuid}`, {
+        const { data } = await api.get(`/usuario/perfil?id=${userId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -40,7 +46,7 @@ export default function MenuPerfil() {
           setProfile(data.usuario);
           
           await api.post('/historial-actividades', {
-            ID_Usuario: user.uuid,
+            ID_Usuario: userId,
             descripcion: "El usuario estuvo en su perfil"
           }, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -49,21 +55,15 @@ export default function MenuPerfil() {
           setError(data.message || 'Error al cargar el perfil');
         }
       } catch (err) {
+        console.error('Error fetching profile:', err);
         setError(err.message || 'Error al cargar el perfil');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        navigate('/login');
+        // No redirigir automáticamente, solo mostrar error
       } finally {
         setLoading(false);
       }
     };
 
-    if (currentUser?.uuid) {
-      fetchProfile();
-    } else {
-      setError('Usuario no autenticado');
-      setLoading(false);
-    }
+    fetchProfile();
   }, [currentUser, navigate]);
 
   const handleLogout = async () => {
@@ -162,11 +162,12 @@ export default function MenuPerfil() {
           <div id="historial"></div>
         </form>
         <button
-            onClick={() => navigate(`/usuario/actualizar-perfil?id=${currentUser.uuid}`)}
-          >
-            Editar Perfil
-          </button>
+          onClick={() => navigate('/usuario/actualizar-perfil')}
+        >
+          Editar Perfil
+        </button>
         <button onClick={() => navigate(-1)}>Regresar</button>
+        <button onClick={handleLogout}>Cerrar Sesión</button>
       </div>
     </div>
   );

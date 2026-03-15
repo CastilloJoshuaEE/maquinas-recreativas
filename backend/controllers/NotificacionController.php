@@ -109,46 +109,79 @@ class NotificacionController {
      * @throws \Exception
      * @return void
      */
-
-    public function marcarComoLeidaNotificacion($notificacionId) {
-        try {
-            session_start();
-            $userId = $_SESSION['ID_Usuario'] ?? null;
-            
-            if (!$userId) {
-                throw new Exception('No autorizado');
-            }
-
-            $response = $this->service->marcarComoLeidaNotificacion($notificacionId, $userId);
-            header('Content-Type: application/json');
-            echo json_encode($response);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    // En NotificacionController.php - CORREGIR
+public function marcarComoLeidaNotificacion($notificacionId) {
+    try {
+        session_start();
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            return;
         }
+
+        // Validar que el ID de notificación no esté vacío
+        if (empty($notificacionId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID de notificación requerido']);
+            return;
+        }
+
+        $response = $this->service->marcarComoLeidaNotificacion($notificacionId, $userId);
+        
+        // Asegurarse de que la respuesta sea siempre un objeto JSON válido
+        header('Content-Type: application/json');
+        
+        if (!is_array($response)) {
+            $response = ['success' => false, 'message' => 'Respuesta inválida del servicio'];
+        }
+        
+        echo json_encode($response);
+        
+    } catch (Exception $e) {
+        error_log("Error en marcarComoLeidaNotificacion: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        ]);
     }
+}
+
     /**
      * Marca todas las notificaciones del usuario autenticado como leídas.
      * @throws \Exception
      * @return void
      */
     public function marcarTodasComoLeidas() {
-        try {
-            session_start();
-            $userId = $_SESSION['ID_Usuario'] ?? null;
-            
-            if (!$userId) {
-                throw new Exception('No autorizado');
-            }
-
-            $response = $this->service->marcarTodasComoLeidas($userId);
-            header('Content-Type: application/json');
-            echo json_encode($response);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    try {
+        session_start();
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        
+        if (!$userId) {
+            throw new Exception('No autorizado');
         }
+
+        $result = $this->service->marcarTodasComoLeidas($userId);
+
+        header('Content-Type: application/json');
+
+        echo json_encode([
+            'success' => $result,
+            'message' => $result 
+                ? 'Todas las notificaciones marcadas como leídas'
+                : 'Error al actualizar notificaciones'
+        ]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+}
 
     /**
      * Devuelve el número de notificaciones no leídas de un usuario autenticado.

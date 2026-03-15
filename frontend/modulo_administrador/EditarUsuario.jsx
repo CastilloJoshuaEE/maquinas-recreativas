@@ -41,51 +41,65 @@ export default function EditarUsuario({ modo = 'actualizar' }) {
         fetchUsuario(uuid);
     }, [uuid]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!window.confirm('¿Está seguro de guardar los cambios?')) {
-            return;
-        }
+// En EditarUsuario.jsx - handleSubmit()
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!window.confirm('¿Está seguro de guardar los cambios?')) {
+        return;
+    }
+    
+    try {
+        let formData;
+        const token = localStorage.getItem('token');
         
-        try {
-            let formData;
-            const token = localStorage.getItem('token');
-            
-            if (modo === 'actualizar') {
-                formData = {
-                    ID_Usuario: uuid,
-                    nombre: e.target.nombre.value,
-                    apellido: e.target.apellido.value,
-                    email: e.target.email.value,
-                    usuario_asignado: e.target.usuario_asignado.value,
-                    ci: e.target.ci.value,
-                    tipo: e.target.tipo.value,
-                    estado: usuario.estado
-                };
+        if (modo === 'actualizar') {
+            formData = {
+                ID_Usuario: uuid,
+                nombre: e.target.nombre.value,
+                apellido: e.target.apellido.value,
+                email: e.target.email.value,
+                usuario_asignado: e.target.usuario_asignado.value,
+                ci: e.target.ci.value,
+                tipo: e.target.tipo.value,
+                estado: usuario.estado
+            };
 
-                if (formData.tipo === 'Tecnico') {
-                    formData.ID_Tecnico = uuid;
-                    formData.especialidad = e.target.especialidad?.value;
-                }
-
-                if (e.target.contrasena) {
-                    const nuevaContrasena = e.target.contrasena.value.trim();
-                    if (nuevaContrasena !== '') {
-                        formData.contrasena = nuevaContrasena;
-                    }
-                }
-            } else {
-                formData = {
-                    ID_Usuario: uuid,
-                    estado: e.target.estado.value
-                };
+            if (formData.tipo === 'Tecnico') {
+                formData.ID_Tecnico = uuid;
+                formData.especialidad = e.target.especialidad?.value;
             }
 
-            const method = modo === 'actualizar' ? 'put' : 'patch';
-            const { response, data } = await api[method](`/administrador/usuarios/${uuid}`, formData, {
-                headers: { 
-                    'Authorization': `Bearer ${token}`
+            if (e.target.contrasena) {
+                const nuevaContrasena = e.target.contrasena.value.trim();
+                if (nuevaContrasena !== '') {
+                    formData.contrasena = nuevaContrasena;
                 }
+            }
+            
+            // ✅ Usar PUT para actualización completa
+            const { response, data } = await api.put(`/administrador/usuarios/${uuid}`, formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en la solicitud');
+            }
+
+            if (data.success) {
+                setSuccess(true);
+                setTimeout(() => navigate('/admin/gestion-usuarios/consultar-usuarios'), 2000);
+            } else {
+                setError(data.message || 'Error al actualizar usuario');
+            }
+        } else {
+            // ✅ Modo estado - usar PATCH
+            formData = {
+                ID_Usuario: uuid,
+                estado: e.target.estado.value
+            };
+            
+            const { response, data } = await api.patch(`/administrador/usuarios/${uuid}`, formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) {
@@ -93,22 +107,17 @@ export default function EditarUsuario({ modo = 'actualizar' }) {
             }
 
             if (data.success) {
-                await api.post('/historial-actividades', {
-                    descripcion: `El usuario editó los datos del usuario ${uuid}`
-                }, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
                 setSuccess(true);
                 setTimeout(() => navigate('/admin/gestion-usuarios/consultar-usuarios'), 2000);
             } else {
-                setError(data.message || `Error al ${modo === 'actualizar' ? 'actualizar' : 'cambiar estado del'} usuario`);
+                setError(data.message || 'Error al cambiar estado del usuario');
             }
-        } catch (err) {
-            setError(err.message || 'Error de conexión con el servidor');
-            console.error('Error al guardar cambios:', err);
         }
-    };
+    } catch (err) {
+        setError(err.message || 'Error de conexión con el servidor');
+        console.error('Error al guardar cambios:', err);
+    }
+};
 
     if (loading) return <div className="loading">Cargando usuario...</div>;
     if (error) return <div className="error">{error}</div>;

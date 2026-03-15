@@ -11,39 +11,53 @@ class ReporteModel {
 
  
     public function crearReporte($emisorId, $destinatarioId, $descripcion) {
-        $conn = $this->db->getConnection();
-        
-        try {
-            // Verificar que los usuarios existen
-            $checkEmisor = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$emisorId'");
-            if ($checkEmisor->num_rows == 0) {
-                throw new Exception("El usuario emisor no existe");
-            }
-            
-            if ($destinatarioId) {
-                $checkDestinatario = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$destinatarioId'");
-                if ($checkDestinatario->num_rows == 0) {
-                    throw new Exception("El usuario destinatario no existe");
-                }
-            }
-
-            
-            $sql = "INSERT INTO reporte ( ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado) 
-                    VALUES ( ?, ?, ?, NOW(), 'Pendiente')";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $emisorId, $destinatarioId, $descripcion);
-            
-            if ($stmt->execute()) {
-                return true;
-            }
-            
-            return false;
-
-        } catch (Exception $e) {
-            error_log("Error en crearReporte: " . $e->getMessage());
-            return false;
+    $conn = $this->db->getConnection();
+    
+    try {
+        // Verificar que los usuarios existen
+        $checkEmisor = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$emisorId'");
+        if ($checkEmisor->num_rows == 0) {
+            throw new Exception("El usuario emisor no existe");
         }
+        
+        if ($destinatarioId) {
+            $checkDestinatario = $conn->query("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = '$destinatarioId'");
+            if ($checkDestinatario->num_rows == 0) {
+                throw new Exception("El usuario destinatario no existe");
+            }
+        }
+
+        $sql = "INSERT INTO reporte (ID_Reporte, ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado) 
+                VALUES (UUID(), ?, ?, ?, NOW(), 'Pendiente')";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sss", $emisorId, $destinatarioId, $descripcion);
+        
+        if ($stmt->execute()) {
+            $reporteId = $conn->insert_id;
+            
+            // Si la tabla usa UUID generado por MySQL, necesitamos consultarlo
+            if (!$reporteId || $reporteId == 0) {
+                $getIdSql = "SELECT ID_Reporte FROM reporte 
+                            WHERE ID_Usuario_Emisor = ? AND ID_Usuario_Destinatario = ? 
+                            ORDER BY fecha_hora DESC LIMIT 1";
+                $getIdStmt = $conn->prepare($getIdSql);
+                $getIdStmt->bind_param("ss", $emisorId, $destinatarioId);
+                $getIdStmt->execute();
+                $result = $getIdStmt->get_result();
+                $row = $result->fetch_assoc();
+                $reporteId = $row['ID_Reporte'] ?? null;
+            }
+            
+            return $reporteId;
+        }
+        
+        return false;
+
+    } catch (Exception $e) {
+        error_log("Error en crearReporte: " . $e->getMessage());
+        return false;
     }
+}
 
     public function obtenerReportesPorUsuario($userId) {
         $conn = $this->db->getConnection();

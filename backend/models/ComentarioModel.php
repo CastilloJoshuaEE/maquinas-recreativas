@@ -9,29 +9,37 @@ class ComentarioModel {
         $this->db = new Database();
     }
 
-
-    public function crearComentario($reporteId, $emisorId, $comentario) {
-        $conn = $this->db->getConnection();
+public function crearComentario($reporteId, $emisorId, $comentario) {
+    $conn = $this->db->getConnection();
+    
+    try {
+        // ✅ Incluir ID_Comentario con UUID() para tener control del ID
+        $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
+                VALUES (UUID(), ?, ?, ?, NOW())";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sss", $reporteId, $emisorId, $comentario);
         
-        try {
+        if ($stmt->execute()) {
+            // Obtener el ID del comentario insertado
+            $getIdSql = "SELECT ID_Comentario FROM comentario 
+                        WHERE ID_Reporte = ? AND ID_Usuario_Emisor = ? 
+                        ORDER BY fecha_hora DESC LIMIT 1";
+            $getIdStmt = $conn->prepare($getIdSql);
+            $getIdStmt->bind_param("ss", $reporteId, $emisorId);
+            $getIdStmt->execute();
+            $result = $getIdStmt->get_result();
+            $row = $result->fetch_assoc();
             
-            // CORRECCIÓN: Usar los nombres correctos de columnas según bootstrap.php
-            $sql = "INSERT INTO comentario (ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
-                    VALUES (?, ?, ?, ?, NOW())";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $reporteId, $emisorId, $comentario);
-            
-            if ($stmt->execute()) {
-                return true;
-            }
-            
-            return false;
-
-        } catch (Exception $e) {
-            error_log("Error en crearComentario: " . $e->getMessage());
-            return false;
+            return $row ? $row['ID_Comentario'] : true;
         }
+        
+        return false;
+
+    } catch (Exception $e) {
+        error_log("Error en crearComentario: " . $e->getMessage());
+        return false;
     }
+}
 
     public function obtenerComentariosPorReporte($reporteId, $userId) {
         $conn = $this->db->getConnection();

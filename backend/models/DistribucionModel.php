@@ -16,7 +16,8 @@ class DistribucionModel {
             $estado = 'Operativa';
         }
         
-        $sql = "UPDATE informe_distribucion SET estado_maquina = ? WHERE ID_Maquina = ?";
+        // CORREGIDO: Usar 'estado' en lugar de 'estado_maquina'
+        $sql = "UPDATE informe_distribucion SET estado = ? WHERE ID_Maquina = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $estado, $idMaquina);
         
@@ -28,24 +29,25 @@ class DistribucionModel {
         
         try {
             // Verificar si ya existe un informe
-            $checkSql = "SELECT ID_Informe_Distribucion FROM informe_distribucion WHERE ID_Maquina = ?";
+            $checkSql = "SELECT ID_Distribucion FROM informe_distribucion WHERE ID_Maquina = ?";
             $checkStmt = $conn->prepare($checkSql);
             $checkStmt->bind_param("s", $idMaquina);
             $checkStmt->execute();
             $checkResult = $checkStmt->get_result();
 
             if ($checkResult->num_rows > 0) {
-                // Actualizar existente
+                // Actualizar existente - CORREGIDO: Usar nombres correctos de columnas
                 $updateSql = "UPDATE informe_distribucion 
-                              SET ID_Usuario = ?, ID_Comercio = ?, fecha_actualizacion = NOW() 
+                              SET ID_Usuario_Comprobador = ?, ID_Comercio = ?, fecha_alta = NOW() 
                               WHERE ID_Maquina = ?";
                 $updateStmt = $conn->prepare($updateSql);
                 $updateStmt->bind_param("sss", $idUsuario, $idComercio, $idMaquina);
                 return $updateStmt->execute();
             } else {
-                // Crear nuevo
-                $insertSql = "INSERT INTO informe_distribucion ( ID_Maquina, ID_Usuario, ID_Comercio, fecha_creacion, estado_maquina) 
-                              VALUES (?, ?, ?, NOW(), 'Operativa')";
+                // Crear nuevo - CORREGIDO: Usar nombres correctos de columnas
+                $insertSql = "INSERT INTO informe_distribucion 
+                              (ID_Maquina, ID_Usuario_Comprobador, ID_Comercio, fecha_alta, estado) 
+                              VALUES (?, ?, ?, NOW(), 'Distribuyendose')";
                 $insertStmt = $conn->prepare($insertSql);
                 $insertStmt->bind_param("sss", $idMaquina, $idUsuario, $idComercio);
                 return $insertStmt->execute();
@@ -56,68 +58,80 @@ class DistribucionModel {
             return false;
         }
     }
+// En DistribucionModel.php - CORREGIR método obtenerInformesDistribucion
+public function obtenerInformesDistribucion($filters = []) {
+    $conn = $this->db->getConnection();
+    
+    $estado = $filters['estado'] ?? null;
+    $idComercio = $filters['ID_Comercio'] ?? null;
+    $fechaInicio = $filters['fecha_inicio'] ?? null;
+    $fechaFin = $filters['fecha_fin'] ?? null;
+    $idMaquina = $filters['ID_Maquina'] ?? null;
+    
+    $sql = "SELECT 
+                id.ID_Distribucion,
+                id.ID_Maquina,
+                id.ID_Usuario_Comprobador,
+                id.ID_Comercio,
+                id.fecha_alta,
+                id.fecha_baja,
+                id.estado,
+                m.Nombre_Maquina,
+                CONCAT(u.nombre, ' ', u.apellido) as Nombre_Tecnico,
+                c.Nombre as Nombre_Comercio,
+                c.Direccion as Direccion_Comercio,
+                c.Telefono as Telefono_Comercio,
+                c.Tipo as Tipo_Comercio
+            FROM informe_distribucion id
+            INNER JOIN MaquinaRecreativa m ON id.ID_Maquina = m.ID_Maquina
+            INNER JOIN usuario u ON id.ID_Usuario_Comprobador = u.ID_Usuario
+            INNER JOIN Comercio c ON id.ID_Comercio = c.ID_Comercio
+            WHERE 1=1";
+    
+    $params = [];
+    $types = "";
 
-    public function obtenerInformesDistribucion($filters = []) {
-        $conn = $this->db->getConnection();
-        
-        $estado = $filters['estado'] ?? null;
-        $idComercio = $filters['ID_Comercio'] ?? null;
-        $fechaInicio = $filters['fecha_inicio'] ?? null;
-        $fechaFin = $filters['fecha_fin'] ?? null;
-        $idMaquina = $filters['ID_Maquina'] ?? null;
-        
-        $sql = "SELECT id.*, m.nombre as nombre_maquina, c.nombre as nombre_comercio, 
-                       u.nombre as nombre_usuario, u.apellido as apellido_usuario
-                FROM informe_distribucion id
-                JOIN maquina m ON id.ID_Maquina = m.ID_Maquina
-                JOIN comercio c ON id.ID_Comercio = c.ID_Comercio
-                JOIN usuario u ON id.ID_Usuario = u.ID_Usuario
-                WHERE 1=1";
-        $params = [];
-        $types = "";
-
-        if ($estado) {
-            $sql .= " AND id.estado_maquina = ?";
-            $params[] = $estado;
-            $types .= "s";
-        }
-        if ($idComercio) {
-            $sql .= " AND id.ID_Comercio = ?";
-            $params[] = $idComercio;
-            $types .= "s";
-        }
-        if ($fechaInicio) {
-            $sql .= " AND DATE(id.fecha_creacion) >= ?";
-            $params[] = $fechaInicio;
-            $types .= "s";
-        }
-        if ($fechaFin) {
-            $sql .= " AND DATE(id.fecha_creacion) <= ?";
-            $params[] = $fechaFin;
-            $types .= "s";
-        }
-        if ($idMaquina) {
-            $sql .= " AND id.ID_Maquina = ?";
-            $params[] = $idMaquina;
-            $types .= "s";
-        }
-
-        $sql .= " ORDER BY id.fecha_creacion DESC";
-
-        $stmt = $conn->prepare($sql);
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        $informes = [];
-        while ($row = $result->fetch_assoc()) {
-            $informes[] = $row;
-        }
-        
-        return $informes;
+    if ($estado) {
+        $sql .= " AND id.estado = ?";
+        $params[] = $estado;
+        $types .= "s";
+    }
+    if ($idComercio) {
+        $sql .= " AND id.ID_Comercio = ?";
+        $params[] = $idComercio;
+        $types .= "s";
+    }
+    if ($fechaInicio) {
+        $sql .= " AND DATE(id.fecha_alta) >= ?";
+        $params[] = $fechaInicio;
+        $types .= "s";
+    }
+    if ($fechaFin) {
+        $sql .= " AND DATE(id.fecha_alta) <= ?";
+        $params[] = $fechaFin;
+        $types .= "s";
+    }
+    if ($idMaquina) {
+        $sql .= " AND id.ID_Maquina = ?";
+        $params[] = $idMaquina;
+        $types .= "s";
     }
 
+    $sql .= " ORDER BY id.fecha_alta DESC";
+
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $informes = [];
+    while ($row = $result->fetch_assoc()) {
+        $informes[] = $row;
+    }
+    
+    return $informes;
+}
 }
 ?>

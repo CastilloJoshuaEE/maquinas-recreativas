@@ -1,4 +1,4 @@
-/* chatbot.css con correcciones */
+/* chatbot.css corregido para que los mensajes del bot se vean negros */
 .chatbot-container {
   width: 350px;
   max-width: 90vw;
@@ -57,8 +57,12 @@
 .message.bot {
   align-self: flex-start;
   background-color: #ecf0f1;
-  color: #333;
-  border-bottom-left-radius: 5px;
+  color: black !important; /* fuerza que sea negro */
+}
+
+/* aplica color negro a cualquier elemento dentro del mensaje del bot */
+.message.bot * {
+  color: black !important;
 }
 
 .chatbot-options {
@@ -67,6 +71,7 @@
   gap: 8px;
   padding: 10px;
   background-color: #e8e8e8;
+  color: black;
   max-height: 200px;
   overflow-y: auto;
 }
@@ -129,6 +134,7 @@
     bottom: 10px;
   }
 }
+
 .chatbot-button-link {
   background-color: #2b6cb0;
   color: white;
@@ -138,6 +144,7 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 .chatbot-button-link:hover {
   background-color: #2c5282;
 }

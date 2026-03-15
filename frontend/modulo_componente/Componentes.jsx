@@ -270,7 +270,6 @@ export default function Componentes() {
                   <th>Nombre</th>
                   <th>Tipo</th>
                   <th>Máquina</th>
-                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -285,7 +284,6 @@ export default function Componentes() {
                     <td>{comp.nombre}</td>
                     <td>{comp.tipo}</td>
                     <td>{comp.Nombre_Maquina || "N/A"}</td>
-                    <td>{comp.estado_uso}</td>
                     <td>
                       <button
                         onClick={() =>

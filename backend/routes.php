@@ -208,40 +208,71 @@ break;
         // --------------------------------
         // ENDPOINTS DE NOTIFICACIONES
         // --------------------------------
-        case (preg_match('/\/notificaciones_maquina\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
-            if ($requestMethod === 'GET') {
-                $controller = new NotificacionController();
-                $controller->obtenerPorUsuario($matches[1]);
-            }
-            break;
+// --------------------------------
+// ENDPOINTS DE NOTIFICACIONES 
+// --------------------------------
 
-        case (preg_match('/\/notificaciones\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
-            if ($requestMethod === 'GET') {
-                $controller = new NotificacionController();
-                $controller->getByUser($matches[1]);
-            }
-            break;
-            
-        case '/notificaciones/create':
-            if ($requestMethod === 'POST') {
-                $controller = new NotificacionController();
-                $controller->create();
-            }
-            break;
+// Notificaciones de máquinas (tabla NotificacionMaquinaRecreativa)
+case (preg_match('/\/notificaciones_maquina\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+    if ($requestMethod === 'GET') {
+        $controller = new NotificacionController();
+        $controller->obtenerPorUsuario($matches[1]);
+    }
+    break;
 
-        case '/notificaciones/marcar-leida':
-            if ($requestMethod === 'POST') {
-                $controller = new NotificacionController();
-                $controller->marcarComoLeida();
-            }
-            break;
+// Notificaciones de reportes (tabla notificaciones) - GET con UUID
+case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
+    if ($requestMethod === 'GET') {
+        $controller = new NotificacionController();
+        $controller->getNotificaciones($m[1]);
+    }
+    break;
 
-        case (preg_match('/\/notificaciones\/no-leidas\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
-            if ($requestMethod === 'GET') {
-                $controller = new NotificacionController();
-                $controller->obtenerNoLeidas($matches[1]);
-            }
-            break;
+// Marcar una notificación como leída - POST con UUID
+case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/marcarla-leida$#i', $apiRoute, $m) ? true : false):
+    if ($requestMethod === 'POST') {
+        $controller = new NotificacionController();
+        $controller->marcarComoLeidaNotificacion($m[1]);
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
+
+// Marcar todas como leídas
+case '/notificaciones/marcarla-todas-leidas':
+    if ($requestMethod === 'POST') {
+        $controller = new NotificacionController();
+        $controller->marcarTodasComoLeidas();
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
+
+// Crear notificación
+case '/notificaciones/create':
+    if ($requestMethod === 'POST') {
+        $controller = new NotificacionController();
+        $controller->create();
+    }
+    break;
+
+// Marcar como leída (versión antigua, mantener por compatibilidad)
+case '/notificaciones/marcar-leida':
+    if ($requestMethod === 'POST') {
+        $controller = new NotificacionController();
+        $controller->marcarComoLeida();
+    }
+    break;
+
+// Obtener no leídas
+case (preg_match('/\/notificaciones\/no-leidas\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
+    if ($requestMethod === 'GET') {
+        $controller = new NotificacionController();
+        $controller->obtenerNoLeidas($matches[1]);
+    }
+    break;
 
         // --------------------------------
         // PERFIL DE USUARIO ENDPOINTS
@@ -479,35 +510,7 @@ break;
             }
             break;
             
-        // --------------------------------
-        // ENDPOINTS DE NOTIFICACIONES 
-        // --------------------------------
-        case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $m) ? true : false):
-            if ($requestMethod === 'GET') {
-                $controller = new NotificacionController();
-                $controller->getByUser($m[1]);
-                (new NotificacionController())->getNotificaciones($m[1]);
-            }
-            break;
-   
-        case (preg_match('#^/notificaciones/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/marcarla-leida$#i', $apiRoute, $m) ? true : false):
-            if ($requestMethod === 'POST') {
-                (new NotificacionController())->marcarComoLeidaNotificacion($m[1]);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            }
-            break;
 
-        case '/notificaciones/marcarla-todas-leidas':
-            if ($requestMethod === 'POST') {
-                (new NotificacionController())->marcarTodasComoLeidas();
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            }
-            break;
-            
         // --------------------------------
         // ENDPOINTS DE COMPONENTES
         // --------------------------------
@@ -658,7 +661,11 @@ break;
                 $controller->registrarMontaje();
             }
             break;
-
+case (preg_match('#^/contabilidad/informe/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+    if ($requestMethod === 'GET') {
+        (new InformeController())->obtenerInformePorRecaudacion($matches[1]);
+    }
+    break;
         // --------------------------------
         // ENDPOINT POR DEFECTO (404)
         // --------------------------------
