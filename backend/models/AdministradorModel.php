@@ -36,7 +36,7 @@ class AdministradorModel {
     public function obtenerTodosUsuarios() {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Eliminado ORDER BY fecha_registro
+        //  Eliminado ORDER BY fecha_registro
         $sql = "SELECT u.*, t.Especialidad 
                 FROM usuario u 
                 LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
@@ -235,7 +235,7 @@ class AdministradorModel {
             $conn->begin_transaction();
 
 
-            // CORRECCIÓN: Eliminado fecha_registro
+            //  Eliminado fecha_registro
             $sql = "INSERT INTO usuario (nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                     VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);

@@ -13,7 +13,7 @@ public function crearComentario($reporteId, $emisorId, $comentario) {
     $conn = $this->db->getConnection();
     
     try {
-        // ✅ Incluir ID_Comentario con UUID() para tener control del ID
+        // Incluir ID_Comentario con UUID() para tener control del ID
         $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
                 VALUES (UUID(), ?, ?, ?, NOW())";
         $stmt = $conn->prepare($sql);
@@ -44,7 +44,7 @@ public function crearComentario($reporteId, $emisorId, $comentario) {
     public function obtenerComentariosPorReporte($reporteId, $userId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar los nombres correctos de columnas
+        //  Usar los nombres correctos de columnas
         $sql = "SELECT c.*, u.nombre, u.apellido, u.email, u.tipo,
                        CASE WHEN u.ID_Usuario = ? THEN 1 ELSE 0 END as es_propio
                 FROM comentario c
@@ -71,7 +71,7 @@ public function crearComentario($reporteId, $emisorId, $comentario) {
     public function obtenerComentariosPorChat($emisorId, $destinatarioId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar los nombres correctos de columnas
+        //  Usar los nombres correctos de columnas
         $sql = "SELECT c.*, u.nombre, u.apellido, u.email, u.tipo,
                        r.ID_Usuario_Destinatario, r.ID_Usuario_Emisor
                 FROM comentario c

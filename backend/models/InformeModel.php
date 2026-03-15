@@ -48,7 +48,7 @@ class InformeModel {
         error_log("Error en registrarRecaudacion: " . $e->getMessage());
         return false;
     }
-}// En InformeModel.php - CORREGIR método obtenerRecaudaciones
+}
 public function obtenerRecaudaciones($filters) {
     $conn = $this->db->getConnection();
     
@@ -122,7 +122,6 @@ public function obtenerRecaudaciones($filters) {
     
     return $recaudaciones;
 }
-    // En InformeModel.php - CORREGIR método obtenerResumenRecaudacionesLimitado
 public function obtenerResumenRecaudacionesLimitado($limit = null) {
     $conn = $this->db->getConnection();
     
@@ -223,7 +222,6 @@ public function obtenerResumenRecaudacionesLimitado($limit = null) {
             ];
         }
     }
-// En InformeModel.php - CORREGIR método eliminarRecaudacion
 public function eliminarRecaudacion($id) {
     $conn = $this->db->getConnection();
     
@@ -259,7 +257,6 @@ public function eliminarRecaudacion($id) {
         return false;
     }
 }
-// En InformeModel.php - CORREGIR método guardarInformePrincipal
 public function guardarInformePrincipal($data) {
     $conn = $this->db->getConnection();
     
@@ -402,7 +399,6 @@ public function obtenerInformePrincipal($idRecaudacion) {
     
     return false;
 }
-// En InformeModel.php - CORREGIR método obtenerComponentesInforme
 public function obtenerComponentesInforme($idInforme) {
     $conn = $this->db->getConnection();
     
@@ -423,7 +419,6 @@ public function obtenerComponentesInforme($idInforme) {
     
     return $componentes;
 }
-// En InformeModel.php - CORREGIR método obtenerRecaudacion
 public function obtenerRecaudacion($idRecaudacion) {
     $conn = $this->db->getConnection();
     

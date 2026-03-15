@@ -49,7 +49,7 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'La cédula ya está registrada'];
         }
 
-        // ✅ Verificar duplicados de nombre de usuario
+        // Verificar duplicados de nombre de usuario
         $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
         $checkUserStmt = $conn->prepare($checkUserSql);
         $checkUserStmt->bind_param("s", $usuario_asignado);
@@ -173,7 +173,7 @@ public function login($usuario_asignado) {
         
         try {
             
-            // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
+            //  Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
             $sql = "INSERT INTO inicio_sesion (ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
                     VALUES ( ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
@@ -190,7 +190,7 @@ public function login($usuario_asignado) {
     public function registrarLogout($userId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion'
+        //  Usar la tabla correcta 'inicio_sesion'
         $sql = "UPDATE inicio_sesion SET fecha_ultima_sesion = NOW() 
                 WHERE ID_Usuario = ? AND fecha_ultima_sesion IS NULL 
                 ORDER BY fecha_inicio DESC LIMIT 1";
@@ -216,7 +216,7 @@ public function login($usuario_asignado) {
 public function incrementarActividadesTecnico($idTecnico) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar el nombre correcto de la columna 'Cantidad_Actividades'
+        //  Usar el nombre correcto de la columna 'Cantidad_Actividades'
         $sql = "UPDATE Tecnico SET Cantidad_Actividades = Cantidad_Actividades + 1 
                 WHERE ID_Tecnico = ?";
         $stmt = $conn->prepare($sql);
@@ -358,7 +358,7 @@ public function incrementarActividadesTecnico($idTecnico) {
     try {
         $emailEncriptado = CifradoHelper::encriptar($data['email']);
         
-        // ✅ CORRECCIÓN: Primero obtener el ID del usuario por su email
+        //  Primero obtener el ID del usuario por su email
         $getIdSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
         $getIdStmt = $conn->prepare($getIdSql);
         $getIdStmt->bind_param("s", $emailEncriptado);
@@ -372,7 +372,7 @@ public function incrementarActividadesTecnico($idTecnico) {
         $usuario = $result->fetch_assoc();
         $userId = $usuario['ID_Usuario'];
         
-        // ✅ VALIDACIÓN: Verificar si el nuevo nombre de usuario ya existe en OTRO usuario
+        // VALIDACIÓN: Verificar si el nuevo nombre de usuario ya existe en OTRO usuario
         $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? AND ID_Usuario != ?";
         $checkUserStmt = $conn->prepare($checkUserSql);
         $checkUserStmt->bind_param("ss", $data['usuario_asignado'], $userId);
@@ -382,7 +382,7 @@ public function incrementarActividadesTecnico($idTecnico) {
             return ['success' => false, 'message' => 'El nombre de usuario ya está en uso por otro usuario'];
         }
         
-        // ✅ Actualizar el usuario
+        // Actualizar el usuario
         $sql = "UPDATE usuario SET usuario_asignado = ? WHERE ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $data['usuario_asignado'], $userId);
@@ -511,7 +511,7 @@ public function incrementarActividadesTecnico($idTecnico) {
         
         try {
             
-            // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+            //  Usar la tabla correcta 'historial_actividades'
             $sql = "INSERT INTO historial_actividades ( ID_Usuario, descripcion, fecha_registro) 
                     VALUES ( ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
@@ -528,7 +528,7 @@ public function incrementarActividadesTecnico($idTecnico) {
     public function obtenerHistorialActividades($usuarioId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+        //  Usar la tabla correcta 'historial_actividades'
         $sql = "SELECT * FROM historial_actividades 
                 WHERE ID_Usuario = ? 
                 ORDER BY fecha_registro DESC 

@@ -95,7 +95,7 @@ class NotificacionService {
      * @param mixed $userId ID del usuario.
      * @return array{message: string, success: bool|array{success: bool}}
      */
-// En NotificacionService.php - CORREGIR
+// En NotificacionService.php - 
 public function marcarComoLeidaNotificacion($notificacionId, $userId) {
     try {
         // Validar parámetros

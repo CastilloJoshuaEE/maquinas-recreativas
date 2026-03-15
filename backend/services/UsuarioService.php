@@ -30,7 +30,7 @@ public function registrarUsuario($data) {
         return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
     }
     
-    // ✅ CORRECCIÓN: Pasar parámetros individuales en lugar del array completo
+    //  Pasar parámetros individuales en lugar del array completo
     $result = $this->model->registrarUsuario(
         $data['nombre'],
         $data['apellido'],

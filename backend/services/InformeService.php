@@ -154,7 +154,7 @@ class InformeService {
             return ['success' => false, 'message' => 'Error interno del servidor'];
         }
     }
-// En InformeService.php - CORREGIR método obtenerMaquinasRecaudacion
+// En InformeService.php -  método obtenerMaquinasRecaudacion
 public function obtenerMaquinasRecaudacion() {
     try {
         $maquinas = $this->maquinaModel->obtenerMaquinasPorEtapaYEstado('Recaudacion', 'Operativa');

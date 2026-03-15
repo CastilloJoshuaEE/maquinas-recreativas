@@ -76,7 +76,7 @@ const handleSubmit = async (e) => {
                 }
             }
             
-            // ✅ Usar PUT para actualización completa
+            // Usar PUT para actualización completa
             const { response, data } = await api.put(`/administrador/usuarios/${uuid}`, formData, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -92,7 +92,7 @@ const handleSubmit = async (e) => {
                 setError(data.message || 'Error al actualizar usuario');
             }
         } else {
-            // ✅ Modo estado - usar PATCH
+            // Modo estado - usar PATCH
             formData = {
                 ID_Usuario: uuid,
                 estado: e.target.estado.value

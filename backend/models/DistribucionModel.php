@@ -16,7 +16,7 @@ class DistribucionModel {
             $estado = 'Operativa';
         }
         
-        // CORREGIDO: Usar 'estado' en lugar de 'estado_maquina'
+        //  Usar 'estado' en lugar de 'estado_maquina'
         $sql = "UPDATE informe_distribucion SET estado = ? WHERE ID_Maquina = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ss", $estado, $idMaquina);
@@ -36,7 +36,7 @@ class DistribucionModel {
             $checkResult = $checkStmt->get_result();
 
             if ($checkResult->num_rows > 0) {
-                // Actualizar existente - CORREGIDO: Usar nombres correctos de columnas
+                // Actualizar existente -  Usar nombres correctos de columnas
                 $updateSql = "UPDATE informe_distribucion 
                               SET ID_Usuario_Comprobador = ?, ID_Comercio = ?, fecha_alta = NOW() 
                               WHERE ID_Maquina = ?";
@@ -44,7 +44,7 @@ class DistribucionModel {
                 $updateStmt->bind_param("sss", $idUsuario, $idComercio, $idMaquina);
                 return $updateStmt->execute();
             } else {
-                // Crear nuevo - CORREGIDO: Usar nombres correctos de columnas
+                // Crear nuevo -  Usar nombres correctos de columnas
                 $insertSql = "INSERT INTO informe_distribucion 
                               (ID_Maquina, ID_Usuario_Comprobador, ID_Comercio, fecha_alta, estado) 
                               VALUES (?, ?, ?, NOW(), 'Distribuyendose')";
@@ -58,7 +58,7 @@ class DistribucionModel {
             return false;
         }
     }
-// En DistribucionModel.php - CORREGIR método obtenerInformesDistribucion
+// En DistribucionModel.php -  método obtenerInformesDistribucion
 public function obtenerInformesDistribucion($filters = []) {
     $conn = $this->db->getConnection();
     

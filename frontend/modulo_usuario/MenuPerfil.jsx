@@ -1,4 +1,4 @@
-// En MenuPerfil.jsx - CORREGIR
+// En MenuPerfil.jsx - 
 import { useState, useEffect } from 'react';
 import '../css/modulo_usuario/menu_perfil.css';
 import { AdminHeader } from './AdminHeader';

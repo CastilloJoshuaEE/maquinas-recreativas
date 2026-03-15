@@ -62,7 +62,7 @@ class ReporteModel {
     public function obtenerReportesPorUsuario($userId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar los nombres correctos de columnas
+        //  Usar los nombres correctos de columnas
         $sql = "SELECT r.*, 
                        e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
                        d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email

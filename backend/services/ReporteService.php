@@ -36,7 +36,7 @@ class ReporteService {
         throw new Exception('Error al crear el reporte');
     }
 
-    // ✅ Verificar que tenemos un ID válido antes de crear la notificación
+    // Verificar que tenemos un ID válido antes de crear la notificación
     if ($reporteId) {
         $mensaje = "Tienes un nuevo reporte: " . substr($data['descripcion'], 0, 50) . "...";
         $notificacionCreada = $this->notificacionesModel->crearNotificacionReporte(

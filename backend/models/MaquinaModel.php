@@ -34,7 +34,7 @@ class MaquinaModel {
             $this->verificarTecnico($idComprobador);
             
             
-            // CORRECCIÓN: Usar MaquinaRecreativa y Nombre_Maquina
+            //  Usar MaquinaRecreativa y Nombre_Maquina
             $sql = "INSERT INTO MaquinaRecreativa ( Nombre_Maquina, Tipo, Fecha_Registro, Estado, Etapa, ID_Comercio, ID_Tecnico_Ensamblador, ID_Tecnico_Comprobador) 
                     VALUES ( ?, ?, CURDATE(), 'Ensamblandose', 'Montaje', ?, ?, ?)";
             $stmt = $conn->prepare($sql);
@@ -185,7 +185,7 @@ public function generarPlaca($idTecnico) {
 public function asignarTecnicoMantenimiento($idMaquina, $idTecnico) {
     $conn = $this->db->getConnection();
     
-    // CORREGIDO: Usar ID_Tecnico_Mantenimiento en lugar de ID_Mantenimiento
+    //  Usar ID_Tecnico_Mantenimiento en lugar de ID_Mantenimiento
     $sql = "UPDATE MaquinaRecreativa SET ID_Tecnico_Mantenimiento = ? WHERE ID_Maquina = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $idTecnico, $idMaquina);
@@ -238,11 +238,10 @@ public function obtenerMaquinasPorTecnicoComprobador($idTecnico) {
     
     return $maquinas;
 }
-// En MaquinaModel.php - Verificar que también use el nombre correcto
 public function obtenerMaquinasPorTecnicoMantenimiento($idTecnico) {
     $conn = $this->db->getConnection();
     
-    // CORREGIDO: Usar ID_Tecnico_Mantenimiento
+    //  Usar ID_Tecnico_Mantenimiento
     $sql = "SELECT m.*, 
                    c.Nombre as NombreComercio,
                    c.Direccion as DireccionComercio
@@ -356,7 +355,6 @@ public function obtenerMaquinaPorId($id) {
         
         return $maquinas;
     }
-// En MaquinaModel.php - CORREGIR método obtenerMaquinasPorEtapaYEstado
 public function obtenerMaquinasPorEtapaYEstado($etapa, $estado) {
     $conn = $this->db->getConnection();
     

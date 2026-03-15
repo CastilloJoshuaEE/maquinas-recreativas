@@ -8,7 +8,6 @@ class ComponenteModel {
     public function __construct() {
         $this->db = new Database();
     }
-// En ComponenteModel.php - CORREGIR método obtenerComponentes
 public function obtenerComponentes($tipo = null, $limit = 10, $offset = 0) {
     $conn = $this->db->getConnection();
     
@@ -95,7 +94,6 @@ public function obtenerComponentes($tipo = null, $limit = 10, $offset = 0) {
         
         return $componentes;
     }
-// En ComponenteModel.php - CORREGIR método usarComponente
 public function usarComponente($idComponente, $idUsuario, $idMaquina = null) {
     $conn = $this->db->getConnection();
     
@@ -217,7 +215,6 @@ public function liberarComponente($idComponente, $idUsuario) {
         ];
     }
 }
-// En ComponenteModel.php - CORREGIR método obtenerComponentesEnUso
 public function obtenerComponentesEnUso($idUsuario, $idMaquina = null) {
     $conn = $this->db->getConnection();
     

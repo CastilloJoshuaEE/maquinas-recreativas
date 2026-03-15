@@ -8,7 +8,6 @@ class NotificacionModel {
         $this->db = new Database();
     }
 
-// En NotificacionModel.php - CORREGIR método crearNotificacion
 public function crearNotificacion($idRemitente, $idDestinatario, $idMaquina, $tipo, $mensaje) {
     $conn = $this->db->getConnection();
     
@@ -30,7 +29,7 @@ public function crearNotificacion($idRemitente, $idDestinatario, $idMaquina, $ti
     $conn = $this->db->getConnection();
     
     try {
-        // ✅ Verificar que el reporte existe antes de crear la notificación
+        // Verificar que el reporte existe antes de crear la notificación
         $checkReporte = $conn->query("SELECT ID_Reporte FROM reporte WHERE ID_Reporte = '$reporteId'");
         if ($checkReporte->num_rows == 0) {
             error_log("Error: El reporte con ID $reporteId no existe");
@@ -84,7 +83,6 @@ public function crearNotificacion($idRemitente, $idDestinatario, $idMaquina, $ti
             return [];
         }
     }
-// En NotificacionModel.php - CORREGIR método obtenerNotificacionesPorDestinatario
 public function obtenerNotificacionesPorDestinatario($idDestinatario) {
     $conn = $this->db->getConnection();
     
@@ -128,7 +126,6 @@ public function marcarComoLeida($idNotificacion) {
     
     return $stmt->execute();
 }
-// En NotificacionModel.php - CORREGIR
 public function marcarComoLeidaNotificacion($notificacionId, $usuarioId) {
     $conn = $this->db->getConnection();
     

@@ -109,7 +109,7 @@ class NotificacionController {
      * @throws \Exception
      * @return void
      */
-    // En NotificacionController.php - CORREGIR
+    // En NotificacionController.php - 
 public function marcarComoLeidaNotificacion($notificacionId) {
     try {
         session_start();

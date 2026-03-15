@@ -36,7 +36,7 @@ const NotificacionesPanel = ({ currentUser }) => {
         return () => clearInterval(intervalo);
     }, [currentUser]);
 
-    // En NotificacionesPanel.jsx - MEJORAR
+    // En NotificacionesPanel.jsx - 
 const marcarComoLeida = async (notificacionId) => {
     try {
         setError(''); // Limpiar errores previos

@@ -137,7 +137,7 @@ class MaquinaService {
         
         return ['success' => true];
     }
-// En MaquinaService.php - CORREGIR método mandarADistribucion
+// En MaquinaService.php -  método mandarADistribucion
 public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
     $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
 
@@ -206,7 +206,7 @@ public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
         $maquinas = $this->maquinaModel->obtenerMaquinasPorTecnicoMantenimiento($idTecnico);
         return ['success' => true, 'maquinas' => $maquinas];
     }
-    // En MaquinaService.php - CORREGIR método darMantenimiento
+    // En MaquinaService.php -  método darMantenimiento
 public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
     $tecnicos = $this->usuarioModel->obtenerTecnicosPorEspecialidad('Mantenimiento');
 
