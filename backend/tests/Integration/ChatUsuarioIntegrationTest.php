@@ -54,8 +54,9 @@ class ChatUsuarioIntegrationTest extends TestCase {
         $conn->query("DELETE FROM reporte");
         $conn->query("DELETE FROM usuario");
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
-        // Crear usuarios de prueba si no existen
-        $this->usuario1Id = $this->usuarioModel->registrarUsuario(
+        
+        // Crear usuarios de prueba
+        $resultado1 = $this->usuarioModel->registrarUsuario(
             'Usuario1', 
             'Prueba', 
             '3333333333', 
@@ -65,7 +66,7 @@ class ChatUsuarioIntegrationTest extends TestCase {
             'Administrador'
         );
         
-        $this->usuario2Id = $this->usuarioModel->registrarUsuario(
+        $resultado2 = $this->usuarioModel->registrarUsuario(
             'Usuario2', 
             'Prueba', 
             '2222222222', 
@@ -74,14 +75,25 @@ class ChatUsuarioIntegrationTest extends TestCase {
             '12345678', 
             'Logistica'
         );
+        
+        // Verificar que los registros fueron exitosos
+        $this->assertTrue($resultado1['success']);
+        $this->assertTrue($resultado2['success']);
+        
+        // Extraer los IDs del array
+        $this->usuario1Id = $resultado1['userId'];
+        $this->usuario2Id = $resultado2['userId'];
+        
+        $this->assertNotNull($this->usuario1Id);
+        $this->assertNotNull($this->usuario2Id);
     }
     /**
      * CPI-003: Comunicación entre usuarios vía comentarios en reporte
-     * Comunicación entre usuarios vía comentarios en reporte
      */
     public function testFlujoChatUsuarios() {
         $conn = self::$testDb->getConnection();
-// 1. Crear reporte (inicia conversación)
+        
+        // 1. Crear reporte (inicia conversación)
         $reporteId = $this->reporteModel->crearReporte(
             $this->usuario1Id,
             $this->usuario2Id,
@@ -90,24 +102,29 @@ class ChatUsuarioIntegrationTest extends TestCase {
         
         $this->assertIsString($reporteId);
         $this->assertNotEmpty($reporteId);
-// 2. Crear notificación
+        
+        // 2. Crear notificación
         $notificacionCreada = $this->notificacionModel->crearNotificacionReporte(
             $reporteId,
             $this->usuario2Id,
             'Nuevo reporte creado'
         );
         $this->assertTrue($notificacionCreada);
-// 3. Crear comentarios
+        
+        // 3. Crear comentarios
         $this->crearComentarioTest($reporteId, $this->usuario1Id, 'Hola, tengo un problema');
         $this->crearComentarioTest($reporteId, $this->usuario2Id, 'Cuéntame más sobre el problema');
         $this->crearComentarioTest($reporteId, $this->usuario1Id, 'La máquina no enciende');
-// 4. Obtener chat completo
+        
+        // 4. Obtener chat completo
         $reportes = $this->reporteModel->obtenerChat($this->usuario1Id, $this->usuario2Id);
+        
         // Verificar resultados
-        $this->assertCount(1, $reportes);// Debería haber 1 reporte
+        $this->assertCount(1, $reportes); // Debería haber 1 reporte
+        
         // Verificar comentarios
         $comentarios = $conn->query("SELECT * FROM comentario WHERE ID_Reporte = '$reporteId'");
-        $this->assertEquals(3, $comentarios->num_rows);// Debería haber 3 comentarios
+        $this->assertEquals(3, $comentarios->num_rows); // Debería haber 3 comentarios
     }
     /**
      * Helper para crear comentarios de prueba
@@ -121,13 +138,5 @@ class ChatUsuarioIntegrationTest extends TestCase {
         $stmt->bind_param("ssss", $comentarioId, $reporteId, $usuarioId, $mensaje);
         return $stmt->execute();
     }
-     /**
-     * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
-     */
-    /*
-    public static function tearDownAfterClass(): void {
-        self::$testDb->cleanUp();
-    }    
-        */
 }
 ?>

@@ -223,52 +223,63 @@ class AdministradorModel {
             throw $e;
         }
     }
-   public function registrarUsuarioAdmin($data) {
-        $conn = $this->db->getConnection();
+ public function registrarUsuarioAdmin($data) {
+    $conn = $this->db->getConnection();
+    
+    $contrasenaHash = password_hash($data['contrasena'], PASSWORD_BCRYPT);
+    $especialidad = $data['especialidad'] ?? null;
+    $ciEncriptado = CifradoHelper::encriptar($data['ci']);
+    $emailEncriptado = CifradoHelper::encriptar($data['email']);
+
+    try {
+        $conn->begin_transaction();
+
+        // Insertar usuario
+        $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+                VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "ssssssss",
+            $data['nombre'],
+            $data['apellido'],
+            $ciEncriptado,
+            $emailEncriptado,
+            $data['usuario_asignado'],
+            $contrasenaHash,
+            $data['tipo'],
+            $data['estado']
+        );
+        $stmt->execute();
         
-        $contrasenaHash = password_hash($data['contrasena'], PASSWORD_BCRYPT);
-        $especialidad = $data['especialidad'] ?? null;
-        $ciEncriptado = CifradoHelper::encriptar($data['ci']);
-        $emailEncriptado = CifradoHelper::encriptar($data['email']);
-
-        try {
-            $conn->begin_transaction();
-
-
-            //  Eliminado fecha_registro
-            $sql = "INSERT INTO usuario (nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
-                    VALUES ( ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param(
-                "ssssssss",
-                $data['nombre'],
-                $data['apellido'],
-                $ciEncriptado,
-                $emailEncriptado,
-                $data['usuario_asignado'],
-                $contrasenaHash,
-                $data['tipo'],
-                $data['estado']
-            );
-            $stmt->execute();
-
-            // Si es técnico, insertar en tabla Tecnico
-            if ($data['tipo'] === 'Tecnico' && $especialidad !== null) {
-                $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
-                $stmtTec = $conn->prepare($sqlTec);
-                $stmtTec->bind_param("ss", $id_usuario, $especialidad);
-                $stmtTec->execute();
-            }
-
-            $conn->commit();
-            return $id_usuario;
-
-        } catch (Exception $e) {
-            $conn->rollback();
-            error_log("Error en registrarUsuarioAdmin: " . $e->getMessage());
-            return false;
+        // Obtener el ID del usuario insertado
+        $id_usuario = $conn->insert_id;
+        if (!$id_usuario) {
+            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+            $getIdStmt = $conn->prepare($getIdSql);
+            $getIdStmt->bind_param("s", $data['usuario_asignado']);
+            $getIdStmt->execute();
+            $result = $getIdStmt->get_result();
+            $row = $result->fetch_assoc();
+            $id_usuario = $row['ID_Usuario'];
         }
+
+        // Si es técnico, insertar en tabla Tecnico
+        if ($data['tipo'] === 'Tecnico' && $especialidad !== null) {
+            $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
+            $stmtTec = $conn->prepare($sqlTec);
+            $stmtTec->bind_param("ss", $id_usuario, $especialidad);
+            $stmtTec->execute();
+        }
+
+        $conn->commit();
+        return $id_usuario;
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Error en registrarUsuarioAdmin: " . $e->getMessage());
+        return false;
     }
+}
     public function getUsuarios($f) {
         $conn = $this->db->getConnection();
         
