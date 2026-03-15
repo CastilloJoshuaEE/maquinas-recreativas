@@ -53,7 +53,7 @@ class NotificacionIntegrationTest extends TestCase {
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
         
         // Guardar los IDs para usarlos después
-        $this->emisorId = $this->usuarioModel->registrarUsuario(
+        $resultado1 = $this->usuarioModel->registrarUsuario(
             'Emisor',
             'Prueba',
             '1111111111',
@@ -63,7 +63,7 @@ class NotificacionIntegrationTest extends TestCase {
             'Administrador'
         );
         
-        $this->destinatarioId = $this->usuarioModel->registrarUsuario(
+        $resultado2 = $this->usuarioModel->registrarUsuario(
             'Destinatario',
             'Prueba',
             '2222222222',
@@ -73,10 +73,19 @@ class NotificacionIntegrationTest extends TestCase {
             'Tecnico',
             'Ensamblador'
         );
+        
+        $this->assertTrue($resultado1['success']);
+        $this->assertTrue($resultado2['success']);
+        
+        $this->emisorId = $resultado1['userId'];
+        $this->destinatarioId = $resultado2['userId'];
+        
+        $this->assertNotNull($this->emisorId);
+        $this->assertNotNull($this->destinatarioId);
     }
+    
     /**
      * CPI-004: Notificaciones por Usuario
-     * Recuperar notificaciones por ID de usuario
      */
     public function testObtenerNotificacionesUsuario() {
         $conn = self::$testDb->getConnection();
@@ -93,11 +102,13 @@ class NotificacionIntegrationTest extends TestCase {
         $this->notificacionModel->crearNotificacionReporte($reporteId, $this->destinatarioId, 'Nuevo reporte creado');
         
         $notificaciones = $this->notificacionModel->obtenerNotificacionesPorUsuario($this->destinatarioId);
+        
         // Verificar resultados
         $this->assertNotEmpty($notificaciones);
         $this->assertCount(1, $notificaciones);
         $this->assertEquals('Nuevo reporte creado', $notificaciones[0]['mensaje']);
     }
+    
     /**
      * CPI-103: Marcar Notificación como Leída
      */
@@ -113,21 +124,25 @@ class NotificacionIntegrationTest extends TestCase {
         $this->notificacionModel->crearNotificacionReporte($reporteId, $this->destinatarioId, 'Nuevo reporte creado');
 
         $notificacion = $conn->query("SELECT ID_Notificaciones FROM notificaciones WHERE ID_Usuario = '{$this->destinatarioId}'")->fetch_assoc();
+        $this->assertNotNull($notificacion);
         $notificacionId = $notificacion['ID_Notificaciones'];
+        
         // Marcar como leída
-
         $resultado = $this->notificacionModel->marcarComoLeidaNotificacion($notificacionId, $this->destinatarioId);
         
         $this->assertTrue($resultado);
+        
         // Verificar en la base de datos
         $notificacion = $conn->query("SELECT leida FROM notificaciones WHERE ID_Notificaciones = '$notificacionId'")->fetch_assoc();
         $this->assertEquals(1, $notificacion['leida']);
     }
+    
     /**
      * CPI-104: Obtener Cantidad de Notificaciones No Leídas
      */
     public function testObtenerCantidadNoLeidas() {
         $conn = self::$testDb->getConnection();
+        
         // Crear 3 notificaciones (2 no leídas, 1 leída)
         $this->crearNotificacionTest($this->destinatarioId, false);
         $this->crearNotificacionTest($this->destinatarioId, false);
@@ -137,6 +152,7 @@ class NotificacionIntegrationTest extends TestCase {
         
         $this->assertEquals(2, $cantidad);
     }
+    
     /**
      * Helper para crear notificaciones de prueba
      */
@@ -159,8 +175,7 @@ class NotificacionIntegrationTest extends TestCase {
         if (!$conn->query($sqlNotificacion)) {
             throw new Exception("Error al crear notificación de prueba: " . $conn->error);
         }
-    }
-     /**
+    }/**
      * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
      */
 /*
@@ -168,5 +183,8 @@ class NotificacionIntegrationTest extends TestCase {
         self::$testDb->cleanUp();
     }
         */
+
+
+    
 }
-?>
+?> 

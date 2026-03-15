@@ -9,7 +9,6 @@ class UsuarioModel {
         $this->db = new Database();
     }
 
-
 public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
     $conn = $this->db->getConnection();
     
@@ -59,13 +58,13 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
         }
 
-        $sql = "INSERT INTO usuario 
-                (nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')";
+        // Insertar usuario incluyendo ID_Usuario con UUID()
+        $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+                VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, 'Activo')";
 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "sssssss", 
+            "sssssss",
             $nombre,
             $apellido,
             $ciEncriptado,
@@ -80,19 +79,22 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
         }
 
-        // Obtener el ID del usuario recién insertado
-        $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
-        $getIdStmt = $conn->prepare($getIdSql);
-        $getIdStmt->bind_param("s", $usuario_asignado);
-        $getIdStmt->execute();
-        $result = $getIdStmt->get_result();
-        $row = $result->fetch_assoc();
-
-        if (!$row) {
-            throw new Exception("No se pudo obtener el ID del usuario");
+        // Obtener el ID del usuario recién insertado (usando insert_id o consulta)
+        $id_usuario = $conn->insert_id;
+        if (!$id_usuario) {
+            // Si insert_id no funciona, consultar por usuario_asignado (que es único)
+            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+            $getIdStmt = $conn->prepare($getIdSql);
+            $getIdStmt->bind_param("s", $usuario_asignado);
+            $getIdStmt->execute();
+            $result = $getIdStmt->get_result();
+            $row = $result->fetch_assoc();
+            $id_usuario = $row['ID_Usuario'] ?? null;
         }
 
-        $id_usuario = $row['ID_Usuario'];
+        if (!$id_usuario) {
+            throw new Exception("No se pudo obtener el ID del usuario");
+        }
 
         // Si es técnico, insertar en tabla Tecnico
         if ($tipo === 'Tecnico' && $especialidad !== null) {

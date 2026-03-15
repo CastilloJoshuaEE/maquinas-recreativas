@@ -12,8 +12,8 @@ class TestDatabase extends Database {
         $this->db_name = 'prueba_bd_recrea_sys_';
  
         $this->conn = new mysqli($this->host, $this->username, $this->password);
-                $this->conn->query("SET default_storage_engine=INNODB");
-$this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
+        $this->conn->query("SET default_storage_engine=INNODB");
+        $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
         $this->conn->select_db($this->db_name);
         
         // Eliminar todas las tablas existentes
@@ -40,7 +40,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
     private function crearTablas() {
         // Tabla: usuario (con UUID y fecha_registro)
         $this->conn->query("CREATE TABLE usuario (
-            ID_Usuario CHAR(36) PRIMARY KEY,
+            ID_Usuario CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ci VARCHAR(100) NOT NULL UNIQUE,
             nombre VARCHAR(50) NOT NULL,
             apellido VARCHAR(50) NOT NULL,
@@ -68,7 +68,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: inicio_sesion (con UUID)
         $this->conn->query("CREATE TABLE inicio_sesion (
-            ID_Inicio_Sesion CHAR(36) PRIMARY KEY,
+            ID_Inicio_Sesion CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Usuario CHAR(36) NOT NULL,
             usuario_asignado VARCHAR(100) NOT NULL,
             contrasena VARCHAR(255) NOT NULL,
@@ -79,7 +79,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: historial_actividades (con UUID)
         $this->conn->query("CREATE TABLE historial_actividades (
-            ID_Historial_Actividades CHAR(36) PRIMARY KEY,
+            ID_Historial_Actividades CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Usuario CHAR(36) NOT NULL,
             descripcion TEXT DEFAULT 'Estuvo en su main',
             fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -88,7 +88,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: Comercio (con UUID)
         $this->conn->query("CREATE TABLE Comercio (
-            ID_Comercio CHAR(36) PRIMARY KEY,
+            ID_Comercio CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             Nombre VARCHAR(100) NOT NULL UNIQUE,
             Tipo ENUM('Minorista', 'Mayorista') NOT NULL,
             Direccion TEXT NOT NULL,
@@ -99,7 +99,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: MaquinaRecreativa (con UUID)
         $this->conn->query("CREATE TABLE MaquinaRecreativa (
-            ID_Maquina CHAR(36) PRIMARY KEY,
+            ID_Maquina CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             Nombre_Maquina VARCHAR(100) NOT NULL,
             Tipo VARCHAR(50) NOT NULL,
             Etapa ENUM('Montaje', 'Distribucion', 'Recaudacion') DEFAULT 'Montaje' NOT NULL,
@@ -117,7 +117,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: componente (con UUID)
         $this->conn->query("CREATE TABLE componente (
-            ID_Componente CHAR(36) PRIMARY KEY,
+            ID_Componente CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             tipo ENUM('Ensamblador', 'Comprobador', 'Mantenimiento', 'Logistico') NOT NULL,
             nombre VARCHAR(50) NOT NULL,
             precio DECIMAL(10,2) DEFAULT 10.00,
@@ -126,7 +126,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: componente_usuario (con UUID)
         $this->conn->query("CREATE TABLE componente_usuario (
-            ID_Registro CHAR(36) PRIMARY KEY,
+            ID_Registro CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Componente CHAR(36) NOT NULL,
             ID_Usuario CHAR(36) NOT NULL,
             fecha_asignacion DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -139,7 +139,7 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: montaje (con UUID)
         $this->conn->query("CREATE TABLE montaje (
-            ID_Montaje CHAR(36) PRIMARY KEY,
+            ID_Montaje CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             fecha DATETIME NOT NULL,
             ID_Maquina CHAR(36) NOT NULL,
             ID_Componente CHAR(36),
@@ -152,9 +152,9 @@ $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
 
         // Tabla: reporte (con UUID)
         $this->conn->query("CREATE TABLE reporte (
-            ID_Reporte CHAR(36) PRIMARY KEY,
+            ID_Reporte CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Usuario_Emisor CHAR(36) NOT NULL,
-ID_Usuario_Destinatario CHAR(36) NULL,
+            ID_Usuario_Destinatario CHAR(36) NULL,
             fecha_hora DATETIME NOT NULL,
             descripcion TEXT NOT NULL,
             estado VARCHAR(15) NOT NULL,
@@ -164,7 +164,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: notificaciones (con UUID)
         $this->conn->query("CREATE TABLE notificaciones (
-            ID_Notificaciones CHAR(36) PRIMARY KEY,
+            ID_Notificaciones CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Reporte CHAR(36) NOT NULL,
             ID_Usuario CHAR(36) NOT NULL,
             fecha_hora DATETIME NOT NULL,
@@ -176,7 +176,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: comentario (con UUID)
         $this->conn->query("CREATE TABLE comentario (
-            ID_Comentario CHAR(36) PRIMARY KEY,
+            ID_Comentario CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Reporte CHAR(36) NOT NULL,
             ID_Usuario_Emisor CHAR(36) NOT NULL,
             fecha_hora DATETIME NOT NULL,
@@ -187,7 +187,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: recaudaciones (con UUID)
         $this->conn->query("CREATE TABLE recaudaciones (
-            ID_Recaudacion CHAR(36) PRIMARY KEY,
+            ID_Recaudacion CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             Tipo_Comercio ENUM('Minorista', 'Mayorista') NOT NULL,
             ID_Maquina CHAR(36) NOT NULL,
             ID_Usuario CHAR(36) NOT NULL,
@@ -203,7 +203,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: informes_recaudacion (con UUID)
         $this->conn->query("CREATE TABLE informes_recaudacion (
-            ID_Informe CHAR(36) PRIMARY KEY,
+            ID_Informe CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Recaudacion CHAR(36) NOT NULL,
             CI_Usuario VARCHAR(100) NOT NULL,
             Nombre_Maquina VARCHAR(100) NOT NULL,
@@ -222,7 +222,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: informe_detalle (con UUID)
         $this->conn->query("CREATE TABLE informe_detalle (
-            ID_Informe_Detalle CHAR(36) PRIMARY KEY,
+            ID_Informe_Detalle CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Informe CHAR(36) NOT NULL,
             ID_Componente CHAR(36) NOT NULL,
             FOREIGN KEY (ID_Informe) REFERENCES informes_recaudacion(ID_Informe) ON DELETE CASCADE,
@@ -231,7 +231,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: NotificacionMaquinaRecreativa (con UUID)
         $this->conn->query("CREATE TABLE NotificacionMaquinaRecreativa (
-            ID_Notificacion CHAR(36) PRIMARY KEY,
+            ID_Notificacion CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Remitente CHAR(36) NOT NULL,
             ID_Destinatario CHAR(36) NOT NULL,
             ID_Maquina CHAR(36) NOT NULL,
@@ -254,7 +254,7 @@ ID_Usuario_Destinatario CHAR(36) NULL,
 
         // Tabla: informe_distribucion (con UUID)
         $this->conn->query("CREATE TABLE informe_distribucion (
-            ID_Distribucion CHAR(36) PRIMARY KEY,
+            ID_Distribucion CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Maquina CHAR(36) NOT NULL,
             ID_Usuario_Comprobador CHAR(36) NOT NULL,
             ID_Comercio CHAR(36) NOT NULL,
@@ -266,14 +266,14 @@ ID_Usuario_Destinatario CHAR(36) NULL,
             FOREIGN KEY (ID_Comercio) REFERENCES Comercio(ID_Comercio) ON DELETE CASCADE
         )");
     }
-   private function insertarDatosIniciales() {
+
+    private function insertarDatosIniciales() {
         // Insertar usuario administrador por defecto
         $adminId = $this->generateUUID();
         $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
         $this->conn->query("INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                           VALUES ('$adminId', 'Admin', 'Sistema', 'admin123', 'admin@sistema.com', 'admin', '$hashedPassword', 'Administrador', 'Activo')");
     }
-
 
     public function generateUUID() {
         $result = $this->conn->query("SELECT UUID() as uuid");

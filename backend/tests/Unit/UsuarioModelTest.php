@@ -2,42 +2,38 @@
 use PHPUnit\Framework\TestCase;
 
 class UsuarioModelTest extends TestCase {
-    private $model; // Instancia del modelo que se va a probar.
-    private static $testDb; // Conexión a la base de datos de prueba.
+    private $model;
+    private static $testDb;
 
-    /**
-     * Método ejecutado UNA SOLA VEZ antes de todas las pruebas.
-     * Ideal para inicialización costosa que no cambia entre pruebas.
-     */
     public static function setUpBeforeClass(): void {
-        self::$testDb = new TestDatabase(); // Inicializa la base de datos de prueba.
+        self::$testDb = new TestDatabase();
     }
 
-    /**
-     * Método ejecutado ANTES DE CADA prueba.
-     * Prepara el entorno para cada caso de prueba individual.
-     */
     protected function setUp(): void {
         $this->model = new UsuarioModel();
         
-        // Inyectar la conexión de prueba en el modelo
         $reflection = new ReflectionClass($this->model);
         $property = $reflection->getProperty('db');
         $property->setAccessible(true);
         $property->setValue($this->model, self::$testDb);
         
-        // Limpiar datos antes de cada prueba
         $conn = self::$testDb->getConnection();
-        $conn->query("DELETE FROM usuario WHERE email = 'jean@admin.com'");
+
+        // Limpiar todos los usuarios de prueba antes de cada test.
+        // No se puede filtrar por email (está encriptado), se filtra por usuario_asignado
+        // que es texto plano y único. Se excluye el admin inicial de TestDatabase.
+        $conn->query("SET FOREIGN_KEY_CHECKS = 0");
+        $conn->query("DELETE FROM Logistica");
+        $conn->query("DELETE FROM Tecnico");
+        $conn->query("DELETE FROM usuario WHERE usuario_asignado != 'admin'");
+        $conn->query("SET FOREIGN_KEY_CHECKS = 1");
     }
 
     /**
-     * CP-001
-     * Prueba el registro exitoso de un usuario de tipo Administrador.
-     * Verifica que: Se crea correctamente en la tabla usuario.
+     * CP-001 - Prueba el registro exitoso de un usuario de tipo Administrador.
      */
-     public function testRegistrarUsuarioAdministrador() {
-        $userId = $this->model->registrarUsuario(
+    public function testRegistrarUsuarioAdministrador() {
+        $resultado = $this->model->registrarUsuario(
             'Jean',
             'Castro',
             '0909090909',
@@ -47,22 +43,21 @@ class UsuarioModelTest extends TestCase {
             'Administrador'
         );
         
-        $this->assertIsString($userId);
-        $this->assertNotEmpty($userId);
+        $this->assertIsArray($resultado);
+        $this->assertTrue($resultado['success']);
+        $this->assertIsString($resultado['userId']);
+        $this->assertNotEmpty($resultado['userId']);
         
         $conn = self::$testDb->getConnection();
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
     }
+    
     /**
-     * CP-002
-     * Prueba el registro exitoso de un usuario de tipo Logistica.
-     * Verifica que:
-     * 1. Se crea correctamente en la tabla usuario.
-     * 2. Se registra en la tabla Logistica.
+     * CP-002 - Prueba el registro exitoso de un usuario de tipo Logistica.
      */
-   public function testRegistrarUsuarioLogistica() {
-        $userId = $this->model->registrarUsuario(
+    public function testRegistrarUsuarioLogistica() {
+        $resultado = $this->model->registrarUsuario(
             'Edú',
             'Sabando',
             '1316789914',
@@ -72,28 +67,25 @@ class UsuarioModelTest extends TestCase {
             'Logistica'
         );
         
-        $this->assertIsString($userId);
-        $this->assertNotEmpty($userId);
+        $this->assertIsArray($resultado);
+        $this->assertTrue($resultado['success']);
+        $this->assertIsString($resultado['userId']);
+        $this->assertNotEmpty($resultado['userId']);
         
         $conn = self::$testDb->getConnection();
         
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
         
-        $result = $conn->query("SELECT * FROM Logistica WHERE ID_Logistica = '$userId'");
+        $result = $conn->query("SELECT * FROM Logistica WHERE ID_Logistica = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
     }
     
     /**
-     * CP-003
-     * Prueba el registro exitoso de un usuario de tipo Tecnico.
-     * Verifica que:
-     * 1. Se crea correctamente en la tabla usuario.
-     * 2. Se registra en la tabla Tecnico con la especialidad correcta.
+     * CP-003 - Prueba el registro exitoso de un usuario de tipo Tecnico.
      */
-     
     public function testRegistrarUsuarioTecnicoEnsamblador() {
-        $userId = $this->model->registrarUsuario(
+        $resultado = $this->model->registrarUsuario(
             'Joshúa',
             'Castillo',
             '0808080808',
@@ -104,15 +96,17 @@ class UsuarioModelTest extends TestCase {
             'Ensamblador'
         );
         
-        $this->assertIsString($userId);
-        $this->assertNotEmpty($userId);
+        $this->assertIsArray($resultado);
+        $this->assertTrue($resultado['success']);
+        $this->assertIsString($resultado['userId']);
+        $this->assertNotEmpty($resultado['userId']);
         
         $conn = self::$testDb->getConnection();
         
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
         
-        $result = $conn->query("SELECT * FROM Tecnico WHERE ID_Tecnico = '$userId'");
+        $result = $conn->query("SELECT * FROM Tecnico WHERE ID_Tecnico = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
         
         $row = $result->fetch_assoc();
@@ -120,12 +114,10 @@ class UsuarioModelTest extends TestCase {
     }
 
     /**
-     * CP-004
-     * Prueba el registro exitoso de un usuario de tipo Contabilidad.
-     * Verifica que: Se crea correctamente en la tabla usuario.
+     * CP-004 - Prueba el registro exitoso de un usuario de tipo Contabilidad.
      */
-        public function testRegistrarUsuarioContabilidad() {
-        $userId = $this->model->registrarUsuario(
+    public function testRegistrarUsuarioContabilidad() {
+        $resultado = $this->model->registrarUsuario(
             'Joel',
             'Gabino',
             '0707070707',
@@ -135,22 +127,22 @@ class UsuarioModelTest extends TestCase {
             'Contabilidad'
         );
         
-        $this->assertIsString($userId);
-        $this->assertNotEmpty($userId);
+        $this->assertIsArray($resultado);
+        $this->assertTrue($resultado['success']);
+        $this->assertIsString($resultado['userId']);
+        $this->assertNotEmpty($resultado['userId']);
         
         $conn = self::$testDb->getConnection();
-        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '$userId'");
+        $result = $conn->query("SELECT * FROM usuario WHERE ID_Usuario = '{$resultado['userId']}'");
         $this->assertEquals(1, $result->num_rows);
     }
 
     /**
-     * CP-005
-     * Prueba el registro fallido de un usuario de tipo Administrador.
-     * Verifica que: userId devuelve false.
+     * CP-005 - Prueba el registro fallido de un usuario duplicado.
      */
     public function testRegistrarUsuarioAdministradorFallido() {
-        // Primero registrar un usuario
-        $userId = $this->model->registrarUsuario(
+        // Primero registrar un usuario (setUp ya limpió la BD, así que esto debe funcionar)
+        $resultado = $this->model->registrarUsuario(
             'Jean',
             'Castro',
             '0909090909',
@@ -160,8 +152,10 @@ class UsuarioModelTest extends TestCase {
             'Administrador'
         );
         
-        // Intentar registrar el mismo usuario
-        $result = $this->model->registrarUsuario(
+        $this->assertTrue($resultado['success']);
+        
+        // Intentar registrar el mismo usuario (mismo email, ci y usuario_asignado)
+        $resultado2 = $this->model->registrarUsuario(
             'Jean',
             'Castro',
             '0909090909',
@@ -171,16 +165,9 @@ class UsuarioModelTest extends TestCase {
             'Administrador'
         );
         
-        $this->assertIsArray($result);
-        $this->assertFalse($result['success']);
-        $this->assertEquals('El correo electrónico ya está registrado', $result['message']);
+        $this->assertIsArray($resultado2);
+        $this->assertFalse($resultado2['success']);
+        $this->assertEquals('El correo electrónico ya está registrado', $resultado2['message']);
     }
-    
-    /*
-    // Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba:
-    public static function tearDownAfterClass(): void {
-        // Eliminar la base de datos de prueba:
-        self::$testDb->cleanUp();
-    }
-        */
 }
+?>

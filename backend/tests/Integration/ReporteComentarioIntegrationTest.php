@@ -53,7 +53,7 @@ class ReporteComentarioIntegrationTest extends TestCase {
         $conn->query("DELETE FROM usuario");
         $conn->query("SET FOREIGN_KEY_CHECKS = 1");
         
-        $this->usuario1Id = $this->usuarioModel->registrarUsuario(
+        $resultado1 = $this->usuarioModel->registrarUsuario(
             'Usuario1', 
             'Prueba', 
             '1111111111', 
@@ -63,7 +63,7 @@ class ReporteComentarioIntegrationTest extends TestCase {
             'Administrador'
         );
         
-        $this->usuario2Id = $this->usuarioModel->registrarUsuario(
+        $resultado2 = $this->usuarioModel->registrarUsuario(
             'Usuario2', 
             'Prueba', 
             '2222222222', 
@@ -73,7 +73,17 @@ class ReporteComentarioIntegrationTest extends TestCase {
             'Tecnico',
             'Ensamblador'
         );
+        
+        $this->assertTrue($resultado1['success']);
+        $this->assertTrue($resultado2['success']);
+        
+        $this->usuario1Id = $resultado1['userId'];
+        $this->usuario2Id = $resultado2['userId'];
+        
+        $this->assertNotNull($this->usuario1Id);
+        $this->assertNotNull($this->usuario2Id);
     }
+    
     /**
      * CPI-002: Flujo Completo Reporte-Comentarios
      */
@@ -103,19 +113,12 @@ class ReporteComentarioIntegrationTest extends TestCase {
 
         $comentario = $conn->query("SELECT * FROM comentario WHERE ID_Comentario = '$comentarioId'")->fetch_assoc();
         $this->assertEquals('Estoy trabajando en esto', $comentario['comentario']);
-// 3. Obtener comentarios del reporte
+        
+        // 3. Obtener comentarios del reporte
         $comentarios = $this->comentarioModel->obtenerComentariosPorReporte($reporteId, $this->usuario1Id);
         
         $this->assertCount(1, $comentarios);
         $this->assertEquals('Estoy trabajando en esto', $comentarios[0]['comentario']);
     }
-       /**
-     * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
-     */
-    /*
-    public static function tearDownAfterClass(): void {
-        self::$testDb->cleanUp();
-    } 
-        */
 }
 ?>

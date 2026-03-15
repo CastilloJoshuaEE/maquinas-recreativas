@@ -8,83 +8,73 @@ class UsuarioTest extends TestCase {
     private $comercioModel;
     private static $testDb;
 
-    /**
-     * Método ejecutado UNA SOLA VEZ antes de todas las pruebas.
-     */
     public static function setUpBeforeClass(): void {
         self::$testDb = new TestDatabase();
     }
 
-    /**
-     * Método ejecutado ANTES DE CADA prueba.
-     */
     protected function setUp(): void {
-        // Inicializar modelos
         $this->usuarioModel = new UsuarioModel();
         $this->administradorModel = new AdministradorModel();
         $this->maquinaModel = new MaquinaModel();
         $this->comercioModel = new ComercioModel();
 
-        // Inyectar la conexión de prueba en los modelos usando Reflection
         $this->injectTestDb($this->usuarioModel, 'db');
         $this->injectTestDb($this->administradorModel, 'db');
         $this->injectTestDb($this->maquinaModel, 'db');
         $this->injectTestDb($this->comercioModel, 'db');
-          // Limpiar datos antes de cada prueba
+        
         $conn = self::$testDb->getConnection();
         $conn->query("DELETE FROM usuario WHERE email = 'jean@admin.com'");
-        
     }
 
-    /**
-     * Helper para inyectar la conexión de prueba en los modelos
-     */
     private function injectTestDb($object, $propertyName) {
         $reflection = new ReflectionClass($object);
         $property = $reflection->getProperty($propertyName);
         $property->setAccessible(true);
         $property->setValue($object, self::$testDb);
     }
+    
     /**
-     * CP-006
-     * Prueba el registro fallido con contraseña corta.
+     * CP-006 - Prueba el registro fallido con contraseña corta.
      */
     public function testRegistroContrasenaCorta() {
-        $this->expectException(ValidacionDatosException::class);
-        $this->expectExceptionCode(1200);
-
-        $this->usuarioModel->registrarUsuario(
+        $resultado = $this->usuarioModel->registrarUsuario(
             'Edú',
             'Barberan',
             '0016789914',
             'esbsabando@gmail.com',
             'esbbarberan',
-            '1234',
+            '1234', // Contraseña corta
             'Contabilidad'
         );
+        
+        $this->assertIsArray($resultado);
+        $this->assertFalse($resultado['success']);
+        $this->assertEquals('La contraseña debe tener al menos 6 caracteres', $resultado['message']);
     }
+    
     /**
-     * CP-008
-     * Prueba que no se puede eliminar un usuario con dependencias, 
-     * Debe fallar exitosamente cuando se encuentra un usuario con dependencias muy fuertes como lo son los tecnicos
-     * Debe esperarse un: OK (3 tests, 6 assertions)
+     * CP-008 - Prueba que no se puede eliminar un usuario con dependencias
      */
-     public function testEliminarUsuarioConDependencias() {
+    public function testEliminarUsuarioConDependencias() {
         $conn = self::$testDb->getConnection();
         
         // Crear comercio
-        $idComercio = $this->comercioModel->registrarComercio(
+        $comercioId = $this->comercioModel->registrarComercio(
             "Comercio Test",
             "Minorista",
             "Dirección",
             "0999999999"
         );
 
-        $this->assertIsString($idComercio);
-        $this->assertNotEmpty($idComercio);
+        $this->assertTrue($comercioId);
+
+        // Obtener el ID del comercio
+        $comercio = $conn->query("SELECT ID_Comercio FROM Comercio WHERE Nombre = 'Comercio Test'")->fetch_assoc();
+        $idComercio = $comercio['ID_Comercio'];
 
         // Crear usuario técnico ensamblador
-        $idUsuarioEnsamblador = $this->administradorModel->registrarUsuarioAdmin([
+        $resultadoEnsamblador = $this->administradorModel->registrarUsuarioAdmin([
             'nombre' => 'Tecnico',
             'apellido' => 'Cast',
             'ci' => '1234567899',
@@ -97,7 +87,7 @@ class UsuarioTest extends TestCase {
         ]);
 
         // Crear usuario técnico comprobador
-        $idUsuarioComprobador = $this->administradorModel->registrarUsuarioAdmin([
+        $resultadoComprobador = $this->administradorModel->registrarUsuarioAdmin([
             'nombre' => 'Comprobador',
             'apellido' => 'Kaka',
             'ci' => '0234567999',
@@ -109,39 +99,34 @@ class UsuarioTest extends TestCase {
             'especialidad' => 'Comprobador'
         ]);
 
+        $this->assertIsString($resultadoEnsamblador);
+        $this->assertIsString($resultadoComprobador);
+        $this->assertNotEmpty($resultadoEnsamblador);
+        $this->assertNotEmpty($resultadoComprobador);
+
         // Registrar máquina
         $idMaquina = $this->maquinaModel->registrarMaquina(
             'Máquina de prueba',
             'Tipo prueba',
-            $idUsuarioEnsamblador,
-            $idUsuarioComprobador,
+            $resultadoEnsamblador,
+            $resultadoComprobador,
             $idComercio
         );
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se puede eliminar el usuario porque tiene máquinas asignadas');
         
-        $this->administradorModel->eliminarUsuario($idUsuarioEnsamblador);
+        $this->administradorModel->eliminarUsuario($resultadoEnsamblador);
     }
+    
     /**
-     * CP-007
-     * Búsqueda de usuario inexistente
-     * 
-     * Prueba obtener un usuario inexistente.
-     */    
+     * CP-007 - Búsqueda de usuario inexistente
+     */
     public function testObtenerUsuarioInexistente() {
         $idInexistente = '00000000-0000-0000-0000-000000000000';
         $usuario = $this->usuarioModel->obtenerUsuarioPorId($idInexistente);
         
         $this->assertFalse($usuario);
     }
-
-    /**
-     * Método ejecutado UNA SOLA VEZ después de todas las pruebas para limpiar la BD de prueba.
-     */
-    /*
-    public static function tearDownAfterClass(): void {
-        self::$testDb->cleanUp();
-    }
-        */
 }
+?>
