@@ -11,118 +11,119 @@ class UsuarioModel {
 
 
 public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
-        $conn = $this->db->getConnection();
-        
-        if (empty($nombre) || empty($apellido) || empty($ci) || empty($email) || empty($usuario_asignado) || empty($contrasena) || empty($tipo)) {
-            return ['success' => false, 'message' => 'Todos los campos son requeridos'];
-        }
-
-        // Validar longitud de contraseña
-        if (strlen($contrasena) < 6) {
-            throw new ValidacionDatosException(
-                "La contraseña debe tener al menos 6 caracteres",
-                1200,
-                ['min_length' => 6]
-            );
-        }
-
-        try {
-            $hashedPassword = password_hash($contrasena, PASSWORD_DEFAULT);
-            $ciEncriptado = CifradoHelper::encriptar($ci);
-            $emailEncriptado = CifradoHelper::encriptar($email);
-            
-            $conn->begin_transaction();
-
-            // Verificar duplicados
-            $checkEmailSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
-            $checkEmailStmt = $conn->prepare($checkEmailSql);
-            $checkEmailStmt->bind_param("s", $emailEncriptado);
-            $checkEmailStmt->execute();
-            if ($checkEmailStmt->get_result()->num_rows > 0) {
-                $conn->rollback();
-                return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
-            }
-
-            $checkCiSql = "SELECT ID_Usuario FROM usuario WHERE ci = ?";
-            $checkCiStmt = $conn->prepare($checkCiSql);
-            $checkCiStmt->bind_param("s", $ciEncriptado);
-            $checkCiStmt->execute();
-            if ($checkCiStmt->get_result()->num_rows > 0) {
-                $conn->rollback();
-                return ['success' => false, 'message' => 'La cédula ya está registrada'];
-            }
-
-            $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
-            $checkUserStmt = $conn->prepare($checkUserSql);
-            $checkUserStmt->bind_param("s", $usuario_asignado);
-            $checkUserStmt->execute();
-            if ($checkUserStmt->get_result()->num_rows > 0) {
-                $conn->rollback();
-                return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
-            }
-
-            
-$sql = "INSERT INTO usuario 
-(nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
-VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param(
-                "sssssss", 
-                $nombre,
-                $apellido,
-                $ciEncriptado,
-                $emailEncriptado,
-                $usuario_asignado,
-                $hashedPassword,
-                $tipo
-            );
-
-            if (!$stmt->execute()) {
-                $conn->rollback();
-                return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
-            }
-$getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
-$getIdStmt = $conn->prepare($getIdSql);
-$getIdStmt->bind_param("s", $usuario_asignado);
-$getIdStmt->execute();
-$result = $getIdStmt->get_result();
-$row = $result->fetch_assoc();
-
-if (!$row) {
-    throw new Exception("No se pudo obtener el ID del usuario");
-}
-
-$id_usuario = $row['ID_Usuario'];
-
-            // Si es técnico, insertar en tabla Tecnico
-            if ($tipo === 'Tecnico' && $especialidad !== null) {
-                $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
-                $stmtTec = $conn->prepare($sqlTec);
-                $stmtTec->bind_param("ss", $id_usuario, $especialidad);
-                $stmtTec->execute();
-            }
-
-            // Si es Logistica, insertar en tabla Logistica
-            if ($tipo === 'Logistica') {
-                $sqlLog = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
-                $stmtLog = $conn->prepare($sqlLog);
-                $stmtLog->bind_param("s", $id_usuario);
-                $stmtLog->execute();
-            }
-
-            $conn->commit();
-
-            return $id_usuario;
-
-        } catch (ValidacionDatosException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            $conn->rollback();
-            error_log("Error en registrarUsuario: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
-        }
+    $conn = $this->db->getConnection();
+    
+    if (empty($nombre) || empty($apellido) || empty($ci) || empty($email) || empty($usuario_asignado) || empty($contrasena) || empty($tipo)) {
+        return ['success' => false, 'message' => 'Todos los campos son requeridos'];
     }
+
+    // Validar longitud de contraseña
+    if (strlen($contrasena) < 6) {
+        return ['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'];
+    }
+
+    try {
+        $hashedPassword = password_hash($contrasena, PASSWORD_DEFAULT);
+        $ciEncriptado = CifradoHelper::encriptar($ci);
+        $emailEncriptado = CifradoHelper::encriptar($email);
+        
+        $conn->begin_transaction();
+
+        // Verificar duplicados de email
+        $checkEmailSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
+        $checkEmailStmt = $conn->prepare($checkEmailSql);
+        $checkEmailStmt->bind_param("s", $emailEncriptado);
+        $checkEmailStmt->execute();
+        if ($checkEmailStmt->get_result()->num_rows > 0) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
+        }
+
+        // Verificar duplicados de cédula
+        $checkCiSql = "SELECT ID_Usuario FROM usuario WHERE ci = ?";
+        $checkCiStmt = $conn->prepare($checkCiSql);
+        $checkCiStmt->bind_param("s", $ciEncriptado);
+        $checkCiStmt->execute();
+        if ($checkCiStmt->get_result()->num_rows > 0) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'La cédula ya está registrada'];
+        }
+
+        // Verificar duplicados de nombre de usuario
+        $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        $checkUserStmt = $conn->prepare($checkUserSql);
+        $checkUserStmt->bind_param("s", $usuario_asignado);
+        $checkUserStmt->execute();
+        if ($checkUserStmt->get_result()->num_rows > 0) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
+        }
+
+        $sql = "INSERT INTO usuario 
+                (nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'Activo')";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "sssssss", 
+            $nombre,
+            $apellido,
+            $ciEncriptado,
+            $emailEncriptado,
+            $usuario_asignado,
+            $hashedPassword,
+            $tipo
+        );
+
+        if (!$stmt->execute()) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
+        }
+
+        // Obtener el ID del usuario recién insertado
+        $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        $getIdStmt = $conn->prepare($getIdSql);
+        $getIdStmt->bind_param("s", $usuario_asignado);
+        $getIdStmt->execute();
+        $result = $getIdStmt->get_result();
+        $row = $result->fetch_assoc();
+
+        if (!$row) {
+            throw new Exception("No se pudo obtener el ID del usuario");
+        }
+
+        $id_usuario = $row['ID_Usuario'];
+
+        // Si es técnico, insertar en tabla Tecnico
+        if ($tipo === 'Tecnico' && $especialidad !== null) {
+            $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
+            $stmtTec = $conn->prepare($sqlTec);
+            $stmtTec->bind_param("ss", $id_usuario, $especialidad);
+            $stmtTec->execute();
+        }
+
+        // Si es Logistica, insertar en tabla Logistica
+        if ($tipo === 'Logistica') {
+            $sqlLog = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
+            $stmtLog = $conn->prepare($sqlLog);
+            $stmtLog->bind_param("s", $id_usuario);
+            $stmtLog->execute();
+        }
+
+        $conn->commit();
+
+        return [
+            'success' => true,
+            'userId' => $id_usuario,
+            'message' => 'Usuario registrado correctamente'
+        ];
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        error_log("Error en registrarUsuario: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
+    }
+}
     /**
  * Busca un usuario por su nombre de usuario para el login
  * 
@@ -172,7 +173,7 @@ public function login($usuario_asignado) {
         
         try {
             
-            // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
+            //  Usar la tabla correcta 'inicio_sesion' en lugar de 'sesiones_usuario'
             $sql = "INSERT INTO inicio_sesion (ID_Usuario, usuario_asignado, contrasena, fecha_inicio) 
                     VALUES ( ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
@@ -189,7 +190,7 @@ public function login($usuario_asignado) {
     public function registrarLogout($userId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar la tabla correcta 'inicio_sesion'
+        //  Usar la tabla correcta 'inicio_sesion'
         $sql = "UPDATE inicio_sesion SET fecha_ultima_sesion = NOW() 
                 WHERE ID_Usuario = ? AND fecha_ultima_sesion IS NULL 
                 ORDER BY fecha_inicio DESC LIMIT 1";
@@ -215,7 +216,7 @@ public function login($usuario_asignado) {
 public function incrementarActividadesTecnico($idTecnico) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar el nombre correcto de la columna 'Cantidad_Actividades'
+        //  Usar el nombre correcto de la columna 'Cantidad_Actividades'
         $sql = "UPDATE Tecnico SET Cantidad_Actividades = Cantidad_Actividades + 1 
                 WHERE ID_Tecnico = ?";
         $stmt = $conn->prepare($sql);
@@ -348,33 +349,58 @@ public function incrementarActividadesTecnico($idTecnico) {
     }
 
     public function actualizarUsuarioAsignado($data) {
-        $conn = $this->db->getConnection();
-        
-        if (!isset($data['email'], $data['usuario_asignado'])) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
-        }
-
-        try {
-            $emailEncriptado = CifradoHelper::encriptar($data['email']);
-            
-            $sql = "UPDATE usuario SET usuario_asignado = ? WHERE email = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $data['usuario_asignado'], $emailEncriptado);
-            
-            if ($stmt->execute() && $stmt->affected_rows > 0) {
-                return [
-                    'success' => true,
-                    'message' => 'Usuario actualizado correctamente'
-                ];
-            }
-            
-            return ['success' => false, 'message' => 'Correo electrónico no encontrado'];
-
-        } catch (Exception $e) {
-            error_log("Error en actualizarUsuarioAsignado: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
-        }
+    $conn = $this->db->getConnection();
+    
+    if (!isset($data['email'], $data['usuario_asignado'])) {
+        return ['success' => false, 'message' => 'Datos incompletos'];
     }
+
+    try {
+        $emailEncriptado = CifradoHelper::encriptar($data['email']);
+        
+        //  Primero obtener el ID del usuario por su email
+        $getIdSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
+        $getIdStmt = $conn->prepare($getIdSql);
+        $getIdStmt->bind_param("s", $emailEncriptado);
+        $getIdStmt->execute();
+        $result = $getIdStmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return ['success' => false, 'message' => 'Correo electrónico no encontrado'];
+        }
+        
+        $usuario = $result->fetch_assoc();
+        $userId = $usuario['ID_Usuario'];
+        
+        // VALIDACIÓN: Verificar si el nuevo nombre de usuario ya existe en OTRO usuario
+        $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? AND ID_Usuario != ?";
+        $checkUserStmt = $conn->prepare($checkUserSql);
+        $checkUserStmt->bind_param("ss", $data['usuario_asignado'], $userId);
+        $checkUserStmt->execute();
+        
+        if ($checkUserStmt->get_result()->num_rows > 0) {
+            return ['success' => false, 'message' => 'El nombre de usuario ya está en uso por otro usuario'];
+        }
+        
+        // Actualizar el usuario
+        $sql = "UPDATE usuario SET usuario_asignado = ? WHERE ID_Usuario = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ss", $data['usuario_asignado'], $userId);
+        
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'message' => 'Usuario actualizado correctamente'
+            ];
+        }
+        
+        return ['success' => false, 'message' => 'Error al actualizar el usuario'];
+
+    } catch (Exception $e) {
+        error_log("Error en actualizarUsuarioAsignado: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error en el servidor: ' . $e->getMessage()];
+    }
+}
 
     public function recuperarContrasena($data) {
         $conn = $this->db->getConnection();
@@ -485,7 +511,7 @@ public function incrementarActividadesTecnico($idTecnico) {
         
         try {
             
-            // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+            //  Usar la tabla correcta 'historial_actividades'
             $sql = "INSERT INTO historial_actividades ( ID_Usuario, descripcion, fecha_registro) 
                     VALUES ( ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
@@ -502,7 +528,7 @@ public function incrementarActividadesTecnico($idTecnico) {
     public function obtenerHistorialActividades($usuarioId) {
         $conn = $this->db->getConnection();
         
-        // CORRECCIÓN: Usar la tabla correcta 'historial_actividades'
+        //  Usar la tabla correcta 'historial_actividades'
         $sql = "SELECT * FROM historial_actividades 
                 WHERE ID_Usuario = ? 
                 ORDER BY fecha_registro DESC 

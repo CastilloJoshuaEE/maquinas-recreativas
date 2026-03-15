@@ -22,29 +22,41 @@ class ReporteService {
      * @return array{message: string, reporteId: bool|int|string, success: bool}
      */
     public function crearReporte($data) {
-        if (!isset($data['ID_Usuario_Emisor']) || !isset($data['ID_Usuario_Destinatario']) || !isset($data['descripcion'])) {
-            throw new Exception('Datos incompletos para crear el reporte');
-        }
-
-        $reporteId = $this->reporteModel->crearReporte(
-            $data['ID_Usuario_Emisor'],
-            $data['ID_Usuario_Destinatario'],
-            $data['descripcion']
-        );
-
-        if (!$reporteId) {
-            throw new Exception('Error al crear el reporte');
-        }
-
-        $mensaje = "Tienes un nuevo reporte: " . substr($data['descripcion'], 0, 50) . "...";
-        $this->notificacionesModel->crearNotificacionReporte($reporteId, $data['ID_Usuario_Destinatario'], $mensaje);
-
-        return [
-            'success' => true,
-            'reporteId' => $reporteId,
-            'message' => 'Reporte creado correctamente'
-        ];
+    if (!isset($data['ID_Usuario_Emisor']) || !isset($data['ID_Usuario_Destinatario']) || !isset($data['descripcion'])) {
+        throw new Exception('Datos incompletos para crear el reporte');
     }
+
+    $reporteId = $this->reporteModel->crearReporte(
+        $data['ID_Usuario_Emisor'],
+        $data['ID_Usuario_Destinatario'],
+        $data['descripcion']
+    );
+
+    if (!$reporteId) {
+        throw new Exception('Error al crear el reporte');
+    }
+
+    // Verificar que tenemos un ID válido antes de crear la notificación
+    if ($reporteId) {
+        $mensaje = "Tienes un nuevo reporte: " . substr($data['descripcion'], 0, 50) . "...";
+        $notificacionCreada = $this->notificacionesModel->crearNotificacionReporte(
+            $reporteId, 
+            $data['ID_Usuario_Destinatario'], 
+            $mensaje
+        );
+        
+        if (!$notificacionCreada) {
+            error_log("Advertencia: No se pudo crear la notificación para el reporte $reporteId");
+            // No lanzamos excepción porque el reporte ya se creó correctamente
+        }
+    }
+
+    return [
+        'success' => true,
+        'reporteId' => $reporteId,
+        'message' => 'Reporte creado correctamente'
+    ];
+}
     public function obtenerReportesPorUsuario($userId) {
         $reportes = $this->reporteModel->obtenerReportesPorUsuario($userId);
         return [

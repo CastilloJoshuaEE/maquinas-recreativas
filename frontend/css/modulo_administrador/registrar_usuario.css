@@ -22,7 +22,7 @@ form {
   margin-top: 1.5rem; /* AQUI LE DAMOS MÁS ESPACIO AL FORMULARIO */
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px) saturate(180%);
-  color: #ffffff;
+  color: #000000;
   padding: 2.5rem;
   border-radius: 16px;
   width: 100%;
@@ -41,7 +41,7 @@ form {
 }
 
 .form-group label {
-  color: white;
+  color: rgb(0, 0, 0);
   font-weight: 600;
   margin-bottom: 0.5rem;
 }

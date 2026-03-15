@@ -133,9 +133,6 @@
   border-bottom: 1px solid #000000;
 }
 
-.tabla-reportes tr:hover td {
-  background-color: #000000;
-}
 
 .tabla-reportes button {
   padding: 6px 12px;
@@ -272,6 +269,7 @@
   max-height: 300px;       /* Limita la altura a 300px */
   overflow-y: auto;        /* Habilita scroll vertical */
   padding-right: 8px;      /* Para no tapar contenido con scrollbar */
+  color: black;
 }
 
 .notificaciones-container::-webkit-scrollbar {

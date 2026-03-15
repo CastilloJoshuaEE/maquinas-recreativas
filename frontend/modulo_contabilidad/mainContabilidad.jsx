@@ -52,12 +52,12 @@ export default function Contabilidad() {
             {summary ? (
               <div className="summary-content">
                 {summary.map((item, index) => (
-                  <div key={index} className="summary-item">
+                  <div key={index} className="summary-item" >
                     <h4>{item.Tipo_Comercio}</h4>
-                    <p>Recaudaciones: {item.TotalRecaudaciones}</p>
-                    <p>Total: ${Number(item.TotalRecaudado || 0).toFixed(2)}</p>
-                    <p>Empresa: ${Number(item.TotalEmpresa || 0).toFixed(2)}</p>
-                    <p>Comercio: ${Number(item.TotalComercio || 0).toFixed(2)}</p>
+                    <p style={{color:'black'}}>Recaudaciones: {item.TotalRecaudaciones}</p>
+                    <p style={{color:'black'}}>Total: ${Number(item.TotalRecaudado || 0).toFixed(2)}</p>
+                    <p style={{color:'black'}}>Empresa: ${Number(item.TotalEmpresa || 0).toFixed(2)}</p>
+                    <p style={{color:'black'}}>Comercio: ${Number(item.TotalComercio || 0).toFixed(2)}</p>
                   </div>
                 ))}
               </div>

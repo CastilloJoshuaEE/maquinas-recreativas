@@ -34,7 +34,7 @@ import EliminarRecaudacion from "../modulo_contabilidad/ConsultarRecaudacion";
 import ConsultarRecaudacion from "../modulo_contabilidad/ConsultarRecaudacion";
 import ActualizarRecaudacion from "../modulo_contabilidad/ActualizarRecaudacion";
 import Informacion from "./pages/Informacion.jsx";
-
+import VerInformeRecaudacion from "../modulo_contabilidad/VerInformeRecaudacion.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -259,6 +259,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+  path="/contabilidad/informe/:idRecaudacion"
+  element={
+    <PrivateRoute allowedRoles={["Contabilidad"]}>
+      <VerInformeRecaudacion />
+    </PrivateRoute>
+  }
+/>
           {/* Ruta para el chat de usuarios */}
           <Route
             path="/reportes/chat/:reporteUuid?"

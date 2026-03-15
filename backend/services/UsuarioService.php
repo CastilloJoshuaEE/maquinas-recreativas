@@ -7,37 +7,53 @@ class UsuarioService {
     public function __construct() {
         $this->model = new UsuarioModel();
     }
-
-    public function registrarUsuario($data) {
-        $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
-        
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                return ['success' => false, 'message' => "El campo $field es requerido"];
-            }
-        }
-        
-        if (strlen($data['contrasena']) < 8) {
-            return ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
-        }
-        
-        $tiposPermitidos = ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario'];
-        if (!in_array($data['tipo'], $tiposPermitidos)) {
-            return ['success' => false, 'message' => 'Tipo de usuario no válido'];
-        }
-        
-        if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
-            return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
-        }
-        
-        $result = $this->model->registrarUsuario($data);
-        
-        if ($result['success']) {
-            return ['success' => true, 'idUsuario' => $result['userId'], 'message' => $result['message']];
-        } else {
-            return ['success' => false, 'message' => $result['message']];
+// En backend/services/UsuarioService.php
+public function registrarUsuario($data) {
+    $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
+    
+    foreach ($required as $field) {
+        if (!isset($data[$field]) || empty($data[$field])) {
+            return ['success' => false, 'message' => "El campo $field es requerido"];
         }
     }
+    
+    if (strlen($data['contrasena']) < 8) {
+        return ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
+    }
+    
+    $tiposPermitidos = ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario'];
+    if (!in_array($data['tipo'], $tiposPermitidos)) {
+        return ['success' => false, 'message' => 'Tipo de usuario no válido'];
+    }
+    
+    if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
+        return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
+    }
+    
+    //  Pasar parámetros individuales en lugar del array completo
+    $result = $this->model->registrarUsuario(
+        $data['nombre'],
+        $data['apellido'],
+        $data['ci'],
+        $data['email'],
+        $data['usuario_asignado'],
+        $data['contrasena'],
+        $data['tipo'],
+        $data['especialidad'] ?? null
+    );
+    
+    // Ajustar el formato de respuesta según lo que devuelva el modelo
+    if (is_array($result) && isset($result['success'])) {
+        return $result;
+    } else if (is_string($result) && !empty($result)) {
+        // Si devuelve el ID del usuario
+        return ['success' => true, 'userId' => $result, 'message' => 'Usuario registrado correctamente'];
+    } else if ($result === true) {
+        return ['success' => true, 'message' => 'Usuario registrado correctamente'];
+    } else {
+        return ['success' => false, 'message' => 'Error al registrar el usuario'];
+    }
+}
         
     public function login($usuario_asignado, $contrasena) {
     try {
@@ -150,19 +166,19 @@ class UsuarioService {
     }
 }
     public function actualizarUsuarioAsignado($data) {
-        if (!isset($data['email']) || !isset($data['usuario_asignado'])) {
-            return ['success' => false, 'message' => 'Email y nuevo usuario son requeridos'];
-        }
-
-        $result = $this->model->actualizarUsuarioAsignado($data);
-        
-        if ($result) {
-            return ['success' => true, 'message' => 'Usuario actualizado correctamente'];
-        } else {
-            return ['success' => false, 'message' => 'Error al actualizar el usuario'];
-        }
+    if (!isset($data['email']) || !isset($data['usuario_asignado'])) {
+        return ['success' => false, 'message' => 'Email y nuevo usuario son requeridos'];
     }
 
+    // Validar que el nombre de usuario no esté vacío
+    if (empty(trim($data['usuario_asignado']))) {
+        return ['success' => false, 'message' => 'El nombre de usuario no puede estar vacío'];
+    }
+
+    $result = $this->model->actualizarUsuarioAsignado($data);
+    
+    return $result; // El modelo ya devuelve el formato correcto
+}
     public function recuperarContrasena($data) {
         $result = $this->model->recuperarContrasena($data);
         return ['success' => $result];

@@ -34,7 +34,7 @@ class MaquinaModel {
             $this->verificarTecnico($idComprobador);
             
             
-            // CORRECCIÓN: Usar MaquinaRecreativa y Nombre_Maquina
+            //  Usar MaquinaRecreativa y Nombre_Maquina
             $sql = "INSERT INTO MaquinaRecreativa ( Nombre_Maquina, Tipo, Fecha_Registro, Estado, Etapa, ID_Comercio, ID_Tecnico_Ensamblador, ID_Tecnico_Comprobador) 
                     VALUES ( ?, ?, CURDATE(), 'Ensamblandose', 'Montaje', ?, ?, ?)";
             $stmt = $conn->prepare($sql);
@@ -53,57 +53,98 @@ class MaquinaModel {
             throw $e;
         }
     }
-
-    public function generarPlaca($idTecnico) {
-        $conn = $this->db->getConnection();
+public function generarPlaca($idTecnico) {
+    $conn = $this->db->getConnection();
+    
+    try {
+        // Verificar que el técnico existe
+        $checkSql = "SELECT COUNT(*) as count FROM usuario WHERE ID_Usuario = ?";
+        $checkStmt = $conn->prepare($checkSql);
+        $checkStmt->bind_param("s", $idTecnico);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        $row = $result->fetch_assoc();
         
-        try {
-            $checkSql = "SELECT COUNT(*) as count FROM usuario WHERE ID_Usuario = ?";
-            $checkStmt = $conn->prepare($checkSql);
-            $checkStmt->bind_param("s", $idTecnico);
-            $checkStmt->execute();
-            $result = $checkStmt->get_result();
-            $row = $result->fetch_assoc();
-            
-            if ($row['count'] == 0) {
-                throw new Exception("El técnico con ID $idTecnico no existe");
-            }
-
-            // Generar número de placa aleatorio
-            $numeroPlaca = 'PLACA-' . strtoupper(substr(md5(uniqid()), 0, 8));
-            
-            // Crear componente de placa
-            $idComponente = $this->generateUUID($conn);
-            $sql = "INSERT INTO componente (ID_Componente, tipo, numero_placa, fecha_creacion, ID_Tecnico_Creador) 
-                    VALUES (?, 'placa', ?, NOW(), ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $idComponente, $numeroPlaca, $idTecnico);
-            
-            if ($stmt->execute()) {
-                return [
-                    'placa' => $numeroPlaca,
-                    'id_componente' => $idComponente
-                ];
-            }
-            
-            return null;
-
-        } catch (Exception $e) {
-            error_log("Error en generarPlaca: " . $e->getMessage());
-            return null;
+        if ($row['count'] == 0) {
+            throw new Exception("El técnico con ID $idTecnico no existe");
         }
-    }
 
+        // Generar número de placa con formato PL + año + secuencia
+        $anio = date('y');
+        $prefijo = "PL{$anio}";
+        
+        // Obtener el último número de placa
+        $seqSql = "SELECT MAX(CAST(SUBSTRING(nombre, 5) AS UNSIGNED)) as max_seq 
+                   FROM componente 
+                   WHERE nombre LIKE ? AND tipo = 'Logistico'";
+        $seqStmt = $conn->prepare($seqSql);
+        $like = $prefijo . '%';
+        $seqStmt->bind_param("s", $like);
+        $seqStmt->execute();
+        $seqResult = $seqStmt->get_result();
+        $seqRow = $seqResult->fetch_assoc();
+        
+        $secuencia = ($seqRow['max_seq'] ?? 0) + 1;
+        $numeroPlaca = $prefijo . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
+        
+        // Insertar el componente
+        
+        // Usar UUID() de MySQL
+        $sql = "INSERT INTO componente ( tipo, nombre, precio) 
+                VALUES ('Logistico', ?, 120.00)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $numeroPlaca);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error al insertar componente: " . $stmt->error);
+        }
+        
+        // Obtener el ID generado
+        $idComponente = $conn->insert_id;
+        if (!$idComponente) {
+            // Si insert_id no funciona, obtener el último insertado
+            $lastSql = "SELECT ID_Componente FROM componente WHERE nombre = ? ORDER BY ID_Componente DESC LIMIT 1";
+            $lastStmt = $conn->prepare($lastSql);
+            $lastStmt->bind_param("s", $numeroPlaca);
+            $lastStmt->execute();
+            $lastResult = $lastStmt->get_result();
+            $lastRow = $lastResult->fetch_assoc();
+            $idComponente = $lastRow['ID_Componente'];
+        }
+        
+        // Registrar en componente_usuario
+        $usoSql = "INSERT INTO componente_usuario (ID_Registro, ID_Componente, ID_Usuario, fecha_asignacion) 
+                   VALUES (UUID(), ?, ?, NOW())";
+        $usoStmt = $conn->prepare($usoSql);
+        $usoStmt->bind_param("ss", $idComponente, $idTecnico);
+        
+        if (!$usoStmt->execute()) {
+            throw new Exception("Error al registrar uso: " . $usoStmt->error);
+        }
+        
+        return [
+            'success' => true,
+            'placa' => $numeroPlaca,
+            'id_componente' => $idComponente
+        ];
+
+    } catch (Exception $e) {
+        error_log("Error en generarPlaca: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
     public function registrarMontajeComponente($idMaquina, $idComponente, $idTecnico, $detalle = '') {
         $conn = $this->db->getConnection();
         
         try {
-            $idMontaje = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO montaje (ID_Montaje, fecha, ID_Maquina, ID_Componente, ID_Tecnico, detalle) 
-                    VALUES (?, NOW(), ?, ?, ?, ?)";
+            $sql = "INSERT INTO montaje (fecha, ID_Maquina, ID_Componente, ID_Tecnico, detalle) 
+                    VALUES ( NOW(), ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssss", $idMontaje, $idMaquina, $idComponente, $idTecnico, $detalle);
+            $stmt->bind_param("ssss", $idMaquina, $idComponente, $idTecnico, $detalle);
             
             if (!$stmt->execute()) {
                 error_log("Error al registrar montaje: " . $stmt->error);
@@ -141,155 +182,158 @@ class MaquinaModel {
         return $stmt->execute();
     }
 
-    public function asignarTecnicoMantenimiento($idMaquina, $idTecnico) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "UPDATE MaquinaRecreativa SET ID_Mantenimiento = ? WHERE ID_Maquina = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $idTecnico, $idMaquina);
-        
-        return $stmt->execute();
+public function asignarTecnicoMantenimiento($idMaquina, $idTecnico) {
+    $conn = $this->db->getConnection();
+    
+    //  Usar ID_Tecnico_Mantenimiento en lugar de ID_Mantenimiento
+    $sql = "UPDATE MaquinaRecreativa SET ID_Tecnico_Mantenimiento = ? WHERE ID_Maquina = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $idTecnico, $idMaquina);
+    
+    return $stmt->execute();
+}
+public function obtenerMaquinasPorTecnicoEnsamblador($idTecnico) {
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT m.*, 
+                   c.Nombre as NombreComercio,
+                   c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Ensamblador = ? AND (m.Estado = 'Ensamblandose' OR m.Estado = 'Reensamblandose')
+            ORDER BY m.Fecha_Registro DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $idTecnico);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
-
-    public function obtenerMaquinasPorTecnicoEnsamblador($idTecnico) {
-        $conn = $this->db->getConnection();
-        
-        // CORRECCIÓN: Usar MaquinaRecreativa y Comercio
-        $sql = "SELECT m.*, c.Nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.ID_Tecnico_Ensamblador = ?
-                ORDER BY m.Fecha_Registro DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $idTecnico);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
+    
+    return $maquinas;
+}
+public function obtenerMaquinasPorTecnicoComprobador($idTecnico) {
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT m.*, 
+                   c.Nombre as NombreComercio,
+                   c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Comprobador = ? AND m.Estado = 'Comprobandose'
+            ORDER BY m.Fecha_Registro DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $idTecnico);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
-
-    public function obtenerMaquinasPorTecnicoComprobador($idTecnico) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, c.Nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.ID_Tecnico_Comprobador = ?
-                ORDER BY m.Fecha_Registro DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $idTecnico);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
+    
+    return $maquinas;
+}
+public function obtenerMaquinasPorTecnicoMantenimiento($idTecnico) {
+    $conn = $this->db->getConnection();
+    
+    //  Usar ID_Tecnico_Mantenimiento
+    $sql = "SELECT m.*, 
+                   c.Nombre as NombreComercio,
+                   c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Mantenimiento = ? AND m.Estado = 'No operativa'
+            ORDER BY m.Fecha_Registro DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $idTecnico);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
-
-    public function obtenerMaquinasPorTecnicoMantenimiento($idTecnico) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, c.Nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.ID_Tecnico_Mantenimiento = ?
-                ORDER BY m.Fecha_Registro DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $idTecnico);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
-    }
-
+    
+    return $maquinas;
+}
     public function obtenerMaquinasPorEstado($estado) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, c.nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.estado = ?
-                ORDER BY m.fecha_creacion DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $estado);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT m.*, c.nombre as nombre_comercio 
+            FROM MaquinaRecreativa m
+            LEFT JOIN comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.estado = ?
+            ORDER BY m.Fecha_Registro DESC"; // Cambiar aquí también
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $estado);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
+    
+    return $maquinas;
+}
 
     public function obtenerMaquinasPorEtapa($etapa) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, c.nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.etapa = ?
-                ORDER BY m.fecha_creacion DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $etapa);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT m.*, c.nombre as nombre_comercio 
+            FROM MaquinaRecreativa m
+            LEFT JOIN comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.etapa = ?
+            ORDER BY m.Fecha_Registro DESC"; // Cambiar fecha_creacion por Fecha_Registro
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $etapa);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
+    
+    return $maquinas;
+}
 
-     public function obtenerMaquinaPorId($id) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, 
-                       c.Nombre as nombre_comercio,
-                       c.Direccion as direccion_comercio,
-                       c.Telefono as telefono_comercio,
-                       e.nombre as nombre_ensamblador, e.apellido as apellido_ensamblador,
-                       comp.nombre as nombre_comprobador, comp.apellido as apellido_comprobador,
-                       mant.nombre as nombre_mantenimiento, mant.apellido as apellido_mantenimiento
-                FROM MaquinaRecreativa m
-                LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                LEFT JOIN usuario e ON m.ID_Tecnico_Ensamblador = e.ID_Usuario
-                LEFT JOIN usuario comp ON m.ID_Tecnico_Comprobador = comp.ID_Usuario
-                LEFT JOIN usuario mant ON m.ID_Tecnico_Mantenimiento = mant.ID_Usuario
-                WHERE m.ID_Maquina = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $id);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows > 0) {
-            return $result->fetch_assoc();
-        }
-        
-        return false;
+public function obtenerMaquinaPorId($id) {
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT m.*, 
+                   c.Nombre as nombre_comercio,
+                   c.Direccion as direccion_comercio,
+                   c.Telefono as telefono_comercio,
+                   e.nombre as nombre_ensamblador, e.apellido as apellido_ensamblador,
+                   comp.nombre as nombre_comprobador, comp.apellido as apellido_comprobador,
+                   mant.nombre as nombre_mantenimiento, mant.apellido as apellido_mantenimiento
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            LEFT JOIN usuario e ON m.ID_Tecnico_Ensamblador = e.ID_Usuario
+            LEFT JOIN usuario comp ON m.ID_Tecnico_Comprobador = comp.ID_Usuario
+            LEFT JOIN usuario mant ON m.ID_Tecnico_Mantenimiento = mant.ID_Usuario
+            WHERE m.ID_Maquina = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc();
     }
+    
+    return false;
+}
     public function obtenerMaquinasOperativasPorComercio($idComercio) {
         $conn = $this->db->getConnection();
         
@@ -297,7 +341,7 @@ class MaquinaModel {
                 FROM MaquinaRecreativa m
                 WHERE m.ID_Comercio = ? 
                   AND m.estado = 'Operativa'
-                ORDER BY m.nombre ASC";
+                ORDER BY m.Nombre_Maquina ASC";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $idComercio);
         $stmt->execute();
@@ -311,28 +355,33 @@ class MaquinaModel {
         
         return $maquinas;
     }
-
-    public function obtenerMaquinasPorEtapaYEstado($etapa, $estado) {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT m.*, c.nombre as nombre_comercio 
-                FROM MaquinaRecreativa m
-                LEFT JOIN comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE m.etapa = ? AND m.estado = ?
-                ORDER BY m.fecha_creacion DESC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ss", $etapa, $estado);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $maquinas = [];
-        
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
-        }
-        
-        return $maquinas;
+public function obtenerMaquinasPorEtapaYEstado($etapa, $estado) {
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT 
+                m.*, 
+                c.Nombre as NombreComercio,
+                c.Direccion as DireccionComercio,
+                c.Telefono as TelefonoComercio,
+                c.Tipo as TipoComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.Etapa = ? AND m.Estado = ?
+            ORDER BY m.Fecha_Registro DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $etapa, $estado);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = $row;
     }
+    
+    return $maquinas;
+}
 
     public function obtenerComponentesMontaje($idMaquina) {
         $conn = $this->db->getConnection();
@@ -387,14 +436,12 @@ class MaquinaModel {
         $conn = $this->db->getConnection();
         
         try {
-            $idMontaje = $this->generateUUID($conn);
             
-            $sql = "INSERT INTO montaje (ID_Montaje, ID_Maquina, ID_Componente, ID_Tecnico, detalle, fecha) 
-                    VALUES (?, ?, ?, ?, ?, NOW())";
+            $sql = "INSERT INTO montaje (ID_Maquina, ID_Componente, ID_Tecnico, detalle, fecha) 
+                    VALUES ( ?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssss",
-                $idMontaje,
+                "ssss",
                 $params['ID_Maquina'],
                 $params['ID_Componente'],
                 $params['ID_Tecnico'],
@@ -402,7 +449,7 @@ class MaquinaModel {
             );
 
             if ($stmt->execute()) {
-                return $idMontaje;
+                return true;
             }
             
             return false;

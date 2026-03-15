@@ -137,39 +137,47 @@ class MaquinaService {
         
         return ['success' => true];
     }
+// En MaquinaService.php -  método mandarADistribucion
+public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
+    $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
 
-    public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
-        $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
-
-        if (!$maquina) {
-            return ['success' => false, 'message' => 'Maquina no encontrada'];
-        }
-
-        $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Distribuyendose', 'Distribucion');
-
-        $distribucionModel = new DistribucionModel();
-        $distribucionModel->crearInformeDistribucion(
-            $idMaquina,
-            $maquina['ID_Tecnico_Comprobador'],
-            $maquina['ID_Comercio']
-        );
-
-        $logisticas = $this->usuarioModel->obtenerUsuariosPorTipo('Logistica');
-
-        if (!empty($logisticas)) {
-            foreach ($logisticas as $logistica) {
-                $this->notificacionModel->crearNotificacion(
-                    $idRemitente,
-                    $logistica['ID_Usuario'],
-                    $idMaquina,
-                    'Distribuir maquina recreativa',
-                    $mensaje
-                );
-            }
-        }
-
-        return ['success' => true];
+    if (!$maquina) {
+        return ['success' => false, 'message' => 'Maquina no encontrada'];
     }
+
+    // Obtener información del comercio
+    $comercioModel = new ComercioModel();
+    $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
+
+    // Crear mensaje completo con información de la máquina y comercio
+    $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
+                      ", Comercio: " . ($comercio ? $comercio['Nombre'] : 'N/A');
+
+    $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Distribuyendose', 'Distribucion');
+
+    $distribucionModel = new DistribucionModel();
+    $distribucionModel->crearInformeDistribucion(
+        $idMaquina,
+        $maquina['ID_Tecnico_Comprobador'],
+        $maquina['ID_Comercio']
+    );
+
+    $logisticas = $this->usuarioModel->obtenerUsuariosPorTipo('Logistica');
+
+    if (!empty($logisticas)) {
+        foreach ($logisticas as $logistica) {
+            $this->notificacionModel->crearNotificacion(
+                $idRemitente,
+                $logistica['ID_Usuario'],
+                $idMaquina,
+                'Distribuir maquina recreativa',
+                $mensajeCompleto
+            );
+        }
+    }
+
+    return ['success' => true];
+}
 
     public function ponerOperativa($idMaquina) {
         $result = $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Operativa', 'Recaudacion');
@@ -198,32 +206,45 @@ class MaquinaService {
         $maquinas = $this->maquinaModel->obtenerMaquinasPorTecnicoMantenimiento($idTecnico);
         return ['success' => true, 'maquinas' => $maquinas];
     }
-    
-    public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
-        $tecnicos = $this->usuarioModel->obtenerTecnicosPorEspecialidad('Mantenimiento');
+    // En MaquinaService.php -  método darMantenimiento
+public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
+    $tecnicos = $this->usuarioModel->obtenerTecnicosPorEspecialidad('Mantenimiento');
 
-        if (empty($tecnicos)) {
-            return ['success' => false, 'message' => 'No hay técnicos de mantenimiento disponibles'];
-        }
-
-        $idTecnico = $tecnicos[0]['ID_Usuario'];
-
-        $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'No operativa');
-        $this->maquinaModel->asignarTecnicoMantenimiento($idMaquina, $idTecnico);
-
-        $this->notificacionModel->crearNotificacion(
-            $idLogistica,
-            $idTecnico,
-            $idMaquina,
-            'Dar mantenimiento a máquina recreativa',
-            $mensaje
-        );
-
-        $distribucionModel = new DistribucionModel();
-        $distribucionModel->actualizarInformeDistribucion($idMaquina, 'No operativa');
-
-        return ['success' => true];
+    if (empty($tecnicos)) {
+        return ['success' => false, 'message' => 'No hay técnicos de mantenimiento disponibles'];
     }
+
+    $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
+    if (!$maquina) {
+        return ['success' => false, 'message' => 'Máquina no encontrada'];
+    }
+
+    $idTecnico = $tecnicos[0]['ID_Usuario'];
+
+    // Obtener información del comercio
+    $comercioModel = new ComercioModel();
+    $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
+
+    // Crear mensaje completo
+    $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
+                      ", Comercio: " . ($comercio ? $comercio['Nombre'] : 'N/A');
+
+    $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'No operativa');
+    $this->maquinaModel->asignarTecnicoMantenimiento($idMaquina, $idTecnico);
+
+    $this->notificacionModel->crearNotificacion(
+        $idLogistica,
+        $idTecnico,
+        $idMaquina,
+        'Dar mantenimiento a máquina recreativa',
+        $mensajeCompleto
+    );
+
+    $distribucionModel = new DistribucionModel();
+    $distribucionModel->actualizarInformeDistribucion($idMaquina, 'No operativa');
+
+    return ['success' => true];
+}
 
     public function finalizarMantenimiento($idMaquina, $idRemitente, $exito, $mensaje) {
         try {

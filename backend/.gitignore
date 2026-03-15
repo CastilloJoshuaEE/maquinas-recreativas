@@ -1,3 +1,4 @@
 .env
 .env.production
 .usuarios_iniciales.lock
+.phpunit.result.cache

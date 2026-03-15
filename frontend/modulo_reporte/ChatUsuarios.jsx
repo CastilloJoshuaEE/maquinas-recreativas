@@ -238,7 +238,7 @@ const ChatUsuarios = ({ currentUser, asPanel = false, onClose }) => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p>No hay comentarios aún.</p>
+                                    <p style={{color:'black'}}>No hay comentarios aún.</p>
                                 )}
                             </div>
 

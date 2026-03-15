@@ -95,25 +95,50 @@ class NotificacionService {
      * @param mixed $userId ID del usuario.
      * @return array{message: string, success: bool|array{success: bool}}
      */
-    public function marcarComoLeidaNotificacion($notificacionId, $userId) {
-        try {
-            $success = $this->model->marcarComoLeidaNotificacion($notificacionId, $userId);
-            
-            if (!$success) {
-                return [
-                    'success' => false,
-                    'message' => 'No se pudo marcar la notificación como leída'
-                ];
-            }
-            
-            return ['success' => true];
-        } catch (Exception $e) {
+// En NotificacionService.php - 
+public function marcarComoLeidaNotificacion($notificacionId, $userId) {
+    try {
+        // Validar parámetros
+        if (empty($notificacionId) || empty($userId)) {
+            error_log("Parámetros inválidos: notificacionId=$notificacionId, userId=$userId");
             return [
                 'success' => false,
-                'message' => 'Error al actualizar notificación: ' . $e->getMessage()
+                'message' => 'Parámetros inválidos'
             ];
         }
+
+        $success = $this->model->marcarComoLeidaNotificacion($notificacionId, $userId);
+        
+        // Verificar que $success sea booleano
+        if (!is_bool($success)) {
+            error_log("El modelo devolvió un valor no booleano: ");
+            return [
+                'success' => false,
+                'message' => 'Error interno en el modelo'
+            ];
+        }
+        
+        if (!$success) {
+            return [
+                'success' => false,
+                'message' => 'No se pudo marcar la notificación como leída'
+            ];
+        }
+        
+        // Siempre devolver un array con la estructura esperada
+        return [
+            'success' => true,
+            'message' => 'Notificación marcada como leída correctamente'
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error en marcarComoLeidaNotificacion: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Error al actualizar notificación: ' . $e->getMessage()
+        ];
     }
+}
     /**
      * Marca todas las notificaciones como leídas para un usuario específico.
      * @param mixed $userId

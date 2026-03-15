@@ -36,35 +36,60 @@ const NotificacionesPanel = ({ currentUser }) => {
         return () => clearInterval(intervalo);
     }, [currentUser]);
 
-    const marcarComoLeida = async (notificacionId) => {
-        try {
-            const { response } = await api.post(`/notificaciones/${notificacionId}/marcarla-leida`, {});
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al marcar como leída');
-            }
-            
-            setUnreadCount(prev => prev - 1);
-            setNotificaciones(prev => 
-                prev.map(n => 
-                    n.ID_Notificaciones === notificacionId ? { ...n, leida: 1 } : n
-                )
-            );
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+    // En NotificacionesPanel.jsx - 
+const marcarComoLeida = async (notificacionId) => {
+    try {
+        setError(''); // Limpiar errores previos
+        
+        console.log('Marcando notificación como leída:', notificacionId);
+        
+        const { data } = await api.post(`/notificaciones/${notificacionId}/marcarla-leida`);
 
+        // Verificar que la respuesta existe
+        if (!data) {
+            throw new Error('No se recibió respuesta del servidor');
+        }
+
+        console.log('Respuesta del servidor:', data);
+
+        // Verificar que data es un objeto
+        if (typeof data !== 'object') {
+            throw new Error('Respuesta del servidor no válida');
+        }
+
+        if (!data.success) {
+            throw new Error(data.message || 'Error al marcar como leída');
+        }
+
+        // Actualizar el estado local
+        setNotificaciones(prev => 
+            prev.map(n => 
+                n.ID_Notificaciones === notificacionId ? { ...n, leida: 1 } : n
+            )
+        );
+        
+        // Actualizar contador de no leídas
+        setUnreadCount(prev => Math.max(prev - 1, 0));
+
+        // Opcional: mostrar mensaje de éxito
+        console.log('Notificación marcada como leída exitosamente');
+
+    } catch (err) {
+        console.error('Error al marcar como leída:', err);
+        setError(err.message || 'Error al marcar la notificación');
+        
+        // Opcional: mostrar un toast o alerta al usuario
+        alert('Error: ' + (err.message || 'No se pudo marcar la notificación'));
+    }
+};
     const marcarTodasComoLeidas = async () => {
         try {
-            const { response } = await api.post('/notificaciones/marcarla-todas-leidas', {});
+const { data } = await api.post('/notificaciones/marcarla-todas-leidas');
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al marcar todas como leídas');
-            }
-            
+if (!data.success) {
+    throw new Error(data.message || 'Error al marcar todas como leída');
+}
+
             setNotificaciones(prev => 
                 prev.map(n => ({ ...n, leida: 1 }))
             );
@@ -100,10 +125,10 @@ const NotificacionesPanel = ({ currentUser }) => {
     return (
         <div className="notificaciones-container">
             <h2>
-                <span className="bell-icon">🔔</span>
-                Notificaciones
+                <span className="bell-icon" style={{ color: "black", marginRight: "10px" }}>🔔
+                Notificaciones</span>
                 {unreadCount > 0 && (
-                    <span className="unread-count">{unreadCount}</span>
+                    <span className="unread-count"style={{ color: "black" }}>{unreadCount}</span>
                 )}
             </h2>
             

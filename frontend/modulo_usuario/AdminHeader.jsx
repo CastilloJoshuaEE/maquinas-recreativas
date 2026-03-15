@@ -1,3 +1,4 @@
+// En AdminHeader.jsx - 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../src/context/AuthContext';
@@ -41,6 +42,9 @@ export function AdminHeader({ showReportesButton = true, showChatButton = true, 
             console.error('Error al cerrar sesión:', err);
         }
     };
+
+    // Obtener el ID correcto para usar en las rutas
+    const userId = currentUser?.uuid || currentUser?.ID_Usuario;
 
     return (
         <header className="admin-header">
@@ -91,13 +95,13 @@ export function AdminHeader({ showReportesButton = true, showChatButton = true, 
                         <div className="profile-dropdown">
                             <button
                                 className="dropdown-item"
-                                onClick={() => navigate(`/usuario/perfil?id=${currentUser.uuid}`)}
+                                onClick={() => navigate(`/usuario/perfil`)}
                             >
                                 Ver Perfil
                             </button>
                             <button
                                 className="dropdown-item"
-                                onClick={() => navigate(`/usuario/actualizar-perfil?id=${currentUser.uuid}`)}
+                                onClick={() => navigate(`/usuario/actualizar-perfil`)}
                             >
                                 Editar Perfil
                             </button>
@@ -128,7 +132,6 @@ export function AdminHeader({ showReportesButton = true, showChatButton = true, 
                     />
                 </div>
             )}
-                
         </header>
     );
 }

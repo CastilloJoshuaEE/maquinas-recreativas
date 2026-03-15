@@ -156,11 +156,39 @@ public function updateProfile() {
 }
 
     public function updateUsername() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        error_log(print_r($data, true));
-        $response = $this->service->actualizarUsuarioAsignado($data);
-        $this->sendResponse($response);
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    // Validar entrada
+    if (!isset($data['email']) || !isset($data['usuario_asignado'])) {
+        $this->sendResponse([
+            'success' => false, 
+            'message' => 'Email y nombre de usuario son requeridos'
+        ]);
+        return;
     }
+    
+    // Validar formato de email
+    if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        $this->sendResponse([
+            'success' => false, 
+            'message' => 'Formato de email inválido'
+        ]);
+        return;
+    }
+    
+    // Validar longitud del nombre de usuario
+    if (strlen($data['usuario_asignado']) < 3) {
+        $this->sendResponse([
+            'success' => false, 
+            'message' => 'El nombre de usuario debe tener al menos 3 caracteres'
+        ]);
+        return;
+    }
+    
+    error_log(print_r($data, true));
+    $response = $this->service->actualizarUsuarioAsignado($data);
+    $this->sendResponse($response);
+}
 
     public function resetPassword() {
         $data = json_decode(file_get_contents('php://input'), true);

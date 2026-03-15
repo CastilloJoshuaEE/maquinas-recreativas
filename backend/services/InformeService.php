@@ -154,19 +154,35 @@ class InformeService {
             return ['success' => false, 'message' => 'Error interno del servidor'];
         }
     }
-
-    public function obtenerMaquinasRecaudacion() {
-        try {
-            $maquinas = $this->maquinaModel->obtenerMaquinasPorEtapaYEstado('Recaudacion', 'Operativa');
-            return [
-                'success' => true,
-                'maquinas' => $maquinas
-            ];
-        } catch (Exception $e) {
-            error_log("Error en obtenerMaquinasRecaudacion: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error al obtener máquinas'];
+// En InformeService.php -  método obtenerMaquinasRecaudacion
+public function obtenerMaquinasRecaudacion() {
+    try {
+        $maquinas = $this->maquinaModel->obtenerMaquinasPorEtapaYEstado('Recaudacion', 'Operativa');
+        
+        // Enriquecer los datos de máquinas con información del comercio
+        $maquinasEnriquecidas = [];
+        $comercioModel = new ComercioModel();
+        
+        foreach ($maquinas as $maquina) {
+            // Obtener información del comercio
+            $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
+            
+            $maquina['NombreComercio'] = $comercio ? $comercio['Nombre'] : 'N/A';
+            $maquina['TipoComercio'] = $comercio ? $comercio['Tipo'] : 'N/A';
+            $maquina['DireccionComercio'] = $comercio ? $comercio['Direccion'] : 'N/A';
+            
+            $maquinasEnriquecidas[] = $maquina;
         }
+        
+        return [
+            'success' => true,
+            'maquinas' => $maquinasEnriquecidas
+        ];
+    } catch (Exception $e) {
+        error_log("Error en obtenerMaquinasRecaudacion: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error al obtener máquinas'];
     }
+}
 
     public function obtenerMaquinasOperativasPorComercio($id_comercio) {
         try {
@@ -244,32 +260,42 @@ class InformeService {
         }
     }
 
-
-      public function obtenerInformePorRecaudacion($idRecaudacion) {
-        try {
-            if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $idRecaudacion)) {
-                return ['success' => false, 'message' => 'ID de recaudación inválido'];
-            }
-
-            $informe = $this->model->obtenerInformePrincipal($idRecaudacion);
-            
-            if (!$informe) {
-                return ['success' => false, 'message' => 'Informe no encontrado'];
-            }
-
-            $componentes = $this->model->obtenerComponentesInforme($informe['ID_Informe']);
-
-            return [
-                'success' => true,
-                'informe' => $informe,
-                'componentes' => $componentes
-            ];
-
-        } catch (Exception $e) {
-            error_log("Error en obtenerInformePorRecaudacion: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Error al obtener el informe'];
+// En InformeService.php - Asegurar que el método devuelva los datos completos
+public function obtenerInformePorRecaudacion($idRecaudacion) {
+    try {
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $idRecaudacion)) {
+            return ['success' => false, 'message' => 'ID de recaudación inválido'];
         }
+
+        $informe = $this->model->obtenerInformePrincipal($idRecaudacion);
+        
+        if (!$informe) {
+            return ['success' => false, 'message' => 'Informe no encontrado'];
+        }
+
+        $componentes = $this->model->obtenerComponentesInforme($informe['ID_Informe']);
+
+        // Obtener la recaudación para tener los montos
+        $recaudacion = $this->model->obtenerRecaudacion($idRecaudacion);
+        
+        $informe['Monto_Total'] = $recaudacion ? $recaudacion['Monto_Total'] : null;
+        $informe['Monto_Empresa'] = $recaudacion ? $recaudacion['Monto_Empresa'] : null;
+        $informe['Monto_Comercio'] = $recaudacion ? $recaudacion['Monto_Comercio'] : null;
+        $informe['Tipo_Comercio'] = $recaudacion ? $recaudacion['Tipo_Comercio'] : null;
+        $informe['fecha'] = $recaudacion ? $recaudacion['fecha'] : null;
+        $informe['detalle'] = $recaudacion ? $recaudacion['detalle'] : null;
+
+        return [
+            'success' => true,
+            'informe' => $informe,
+            'componentes' => $componentes
+        ];
+
+    } catch (Exception $e) {
+        error_log("Error en obtenerInformePorRecaudacion: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Error al obtener el informe'];
     }
+}
     public function obtenerRecaudacion($idRecaudacion) {
         try {
             if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $idRecaudacion))

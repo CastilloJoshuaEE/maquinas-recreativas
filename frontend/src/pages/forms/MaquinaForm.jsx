@@ -201,7 +201,7 @@ export default function MaquinaForm({ onClose, onSuccess }) {
                 disabled={componentesCreados.placa || loading}
               >
                 {componentesCreados.placa
-                  ? `✅ Placa creada: ${componentesCreados.placa}`
+                  ? `Placa creada: ${componentesCreados.placa}`
                   : "Crear Placa"}
               </button>
               {componentErrors.placa && (
@@ -228,7 +228,7 @@ export default function MaquinaForm({ onClose, onSuccess }) {
                 disabled={componentesCreados.carcasa || !selectedCarcasa || loading}
               >
                 {componentesCreados.carcasa
-                  ? "✅ Carcasa asignada"
+                  ? "Carcasa asignada"
                   : "Asignar Carcasa"}
               </button>
               {componentErrors.carcasa && (
