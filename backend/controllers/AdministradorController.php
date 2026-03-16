@@ -17,14 +17,26 @@ class AdministradorController {
         }
     }
 
-    public function getAllUsers($filters = []) {
-        try {
-            $usuarios = $this->service->obtenerTodosUsuarios($filters);
-            $this->sendResponse(['success' => true, 'usuarios' => $usuarios]);
-        } catch (Exception $e) {
-            $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
+public function getAllUsers($filters = []) {
+    try {
+        // Verificar autenticación
+        if (!isset($_SESSION['ID_Usuario'])) {
+            $this->sendResponse(['success' => false, 'message' => 'No autorizado'], 401);
+            return;
         }
+        
+        // Verificar rol de administrador
+        if ($_SESSION['rol'] !== 'Administrador') {
+            $this->sendResponse(['success' => false, 'message' => 'No tiene permisos suficientes'], 403);
+            return;
+        }
+        
+        $usuarios = $this->service->obtenerTodosUsuarios($filters);
+        $this->sendResponse(['success' => true, 'usuarios' => $usuarios]);
+    } catch (Exception $e) {
+        $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
     }
+}
 
     public function updateUser($id, $data) {
         try {

@@ -92,6 +92,10 @@ class UsuarioController {
     }
 
     public function getProfile($id = null) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->sendResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
         try {
             if ($id === null && isset($_GET['id'])) {
                 $id = $_GET['id'];
@@ -132,6 +136,10 @@ $tipo = $_SESSION['rol'] ?? null;
     }
 
 public function updateProfile() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            $this->sendResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
     $data = json_decode(file_get_contents('php://input'), true);
     
     if (!$data || !isset($data['id'])) {

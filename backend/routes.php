@@ -21,56 +21,104 @@ require_once __DIR__ . '/controllers/ComponenteController.php';
 // =============================================
 // FUNCIÓN PRINCIPAL DE ENRUTAMIENTO
 // =============================================
+function sendResponse($data, $statusCode = 200) {
+    http_response_code($statusCode);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
 function routeRequest($apiRoute, $requestMethod) {
     // Depuración - quitar en producción
     error_log("Ruta solicitada: " . $apiRoute . " Método: " . $requestMethod);
     
     switch ($apiRoute) {
           // ENDPOINT DE SALUD
-        case '/health':
-        echo json_encode([
+case '/health':
+
+    if ($requestMethod === 'GET') {
+
+        sendResponse([
             "status" => "ok",
             "message" => "Backend funcionando",
             "time" => date("Y-m-d H:i:s")
         ]);
-        break;    
-        case '/test-db':
-    $db = new Database();
-    echo json_encode([
-        "success" => true,
-        "message" => "Conexión a DB exitosa"
-    ]);
+
+    } else {
+
+        sendResponse([
+            "success" => false,
+            "message" => "Método no permitido"
+        ], 405);
+
+    }
+
+break;
+
+
+case '/test-db':
+
+    if ($requestMethod === 'GET') {
+
+        $db = new Database();
+
+        sendResponse([
+            "success" => true,
+            "message" => "Conexión a DB exitosa"
+        ]);
+
+    } else {
+
+        sendResponse([
+            "success" => false,
+            "message" => "Método no permitido"
+        ], 405);
+
+    }
+
 break;
     // --------------------------------
         // ENDPOINTS DE USUARIO
         // --------------------------------
-        case '/usuario/register':
-            if ($requestMethod === 'POST') {
-                $input = json_decode(file_get_contents('php://input'), true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    $input = $_POST;
-                }
-                $controller = new UsuarioController();
-                $controller->register();
-            }
-            break;
-            
-        case '/usuario/buscar-email':
-            if ($requestMethod === 'POST') {
-                $controller = new UsuarioController();
-                $controller->buscarPorEmail();
-            }
-            break;
+case '/usuario/register':
 
-        case '/usuario/login':
-            if ($requestMethod === 'POST') {
-                $controller = new UsuarioController();
-                $controller->login();
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            }
-            break;
+    if ($requestMethod !== 'POST') {
+        sendResponse([
+            'success' => false,
+            'message' => 'Método no permitido'
+        ], 405);
+    }
+
+    $controller = new UsuarioController();
+    $controller->register();
+
+break;
+case '/usuario/buscar-email':
+
+    if ($requestMethod !== 'POST') {
+        sendResponse([
+            'success' => false,
+            'message' => 'Método no permitido'
+        ], 405);
+    }
+
+    $controller = new UsuarioController();
+    $controller->buscarPorEmail();
+
+break;
+
+case '/usuario/login':
+
+    if ($requestMethod !== 'POST') {
+        sendResponse([
+            'success' => false,
+            'message' => 'Método no permitido'
+        ], 405);
+    }
+
+    $controller = new UsuarioController();
+    $controller->login();
+
+break;
 
         case (preg_match('/\/usuario\/profile\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i', $apiRoute, $matches) ? true : false):
             if ($requestMethod === 'GET') {
