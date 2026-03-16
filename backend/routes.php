@@ -22,9 +22,14 @@ require_once __DIR__ . '/controllers/ComponenteController.php';
 // FUNCIÓN PRINCIPAL DE ENRUTAMIENTO
 // =============================================
 function sendResponse($data, $statusCode = 200) {
+
     http_response_code($statusCode);
-    header('Content-Type: application/json');
-    echo json_encode($data);
+
+    header("Content-Type: application/json; charset=utf-8");
+    header("X-Content-Type-Options: nosniff");
+
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+
     exit;
 }
 function routeRequest($apiRoute, $requestMethod) {
