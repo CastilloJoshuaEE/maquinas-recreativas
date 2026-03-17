@@ -8,7 +8,6 @@ class UsuarioModel {
     public function __construct() {
         $this->db = new Database();
     }
-
 public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
     $conn = $this->db->getConnection();
     
@@ -58,7 +57,7 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
         }
 
-        // Insertar usuario incluyendo ID_Usuario con UUID()
+        // Insertar usuario
         $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                 VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, 'Activo')";
 
@@ -79,21 +78,21 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
         }
 
-        // Obtener el ID del usuario recién insertado (usando insert_id o consulta)
+        // Obtener el ID del usuario - USAR LAST_INSERT_ID() o consulta
         $id_usuario = $conn->insert_id;
-        if (!$id_usuario) {
-            // Si insert_id no funciona, consultar por usuario_asignado (que es único)
-            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        if (!$id_usuario || $id_usuario == 0) {
+            // Para UUID, consultar por usuario_asignado
+            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? ORDER BY fecha_registro DESC LIMIT 1";
             $getIdStmt = $conn->prepare($getIdSql);
             $getIdStmt->bind_param("s", $usuario_asignado);
             $getIdStmt->execute();
             $result = $getIdStmt->get_result();
-            $row = $result->fetch_assoc();
-            $id_usuario = $row['ID_Usuario'] ?? null;
-        }
-
-        if (!$id_usuario) {
-            throw new Exception("No se pudo obtener el ID del usuario");
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $id_usuario = $row['ID_Usuario'];
+            } else {
+                throw new Exception("No se pudo obtener el ID del usuario");
+            }
         }
 
         // Si es técnico, insertar en tabla Tecnico
@@ -101,7 +100,9 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
             $stmtTec = $conn->prepare($sqlTec);
             $stmtTec->bind_param("ss", $id_usuario, $especialidad);
-            $stmtTec->execute();
+            if (!$stmtTec->execute()) {
+                throw new Exception("Error al insertar en Tecnico: " . $stmtTec->error);
+            }
         }
 
         // Si es Logistica, insertar en tabla Logistica
@@ -109,7 +110,9 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             $sqlLog = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
             $stmtLog = $conn->prepare($sqlLog);
             $stmtLog->bind_param("s", $id_usuario);
-            $stmtLog->execute();
+            if (!$stmtLog->execute()) {
+                throw new Exception("Error al insertar en Logistica: " . $stmtLog->error);
+            }
         }
 
         $conn->commit();

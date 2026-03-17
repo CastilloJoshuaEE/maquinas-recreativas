@@ -223,7 +223,7 @@ class AdministradorModel {
             throw $e;
         }
     }
- public function registrarUsuarioAdmin($data) {
+public function registrarUsuarioAdmin($data) {
     $conn = $this->db->getConnection();
     
     $contrasenaHash = password_hash($data['contrasena'], PASSWORD_BCRYPT);
@@ -234,7 +234,7 @@ class AdministradorModel {
     try {
         $conn->begin_transaction();
 
-        // Insertar usuario
+        // Insertar usuario - usar UUID() de MySQL directamente
         $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                 VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
@@ -249,26 +249,40 @@ class AdministradorModel {
             $data['tipo'],
             $data['estado']
         );
-        $stmt->execute();
         
-        // Obtener el ID del usuario insertado
+        if (!$stmt->execute()) {
+            throw new Exception("Error al insertar usuario: " . $stmt->error);
+        }
+        
+        // Obtener el ID del usuario insertado - USANDO LAST_INSERT_ID()
         $id_usuario = $conn->insert_id;
-        if (!$id_usuario) {
-            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        if (!$id_usuario || $id_usuario == 0) {
+            // Si insert_id no funciona (porque es UUID), consultar por usuario_asignado
+            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? ORDER BY fecha_registro DESC LIMIT 1";
             $getIdStmt = $conn->prepare($getIdSql);
             $getIdStmt->bind_param("s", $data['usuario_asignado']);
             $getIdStmt->execute();
             $result = $getIdStmt->get_result();
-            $row = $result->fetch_assoc();
-            $id_usuario = $row['ID_Usuario'];
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $id_usuario = $row['ID_Usuario'];
+            } else {
+                throw new Exception("No se pudo obtener el ID del usuario insertado");
+            }
         }
 
-        // Si es técnico, insertar en tabla Tecnico
+        // Si es técnico, insertar en tabla Tecnico (solo si el ID no es null)
         if ($data['tipo'] === 'Tecnico' && $especialidad !== null) {
+            if (empty($id_usuario)) {
+                throw new Exception("ID de usuario es null, no se puede insertar en Tecnico");
+            }
+            
             $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
             $stmtTec = $conn->prepare($sqlTec);
             $stmtTec->bind_param("ss", $id_usuario, $especialidad);
-            $stmtTec->execute();
+            if (!$stmtTec->execute()) {
+                throw new Exception("Error al insertar en Tecnico: " . $stmtTec->error);
+            }
         }
 
         $conn->commit();
