@@ -25,10 +25,34 @@ class UsuarioController {
         
         $response = $this->service->login($data['usuario_asignado'], $data['contrasena']);
         
+        // Verificar que $response no sea null y tenga la estructura esperada
+        if (!is_array($response)) {
+            error_log("ERROR LOGIN: respuesta no es array");
+            $this->sendResponse([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+            return;
+        }
+        
         if ($response['success']) {
+            // Asegurarse de que 'usuario' existe y es un array
+            if (!isset($response['usuario']) || !is_array($response['usuario'])) {
+                error_log("ERROR LOGIN: usuario no encontrado en respuesta");
+                $this->sendResponse([
+                    'success' => false,
+                    'message' => 'Error en datos de usuario'
+                ]);
+                return;
+            }
+            
             // Asegurarse de incluir el ID_Usuario en la respuesta
             $response['usuario']['uuid'] = $response['usuario']['ID_Usuario'];
-            session_start();
+            
+            // Iniciar sesión PHP
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
             session_regenerate_id(true);
             
             $_SESSION['ID_Usuario'] = $response['usuario']['ID_Usuario'];
@@ -37,6 +61,7 @@ class UsuarioController {
         }
         
         $this->sendResponse($response);
+        
     } catch (Exception $e) {
         error_log("ERROR LOGIN: " . $e->getMessage());
         $this->sendResponse([

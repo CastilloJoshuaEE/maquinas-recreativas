@@ -7,18 +7,13 @@ class RateLimiter {
     private $storageFile = __DIR__ . '/../storage/rate_limits.json';
     
     private function __construct() {
-        // Crear directorio si no existe
         $dir = dirname($this->storageFile);
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
-        
-        // Cargar límites existentes
         if (file_exists($this->storageFile)) {
             $this->limits = json_decode(file_get_contents($this->storageFile), true) ?: [];
         }
-        
-        // Limpiar límites antiguos
         $this->cleanOldLimits();
     }
     
@@ -44,7 +39,6 @@ class RateLimiter {
         }
         
         $this->save();
-        
         return $this->limits[$storageKey]['count'] <= $maxRequests;
     }
     
@@ -52,9 +46,28 @@ class RateLimiter {
         $now = time();
         $windowKey = floor($now / $timeWindow);
         $storageKey = $key . '_' . $windowKey;
-        
         $used = $this->limits[$storageKey]['count'] ?? 0;
         return max(0, $maxRequests - $used);
+    }
+
+    /**
+     * Resetea los contadores de una IP específica (usado entre pruebas).
+     */
+    public function resetKey($key) {
+        foreach (array_keys($this->limits) as $storageKey) {
+            if (strpos($storageKey, $key . '_') === 0) {
+                unset($this->limits[$storageKey]);
+            }
+        }
+        $this->save();
+    }
+
+    /**
+     * Resetea TODOS los contadores (solo para entorno de pruebas).
+     */
+    public function resetAll() {
+        $this->limits = [];
+        $this->save();
     }
     
     private function cleanOldLimits() {
