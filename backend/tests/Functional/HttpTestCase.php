@@ -2,7 +2,6 @@
 // tests/Functional/HttpTestCase.php
 
 require_once __DIR__ . '/../../config/database.php';
-
 abstract class HttpTestCase {
     protected $baseUrl = 'http://localhost:8000';
     protected $cookies = [];
@@ -54,12 +53,16 @@ abstract class HttpTestCase {
         }
         
         // Headers
-        $httpHeaders = ['Content-Type: application/json'];
-        if (!empty($headers)) {
-            $httpHeaders = array_merge($httpHeaders, $headers);
-        }
-        $options[CURLOPT_HTTPHEADER] = $httpHeaders;
-        
+$httpHeaders = [
+    'Content-Type: application/json',
+    'User-Agent: PHPUnit' 
+];
+
+if (!empty($headers)) {
+    $httpHeaders = array_merge($httpHeaders, $headers);
+}
+
+$options[CURLOPT_HTTPHEADER] = $httpHeaders;
         // Datos
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && $data) {
             $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);

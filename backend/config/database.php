@@ -4,13 +4,36 @@ $envPath = __DIR__ . '/../.env';
 if (!file_exists($envPath)) {
     die("Archivo .env no encontrado");
 }
-
 $env = parse_ini_file($envPath);
-// Definición de constantes para la configuración de la base de datos
+
+// =============================================
+// DETECTAR ENTORNO (LOCAL / TEST / PRODUCCIÓN)
+// =============================================
+$isTest = (
+    ($env['APP_ENV'] ?? '') === 'testing' ||
+    (defined('TEST_ENVIRONMENT') && TEST_ENVIRONMENT === true)
+);
+
+// =============================================
+// SELECCIONAR BASE DE DATOS
+// =============================================
+$dbName = $env['DB_NAME'] ?? null;
+
+if ($isTest) {
+    $dbName = $env['DB_NAME_TEST'] ?? $dbName;
+}
+
+if (!$dbName) {
+    die("No se ha definido DB_NAME en el .env");
+}
+
+// =============================================
+// DEFINIR CONSTANTES
+// =============================================
 define('DB_HOST', $env['DB_HOST']);
 define('DB_USER', $env['DB_USER']);
 define('DB_PASS', $env['DB_PASS']);
-define('DB_NAME', $env['DB_NAME']);
+define('DB_NAME', $dbName);
 
 require_once __DIR__ . '/../helper/CifradoHelper.php';
 require_once __DIR__ . '/Inserter.php'; // Asegúrate de que la ruta sea correcta
@@ -27,8 +50,9 @@ class Database {
 
         $this->connection->set_charset("utf8mb4");
 
-        // Insertar usuarios iniciales con validación
-        $this->insertarUsuariosIniciales();
+if (!defined('TEST_ENVIRONMENT') || TEST_ENVIRONMENT !== true) {
+    $this->insertarUsuariosIniciales();
+}
     }
 
     private function insertarUsuariosIniciales() {

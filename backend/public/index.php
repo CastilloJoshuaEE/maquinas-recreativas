@@ -50,6 +50,23 @@ session_set_cookie_params([
 ]);
 
 session_start();
+// =============================================
+// DETECTAR ENTORNO DE PRUEBAS
+// =============================================
+
+$isTestEnvironment = (
+    isset($_SERVER['HTTP_USER_AGENT']) && 
+    strpos($_SERVER['HTTP_USER_AGENT'], 'PHPUnit') !== false
+) || (
+    isset($_SERVER['REQUEST_URI']) && 
+    strpos($_SERVER['REQUEST_URI'], '/test') !== false
+) || (
+    isset($_GET['test']) // opcional para forzar desde URL
+);
+
+if ($isTestEnvironment) {
+    define('TEST_ENVIRONMENT', true);
+}
 securityHeaders();
 
 function securityHeaders() {
