@@ -49,10 +49,14 @@ class Database {
         }
 
         $this->connection->set_charset("utf8mb4");
-
+$this->insertarUsuariosIniciales();
+// Si falla el registro automático de usuarios iniciales puede hacerlo manualmente en su phpmyadmin o mysql workbench en SQL
+// En el caso de que ya haya generado el archivo usuarios_iniciales.lock anteriormente, proceda a eliminarlo manualmente de  la carpeta config y levante de nuevo el servidor backend y frontend para que el sistema lo haga automáticamente
+/* SOLO EN ENTORNOS DE PRUEBAS, DESCARTAR USUARIOS INICIALES
 if (!defined('TEST_ENVIRONMENT') || TEST_ENVIRONMENT !== true) {
     $this->insertarUsuariosIniciales();
 }
+    */
     }
 
     private function insertarUsuariosIniciales() {
