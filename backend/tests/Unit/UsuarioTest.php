@@ -99,24 +99,28 @@ class UsuarioTest extends TestCase {
             'especialidad' => 'Comprobador'
         ]);
 
-        $this->assertIsString($resultadoEnsamblador);
-        $this->assertIsString($resultadoComprobador);
+$this->assertIsArray($resultadoEnsamblador);
+$this->assertTrue($resultadoEnsamblador['success']);
+
+$this->assertIsArray($resultadoComprobador);
+$this->assertTrue($resultadoComprobador['success']);
         $this->assertNotEmpty($resultadoEnsamblador);
         $this->assertNotEmpty($resultadoComprobador);
+$idEnsamblador = $resultadoEnsamblador['id'];
+$idComprobador = $resultadoComprobador['id'];
 
-        // Registrar máquina
-        $idMaquina = $this->maquinaModel->registrarMaquina(
-            'Máquina de prueba',
-            'Tipo prueba',
-            $resultadoEnsamblador,
-            $resultadoComprobador,
-            $idComercio
-        );
-
+$idMaquina = $this->maquinaModel->registrarMaquina(
+    'Máquina de prueba',
+    'Tipo prueba',
+    $idEnsamblador,
+    $idComprobador,
+    $idComercio
+);
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('No se puede eliminar el usuario porque tiene máquinas asignadas');
-        
-        $this->administradorModel->eliminarUsuario($resultadoEnsamblador);
+        $resultado = $this->administradorModel->eliminarUsuario($idEnsamblador);
+
+$this->assertFalse($resultado);
     }
     
     /**
