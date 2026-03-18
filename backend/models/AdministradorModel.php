@@ -223,7 +223,8 @@ class AdministradorModel {
             throw $e;
         }
     }
- public function registrarUsuarioAdmin($data) {
+
+public function registrarUsuarioAdmin($data) {
     $conn = $this->db->getConnection();
     
     $contrasenaHash = password_hash($data['contrasena'], PASSWORD_BCRYPT);
@@ -233,6 +234,25 @@ class AdministradorModel {
 
     try {
         $conn->begin_transaction();
+
+        // Verificar duplicados
+        $checkEmailSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
+        $checkEmailStmt = $conn->prepare($checkEmailSql);
+        $checkEmailStmt->bind_param("s", $emailEncriptado);
+        $checkEmailStmt->execute();
+        if ($checkEmailStmt->get_result()->num_rows > 0) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
+        }
+
+        $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        $checkUserStmt = $conn->prepare($checkUserSql);
+        $checkUserStmt->bind_param("s", $data['usuario_asignado']);
+        $checkUserStmt->execute();
+        if ($checkUserStmt->get_result()->num_rows > 0) {
+            $conn->rollback();
+            return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
+        }
 
         // Insertar usuario
         $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
@@ -249,18 +269,36 @@ class AdministradorModel {
             $data['tipo'],
             $data['estado']
         );
-        $stmt->execute();
         
-        // Obtener el ID del usuario insertado
-        $id_usuario = $conn->insert_id;
-        if (!$id_usuario) {
-            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
+        if (!$stmt->execute()) {
+            throw new Exception("Error al insertar usuario: " . $stmt->error);
+        }
+        
+        // Obtener el UUID generado
+        $id_usuario = null;
+        $maxAttempts = 3;
+        $attempt = 0;
+        
+        while ($id_usuario === null && $attempt < $maxAttempts) {
+            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? ORDER BY fecha_registro DESC LIMIT 1";
             $getIdStmt = $conn->prepare($getIdSql);
             $getIdStmt->bind_param("s", $data['usuario_asignado']);
             $getIdStmt->execute();
             $result = $getIdStmt->get_result();
-            $row = $result->fetch_assoc();
-            $id_usuario = $row['ID_Usuario'];
+            
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $id_usuario = $row['ID_Usuario'];
+            } else {
+                $attempt++;
+                if ($attempt < $maxAttempts) {
+                    usleep(100000); // 0.1 segundos
+                }
+            }
+        }
+        
+        if ($id_usuario === null) {
+            throw new Exception("No se pudo obtener el ID del usuario insertado después de $maxAttempts intentos");
         }
 
         // Si es técnico, insertar en tabla Tecnico
@@ -268,16 +306,23 @@ class AdministradorModel {
             $sqlTec = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
             $stmtTec = $conn->prepare($sqlTec);
             $stmtTec->bind_param("ss", $id_usuario, $especialidad);
-            $stmtTec->execute();
+            if (!$stmtTec->execute()) {
+                throw new Exception("Error al insertar en Tecnico: " . $stmtTec->error);
+            }
         }
 
         $conn->commit();
-        return $id_usuario;
+        
+        return [
+            'success' => true,
+            'id' => $id_usuario,
+            'message' => 'Usuario registrado correctamente'
+        ];
 
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Error en registrarUsuarioAdmin: " . $e->getMessage());
-        return false;
+        return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $e->getMessage()];
     }
 }
     public function getUsuarios($f) {

@@ -17,14 +17,26 @@ class AdministradorController {
         }
     }
 
-    public function getAllUsers($filters = []) {
-        try {
-            $usuarios = $this->service->obtenerTodosUsuarios($filters);
-            $this->sendResponse(['success' => true, 'usuarios' => $usuarios]);
-        } catch (Exception $e) {
-            $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
+public function getAllUsers($filters = []) {
+    try {
+        // Verificar autenticación
+        if (!isset($_SESSION['ID_Usuario'])) {
+            $this->sendResponse(['success' => false, 'message' => 'No autorizado'], 401);
+            return;
         }
+        
+        // Verificar rol de administrador
+        if ($_SESSION['rol'] !== 'Administrador') {
+            $this->sendResponse(['success' => false, 'message' => 'No tiene permisos suficientes'], 403);
+            return;
+        }
+        
+        $usuarios = $this->service->obtenerTodosUsuarios($filters);
+        $this->sendResponse(['success' => true, 'usuarios' => $usuarios]);
+    } catch (Exception $e) {
+        $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
     }
+}
 
     public function updateUser($id, $data) {
         try {
@@ -46,15 +58,30 @@ class AdministradorController {
         }
     }
 
-    public function registerAdmin($data) {
-        try {
-            $result = $this->service->registrarUsuarioAdmin($data);
+public function registerAdmin($data) {
+    try {
+        $result = $this->service->registrarUsuarioAdmin($data);
+        
+        // Verificar que el resultado tenga la estructura correcta
+        if (is_array($result) && isset($result['success'])) {
             $this->sendResponse($result);
-        } catch (Exception $e) {
-            $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
+        } else if (is_string($result)) {
+            // Si el servicio devuelve solo el ID
+            $this->sendResponse([
+                'success' => true,
+                'id' => $result,
+                'message' => 'Usuario registrado correctamente'
+            ]);
+        } else {
+            $this->sendResponse([
+                'success' => false,
+                'message' => 'Error al registrar el usuario'
+            ], 400);
         }
+    } catch (Exception $e) {
+        $this->sendResponse(['success' => false, 'message' => $e->getMessage()], 400);
     }
-
+}
     public function deleteUser($id) {
         try {
             $result = $this->service->eliminarUsuario($id);

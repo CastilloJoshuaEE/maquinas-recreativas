@@ -74,29 +74,40 @@ class AdministradorService {
     }
 
     public function registrarUsuarioAdmin($data) {
-        if (empty($data['usuario_asignado']) || trim($data['usuario_asignado']) === '') {
-            throw new Exception("El campo usuario_asignado es requerido y no puede estar vacío");
-        }
-        
-        if (strlen($data['contrasena']) < 8) {
-            throw new Exception("La contraseña debe tener al menos 8 caracteres");
-        }
-        
-        $this->validarDatosUsuario($data);
-        
-        try {
-            $id = $this->model->registrarUsuarioAdmin($data);
-            
-            if (!$id) {
-                throw new Exception('Error al registrar el usuario');
-            }
-            
-            return ['success' => true, 'message' => 'Usuario registrado correctamente', 'id' => $id];
-        } catch (Exception $e) {
-            error_log("Error en registrarUsuarioAdmin: " . $e->getMessage());
-            throw new Exception('Error al procesar el registro del usuario');
-        }
+    if (empty($data['usuario_asignado']) || trim($data['usuario_asignado']) === '') {
+        throw new Exception("El campo usuario_asignado es requerido y no puede estar vacío");
     }
+    
+    if (strlen($data['contrasena']) < 8) {
+        throw new Exception("La contraseña debe tener al menos 8 caracteres");
+    }
+    
+    $this->validarDatosUsuario($data);
+    
+    try {
+        $result = $this->model->registrarUsuarioAdmin($data);
+        
+        if (!$result) {
+            throw new Exception('Error al registrar el usuario');
+        }
+        
+        // Si el modelo devuelve un array con la estructura correcta
+        if (is_array($result) && isset($result['success'])) {
+            return $result;
+        }
+        
+        // Si devuelve solo el ID
+        return [
+            'success' => true, 
+            'message' => 'Usuario registrado correctamente', 
+            'id' => $result
+        ];
+        
+    } catch (Exception $e) {
+        error_log("Error en registrarUsuarioAdmin: " . $e->getMessage());
+        throw new Exception('Error al procesar el registro del usuario');
+    }
+}
 
     private function validarDatosUsuario($data, $isUpdate = false) {
         $required = $isUpdate ? 

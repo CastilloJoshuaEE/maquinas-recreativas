@@ -7,12 +7,38 @@ class UsuarioController {
     public function __construct() {
         $this->service = new UsuarioService();
     }
-
-    public function register() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $response = $this->service->registrarUsuario($data);
-        $this->sendResponse($response);
+public function register() {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    // Validar datos mínimos
+    if (!isset($data['usuario_asignado']) || !isset($data['contrasena'])) {
+        $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
+        return;
     }
+    
+    $response = $this->service->registrarUsuario($data);
+    
+    // Asegurar que la respuesta siempre tenga userId si es exitosa
+    if (isset($response['success']) && $response['success'] === true) {
+        // Si no viene userId, intentar obtenerlo de alguna manera
+        if (!isset($response['userId']) && isset($response['id'])) {
+            $response['userId'] = $response['id'];
+        }
+        
+        // Si aún no hay userId, hacer una consulta adicional (esto no debería pasar)
+        if (!isset($response['userId'])) {
+            error_log("ADVERTENCIA: Registro exitoso pero sin userId en respuesta");
+            // Intentar recuperar el ID por usuario_asignado
+            $model = new UsuarioModel();
+            $usuario = $model->obtenerUsuarioPorUsuarioAsignado($data['usuario_asignado']);
+            if ($usuario) {
+                $response['userId'] = $usuario['ID_Usuario'];
+            }
+        }
+    }
+    
+    $this->sendResponse($response);
+}
 
     public function login() {
     try {
@@ -25,10 +51,34 @@ class UsuarioController {
         
         $response = $this->service->login($data['usuario_asignado'], $data['contrasena']);
         
+        // Verificar que $response no sea null y tenga la estructura esperada
+        if (!is_array($response)) {
+            error_log("ERROR LOGIN: respuesta no es array");
+            $this->sendResponse([
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ]);
+            return;
+        }
+        
         if ($response['success']) {
+            // Asegurarse de que 'usuario' existe y es un array
+            if (!isset($response['usuario']) || !is_array($response['usuario'])) {
+                error_log("ERROR LOGIN: usuario no encontrado en respuesta");
+                $this->sendResponse([
+                    'success' => false,
+                    'message' => 'Error en datos de usuario'
+                ]);
+                return;
+            }
+            
             // Asegurarse de incluir el ID_Usuario en la respuesta
             $response['usuario']['uuid'] = $response['usuario']['ID_Usuario'];
-            session_start();
+            
+            // Iniciar sesión PHP
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
             session_regenerate_id(true);
             
             $_SESSION['ID_Usuario'] = $response['usuario']['ID_Usuario'];
@@ -37,6 +87,7 @@ class UsuarioController {
         }
         
         $this->sendResponse($response);
+        
     } catch (Exception $e) {
         error_log("ERROR LOGIN: " . $e->getMessage());
         $this->sendResponse([
@@ -92,6 +143,10 @@ class UsuarioController {
     }
 
     public function getProfile($id = null) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->sendResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
         try {
             if ($id === null && isset($_GET['id'])) {
                 $id = $_GET['id'];
@@ -132,6 +187,10 @@ $tipo = $_SESSION['rol'] ?? null;
     }
 
 public function updateProfile() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            $this->sendResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+            return;
+        }
     $data = json_decode(file_get_contents('php://input'), true);
     
     if (!$data || !isset($data['id'])) {

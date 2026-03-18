@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__.'/../config/database.php'; // Usa la configuración real.
-
 class TestDatabase extends Database {
     protected $host = 'localhost';
     protected $db_name;
@@ -9,8 +8,9 @@ class TestDatabase extends Database {
     public $conn;
 
     public function __construct() {
-        $this->db_name = 'prueba_bd_recrea_sys_';
- 
+        $env = parse_ini_file(__DIR__ . '/../.env');
+
+$this->db_name = $env['DB_NAME_TEST'] ?? 'test_db'; 
         $this->conn = new mysqli($this->host, $this->username, $this->password);
         $this->conn->query("SET default_storage_engine=INNODB");
         $this->conn->query("CREATE DATABASE IF NOT EXISTS {$this->db_name}");
@@ -73,7 +73,7 @@ class TestDatabase extends Database {
             usuario_asignado VARCHAR(100) NOT NULL,
             contrasena VARCHAR(255) NOT NULL,
             fecha_inicio DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_fin DATETIME NULL,
+            fecha_ultima_sesion DATETIME NULL,
             FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
         )");
 

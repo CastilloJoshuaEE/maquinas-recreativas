@@ -229,7 +229,8 @@ CREATE TABLE montaje (
     FOREIGN KEY (ID_Tecnico) REFERENCES Tecnico(ID_Tecnico)
 );
 ALTER TABLE usuario MODIFY usuario_asignado VARCHAR(25) NOT NULL UNIQUE DEFAULT 'Aun no tiene';
-USE bd_recrea_sys;
+ALTER TABLE usuario
+ADD COLUMN fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP;
 INSERT INTO componente (tipo, nombre, precio) VALUES
 ('Ensamblador', 'Monitor LED 32" Pantalla Táctil', 250.00),
 ('Ensamblador', 'Placa Base Arcade Pro V2', 220.00),
