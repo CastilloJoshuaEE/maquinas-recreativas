@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../models/UsuarioModel.php';
+require_once __DIR__ . '/../helper/UsuarioHelper.php'; // Añadir esta línea
 
 class UsuarioService {
     private $model;
@@ -9,72 +10,104 @@ class UsuarioService {
     }
 
 
-public function registrarUsuario($data) {
-    $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
-    
-    foreach ($required as $field) {
-        if (!isset($data[$field]) || empty($data[$field])) {
-            return ['success' => false, 'message' => "El campo $field es requerido"];
+    public function registrarUsuario($data) {
+        // Modificar la validación: 'usuario_asignado' ya no es requerido si se generará automáticamente
+        $required = ['nombre', 'apellido', 'ci', 'email', 'contrasena', 'tipo'];
+        // 'usuario_asignado' ya no está en required
+        
+        foreach ($required as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return ['success' => false, 'message' => "El campo $field es requerido"];
+            }
         }
-    }
-    
-    if (strlen($data['contrasena']) < 8) {
-        return ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
-    }
-    
-    $tiposPermitidos = ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario'];
-    if (!in_array($data['tipo'], $tiposPermitidos)) {
-        return ['success' => false, 'message' => 'Tipo de usuario no válido'];
-    }
-    
-    if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
-        return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
-    }
-    
-    $result = $this->model->registrarUsuario(
-        $data['nombre'],
-        $data['apellido'],
-        $data['ci'],
-        $data['email'],
-        $data['usuario_asignado'],
-        $data['contrasena'],
-        $data['tipo'],
-        $data['especialidad'] ?? null
-    );
-    
-    // Normalizar la respuesta
-    $normalizedResponse = ['success' => false, 'message' => 'Error al registrar el usuario'];
-    
-    if (is_array($result)) {
-        if (isset($result['success'])) {
-            $normalizedResponse = $result;
-        } else if (isset($result['userId'])) {
+        
+        if (strlen($data['contrasena']) < 8) {
+            return ['success' => false, 'message' => 'La contraseña debe tener al menos 8 caracteres'];
+        }
+        
+        $tiposPermitidos = ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario'];
+        if (!in_array($data['tipo'], $tiposPermitidos)) {
+            return ['success' => false, 'message' => 'Tipo de usuario no válido'];
+        }
+        
+        if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
+            return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
+        }
+        
+        // GENERAR NOMBRE DE USUARIO AUTOMÁTICAMENTE si no se proporciona
+        if (empty($data['usuario_asignado'])) {
+            // Estrategia 1: Generar desde nombre y apellido
+            $usuarioGenerado = UsuarioHelper::generarUsuarioAsignado(
+                $data['nombre'], 
+                $data['apellido'], 
+                $data['tipo']
+            );
+            
+            // Estrategia 2: Si falla, generar desde email
+            if (!$usuarioGenerado && !empty($data['email'])) {
+                $usuarioGenerado = UsuarioHelper::generarDesdeEmail($data['email'], $data['tipo']);
+            }
+            
+            // Estrategia 3: Si todo falla, generar aleatorio
+            if (!$usuarioGenerado) {
+                $usuarioGenerado = UsuarioHelper::generarAleatorio($data['tipo']);
+            }
+            
+            $data['usuario_asignado'] = $usuarioGenerado;
+        }
+        
+        // Verificar que el nombre de usuario generado sea único (el modelo ya lo hace)
+        $result = $this->model->registrarUsuario(
+            $data['nombre'],
+            $data['apellido'],
+            $data['ci'],
+            $data['email'],
+            $data['usuario_asignado'],
+            $data['contrasena'],
+            $data['tipo'],
+            $data['especialidad'] ?? null
+        );
+        
+        // Normalizar la respuesta
+        $normalizedResponse = ['success' => false, 'message' => 'Error al registrar el usuario'];
+        
+        if (is_array($result)) {
+            if (isset($result['success'])) {
+                $normalizedResponse = $result;
+                // Añadir el usuario generado a la respuesta
+                if ($result['success']) {
+                    $normalizedResponse['usuario_asignado'] = $data['usuario_asignado'];
+                }
+            } else if (isset($result['userId'])) {
+                $normalizedResponse = [
+                    'success' => true,
+                    'userId' => $result['userId'],
+                    'usuario_asignado' => $data['usuario_asignado'],
+                    'message' => $result['message'] ?? 'Usuario registrado correctamente'
+                ];
+            }
+        } else if (is_string($result) && !empty($result)) {
             $normalizedResponse = [
                 'success' => true,
-                'userId' => $result['userId'],
-                'message' => $result['message'] ?? 'Usuario registrado correctamente'
+                'userId' => $result,
+                'usuario_asignado' => $data['usuario_asignado'],
+                'message' => 'Usuario registrado correctamente'
             ];
+        } else if ($result === true) {
+            $normalizedResponse = [
+                'success' => true,
+                'usuario_asignado' => $data['usuario_asignado'],
+                'message' => 'Usuario registrado correctamente'
+            ];
+            // Si no hay userId, intentar obtenerlo
+            $usuario = $this->model->obtenerUsuarioPorUsuarioAsignado($data['usuario_asignado']);
+            if ($usuario) {
+                $normalizedResponse['userId'] = $usuario['ID_Usuario'];
+            }
         }
-    } else if (is_string($result) && !empty($result)) {
-        $normalizedResponse = [
-            'success' => true,
-            'userId' => $result,
-            'message' => 'Usuario registrado correctamente'
-        ];
-    } else if ($result === true) {
-        $normalizedResponse = [
-            'success' => true,
-            'message' => 'Usuario registrado correctamente'
-        ];
-        // Si no hay userId, intentar obtenerlo
-        $usuario = $this->model->obtenerUsuarioPorUsuarioAsignado($data['usuario_asignado']);
-        if ($usuario) {
-            $normalizedResponse['userId'] = $usuario['ID_Usuario'];
-        }
+        
+        return $normalizedResponse;
     }
-    
-    return $normalizedResponse;
-}
         
     public function login($usuario_asignado, $contrasena) {
     try {

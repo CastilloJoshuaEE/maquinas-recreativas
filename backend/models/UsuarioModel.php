@@ -592,6 +592,7 @@ public function obtenerUsuarioPorUsuarioAsignado($usuario_asignado) {
             FROM usuario u 
             LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
             WHERE u.usuario_asignado = ?";
+    
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $usuario_asignado);
     $stmt->execute();
@@ -603,7 +604,7 @@ public function obtenerUsuarioPorUsuarioAsignado($usuario_asignado) {
         if (isset($usuario['email'])) {
             $usuario['email'] = CifradoHelper::desencriptar($usuario['email']);
         }
-        if (isset($usuario['ci'])) {
+        if (isset($usuario['ci']) && !empty($usuario['ci'])) {
             $usuario['ci'] = CifradoHelper::desencriptar($usuario['ci']);
         }
         return $usuario;

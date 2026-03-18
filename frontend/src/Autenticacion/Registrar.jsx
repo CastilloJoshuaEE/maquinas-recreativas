@@ -138,17 +138,7 @@ export default function RegistrarUsuario() {
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Usuario: </label>
-                    <input
-                        type="text"
-                        name="usuario_asignado"
-                        value={formData.usuario_asignado}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
+            
                 <div className="form-group">
                     <label>Contraseña: </label>
                     <input
