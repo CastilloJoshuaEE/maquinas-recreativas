@@ -7,6 +7,15 @@
     <testsuite name="Integration Tests">
       <directory>./Integration</directory>
     </testsuite>
+    <testsuite name="Functional Tests">
+      <directory>./Functional</directory>
+    </testsuite>
+    <testsuite name="Integration Tests">
+      <directory>./Integration</directory>
+    </testsuite>
+    <testsuite name="Smoke Tests">
+      <directory>./Smoke</directory>
+    </testsuite>
   </testsuites>
   <php>
     <ini name="display_errors" value="1"/>
