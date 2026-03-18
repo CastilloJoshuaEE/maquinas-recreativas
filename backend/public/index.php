@@ -66,7 +66,7 @@ $isTestEnvironment = (
     isset($_GET['test']) // opcional para forzar desde URL
 );
 
-if (!defined('TEST_ENVIRONMENT')) {
+if ($isTestEnvironment && !defined('TEST_ENVIRONMENT')) {
     define('TEST_ENVIRONMENT', true);
 }
 securityHeaders();
@@ -132,10 +132,21 @@ if ($apiRoute === '/reset-rate-limits') {
 
     header('Content-Type: application/json');
     $rateLimiter = RateLimiter::getInstance();
-    $rateLimiter->resetAll();
-    http_response_code(200);
-    echo json_encode(['success' => true, 'message' => 'Rate limits reseteados']);
-    exit();
+    // DESACTIVAR RATE LIMIT EN TESTS
+if (!(defined('TEST_ENVIRONMENT') && TEST_ENVIRONMENT === true)) {
+
+    if (!$rateLimiter->check($clientKey, $maxRequests, $timeWindow)) {
+        http_response_code(429);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Demasiadas solicitudes. Intente nuevamente más tarde.'
+        ]);
+        exit();
+    }
+
+    header('X-RateLimit-Limit: '     . $maxRequests);
+    header('X-RateLimit-Remaining: ' . $rateLimiter->getRemaining($clientKey, $maxRequests, $timeWindow));
+}
 }
 
 // =============================================
