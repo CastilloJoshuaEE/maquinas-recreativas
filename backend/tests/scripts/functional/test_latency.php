@@ -1,7 +1,7 @@
 <?php
 // tests/scripts/test_latency.php
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 echo "🔍 PRUEBA DE LATENCIA EN INSERCIÓN DE USUARIOS\n";
 echo "==============================================\n\n";

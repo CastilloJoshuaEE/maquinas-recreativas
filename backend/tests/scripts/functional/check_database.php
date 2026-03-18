@@ -1,7 +1,7 @@
 <?php
-// tests/scripts/check_database.php
+// tests/scripts/functional/check_database.php
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 echo "🔍 VERIFICANDO BASE DE DATOS\n";
 echo "============================\n\n";
