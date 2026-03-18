@@ -719,6 +719,57 @@ case (preg_match('#^/contabilidad/informe/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[
         (new InformeController())->obtenerInformePorRecaudacion($matches[1]);
     }
     break;
+    // =============================================
+// ENDPOINTS DE HISTORIAL DE MÁQUINAS
+// =============================================
+
+// Historial por máquina
+case (preg_match('#^/historial/maquina/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+    if ($requestMethod === 'GET') {
+        require_once __DIR__ . '/controllers/HistorialMaquinaController.php';
+        $controller = new HistorialMaquinaController();
+        $controller->getHistorialPorMaquina($matches[1]);
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
+
+// Historial por usuario
+case (preg_match('#^/historial/usuario/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$#i', $apiRoute, $matches) ? true : false):
+    if ($requestMethod === 'GET') {
+        require_once __DIR__ . '/controllers/HistorialMaquinaController.php';
+        $controller = new HistorialMaquinaController();
+        $controller->getHistorialPorUsuario($matches[1]);
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
+
+// Historial general con filtros
+case '/historial/general':
+    if ($requestMethod === 'GET') {
+        require_once __DIR__ . '/controllers/HistorialMaquinaController.php';
+        $controller = new HistorialMaquinaController();
+        $controller->getHistorialGeneral();
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
+
+// Resumen de actividades recientes
+case '/historial/resumen':
+    if ($requestMethod === 'GET') {
+        require_once __DIR__ . '/controllers/HistorialMaquinaController.php';
+        $controller = new HistorialMaquinaController();
+        $controller->getResumenReciente();
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    }
+    break;
         // --------------------------------
         // ENDPOINT POR DEFECTO (404)
         // --------------------------------

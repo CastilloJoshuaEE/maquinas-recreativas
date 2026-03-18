@@ -35,6 +35,7 @@ import ConsultarRecaudacion from "../modulo_contabilidad/ConsultarRecaudacion";
 import ActualizarRecaudacion from "../modulo_contabilidad/ActualizarRecaudacion";
 import Informacion from "./pages/Informacion.jsx";
 import VerInformeRecaudacion from "../modulo_contabilidad/VerInformeRecaudacion.jsx";
+import HistorialGeneral from "./pages/HistorialGeneral.jsx";
 function App() {
   return (
     <AuthProvider>
@@ -301,6 +302,14 @@ function App() {
             }
           />
           <Route
+    path="/historial-general"
+    element={
+        <PrivateRoute allowedRoles={["Administrador", "Logistica"]}>
+            <HistorialGeneral />
+        </PrivateRoute>
+    }
+/>
+          <Route
             path="/reportes/gestion"
             element={
               <PrivateRoute
@@ -313,6 +322,7 @@ function App() {
                 ]}
               >
                 <GestionReportes />
+
               </PrivateRoute>
             }
           />

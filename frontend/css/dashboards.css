@@ -360,3 +360,77 @@ p {
 .action-buttons .danger-btn:hover {
   background-color: #c53030;
 }
+.historial-general-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.historial-general-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.historial-header-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.historial-header-section h1 {
+    margin: 0;
+    color: #333;
+    font-size: 2rem;
+}
+
+.ver-historial-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ver-historial-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.historial-info {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    line-height: 1.6;
+    color: #666;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.acceso-denegado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.acceso-denegado h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.acceso-denegado p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}

@@ -10,8 +10,8 @@ class UsuarioController {
 public function register() {
     $data = json_decode(file_get_contents('php://input'), true);
     
-    // Validar datos mínimos
-    if (!isset($data['usuario_asignado']) || !isset($data['contrasena'])) {
+    // Ya no validamos usuario_asignado aquí porque se generará automáticamente
+    if (!isset($data['contrasena'])) {
         $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
         return;
     }
@@ -26,20 +26,24 @@ public function register() {
         }
         
         // Si aún no hay userId, hacer una consulta adicional (esto no debería pasar)
-        if (!isset($response['userId'])) {
+        if (!isset($response['userId']) && isset($response['usuario_asignado'])) {
             error_log("ADVERTENCIA: Registro exitoso pero sin userId en respuesta");
             // Intentar recuperar el ID por usuario_asignado
             $model = new UsuarioModel();
-            $usuario = $model->obtenerUsuarioPorUsuarioAsignado($data['usuario_asignado']);
+            $usuario = $model->obtenerUsuarioPorUsuarioAsignado($response['usuario_asignado']);
             if ($usuario) {
                 $response['userId'] = $usuario['ID_Usuario'];
             }
+        }
+        
+        // Asegurar que se incluya el usuario_asignado en la respuesta
+        if (!isset($response['usuario_asignado']) && isset($data['usuario_asignado'])) {
+            $response['usuario_asignado'] = $data['usuario_asignado'];
         }
     }
     
     $this->sendResponse($response);
 }
-
     public function login() {
     try {
         $data = json_decode(file_get_contents('php://input'), true);

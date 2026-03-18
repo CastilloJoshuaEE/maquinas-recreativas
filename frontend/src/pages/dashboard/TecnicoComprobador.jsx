@@ -7,6 +7,7 @@ import MaquinaList from "../../components/MaquinaList";
 import { AdminHeader } from "../../../modulo_usuario/AdminHeader";
 import "../../../css/dashboards.css";
 import api from "../../utils/api";
+import HistorialMaquina from "../../components/HistorialMaquina";
 export default function TecnicoComprobador() {
   const [user, setUser] = useState(null);
   const [notificaciones, setNotificaciones] = useState([]);
@@ -21,6 +22,7 @@ export default function TecnicoComprobador() {
     carcasaBuenEstado: false,
     experienciaJuegoAcorde: false,
   });
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [mostrarChecklist, setMostrarChecklist] = useState(false);
   const navigate = useNavigate();
 
@@ -147,7 +149,13 @@ export default function TecnicoComprobador() {
             onSelectMaquina={handleSelectMaquina}
             initiallyExpanded={false}
             emptyMessage="No hay máquinas para comprobar..."
-            actionButtons={[]} // Los botones se manejarán después del checklist
+            actionButtons={[
+              {
+  label: "Ver historial 📋",
+  onClick: () => setMostrarHistorial(true),
+  disabled: false
+}
+            ]} // Los botones se manejarán después del checklist
           />
 
           {mostrarChecklist && selectedMaquina && (
@@ -241,6 +249,13 @@ export default function TecnicoComprobador() {
               </div>
             </div>
           )}
+    {mostrarHistorial && (
+  <HistorialMaquina
+    idMaquina={selectedMaquina?.ID_Maquina || null}
+    nombreMaquina={selectedMaquina?.Nombre_Maquina || "General"}
+    onClose={() => setMostrarHistorial(false)}
+  />
+)}
         </section>
       </div>
     </div>

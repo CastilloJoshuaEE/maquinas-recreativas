@@ -3,16 +3,19 @@ require_once __DIR__ . '/../models/MaquinaModel.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once __DIR__ . '/../models/NotificacionModel.php';
 require_once __DIR__ . '/../models/DistribucionModel.php';
+require_once __DIR__ . '/../helper/HistorialHelper.php'; // Añadir esta línea
 
 class MaquinaService {
     private $maquinaModel;
     private $usuarioModel;
     private $notificacionModel;
+    private $historialHelper; // Añadir propiedad
 
     public function __construct() {
         $this->maquinaModel = new MaquinaModel();
         $this->usuarioModel = new UsuarioModel();
         $this->notificacionModel = new NotificacionModel();
+        $this->historialHelper = HistorialHelper::getInstance(); // Inicializar
     }
 
     public function generarPlaca($idTecnico) {
@@ -65,6 +68,21 @@ class MaquinaService {
                 return ['success' => false, 'message' => 'Error al registrar máquina'];
             }
             
+            // Obtener nombre del comercio para el historial
+            $comercioModel = new ComercioModel();
+            $comercio = $comercioModel->obtenerComercioPorId($data['idComercio']);
+            $nombreComercio = $comercio ? $comercio['Nombre'] : 'Desconocido';
+            
+            // Registrar en historial
+            $this->historialHelper->registrarRegistroMaquina(
+                $idMaquina,
+                $data['idUsuarioLogistica'],
+                $data['nombre'],
+                $nombreComercio,
+                $ensambladores[0]['nombre'] . ' ' . $ensambladores[0]['apellido'],
+                $comprobadores[0]['nombre'] . ' ' . $comprobadores[0]['apellido']
+            );
+            
             $this->maquinaModel->registrarMontajeComponente(
                 $idMaquina, 
                 $data['idPlaca'], 
@@ -72,10 +90,26 @@ class MaquinaService {
                 'Placa base generada automáticamente'
             );
             
+            // Registrar montaje de placa en historial
+            $this->historialHelper->registrarMontajeComponente(
+                $idMaquina,
+                $idEnsamblador,
+                'Placa base',
+                'Placa base generada automáticamente'
+            );
+            
             $this->maquinaModel->registrarMontajeComponente(
                 $idMaquina, 
                 $data['idCarcasa'], 
                 $idEnsamblador,
+                'Carcasa asignada'
+            );
+            
+            // Registrar montaje de carcasa en historial
+            $this->historialHelper->registrarMontajeComponente(
+                $idMaquina,
+                $idEnsamblador,
+                'Carcasa',
                 'Carcasa asignada'
             );
             
@@ -107,6 +141,9 @@ class MaquinaService {
         
         $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Comprobandose');
         
+        // Registrar en historial
+        $this->historialHelper->registrarEnvioComprobacion($idMaquina, $idRemitente, $mensaje);
+        
         $this->notificacionModel->crearNotificacion(
             $idRemitente,
             $maquina['ID_Tecnico_Comprobador'],
@@ -127,6 +164,9 @@ class MaquinaService {
         
         $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Reensamblandose');
         
+        // Registrar en historial
+        $this->historialHelper->registrarEnvioReensamblar($idMaquina, $idRemitente, $mensaje);
+        
         $this->notificacionModel->crearNotificacion(
             $idRemitente,
             $maquina['ID_Tecnico_Ensamblador'],
@@ -137,47 +177,51 @@ class MaquinaService {
         
         return ['success' => true];
     }
-// En MaquinaService.php -  método mandarADistribucion
-public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
-    $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
 
-    if (!$maquina) {
-        return ['success' => false, 'message' => 'Maquina no encontrada'];
-    }
+    public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
+        $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
 
-    // Obtener información del comercio
-    $comercioModel = new ComercioModel();
-    $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
-
-    // Crear mensaje completo con información de la máquina y comercio
-    $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
-                      ", Comercio: " . ($comercio ? $comercio['Nombre'] : 'N/A');
-
-    $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Distribuyendose', 'Distribucion');
-
-    $distribucionModel = new DistribucionModel();
-    $distribucionModel->crearInformeDistribucion(
-        $idMaquina,
-        $maquina['ID_Tecnico_Comprobador'],
-        $maquina['ID_Comercio']
-    );
-
-    $logisticas = $this->usuarioModel->obtenerUsuariosPorTipo('Logistica');
-
-    if (!empty($logisticas)) {
-        foreach ($logisticas as $logistica) {
-            $this->notificacionModel->crearNotificacion(
-                $idRemitente,
-                $logistica['ID_Usuario'],
-                $idMaquina,
-                'Distribuir maquina recreativa',
-                $mensajeCompleto
-            );
+        if (!$maquina) {
+            return ['success' => false, 'message' => 'Maquina no encontrada'];
         }
-    }
 
-    return ['success' => true];
-}
+        // Obtener información del comercio
+        $comercioModel = new ComercioModel();
+        $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
+        $nombreComercio = $comercio ? $comercio['Nombre'] : 'N/A';
+
+        // Crear mensaje completo con información de la máquina y comercio
+        $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
+                          ", Comercio: " . $nombreComercio;
+
+        $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Distribuyendose', 'Distribucion');
+        
+        // Registrar en historial
+        $this->historialHelper->registrarEnvioDistribucion($idMaquina, $idRemitente, $nombreComercio, $mensaje);
+
+        $distribucionModel = new DistribucionModel();
+        $distribucionModel->crearInformeDistribucion(
+            $idMaquina,
+            $maquina['ID_Tecnico_Comprobador'],
+            $maquina['ID_Comercio']
+        );
+
+        $logisticas = $this->usuarioModel->obtenerUsuariosPorTipo('Logistica');
+
+        if (!empty($logisticas)) {
+            foreach ($logisticas as $logistica) {
+                $this->notificacionModel->crearNotificacion(
+                    $idRemitente,
+                    $logistica['ID_Usuario'],
+                    $idMaquina,
+                    'Distribuir maquina recreativa',
+                    $mensajeCompleto
+                );
+            }
+        }
+
+        return ['success' => true];
+    }
 
     public function ponerOperativa($idMaquina) {
         $result = $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'Operativa', 'Recaudacion');
@@ -185,6 +229,9 @@ public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
         if ($result) {
             $distribucionModel = new DistribucionModel();
             $distribucionModel->actualizarInformeDistribucion($idMaquina, 'Operativa');
+            
+            // Registrar en historial
+            $this->historialHelper->registrarPuestaOperativa($idMaquina, $_SESSION['ID_Usuario'] ?? 'Sistema');
 
             return ['success' => true];
         } else {
@@ -206,45 +253,53 @@ public function mandarADistribucion($idMaquina, $idRemitente, $mensaje) {
         $maquinas = $this->maquinaModel->obtenerMaquinasPorTecnicoMantenimiento($idTecnico);
         return ['success' => true, 'maquinas' => $maquinas];
     }
-    // En MaquinaService.php -  método darMantenimiento
-public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
-    $tecnicos = $this->usuarioModel->obtenerTecnicosPorEspecialidad('Mantenimiento');
 
-    if (empty($tecnicos)) {
-        return ['success' => false, 'message' => 'No hay técnicos de mantenimiento disponibles'];
+    public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
+        $tecnicos = $this->usuarioModel->obtenerTecnicosPorEspecialidad('Mantenimiento');
+
+        if (empty($tecnicos)) {
+            return ['success' => false, 'message' => 'No hay técnicos de mantenimiento disponibles'];
+        }
+
+        $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
+        if (!$maquina) {
+            return ['success' => false, 'message' => 'Máquina no encontrada'];
+        }
+
+        $idTecnico = $tecnicos[0]['ID_Usuario'];
+
+        // Obtener información del comercio
+        $comercioModel = new ComercioModel();
+        $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
+
+        // Crear mensaje completo
+        $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
+                          ", Comercio: " . ($comercio ? $comercio['Nombre'] : 'N/A');
+
+        $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'No operativa');
+        $this->maquinaModel->asignarTecnicoMantenimiento($idMaquina, $idTecnico);
+
+        // Registrar en historial
+        $this->historialHelper->registrarSolicitudMantenimiento(
+            $idMaquina, 
+            $idLogistica, 
+            $tecnicos[0]['nombre'] . ' ' . $tecnicos[0]['apellido'],
+            $mensaje
+        );
+
+        $this->notificacionModel->crearNotificacion(
+            $idLogistica,
+            $idTecnico,
+            $idMaquina,
+            'Dar mantenimiento a máquina recreativa',
+            $mensajeCompleto
+        );
+
+        $distribucionModel = new DistribucionModel();
+        $distribucionModel->actualizarInformeDistribucion($idMaquina, 'No operativa');
+
+        return ['success' => true];
     }
-
-    $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
-    if (!$maquina) {
-        return ['success' => false, 'message' => 'Máquina no encontrada'];
-    }
-
-    $idTecnico = $tecnicos[0]['ID_Usuario'];
-
-    // Obtener información del comercio
-    $comercioModel = new ComercioModel();
-    $comercio = $comercioModel->obtenerComercioPorId($maquina['ID_Comercio']);
-
-    // Crear mensaje completo
-    $mensajeCompleto = $mensaje . " - Máquina: " . $maquina['Nombre_Maquina'] . 
-                      ", Comercio: " . ($comercio ? $comercio['Nombre'] : 'N/A');
-
-    $this->maquinaModel->actualizarEstadoMaquina($idMaquina, 'No operativa');
-    $this->maquinaModel->asignarTecnicoMantenimiento($idMaquina, $idTecnico);
-
-    $this->notificacionModel->crearNotificacion(
-        $idLogistica,
-        $idTecnico,
-        $idMaquina,
-        'Dar mantenimiento a máquina recreativa',
-        $mensajeCompleto
-    );
-
-    $distribucionModel = new DistribucionModel();
-    $distribucionModel->actualizarInformeDistribucion($idMaquina, 'No operativa');
-
-    return ['success' => true];
-}
 
     public function finalizarMantenimiento($idMaquina, $idRemitente, $exito, $mensaje) {
         try {
@@ -261,6 +316,9 @@ public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
             if (!$result) {
                 return ['success' => false, 'message' => 'Error al actualizar el estado de la máquina'];
             }
+            
+            // Registrar en historial
+            $this->historialHelper->registrarFinMantenimiento($idMaquina, $idRemitente, $exito, $mensaje);
             
             $logisticas = $this->usuarioModel->obtenerUsuariosPorTipo('Logistica');
             
@@ -310,24 +368,26 @@ public function darMantenimiento($idMaquina, $mensaje, $idLogistica) {
             ];
         }
     }
-public function obtenerComponentesPorMaquina($idMaquina) {
-    try {
-        $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
-        if (!$maquina) {
-            return ['success' => false, 'message' => 'Máquina no encontrada'];
-        }
 
-        $componentesMontaje = $this->maquinaModel->obtenerComponentesPorMaquina($idMaquina);
-        
-        return [
-            'success' => true,
-            'componentes' => $componentesMontaje
-        ];
-    } catch (Exception $e) {
-        error_log("Error en obtenerComponentesMaquina: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Error al obtener componentes'];
+    public function obtenerComponentesPorMaquina($idMaquina) {
+        try {
+            $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
+            if (!$maquina) {
+                return ['success' => false, 'message' => 'Máquina no encontrada'];
+            }
+
+            $componentesMontaje = $this->maquinaModel->obtenerComponentesPorMaquina($idMaquina);
+            
+            return [
+                'success' => true,
+                'componentes' => $componentesMontaje
+            ];
+        } catch (Exception $e) {
+            error_log("Error en obtenerComponentesMaquina: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error al obtener componentes'];
+        }
     }
-}
+    
     public function obtenerComponentesMaquina($idMaquina) {
         try {
             $maquina = $this->maquinaModel->obtenerMaquinaPorId($idMaquina);
@@ -380,6 +440,24 @@ public function obtenerComponentesPorMaquina($idMaquina) {
             ]);
 
             if ($ok) {
+                // Obtener nombre del componente para el historial
+                $conn = (new Database())->getConnection();
+                $sql = "SELECT nombre FROM componente WHERE ID_Componente = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("s", $data['ID_Componente']);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $componente = $result->fetch_assoc();
+                $nombreComponente = $componente ? $componente['nombre'] : 'Desconocido';
+                
+                // Registrar en historial
+                $this->historialHelper->registrarMontajeComponente(
+                    $data['ID_Maquina'],
+                    $data['ID_Tecnico'],
+                    $nombreComponente,
+                    $data['detalle'] ?? ''
+                );
+                
                 return [
                     'success' => true,
                     'message' => 'Montaje registrado'

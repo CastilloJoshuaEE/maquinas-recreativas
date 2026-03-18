@@ -228,6 +228,40 @@ CREATE TABLE montaje (
     FOREIGN KEY (ID_Componente) REFERENCES componente(ID_Componente),
     FOREIGN KEY (ID_Tecnico) REFERENCES Tecnico(ID_Tecnico)
 );
+CREATE TABLE historial_maquinas (
+    ID_Historial CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    ID_Maquina CHAR(36) NOT NULL,
+    ID_Usuario CHAR(36) NOT NULL,
+
+    tipo_usuario ENUM('Tecnico', 'Logistica', 'Administrador') NOT NULL,
+    accion VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+
+    estado_anterior VARCHAR(50),
+    estado_nuevo VARCHAR(50),
+
+    etapa_anterior VARCHAR(50),
+    etapa_nueva VARCHAR(50),
+
+    fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ip_address VARCHAR(45),
+    detalles_adicionales JSON,
+
+    INDEX idx_historial_maquina (ID_Maquina),
+    INDEX idx_historial_usuario (ID_Usuario),
+    INDEX idx_historial_fecha (fecha_hora),
+
+    CONSTRAINT fk_historial_maquina 
+        FOREIGN KEY (ID_Maquina) 
+        REFERENCES MaquinaRecreativa(ID_Maquina) 
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_historial_usuario 
+        FOREIGN KEY (ID_Usuario) 
+        REFERENCES usuario(ID_Usuario) 
+        ON DELETE CASCADE
+
+);
 ALTER TABLE usuario MODIFY usuario_asignado VARCHAR(25) NOT NULL UNIQUE DEFAULT 'Aun no tiene';
 ALTER TABLE usuario
 ADD COLUMN fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP;
