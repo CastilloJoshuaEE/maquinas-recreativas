@@ -1,7 +1,7 @@
 <?php
 // tests/scripts/test_connection.php
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 echo "🔍 VERIFICANDO CONEXIÓN A BASE DE DATOS DE PRUEBAS\n";
 echo "==================================================\n\n";

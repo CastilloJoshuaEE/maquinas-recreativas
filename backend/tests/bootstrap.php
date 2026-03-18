@@ -32,7 +32,6 @@ require_once __DIR__ . '/../services/NotificacionService.php';
 require_once __DIR__ . '/../services/ReporteService.php';
 require_once __DIR__ . '/../services/ComponenteService.php';
 require_once __DIR__ . '/../services/InformeService.php';
-require_once __DIR__ . '/../services/DistribucionService.php';
 
 // Cargar excepciones
 require_once __DIR__ . '/exceptions/ValidacionDatosException.php';
