@@ -1,9 +1,11 @@
 <?php
+header('Content-Type: application/json; charset=utf-8');
+
 ob_start();
 ini_set('expose_php', 0);
 header_remove("X-Powered-By");
 
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
@@ -64,7 +66,7 @@ $isTestEnvironment = (
     isset($_GET['test']) // opcional para forzar desde URL
 );
 
-if ($isTestEnvironment) {
+if (!defined('TEST_ENVIRONMENT')) {
     define('TEST_ENVIRONMENT', true);
 }
 securityHeaders();

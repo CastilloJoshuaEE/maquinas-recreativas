@@ -17,7 +17,7 @@
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px) saturate(180%);
   font-size: 1rem;
-  color: white;
+  color: rgb(0, 0, 0);
   min-width: 180px;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
   outline: none;
@@ -26,8 +26,12 @@
 /* Placeholder y opciones en blanco */
 .contenedor-filtros input::placeholder {
   color: rgba(255, 255, 255, 0.7);
-}
 
+}
+input[name="ci"]::placeholder {
+  color: black;
+  opacity: 1;
+}
 /* Select personalizado con flecha visible */
 .contenedor-filtros select {
   appearance: none;
