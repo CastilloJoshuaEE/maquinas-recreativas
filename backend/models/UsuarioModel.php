@@ -8,6 +8,7 @@ class UsuarioModel {
     public function __construct() {
         $this->db = new Database();
     }
+
 public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asignado, $contrasena, $tipo, $especialidad = null) {
     $conn = $this->db->getConnection();
     
@@ -15,7 +16,6 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         return ['success' => false, 'message' => 'Todos los campos son requeridos'];
     }
 
-    // Validar longitud de contraseña
     if (strlen($contrasena) < 6) {
         return ['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres'];
     }
@@ -27,7 +27,7 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
         
         $conn->begin_transaction();
 
-        // Verificar duplicados de email
+        // Verificar duplicados
         $checkEmailSql = "SELECT ID_Usuario FROM usuario WHERE email = ?";
         $checkEmailStmt = $conn->prepare($checkEmailSql);
         $checkEmailStmt->bind_param("s", $emailEncriptado);
@@ -37,7 +37,6 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'El correo electrónico ya está registrado'];
         }
 
-        // Verificar duplicados de cédula
         $checkCiSql = "SELECT ID_Usuario FROM usuario WHERE ci = ?";
         $checkCiStmt = $conn->prepare($checkCiSql);
         $checkCiStmt->bind_param("s", $ciEncriptado);
@@ -47,7 +46,6 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'La cédula ya está registrada'];
         }
 
-        // Verificar duplicados de nombre de usuario
         $checkUserSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ?";
         $checkUserStmt = $conn->prepare($checkUserSql);
         $checkUserStmt->bind_param("s", $usuario_asignado);
@@ -57,10 +55,11 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'El nombre de usuario ya está en uso'];
         }
 
-        // Insertar usuario
+        // Insertar usuario y obtener el UUID generado en una sola operación
         $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado) 
                 VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, 'Activo')";
-
+        
+        // Guardar el usuario_asignado para usarlo después si es necesario
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "sssssss",
@@ -78,22 +77,29 @@ public function registrarUsuario($nombre, $apellido, $ci, $email, $usuario_asign
             return ['success' => false, 'message' => 'Error al registrar el usuario: ' . $stmt->error];
         }
 
-        // Obtener el ID del usuario - USAR LAST_INSERT_ID() o consulta
-        $id_usuario = $conn->insert_id;
-        if (!$id_usuario || $id_usuario == 0) {
-            // Para UUID, consultar por usuario_asignado
-            $getIdSql = "SELECT ID_Usuario FROM usuario WHERE usuario_asignado = ? ORDER BY fecha_registro DESC LIMIT 1";
-            $getIdStmt = $conn->prepare($getIdSql);
-            $getIdStmt->bind_param("s", $usuario_asignado);
+        // Obtener el UUID recién generado usando la función LAST_INSERT_ID() con una variable
+        // Pero como no funciona con UUID, usamos una consulta más específica
+        $getIdSql = "SELECT ID_Usuario FROM usuario 
+                     WHERE usuario_asignado = ? 
+                     ORDER BY fecha_registro DESC LIMIT 1";
+        $getIdStmt = $conn->prepare($getIdSql);
+        $getIdStmt->bind_param("s", $usuario_asignado);
+        $getIdStmt->execute();
+        $result = $getIdStmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            // Si no se encuentra, esperar un momento y reintentar
+            usleep(100000); // 0.1 segundos
             $getIdStmt->execute();
             $result = $getIdStmt->get_result();
-            if ($result->num_rows > 0) {
-                $row = $result->fetch_assoc();
-                $id_usuario = $row['ID_Usuario'];
-            } else {
+            
+            if ($result->num_rows === 0) {
                 throw new Exception("No se pudo obtener el ID del usuario");
             }
         }
+        
+        $row = $result->fetch_assoc();
+        $id_usuario = $row['ID_Usuario'];
 
         // Si es técnico, insertar en tabla Tecnico
         if ($tipo === 'Tecnico' && $especialidad !== null) {
@@ -573,5 +579,37 @@ public function incrementarActividadesTecnico($idTecnico) {
 
         return ['success' => false, 'message' => 'Usuario no encontrado'];
     }
+
+/**
+ * Obtiene un usuario por su nombre de usuario (usuario_asignado)
+ * @param string $usuario_asignado
+ * @return array|false
+ */
+public function obtenerUsuarioPorUsuarioAsignado($usuario_asignado) {
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT u.*, t.Especialidad 
+            FROM usuario u 
+            LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+            WHERE u.usuario_asignado = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $usuario_asignado);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $usuario = $result->fetch_assoc();
+        if (isset($usuario['email'])) {
+            $usuario['email'] = CifradoHelper::desencriptar($usuario['email']);
+        }
+        if (isset($usuario['ci'])) {
+            $usuario['ci'] = CifradoHelper::desencriptar($usuario['ci']);
+        }
+        return $usuario;
+    }
+    
+    return false;
+}
 }
 ?>

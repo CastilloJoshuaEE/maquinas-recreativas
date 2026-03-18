@@ -7,7 +7,8 @@ class UsuarioService {
     public function __construct() {
         $this->model = new UsuarioModel();
     }
-// En backend/services/UsuarioService.php
+
+
 public function registrarUsuario($data) {
     $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
     
@@ -30,7 +31,6 @@ public function registrarUsuario($data) {
         return ['success' => false, 'message' => 'La especialidad es requerida para técnicos'];
     }
     
-    //  Pasar parámetros individuales en lugar del array completo
     $result = $this->model->registrarUsuario(
         $data['nombre'],
         $data['apellido'],
@@ -42,17 +42,38 @@ public function registrarUsuario($data) {
         $data['especialidad'] ?? null
     );
     
-    // Ajustar el formato de respuesta según lo que devuelva el modelo
-    if (is_array($result) && isset($result['success'])) {
-        return $result;
+    // Normalizar la respuesta
+    $normalizedResponse = ['success' => false, 'message' => 'Error al registrar el usuario'];
+    
+    if (is_array($result)) {
+        if (isset($result['success'])) {
+            $normalizedResponse = $result;
+        } else if (isset($result['userId'])) {
+            $normalizedResponse = [
+                'success' => true,
+                'userId' => $result['userId'],
+                'message' => $result['message'] ?? 'Usuario registrado correctamente'
+            ];
+        }
     } else if (is_string($result) && !empty($result)) {
-        // Si devuelve el ID del usuario
-        return ['success' => true, 'userId' => $result, 'message' => 'Usuario registrado correctamente'];
+        $normalizedResponse = [
+            'success' => true,
+            'userId' => $result,
+            'message' => 'Usuario registrado correctamente'
+        ];
     } else if ($result === true) {
-        return ['success' => true, 'message' => 'Usuario registrado correctamente'];
-    } else {
-        return ['success' => false, 'message' => 'Error al registrar el usuario'];
+        $normalizedResponse = [
+            'success' => true,
+            'message' => 'Usuario registrado correctamente'
+        ];
+        // Si no hay userId, intentar obtenerlo
+        $usuario = $this->model->obtenerUsuarioPorUsuarioAsignado($data['usuario_asignado']);
+        if ($usuario) {
+            $normalizedResponse['userId'] = $usuario['ID_Usuario'];
+        }
     }
+    
+    return $normalizedResponse;
 }
         
     public function login($usuario_asignado, $contrasena) {

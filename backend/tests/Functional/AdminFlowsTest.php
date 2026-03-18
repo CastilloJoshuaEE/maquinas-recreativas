@@ -16,7 +16,7 @@ class AdminFlowsTest extends HttpTestCase {
             'apellido' => 'Sistema',
             'ci' => '00000000' . rand(10, 99),
             'email' => 'admin_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'admin_' . uniqid(),
+            'usuario_asignado' => 'adm_' . substr(uniqid(), -8), // Máx 12 caracteres
             'contrasena' => 'Admin123!',
             'tipo' => 'Administrador',
             'estado' => 'Activo'
@@ -75,7 +75,7 @@ class AdminFlowsTest extends HttpTestCase {
             'apellido' => 'Prueba',
             'ci' => '11122233' . rand(10, 99),
             'email' => 'usuario_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'usuarioprueba_' . uniqid(),
+            'usuario_asignado' => 'usr_' . substr(uniqid(), -8), // Máx 12 caracteres
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'estado' => 'Activo',

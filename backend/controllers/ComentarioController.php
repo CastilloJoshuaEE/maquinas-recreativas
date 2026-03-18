@@ -16,27 +16,37 @@ class ComentarioController {
      * Parámetro (interno): $data extraído de php://input.
      * @return void 
      */
- public function create() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (empty($data['ID_Reporte']) || empty($data['comentario'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            return;
-        }
-
-        session_start();
-        $data['ID_Usuario_Emisor'] = $_SESSION['ID_Usuario'] ?? null;
-        
-        if (!$data['ID_Usuario_Emisor']) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-
-        $response = $this->service->crearComentario($data);
-        $this->sendResponse($response);
+public function create() {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (empty($data['ID_Reporte']) || empty($data['comentario'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+        return;
     }
+
+    // Iniciar sesión si no está iniciada
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $data['ID_Usuario_Emisor'] = $_SESSION['ID_Usuario'] ?? null;
+    
+    if (!$data['ID_Usuario_Emisor']) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'No autorizado - Debe iniciar sesión']);
+        return;
+    }
+
+    $response = $this->service->crearComentario($data);
+    
+    // Asegurar que la respuesta tenga el formato correcto
+    if (!isset($response['success'])) {
+        $response = ['success' => false, 'message' => 'Error interno del servidor'];
+    }
+    
+    $this->sendResponse($response);
+}
     /**
      * Obtiene comentarios asociados a un reporte si el usuario tiene permiso.
      * @param mixed $reporteId - ID del reporte.

@@ -22,37 +22,54 @@ class ComentarioService {
      * @param mixed $data
      * @return array{comentarioId: bool|int|string, success: bool|array{message: string, success: bool}}
      */
-    public function crearComentario($data) {
-        if (empty($data['ID_Reporte']) || empty($data['ID_Usuario_Emisor']) || empty($data['comentario'])) {
-            return ['success' => false, 'message' => 'Datos incompletos'];
-        }
 
-        $reporte = $this->reporteModel->obtenerReportePorId($data['ID_Reporte']);
-        
-        if (!$reporte || 
-            ($reporte['ID_Usuario_Emisor'] != $data['ID_Usuario_Emisor'] && 
-            $reporte['ID_Usuario_Destinatario'] != $data['ID_Usuario_Emisor'])) {
-            return ['success' => false, 'message' => 'No autorizado'];
-        }
-
-        $comentarioId = $this->comentarioModel->crearComentario(
-            $data['ID_Reporte'],
-            $data['ID_Usuario_Emisor'],
-            $data['comentario']
-        );
-
-        if (!$comentarioId) {
-            return ['success' => false, 'message' => 'Error al crear el comentario'];
-        }
-
-        $destinatarioId = ($reporte['ID_Usuario_Emisor'] == $data['ID_Usuario_Emisor']) 
-                        ? $reporte['ID_Usuario_Destinatario'] 
-                        : $reporte['ID_Usuario_Emisor'];
-
-        $mensaje = "Nuevo comentario en el reporte #" . $data['ID_Reporte'] . ": " . substr($data['comentario'], 0, 50) . "...";
-        $this->notificacionesModel->crearNotificacionReporte($data['ID_Reporte'], $destinatarioId, $mensaje);
-        return ['success' => true, 'comentarioId' => $comentarioId];
+public function crearComentario($data) {
+    if (empty($data['ID_Reporte']) || empty($data['ID_Usuario_Emisor']) || empty($data['comentario'])) {
+        return ['success' => false, 'message' => 'Datos incompletos'];
     }
+
+    // Log para depuración
+    error_log("Creando comentario - Reporte: {$data['ID_Reporte']}, Usuario: {$data['ID_Usuario_Emisor']}");
+    
+    $reporte = $this->reporteModel->obtenerReportePorId($data['ID_Reporte']);
+    
+    if (!$reporte) {
+        error_log("Reporte no encontrado: {$data['ID_Reporte']}");
+        return ['success' => false, 'message' => 'Reporte no encontrado'];
+    }
+    
+    if ($reporte['ID_Usuario_Emisor'] != $data['ID_Usuario_Emisor'] && 
+        $reporte['ID_Usuario_Destinatario'] != $data['ID_Usuario_Emisor']) {
+        error_log("Usuario no autorizado - Emisor: {$data['ID_Usuario_Emisor']}, Reporte Emisor: {$reporte['ID_Usuario_Emisor']}, Destinatario: {$reporte['ID_Usuario_Destinatario']}");
+        return ['success' => false, 'message' => 'No autorizado'];
+    }
+
+    $comentarioId = $this->comentarioModel->crearComentario(
+        $data['ID_Reporte'],
+        $data['ID_Usuario_Emisor'],
+        $data['comentario']
+    );
+
+    if (!$comentarioId) {
+        error_log("Error al crear comentario en modelo");
+        return ['success' => false, 'message' => 'Error al crear el comentario'];
+    }
+
+    error_log("Comentario creado con ID: $comentarioId");
+
+    $destinatarioId = ($reporte['ID_Usuario_Emisor'] == $data['ID_Usuario_Emisor']) 
+                    ? $reporte['ID_Usuario_Destinatario'] 
+                    : $reporte['ID_Usuario_Emisor'];
+
+    $mensaje = "Nuevo comentario en el reporte #" . $data['ID_Reporte'] . ": " . substr($data['comentario'], 0, 50) . "...";
+    $this->notificacionesModel->crearNotificacionReporte($data['ID_Reporte'], $destinatarioId, $mensaje);
+    
+    return [
+        'success' => true, 
+        'comentarioId' => $comentarioId,
+        'message' => 'Comentario creado correctamente'
+    ];
+}
 
     /**
      * ObtenerComentariosPorReporte

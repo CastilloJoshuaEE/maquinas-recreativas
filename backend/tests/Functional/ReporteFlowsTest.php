@@ -9,8 +9,7 @@ class ReporteFlowsTest extends HttpTestCase {
     private $usuario1Id;
     private $usuario2Id;
     private $reporteId;
-    
-    public function __construct() {
+public function __construct() {
         parent::__construct();
         
         $this->usuario1 = [
@@ -18,7 +17,7 @@ class ReporteFlowsTest extends HttpTestCase {
             'apellido' => 'Reportes',
             'ci' => '11111111' . rand(10, 99),
             'email' => 'emisor_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'emisor_' . uniqid(),
+            'usuario_asignado' => 'em_' . substr(uniqid(), -8), // Máx 11 caracteres
             'contrasena' => 'password123',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
@@ -29,7 +28,7 @@ class ReporteFlowsTest extends HttpTestCase {
             'apellido' => 'Reportes',
             'ci' => '22222222' . rand(10, 99),
             'email' => 'destinatario_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'destinatario_' . uniqid(),
+            'usuario_asignado' => 'dest_' . substr(uniqid(), -8), // Máx 13 caracteres
             'contrasena' => 'password123',
             'tipo' => 'Logistica'
         ];
@@ -46,8 +45,8 @@ class ReporteFlowsTest extends HttpTestCase {
         
         echo "\n✅ FLUJO COMPLETO DE REPORTES EXITOSO\n";
     }
-    
-    private function pasoCrearUsuarios() {
+   
+private function pasoCrearUsuarios() {
     echo "👥 Creando usuarios...\n";
     
     // Usuario 1
@@ -62,8 +61,8 @@ class ReporteFlowsTest extends HttpTestCase {
     }
     $this->assertNotNull($this->usuario1Id, 'No se recibió ID usuario 1');
     
-    // Esperar un poco entre registros
-    sleep(1);
+    // Esperar más tiempo entre registros (3 segundos)
+    sleep(3);
     
     // Usuario 2
     $resp2 = $this->request('POST', '/usuario/register', $this->usuario2);
@@ -106,16 +105,31 @@ class ReporteFlowsTest extends HttpTestCase {
         
         echo "   ✅ Reporte creado ID: {$this->reporteId}\n";
     }
+
+private function pasoEnviarComentario() {
+    echo "💬 Enviando comentario...\n";
     
-    private function pasoEnviarComentario() {
-        echo "💬 Enviando comentario...\n";
-        
-        $response = $this->request('POST', '/comentarios', [
-            'ID_Reporte' => $this->reporteId,
-            'comentario' => 'Comentario de prueba'
-        ]);
-        
-        $this->assertResponseSuccess('Error al enviar comentario');
-        echo "   ✅ Comentario enviado\n";
+    // Verificar que tenemos sesión activa (las cookies no están vacías)
+    if (empty($this->cookies)) {
+        echo "      ⚠️  No hay cookies de sesión, reintentando login...\n";
+        $this->pasoLoginEmisor();
     }
+    
+    $response = $this->request('POST', '/comentarios', [
+        'ID_Reporte' => $this->reporteId,
+        'comentario' => 'Comentario de prueba'
+    ]);
+    
+    // Verificar que la respuesta es exitosa
+    $this->assertResponseSuccess('Error al enviar comentario');
+    
+    // Si falla, mostrar información de depuración
+    if (!$this->lastResponse || !isset($this->lastResponse['success']) || !$this->lastResponse['success']) {
+        echo "      ℹ️  Debug - Cookies: " . (!empty($this->cookies) ? 'presentes' : 'vacías') . "\n";
+        echo "      ℹ️  Debug - Reporte ID: {$this->reporteId}\n";
+        echo "      ℹ️  Debug - Usuario ID: {$this->usuario1Id}\n";
+    }
+    
+    echo "   ✅ Comentario enviado\n";
+}
 }

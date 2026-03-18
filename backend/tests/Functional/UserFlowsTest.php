@@ -25,7 +25,7 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Prueba',
             'ci' => '12345678' . rand(10, 99),
             'email' => 'logistica_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'logistica_' . uniqid(),
+            'usuario_asignado' => 'log_' . substr(uniqid(), -8),
             'contrasena' => 'password123',
             'tipo' => 'Logistica'
         ];
@@ -35,7 +35,7 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Tecnico',
             'ci' => '87654321' . rand(10, 99),
             'email' => 'ensamblador_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'ensamblador_' . uniqid(),
+            'usuario_asignado' => 'ens_' . substr(uniqid(), -8),
             'contrasena' => 'password123',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
@@ -46,7 +46,7 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Tecnico',
             'ci' => '11223344' . rand(10, 99),
             'email' => 'comprobador_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'comprobador_' . uniqid(),
+            'usuario_asignado' => 'comp_' . substr(uniqid(), -8),
             'contrasena' => 'password123',
             'tipo' => 'Tecnico',
             'especialidad' => 'Comprobador'

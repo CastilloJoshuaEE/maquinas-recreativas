@@ -73,7 +73,7 @@ $this->db_name = $env['DB_NAME_TEST'] ?? 'test_db';
             usuario_asignado VARCHAR(100) NOT NULL,
             contrasena VARCHAR(255) NOT NULL,
             fecha_inicio DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_fin DATETIME NULL,
+            fecha_ultima_sesion DATETIME NULL,
             FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
         )");
 
