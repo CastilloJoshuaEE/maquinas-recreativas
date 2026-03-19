@@ -1,0 +1,13 @@
+{
+    "name": "recreasys/backend",
+    "description": "Backend para sistema de gestión de máquinas recreativas",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "RecreaSys\\": "src/"
+        }
+    }
+}
