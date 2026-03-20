@@ -29,15 +29,17 @@ class Router
      * @param callable|array $handler Controlador/método
      * @param array $middleware Middlewares específicos
      */
-    public function add(string $method, string $path, $handler, array $middleware = []):void{
-        $this->routes[]=[
-            'method'=> strtoupper($method),
-            'path'=> $path,
-            'pattern'=>$this->compilePatterns($path),
-            'handler'=>$handler,
-            'middleware'=> $middleware
+    public function add(string $method, string $path, $handler, array $middleware = []): void
+    {
+        $this->routes[] = [
+            'method' => strtoupper($method),
+            'path' => $path,
+            'pattern' => $this->compilePattern($path),
+            'handler' => $handler,
+            'middleware' => $middleware
         ];
     }
+    
     /**
      * Compila un patrón de ruta a regex
      * 
@@ -55,6 +57,7 @@ class Router
         
         return '#^' . $pattern . '$#';
     }
+    
     /**
      * Busca una ruta que coincida
      * 
@@ -62,9 +65,65 @@ class Router
      * @param string $uri
      * @return array|null
      */
-    public function match(string $method, string $uri):?array{
-        foreach($this->routes as $route){
-            if($route)
+    public function match(string $method, string $uri): ?array
+    {
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== strtoupper($method)) {
+                continue;
+            }
+            
+            if (preg_match($route['pattern'], $uri, $matches)) {
+                // Extraer parámetros
+                array_shift($matches); // Quitar la coincidencia completa
+                
+                return [
+                    'handler' => $route['handler'],
+                    'middleware' => $route['middleware'],
+                    'params' => $matches
+                ];
+            }
         }
-    }    
-}    
+        
+        return null;
+    }
+    
+    /**
+     * Añade ruta GET
+     */
+    public function get(string $path, $handler, array $middleware = []): void
+    {
+        $this->add('GET', $path, $handler, $middleware);
+    }
+    
+    /**
+     * Añade ruta POST
+     */
+    public function post(string $path, $handler, array $middleware = []): void
+    {
+        $this->add('POST', $path, $handler, $middleware);
+    }
+    
+    /**
+     * Añade ruta PUT
+     */
+    public function put(string $path, $handler, array $middleware = []): void
+    {
+        $this->add('PUT', $path, $handler, $middleware);
+    }
+    
+    /**
+     * Añade ruta DELETE
+     */
+    public function delete(string $path, $handler, array $middleware = []): void
+    {
+        $this->add('DELETE', $path, $handler, $middleware);
+    }
+    
+    /**
+     * Añade ruta PATCH
+     */
+    public function patch(string $path, $handler, array $middleware = []): void
+    {
+        $this->add('PATCH', $path, $handler, $middleware);
+    }
+}
