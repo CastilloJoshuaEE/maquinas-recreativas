@@ -1,40 +1,72 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * RecreaSys - Global Constants
- * 
- * Define constantes globales utilizadas en toda la aplicación.
+ * Constantes globales de la aplicación.
  * 
  * @package RecreaSys\Config
- * @author Tu Equipo
  * @version 1.0
  */
 
-// Rutas del sistema
-defined('ROOT_PATH') or define('ROOT_PATH', dirname(__DIR__));
-defined('SRC_PATH') or define('SRC_PATH', ROOT_PATH . '/src');
-defined('CONFIG_PATH') or define('CONFIG_PATH', ROOT_PATH . '/config');
-defined('STORAGE_PATH') or define('STORAGE_PATH', ROOT_PATH . '/storage');
+// =============================================
+// ENTORNO
+// =============================================
+define('APP_ENV', $_ENV['APP_ENV'] ?? 'local');
+define('APP_DEBUG', ($_ENV['APP_DEBUG'] ?? 'false') === 'true');
+define('APP_TIMEZONE', $_ENV['APP_TIMEZONE'] ?? 'America/Guayaquil');
 
-// Fecha y hora
-defined('DATE_FORMAT') or define('DATE_FORMAT', 'Y-m-d H:i:s');
-defined('DATE_FORMAT_SHORT') or define('DATE_FORMAT_SHORT', 'Y-m-d');
+// =============================================
+// SEGURIDAD Y ENCRIPTACIÓN
+// =============================================
+define('ENCRYPT_METHOD', 'AES-256-CBC');
+define('SECRET_KEY', $_ENV['SECRET_KEY'] ?? 'clave_super_segura');
+define('SECRET_IV', $_ENV['SECRET_IV'] ?? 'vector_inicial_seguro');
+define('PASSWORD_ALGO', PASSWORD_BCRYPT);
+define('PASSWORD_COST', 12);
 
-// Paginación por defecto
-defined('DEFAULT_PAGE_SIZE') or define('DEFAULT_PAGE_SIZE', 50);
-defined('MAX_PAGE_SIZE') or define('MAX_PAGE_SIZE', 1000);
+// =============================================
+// RATE LIMITING
+// =============================================
+define('RATE_LIMIT_GLOBAL_MAX', 60);
+define('RATE_LIMIT_GLOBAL_WINDOW', 60); // segundos
+define('RATE_LIMIT_LOGIN_MAX', 5);
+define('RATE_LIMIT_LOGIN_WINDOW', 300); // 5 minutos
+define('RATE_LIMIT_REGISTER_MAX', 3);
+define('RATE_LIMIT_REGISTER_WINDOW', 3600); // 1 hora
 
-// Estados y tipos comunes
-defined('USER_TYPES') or define('USER_TYPES', ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario']);
-defined('USER_STATUSES') or define('USER_STATUSES', ['Activo', 'Inactivo']);
+// =============================================
+// SESIÓN
+// =============================================
+define('SESSION_LIFETIME', 7200); // 2 horas
+define('SESSION_NAME', 'recreasys_session');
 
-// Especialidades de técnicos
-defined('TECNICO_ESPECIALIDADES') or define('TECNICO_ESPECIALIDADES', ['Ensamblador', 'Comprobador', 'Mantenimiento']);
+// =============================================
+// PAGINACIÓN
+// =============================================
+define('PAGINATION_DEFAULT_LIMIT', 20);
+define('PAGINATION_MAX_LIMIT', 100);
 
-// Estados de máquina
-defined('MAQUINA_ESTADOS') or define('MAQUINA_ESTADOS', [
-    'Ensamblandose', 'Reensamblandose', 'Comprobandose', 
-    'Distribuyendose', 'Operativa', 'No operativa', 'Retirada'
-]);
+// =============================================
+// ESTADOS Y TIPOS PREDEFINIDOS
+// =============================================
+define('ESTADO_USUARIO_ACTIVO', 'Activo');
+define('ESTADO_USUARIO_INACTIVO', 'Inactivo');
+define('ESTADO_USUARIO_BLOQUEADO', 'Bloqueado');
 
-// Etapas de máquina
-defined('MAQUINA_ETAPAS') or define('MAQUINA_ETAPAS', ['Montaje', 'Distribucion', 'Recaudacion']);
+define('TIPO_USUARIO_ADMIN', 'Administrador');
+define('TIPO_USUARIO_TECNICO', 'Tecnico');
+define('TIPO_USUARIO_LOGISTICA', 'Logistica');
+define('TIPO_USUARIO_CONTABILIDAD', 'Contabilidad');
+define('TIPO_USUARIO_USUARIO', 'Usuario');
+
+define('ESPECIALIDAD_TECNICO_ENSAMBLADOR', 'Ensamblador');
+define('ESPECIALIDAD_TECNICO_COMPROBADOR', 'Comprobador');
+define('ESPECIALIDAD_TECNICO_MANTENIMIENTO', 'Mantenimiento');
+
+// =============================================
+// RUTAS DE ARCHIVOS
+// =============================================
+define('STORAGE_PATH', __DIR__ . '/../storage/');
+define('RATE_LIMIT_STORAGE_FILE', STORAGE_PATH . 'rate_limits.json');
+define('LOG_PATH', __DIR__ . '/../logs/');

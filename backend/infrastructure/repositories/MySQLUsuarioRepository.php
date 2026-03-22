@@ -1,37 +1,40 @@
 <?php
-/**
- * RecreaSys - Infrastructure MySQL Repository
- *
- * Implementación con MySQL del repositorio de Usuario.
- *
- * @package RecreaSys\Infrastructure\Persistence\Repository
- * @author Tu Equipo
- * @version 1.0
- */
+
+declare(strict_types=1);
 
 namespace RecreaSys\Infrastructure\Persistence\Repository;
 
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
 use RecreaSys\Domain\Usuario\Usuario;
+use RecreaSys\Domain\Usuario\Tecnico;
+use RecreaSys\Domain\Usuario\Logistica;
+use RecreaSys\Domain\Usuario\TipoUsuario;
+use RecreaSys\Domain\Usuario\EstadoUsuario;
 use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Infrastructure\Security\CifradoHelper; // Reutilizando tu helper
-use mysqli;
+use RecreaSys\Domain\Shared\ValueObjects\Uuid;
+use RecreaSys\Domain\Shared\ValueObjects\Email;
+use RecreaSys\Infrastructure\Database\Database;
+use RecreaSys\Infrastructure\Security\CifradoHelper;
+use PDO;
+use PDOException;
 
 /**
- * Class MySQLUsuarioRepository
+ * Implementación en MySQL del repositorio de Usuarios.
+ *
+ * @package RecreaSys\Infrastructure\Persistence\Repository
+ * @version 1.0
  */
-class MySQLUsuarioRepository implements UsuarioRepository
+final class MySQLUsuarioRepository implements UsuarioRepository
 {
-    private mysqli $connection;
+    private Database $db;
 
     /**
-     * MySQLUsuarioRepository constructor.
+     * Constructor del repositorio.
      *
-     * @param mysqli $connection
+     * @param Database $db
      */
-    public function __construct(mysqli $connection)
+    public function __construct(Database $db)
     {
-        $this->connection = $connection;
+        $this->db = $db;
     }
 
     /**
@@ -39,105 +42,307 @@ class MySQLUsuarioRepository implements UsuarioRepository
      */
     public function save(Usuario $usuario): void
     {
-        $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                nombre = VALUES(nombre),
-                apellido = VALUES(apellido),
-                ci = VALUES(ci),
-                email = VALUES(email),
-                contrasena = VALUES(contrasena),
-                tipo = VALUES(tipo),
-                estado = VALUES(estado)";
+        $conn = $this->db->getConnection();
+        
+        try {
+            $conn->beginTransaction();
 
-        $stmt = $this->connection->prepare($sql);
-        if (!$stmt) {
-            throw new \RuntimeException('Error preparando la consulta: ' . $this->connection->error);
+            // Verificar si el usuario ya existe
+            $existing = $this->findById($usuario->getId());
+            
+            if ($existing) {
+                // Actualizar
+                $sql = "UPDATE usuario SET 
+                        nombre = :nombre,
+                        apellido = :apellido,
+                        ci = :ci,
+                        email = :email,
+                        usuario_asignado = :usuario_asignado,
+                        contrasena = :contrasena,
+                        tipo = :tipo,
+                        estado = :estado
+                        WHERE ID_Usuario = :id";
+                
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    'id' => $usuario->getId()->value(),
+                    'nombre' => $usuario->getNombre(),
+                    'apellido' => $usuario->getApellido(),
+                    'ci' => $usuario->getCi(),
+                    'email' => CifradoHelper::encriptar($usuario->getEmail()->value()),
+                    'usuario_asignado' => $usuario->getUsuarioAsignado(),
+                    'contrasena' => $usuario->getContrasenaHash(),
+                    'tipo' => $usuario->getTipo()->value(),
+                    'estado' => $usuario->getEstado()->value()
+                ]);
+            } else {
+                // Insertar nuevo
+                $sql = "INSERT INTO usuario 
+                        (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
+                        VALUES 
+                        (:id, :nombre, :apellido, :ci, :email, :usuario_asignado, :contrasena, :tipo, :estado)";
+                
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    'id' => $usuario->getId()->value(),
+                    'nombre' => $usuario->getNombre(),
+                    'apellido' => $usuario->getApellido(),
+                    'ci' => $usuario->getCi(),
+                    'email' => CifradoHelper::encriptar($usuario->getEmail()->value()),
+                    'usuario_asignado' => $usuario->getUsuarioAsignado(),
+                    'contrasena' => $usuario->getContrasenaHash(),
+                    'tipo' => $usuario->getTipo()->value(),
+                    'estado' => $usuario->getEstado()->value()
+                ]);
+            }
+
+            // Manejar tablas específicas según el tipo
+            $this->saveSpecificUserData($conn, $usuario);
+
+            $conn->commit();
+        } catch (PDOException $e) {
+            $conn->rollBack();
+            throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
         }
+    }
 
+    /**
+     * Guarda datos específicos según el tipo de usuario.
+     *
+     * @param PDO $conn
+     * @param Usuario $usuario
+     * @return void
+     */
+    private function saveSpecificUserData(PDO $conn, Usuario $usuario): void
+    {
         $id = $usuario->getId()->value();
-        $nombre = $usuario->getNombre();
-        $apellido = $usuario->getApellido();
-        $ciEncriptado = CifradoHelper::encriptar($usuario->getCi());
-        $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail());
-        $usuarioAsignado = $usuario->getUsuarioAsignado();
-        $contrasenaHash = $usuario->getContrasenaHash();
-        $tipo = $usuario->getTipo();
-        $estado = $usuario->getEstado();
 
-        $stmt->bind_param(
-            "sssssssss",
-            $id,
-            $nombre,
-            $apellido,
-            $ciEncriptado,
-            $emailEncriptado,
-            $usuarioAsignado,
-            $contrasenaHash,
-            $tipo,
-            $estado
-        );
-
-        if (!$stmt->execute()) {
-            throw new \RuntimeException('Error ejecutando la consulta: ' . $stmt->error);
-        }
-
-        // Manejar la tabla Tecnico si es necesario
-        if ($usuario->getTipo() === 'Tecnico' && $usuario->getEspecialidad()) {
-            $this->saveTecnico($usuario->getId(), $usuario->getEspecialidad());
+        if ($usuario instanceof Tecnico) {
+            // Verificar si ya existe en Tecnico
+            $checkSql = "SELECT ID_Tecnico FROM Tecnico WHERE ID_Tecnico = :id";
+            $checkStmt = $conn->prepare($checkSql);
+            $checkStmt->execute(['id' => $id]);
+            
+            if ($checkStmt->fetch()) {
+                // Actualizar
+                $sql = "UPDATE Tecnico SET 
+                        Especialidad = :especialidad,
+                        Cantidad_Actividades = :actividades
+                        WHERE ID_Tecnico = :id";
+            } else {
+                // Insertar
+                $sql = "INSERT INTO Tecnico (ID_Tecnico, Especialidad, Cantidad_Actividades) 
+                        VALUES (:id, :especialidad, :actividades)";
+            }
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([
+                'id' => $id,
+                'especialidad' => $usuario->getEspecialidad(),
+                'actividades' => $usuario->getCantidadActividades()
+            ]);
+        } elseif ($usuario instanceof Logistica) {
+            // Verificar si ya existe en Logistica
+            $checkSql = "SELECT ID_Logistica FROM Logistica WHERE ID_Logistica = :id";
+            $checkStmt = $conn->prepare($checkSql);
+            $checkStmt->execute(['id' => $id]);
+            
+            if (!$checkStmt->fetch()) {
+                $sql = "INSERT INTO Logistica (ID_Logistica) VALUES (:id)";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['id' => $id]);
+            }
         }
     }
 
     /**
      * @inheritDoc
      */
-    public function searchById(Uuid $id): ?Usuario
+    public function findById(Uuid $id): ?Usuario
     {
-        $sql = "SELECT u.*, t.Especialidad
-                FROM usuario u
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                WHERE u.ID_Usuario = ?";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param("s", $idValue = $id->value());
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            return $this->mapRowToUsuario($row);
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.ID_Usuario = :id";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id->value()]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$row) {
+            return null;
         }
 
-        return null;
+        return $this->hydrate($row);
     }
 
     /**
      * @inheritDoc
      */
-    public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
+    public function findByEmail(string $emailEncriptado): ?Usuario
     {
-        // ... (implementación similar a searchById, pero con el filtro por usuario_asignado)
-        return null; // Placeholder
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.email = :email";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['email' => $emailEncriptado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$row) {
+            return null;
+        }
+
+        return $this->hydrate($row);
     }
 
     /**
      * @inheritDoc
      */
-    public function searchByEmail(string $email): ?Usuario
+    public function findByUsuarioAsignado(string $usuarioAsignado): ?Usuario
     {
-        $emailEncriptado = CifradoHelper::encriptar($email);
-        $sql = "SELECT u.*, t.Especialidad
-                FROM usuario u
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                WHERE u.email = ?";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param("s", $emailEncriptado);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($row = $result->fetch_assoc()) {
-            return $this->mapRowToUsuario($row);
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.usuario_asignado = :usuario_asignado";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['usuario_asignado' => $usuarioAsignado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$row) {
+            return null;
         }
 
-        return null;
+        return $this->hydrate($row);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findAll(): array
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                ORDER BY u.nombre ASC";
+        
+        $stmt = $conn->query($sql);
+        
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = $this->hydrate($row);
+        }
+        
+        return $usuarios;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.tipo = :tipo";
+        
+        $params = ['tipo' => $tipo];
+        
+        if ($excluirId) {
+            $sql .= " AND u.ID_Usuario != :excluirId";
+            $params['excluirId'] = $excluirId->value();
+        }
+        
+        $sql .= " ORDER BY u.nombre ASC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = $this->hydrate($row);
+        }
+        
+        return $usuarios;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function existsByEmail(string $emailEncriptado): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE email = :email";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['email' => $emailEncriptado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function existsByCi(string $ciEncriptada): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE ci = :ci";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['ci' => $ciEncriptada]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function existsByUsuarioAsignado(string $usuarioAsignado): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE usuario_asignado = :usuario_asignado";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['usuario_asignado' => $usuarioAsignado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function existsByUsuarioAsignadoAndNotId(string $usuarioAsignado, Uuid $id): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario 
+                WHERE usuario_asignado = :usuario_asignado AND ID_Usuario != :id";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            'usuario_asignado' => $usuarioAsignado,
+            'id' => $id->value()
+        ]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
     }
 
     /**
@@ -145,61 +350,179 @@ class MySQLUsuarioRepository implements UsuarioRepository
      */
     public function delete(Uuid $id): void
     {
-        $sql = "DELETE FROM usuario WHERE ID_Usuario = ?";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param("s", $idValue = $id->value());
-        $stmt->execute();
+        $conn = $this->db->getConnection();
+        
+        try {
+            $conn->beginTransaction();
+
+            // Eliminar de tablas relacionadas
+            $tables = [
+                'comentario' => 'ID_Usuario_Emisor',
+                'notificaciones' => 'ID_Usuario',
+                'NotificacionMaquinaRecreativa' => 'ID_Destinatario',
+                'componente_usuario' => 'ID_Usuario',
+                'inicio_sesion' => 'ID_Usuario',
+                'historial_actividades' => 'ID_Usuario',
+                'Tecnico' => 'ID_Tecnico',
+                'Logistica' => 'ID_Logistica'
+            ];
+            
+            foreach ($tables as $table => $column) {
+                $sql = "DELETE FROM {$table} WHERE {$column} = :id";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute(['id' => $id->value()]);
+            }
+
+            // Eliminar reportes
+            $sqlReporte = "DELETE FROM reporte WHERE ID_Usuario_Emisor = :id OR ID_Usuario_Destinatario = :id";
+            $stmtReporte = $conn->prepare($sqlReporte);
+            $stmtReporte->execute(['id' => $id->value()]);
+
+            // Finalmente eliminar usuario
+            $sqlUsuario = "DELETE FROM usuario WHERE ID_Usuario = :id";
+            $stmtUsuario = $conn->prepare($sqlUsuario);
+            $stmtUsuario->execute(['id' => $id->value()]);
+
+            $conn->commit();
+        } catch (PDOException $e) {
+            $conn->rollBack();
+            throw new \RuntimeException("Error al eliminar usuario: " . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
      * @inheritDoc
      */
-    public function findAll(array $filtros = []): array
+    public function hasMachinesAssigned(Uuid $id): bool
     {
-        $sql = "SELECT u.*, t.Especialidad FROM usuario u LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico ORDER BY u.nombre ASC";
-        $result = $this->connection->query($sql);
-        $usuarios = [];
-        while ($row = $result->fetch_assoc()) {
-            $usuarios[] = $this->mapRowToUsuario($row);
-        }
-        return $usuarios;
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM MaquinaRecreativa 
+                WHERE ID_Tecnico_Ensamblador = :id 
+                   OR ID_Tecnico_Comprobador = :id 
+                   OR ID_Tecnico_Mantenimiento = :id";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id->value()]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
     }
 
     /**
-     * Mapea una fila de la base de datos a una entidad Usuario.
+     * @inheritDoc
+     */
+    public function registrarLogout(Uuid $id): void
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "UPDATE inicio_sesion SET fecha_ultima_sesion = NOW() 
+                WHERE ID_Usuario = :id AND fecha_ultima_sesion IS NULL 
+                ORDER BY fecha_inicio DESC LIMIT 1";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id->value()]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function registrarActividad(Uuid $id, string $descripcion): void
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "INSERT INTO historial_actividades (ID_Usuario, descripcion, fecha_registro) 
+                VALUES (:id, :descripcion, NOW())";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            'id' => $id->value(),
+            'descripcion' => $descripcion
+        ]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function obtenerHistorialActividades(Uuid $id): array
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT * FROM historial_actividades 
+                WHERE ID_Usuario = :id 
+                ORDER BY fecha_registro DESC 
+                LIMIT 50";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute(['id' => $id->value()]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Hidrata un objeto Usuario a partir de un array de datos.
      *
      * @param array $row
-     * @return Usuario
+     * @return Usuario|Tecnico|Logistica
      */
-    private function mapRowToUsuario(array $row): Usuario
+    public function hydrate(array $row): Usuario
     {
-        return new Usuario(
-            new Uuid($row['ID_Usuario']),
-            $row['nombre'],
-            $row['apellido'],
-            CifradoHelper::desencriptar($row['email']),
-            CifradoHelper::desencriptar($row['ci']),
-            $row['usuario_asignado'],
-            $row['contrasena'],
-            $row['tipo'],
-            $row['estado'],
-            $row['Especialidad'] ?? null
-        );
+        $id = new Uuid($row['ID_Usuario']);
+        $email = new Email(CifradoHelper::desencriptar($row['email']));
+        $tipo = new TipoUsuario($row['tipo']);
+        $estado = new EstadoUsuario($row['estado']);
+
+        // Desencriptar CI si existe
+        $ci = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+
+        switch ($tipo->value()) {
+            case TipoUsuario::TECNICO:
+                return new Tecnico(
+                    $id,
+                    $row['nombre'],
+                    $row['apellido'],
+                    $ci,
+                    $email,
+                    $row['usuario_asignado'],
+                    $row['contrasena'],
+                    $estado,
+                    $row['Especialidad'] ?? '',
+                    (int)($row['Cantidad_Actividades'] ?? 0)
+                );
+            case TipoUsuario::LOGISTICA:
+                return new Logistica(
+                    $id,
+                    $row['nombre'],
+                    $row['apellido'],
+                    $ci,
+                    $email,
+                    $row['usuario_asignado'],
+                    $row['contrasena'],
+                    $estado
+                );
+            default:
+                return new Usuario(
+                    $id,
+                    $row['nombre'],
+                    $row['apellido'],
+                    $ci,
+                    $email,
+                    $row['usuario_asignado'],
+                    $row['contrasena'],
+                    $tipo,
+                    $estado
+                );
+        }
     }
 
     /**
-     * Guarda o actualiza la relación de un técnico.
+     * Hidrata un objeto Técnico a partir de un array de datos.
      *
-     * @param Uuid $id
-     * @param string $especialidad
-     * @return void
+     * @param array $row
+     * @return Tecnico
      */
-    private function saveTecnico(Uuid $id, string $especialidad): void
+    public function hydrateTecnico(array $row): Tecnico
     {
-        $sql = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)
-                ON DUPLICATE KEY UPDATE Especialidad = VALUES(Especialidad)";
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bind_param("ss", $idValue = $id->value(), $especialidad);
-        $stmt->execute();
+        return $this->hydrate($row);
     }
 }
