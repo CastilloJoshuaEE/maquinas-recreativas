@@ -7,9 +7,9 @@
  * @version 1.0.0
  */
 
-namespace Application\Queries\Usuario;
+namespace maquinas_recreativas\Application\Queries\Usuario;
 
-use Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * @package Application\Queries\Usuario

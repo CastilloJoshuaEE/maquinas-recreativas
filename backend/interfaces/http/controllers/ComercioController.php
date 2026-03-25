@@ -9,12 +9,12 @@
 
 namespace Interfaces\Http\Controllers;
 
-use Application\Commands\Comercio\RegistrarComercioCommand;
-use Application\Commands\Comercio\RegistrarComercioHandler;
-use Application\Queries\Comercio\ObtenerComerciosQuery;
-use Application\Queries\Comercio\ObtenerComerciosHandler;
-use Domain\Shared\Exceptions\DomainException;
-use Infrastructure\Security\ValidationHelper;
+use maquinas_recreativas\pplication\Commands\Comercio\RegistrarComercioCommand;
+use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
+use maquinas_recreativas\Application\Queries\Comercio\ObtenerComerciosQuery;
+use maquinas_recreativas\Application\Queries\Comercio\ObtenerComerciosHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 
 /**
  * @package Interfaces\Http\Controllers

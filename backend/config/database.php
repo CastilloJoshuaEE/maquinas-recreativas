@@ -9,7 +9,6 @@
  * @version 1.0
  */
 
-use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 class Database {
     private $connection;

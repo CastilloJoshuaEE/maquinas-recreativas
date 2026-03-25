@@ -7,9 +7,9 @@
  * @version 1.0.0
  */
 
-namespace Application\Queries\Comercio;
+namespace maquinas_recreativas\Application\Queries\Comercio;
 
-use Domain\Comercio\ComercioRepository;
+use maquinas_recreativas\Domain\Comercio\ComercioRepository;
 
 /**
  * @package Application\Queries\Comercio

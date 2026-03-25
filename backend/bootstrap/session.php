@@ -21,12 +21,12 @@ $isLocalhost = (
     )
 );
 // Configuración de sesión
-init_set('session.use_only_cookies','1');
-init_set('session.use_strict_mode','1');
-init_set('session.cookie_httponly','1');
-init_set('session.cookie_samesite','Strict');
-init_set('session.gc_maxlifetime',3600); // 1 hora
-init_set('session.cookie_lifetime', '0'); // Hasta cerrar el navegador
+ini_set('session.use_only_cookies','1');
+ini_set('session.use_strict_mode','1');
+ini_set('session.cookie_httponly','1');
+ini_set('session.cookie_samesite','Strict');
+ini_set('session.gc_maxlifetime',3600); // 1 hora
+ini_set('session.cookie_lifetime', '0'); // Hasta cerrar el navegador
 $secureCookie =$isHttps && !$isLocalhost;
 /*
  * Si usas:

@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-namespace Application\Queries\Comercio;
+namespace maquinas_recreativas\Application\Queries\Comercio;
 
 /**
  * @package Application\Queries\Comercio

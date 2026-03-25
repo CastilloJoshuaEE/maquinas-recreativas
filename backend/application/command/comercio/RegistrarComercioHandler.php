@@ -6,14 +6,14 @@
  * Contiene la lógica de aplicación (caso de uso) para registrar un comercio.
  */
 
-namespace Application\Command\Comercio;
+namespace maquinas_recreativas\Application\Command\Comercio;
 
-use Domain\Comercio\Comercio;
-use Domain\Comercio\ComercioRepository;
-use Domain\Shared\Exceptions\DomainException;
-use Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Comercio\Comercio;
+use maquinas_recreativas\Domain\Comercio\ComercioRepository;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
-use Infrastructure\Security\HistorialHelper;
+use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 
 /**
  * Class RegistrarComercioHandler

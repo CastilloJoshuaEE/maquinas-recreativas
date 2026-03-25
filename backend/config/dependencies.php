@@ -19,11 +19,11 @@ require_once __DIR__ . '/constants.php';
 // =============================================
 // HELPERS Y UTILIDADES
 // =============================================
-require_once __DIR__ . '/../helper/CifradoHelper.php';
-require_once __DIR__ . '/../helper/RateLimiter.php';
-require_once __DIR__ . '/../helper/UsuarioHelper.php';
-require_once __DIR__ . '/../helper/ValidationHelper.php';
-require_once __DIR__ . '/../helper/HistorialHelper.php';
+require_once __DIR__ . '/../infrastructure/security/CifradoHelper.php';
+require_once __DIR__ . '/../infrastructure/security/RateLimiter.php';
+require_once __DIR__ . '/../infrastructure/security/UsuarioHelper.php';
+require_once __DIR__ . '/../infrastructure/security/ValidationHelper.php';
+require_once __DIR__ . '/../infrastructure/security/HistorialHelper.php';
 
 // =============================================
 // DOMAIN - VALUE OBJECTS
@@ -306,5 +306,48 @@ Dependencies::register(ComercioController::class, function() {
     return new ComercioController(
         Dependencies::get(ObtenerComerciosHandler::class),
         Dependencies::get(RegistrarComercioHandler::class)
+    );
+});
+// Controllers específicos por rol
+Dependencies::register(TecnicoEnsambladorController::class, function() {
+    return new TecnicoEnsambladorController(
+        Dependencies::get(ObtenerMaquinasPorTecnicoEnsambladorHandler::class),
+        Dependencies::get(RegistrarMontajeHandler::class),
+        Dependencies::get(GenerarPlacaHandler::class)
+    );
+});
+
+Dependencies::register(TecnicoComprobadorController::class, function() {
+    return new TecnicoComprobadorController(
+        Dependencies::get(ObtenerMaquinasPorTecnicoComprobadorHandler::class),
+        Dependencies::get(MandarADistribucionHandler::class),
+        Dependencies::get(MandarAReensamblarHandler::class)
+    );
+});
+
+Dependencies::register(TecnicoMantenimientoController::class, function() {
+    return new TecnicoMantenimientoController(
+        Dependencies::get(ObtenerMaquinasPorTecnicoMantenimientoHandler::class),
+        Dependencies::get(FinalizarMantenimientoHandler::class)
+    );
+});
+
+Dependencies::register(LogisticoController::class, function() {
+    return new LogisticoController(
+        Dependencies::get(ObtenerMaquinasParaDistribucionHandler::class),
+        Dependencies::get(ObtenerInformesDistribucionHandler::class),
+        Dependencies::get(DarMantenimientoHandler::class)
+    );
+});
+
+Dependencies::register(ContabilidadController::class, function() {
+    return new ContabilidadController(
+        Dependencies::get(RegistrarRecaudacionHandler::class),
+        Dependencies::get(GuardarInformeHandler::class),
+        Dependencies::get(ObtenerRecaudacionesHandler::class),
+        Dependencies::get(ObtenerResumenRecaudacionesHandler::class),
+        Dependencies::get(ObtenerRecaudacionPorIdHandler::class),
+        Dependencies::get(ObtenerMaquinasRecaudacionHandler::class),
+        Dependencies::get(ObtenerMaquinasOperativasPorComercioHandler::class)
     );
 });

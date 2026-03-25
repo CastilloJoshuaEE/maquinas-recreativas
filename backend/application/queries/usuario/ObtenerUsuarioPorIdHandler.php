@@ -7,10 +7,10 @@
  * @version 1.0.0
  */
 
-namespace Application\Queries\Usuario;
+namespace maquinas_recreativas\Application\Queries\Usuario;
 
-use Domain\Usuario\UsuarioRepository;
-use Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * @package Application\Queries\Usuario

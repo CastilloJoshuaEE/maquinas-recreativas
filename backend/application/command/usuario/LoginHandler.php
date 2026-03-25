@@ -7,12 +7,12 @@
  * @version 1.0.0
  */
 
-namespace Application\Commands\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
-use Domain\Usuario\UsuarioRepository;
-use Domain\Usuario\Usuario;
-use Domain\Shared\Exceptions\DomainException;
-use Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 /**
  * @package Application\Commands\Usuario

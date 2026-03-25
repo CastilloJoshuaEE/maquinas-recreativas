@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-namespace Application\Commands\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 /**
  * @package Application\Commands\Usuario
