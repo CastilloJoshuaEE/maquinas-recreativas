@@ -4,10 +4,10 @@
  *
  * Comando para liberar un componente.
  *
- * @package Reconocimiento\Application\Commands\Componente
+ * @package maquinas_recreativas\Application\Commands\Componente
  */
 
-namespace Reconocimiento\Application\Commands\Componente;
+namespace maquinas_recreativas\Application\Commands\Componente;
 
 /**
  * Class LiberarComponente

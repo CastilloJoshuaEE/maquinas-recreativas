@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Query\Usuario;
+namespace maquinas_recreativas\Application\Query\Usuario;
 
-use RecreaSys\Application\Query\Query;
+use maquinas_recreativas\Application\Query\Query;
 
 /**
  * Query para buscar un usuario por su email.
  *
- * @package RecreaSys\Application\Query\Usuario
+ * @package maquinas_recreativas\Application\Query\Usuario
  * @version 1.0
  */
 final class BuscarPorEmailQuery implements Query

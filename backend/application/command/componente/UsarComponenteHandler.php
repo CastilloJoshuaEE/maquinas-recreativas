@@ -4,18 +4,18 @@
  *
  * Manejador del comando UsarComponente.
  *
- * @package Reconocimiento\Application\Commands\Componente
+ * @package maquinas_recreativas\Application\Commands\Componente
  */
 
-namespace Reconocimiento\Application\Commands\Componente;
+namespace maquinas_recreativas\Application\Commands\Componente;
 
-use Reconocimiento\Domain\Componente\ComponenteRepository;
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Montaje\Montaje;
-use Reconocimiento\Domain\Montaje\MontajeRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Componente\ComponenteRepository;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Montaje\Montaje;
+use maquinas_recreativas\Domain\Montaje\MontajeRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class UsarComponenteHandler

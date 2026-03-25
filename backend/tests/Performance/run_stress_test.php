@@ -3,7 +3,7 @@
 
 echo "\n";
 echo "╔════════════════════════════════════════════════════════════╗\n";
-echo "║     PRUEBAS DE ESTRÉS - SISTEMA RECREASYS                  ║\n";
+echo "║     PRUEBAS DE ESTRÉS - SISTEMA maquinas_recreativas                  ║\n";
 echo "╚════════════════════════════════════════════════════════════╝\n\n";
 
 // Verificar que el backend está corriendo

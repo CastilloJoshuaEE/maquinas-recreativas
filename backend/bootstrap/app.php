@@ -1,6 +1,6 @@
 <?php
 /**
- * RecreaSys - Bootstrap Application
+ * maquinas_recreativas - Bootstrap Application
  * 
  * Inicializa todos los componentes del sistema en el orden correcto:
  * 1. Configuración de errores y entorno
@@ -10,7 +10,7 @@
  * 5. Headers de seguridad
  * 6. Contenedor de dependencias
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */

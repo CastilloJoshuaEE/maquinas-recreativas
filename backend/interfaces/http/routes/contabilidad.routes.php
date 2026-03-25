@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Contabilidad Routes
+ * maquinas_recreativas - Contabilidad Routes
  * 
  * Rutas para gestión de contabilidad y recaudaciones.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/contabilidad/registrar-recaudacion',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'registrarRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'registrarRecaudacion'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/recaudaciones',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerRecaudaciones'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerRecaudaciones'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/recaudaciones/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerRecaudacion'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/resumen-recaudaciones',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerResumenRecaudaciones'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerResumenRecaudaciones'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'PUT',
         'path' => '/contabilidad/actualizar-recaudacion',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'actualizarRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'actualizarRecaudacion'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'DELETE',
         'path' => '/contabilidad/eliminar-recaudacion/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'eliminarRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'eliminarRecaudacion'],
         'middleware' => []
     ],
     
@@ -62,7 +62,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/maquinas-recaudacion',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinasRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinasRecaudacion'],
         'middleware' => []
     ],
     
@@ -70,7 +70,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/maquinas-operativas-por-comercio',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinasOperativasPorComercio'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinasOperativasPorComercio'],
         'middleware' => []
     ],
     
@@ -78,7 +78,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/maquina-recaudacion',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinaRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerMaquinaRecaudacion'],
         'middleware' => []
     ],
     
@@ -86,7 +86,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/comercio-recaudacion/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerComercioRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerComercioRecaudacion'],
         'middleware' => []
     ],
     
@@ -94,7 +94,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/contabilidad/guardar-informe',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'guardarInforme'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'guardarInforme'],
         'middleware' => []
     ],
     
@@ -102,7 +102,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/contabilidad/informe/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\InformeController::class, 'obtenerInformePorRecaudacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\InformeController::class, 'obtenerInformePorRecaudacion'],
         'middleware' => []
     ]
 ];

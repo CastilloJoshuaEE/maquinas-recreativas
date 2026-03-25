@@ -1,17 +1,17 @@
 <?php
 /**
- * RecreaSys - Domain Usuario Repository Interface
+ * maquinas_recreativas - Domain Usuario Repository Interface
  *
  * Define el contrato para los repositorios de Usuario.
  *
- * @package RecreaSys\Domain\Usuario
+ * @package maquinas_recreativas\Domain\Usuario
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Domain\Usuario;
+namespace maquinas_recreativas\Domain\Usuario;
 
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Interface UsuarioRepository

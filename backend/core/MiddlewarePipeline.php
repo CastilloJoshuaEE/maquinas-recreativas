@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Core Middleware Pipeline
+ * maquinas_recreativas - Core Middleware Pipeline
  * 
  * Implementa el pipeline para ejecutar middlewares en cadena.
  * 
- * @package RecreaSys\Core
+ * @package maquinas_recreativas\Core
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Core;
+namespace maquinas_recreativas\Core;
 
 class MiddlewarePipeline
 {

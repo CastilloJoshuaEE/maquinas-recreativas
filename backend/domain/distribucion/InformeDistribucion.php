@@ -4,12 +4,12 @@
  *
  * Entidad que representa el informe de distribución de una máquina.
  *
- * @package Reconocimiento\Domain\Distribucion
+ * @package maquinas_recreativas\Domain\Distribucion
  */
 
-namespace Reconocimiento\Domain\Distribucion;
+namespace maquinas_recreativas\Domain\Distribucion;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

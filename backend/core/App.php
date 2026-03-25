@@ -1,20 +1,20 @@
 <?php
 /**
- * RecreaSys - Core Application
+ * maquinas_recreativas - Core Application
  * 
  * Clase principal que orquesta toda la aplicación.
  * Implementa el patrón Singleton.
  * 
- * @package RecreaSys\Core
+ * @package maquinas_recreativas\Core
  * @author Tu Equipo
  * @version 1.0
  */
-namespace RecreaSys\Core;
+namespace maquinas_recreativas\Core;
 use RangeException;
-use RecreaSys\Core\Router;
-use RecreaSys\Core\Request;
-use RecreaSys\Core\Response;
-use RecreaSys\Core\MiddlewarePipeline;
+use maquinas_recreativas\Core\Router;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+use maquinas_recreativas\Core\MiddlewarePipeline;
 class App{
     private static ?self $instance = null;
     private Router $router;
@@ -60,10 +60,10 @@ class App{
      */
     private function registerMiddleware():void{
       // Middlewares en orden de ejecución
-        $this->pipeline->add('cors', \RecreaSys\Middleware\CorsMiddleware::class);
-        $this->pipeline->add('rate-limit', \RecreaSys\Middleware\RateLimitMiddleware::class);
-        $this->pipeline->add('auth', \RecreaSys\Middleware\AuthMiddleware::class);
-        $this->pipeline->add('json-response', \RecreaSys\Middleware\JsonResponseMiddleware::class);        
+        $this->pipeline->add('cors', \maquinas_recreativas\Middleware\CorsMiddleware::class);
+        $this->pipeline->add('rate-limit', \maquinas_recreativas\Middleware\RateLimitMiddleware::class);
+        $this->pipeline->add('auth', \maquinas_recreativas\Middleware\AuthMiddleware::class);
+        $this->pipeline->add('json-response', \maquinas_recreativas\Middleware\JsonResponseMiddleware::class);        
     }  
     /**
      * Registra las rutas de la aplicación

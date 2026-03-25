@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Command\Usuario;
 
-use RecreaSys\Application\Command\Command;
+use maquinas_recreativas\Application\Command\Command;
 
 /**
  * Comando para actualizar el nombre de usuario asignado mediante email.
  *
- * @package RecreaSys\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Command\Usuario
  * @version 1.0
  */
 final class ActualizarUsuarioAsignadoCommand implements Command

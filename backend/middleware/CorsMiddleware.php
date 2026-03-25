@@ -1,18 +1,18 @@
 <?php
 /**
- * RecreaSys - CORS Middleware
+ * maquinas_recreativas - CORS Middleware
  * 
  * Maneja las reglas CORS.
  * 
- * @package RecreaSys\Middleware
+ * @package maquinas_recreativas\Middleware
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Middleware;
+namespace maquinas_recreativas\Middleware;
 
-use RecreaSys\Core\Request;
-use RecreaSys\Core\Response;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
 
 class CorsMiddleware
 {

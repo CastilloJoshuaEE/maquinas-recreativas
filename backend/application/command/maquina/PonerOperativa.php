@@ -4,10 +4,10 @@
  *
  * Comando para poner una máquina como operativa.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
 /**
  * Class PonerOperativa

@@ -4,17 +4,17 @@
  *
  * Manejador del comando CrearNotificacionMaquina.
  *
- * @package Reconocimiento\Application\Commands\Notificacion
+ * @package maquinas_recreativas\Application\Commands\Notificacion
  */
 
-namespace Reconocimiento\Application\Commands\Notificacion;
+namespace maquinas_recreativas\Application\Commands\Notificacion;
 
-use Reconocimiento\Domain\Notificacion\NotificacionMaquina;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class CrearNotificacionMaquinaHandler

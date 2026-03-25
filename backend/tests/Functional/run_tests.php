@@ -3,7 +3,7 @@
 
 echo "\n";
 echo "╔════════════════════════════════════════════════════════════╗\n";
-echo "║     PRUEBAS FUNCIONALES (END-TO-END) - SISTEMA RECREASYS   ║\n";
+echo "║     PRUEBAS FUNCIONALES (END-TO-END) - SISTEMA maquinas_recreativas   ║\n";
 echo "╚════════════════════════════════════════════════════════════╝\n\n";
 
 set_time_limit(600);

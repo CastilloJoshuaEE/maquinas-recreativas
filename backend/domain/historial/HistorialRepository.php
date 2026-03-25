@@ -4,14 +4,14 @@
  *
  * Interfaz para el repositorio de historial.
  *
- * @package Reconocimiento\Domain\Historial
+ * @package maquinas_recreativas\Domain\Historial
  */
 
-namespace Reconocimiento\Domain\Historial;
+namespace maquinas_recreativas\Domain\Historial;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
-use Reconocimiento\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Usuario\Usuario;
 
 /**
  * Interface HistorialRepository

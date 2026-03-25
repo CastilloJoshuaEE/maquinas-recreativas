@@ -4,16 +4,16 @@
  *
  * Implementación MySQL del repositorio de comentarios.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Comentario\Comentario;
-use Reconocimiento\Domain\Comentario\ComentarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
-use Reconocimiento\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Domain\Comentario\Comentario;
+use maquinas_recreativas\Domain\Comentario\ComentarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use PDO;
 
 /**

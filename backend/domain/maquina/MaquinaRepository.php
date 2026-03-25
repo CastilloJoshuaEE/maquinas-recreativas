@@ -4,15 +4,15 @@
  *
  * Interfaz para el repositorio de máquinas recreativas.
  *
- * @package Reconocimiento\Domain\Maquina
+ * @package maquinas_recreativas\Domain\Maquina
  */
 
-namespace Reconocimiento\Domain\Maquina;
+namespace maquinas_recreativas\Domain\Maquina;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Usuario\Usuario;
-use Reconocimiento\Domain\Comercio\Comercio;
-use Reconocimiento\Domain\Componente\Componente;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Comercio\Comercio;
+use maquinas_recreativas\Domain\Componente\Componente;
 use RuntimeException;
 
 /**

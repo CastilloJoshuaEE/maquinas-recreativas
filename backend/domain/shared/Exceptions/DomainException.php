@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Domain\Shared\Exceptions;
+namespace maquinas_recreativas\Domain\Shared\Exceptions;
 
 use Exception;
 
@@ -10,7 +10,7 @@ use Exception;
  * Excepción base para errores del dominio.
  * Todas las excepciones específicas del negocio deben extender esta clase.
  *
- * @package RecreaSys\Domain\Shared\Exceptions
+ * @package maquinas_recreativas\Domain\Shared\Exceptions
  * @version 1.0
  */
 class DomainException extends Exception

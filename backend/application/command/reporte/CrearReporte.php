@@ -4,10 +4,10 @@
  *
  * Comando para crear un reporte.
  *
- * @package Reconocimiento\Application\Commands\Reporte
+ * @package maquinas_recreativas\Application\Commands\Reporte
  */
 
-namespace Reconocimiento\Application\Commands\Reporte;
+namespace maquinas_recreativas\Application\Commands\Reporte;
 
 /**
  * Class CrearReporte

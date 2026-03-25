@@ -4,10 +4,10 @@
  *
  * Comando para actualizar un usuario (administradores).
  *
- * @package Reconocimiento\Application\Commands\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  */
 
-namespace Reconocimiento\Application\Commands\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 /**
  * Class ActualizarUsuario

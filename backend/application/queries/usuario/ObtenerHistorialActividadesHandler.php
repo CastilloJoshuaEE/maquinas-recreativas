@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Query\Usuario;
+namespace maquinas_recreativas\Application\Query\Usuario;
 
-use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
-use RecreaSys\Domain\Shared\Exceptions\DomainException;
-use RecreaSys\Application\Query\QueryHandler;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Application\Query\QueryHandler;
 
 /**
  * Manejador para la query de obtener historial de actividades de un usuario.
  *
- * @package RecreaSys\Application\Query\Usuario
+ * @package maquinas_recreativas\Application\Query\Usuario
  * @version 1.0
  */
 final class ObtenerHistorialActividadesHandler implements QueryHandler

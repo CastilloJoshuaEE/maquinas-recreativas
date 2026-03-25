@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Infrastructure\Persistence\Repository;
+namespace maquinas_recreativas\Infrastructure\Persistence\Repository;
 
-use RecreaSys\Domain\Usuario\Tecnico;
-use RecreaSys\Domain\Usuario\TecnicoRepository;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
-use RecreaSys\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Usuario\Tecnico;
+use maquinas_recreativas\Domain\Usuario\TecnicoRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**
  * Implementación en MySQL del repositorio de Técnicos.
  *
- * @package RecreaSys\Infrastructure\Persistence\Repository
+ * @package maquinas_recreativas\Infrastructure\Persistence\Repository
  * @version 1.0
  */
 final class MySQLTecnicoRepository implements TecnicoRepository

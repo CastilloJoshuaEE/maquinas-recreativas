@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Query\Usuario;
+namespace maquinas_recreativas\Application\Query\Usuario;
 
-use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Domain\Usuario\TipoUsuario;
-use RecreaSys\Application\Query\QueryHandler;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Usuario\TipoUsuario;
+use maquinas_recreativas\Application\Query\QueryHandler;
 use InvalidArgumentException;
 
 /**
  * Manejador para la query de obtener usuarios por tipo.
  *
- * @package RecreaSys\Application\Query\Usuario
+ * @package maquinas_recreativas\Application\Query\Usuario
  * @version 1.0
  */
 final class ObtenerUsuariosPorTipoHandler implements QueryHandler

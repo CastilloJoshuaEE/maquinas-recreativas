@@ -214,7 +214,7 @@ $this->db_name = $env['DB_NAME_TEST'] ?? 'test_db';
             Pago_Ensamblador DECIMAL(10,2) DEFAULT 400.00,
             Pago_Comprobador DECIMAL(10,2) DEFAULT 400.00,
             Pago_Mantenimiento DECIMAL(10,2) DEFAULT 400.00,
-            empresa_nombre VARCHAR(100) DEFAULT 'recreasys.s.a',
+            empresa_nombre VARCHAR(100) DEFAULT 'maquinas_recreativas.s.a',
             empresa_descripcion VARCHAR(255) DEFAULT 'Una empresa encargada en el ciclo de vida de las maquinas recreativas',
             FOREIGN KEY (ID_Recaudacion) REFERENCES recaudaciones(ID_Recaudacion),
             FOREIGN KEY (ID_Comercio) REFERENCES Comercio(ID_Comercio)

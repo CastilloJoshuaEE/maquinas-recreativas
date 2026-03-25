@@ -4,12 +4,12 @@
  *
  * Value Object para los estados de un reporte.
  *
- * @package Reconocimiento\Domain\Reporte
+ * @package maquinas_recreativas\Domain\Reporte
  */
 
-namespace Reconocimiento\Domain\Reporte;
+namespace maquinas_recreativas\Domain\Reporte;
 
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class EstadoReporte

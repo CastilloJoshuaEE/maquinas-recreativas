@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Query\Usuario;
+namespace maquinas_recreativas\Application\Query\Usuario;
 
-use RecreaSys\Application\Query\Query;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Application\Query\Query;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Query para obtener usuarios por tipo (con opción de excluir un ID).
  *
- * @package RecreaSys\Application\Query\Usuario
+ * @package maquinas_recreativas\Application\Query\Usuario
  * @version 1.0
  */
 final class ObtenerUsuariosPorTipoQuery implements Query

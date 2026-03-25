@@ -4,12 +4,12 @@
  *
  * Interfaz para el repositorio de montajes.
  *
- * @package Reconocimiento\Domain\Montaje
+ * @package maquinas_recreativas\Domain\Montaje
  */
 
-namespace Reconocimiento\Domain\Montaje;
+namespace maquinas_recreativas\Domain\Montaje;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Interface MontajeRepository

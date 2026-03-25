@@ -4,14 +4,14 @@
  *
  * Interfaz para el repositorio de componentes.
  *
- * @package Reconocimiento\Domain\Componente
+ * @package maquinas_recreativas\Domain\Componente
  */
 
-namespace Reconocimiento\Domain\Componente;
+namespace maquinas_recreativas\Domain\Componente;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Usuario\Usuario;
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 
 /**
  * Interface ComponenteRepository

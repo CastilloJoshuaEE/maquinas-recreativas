@@ -4,10 +4,10 @@
  *
  * Comando para enviar una máquina a reensamblar.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
 /**
  * Class MandarAReensamblar

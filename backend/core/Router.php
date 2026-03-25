@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Core Router
+ * maquinas_recreativas - Core Router
  * 
  * Clase para el enrutamiento de peticiones HTTP.
  * 
- * @package RecreaSys\Core
+ * @package maquinas_recreativas\Core
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Core;
+namespace maquinas_recreativas\Core;
 
 class Router
 {

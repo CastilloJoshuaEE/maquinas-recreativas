@@ -4,10 +4,10 @@
  *
  * Comando para crear un comentario.
  *
- * @package Reconocimiento\Application\Commands\Comentario
+ * @package maquinas_recreativas\Application\Commands\Comentario
  */
 
-namespace Reconocimiento\Application\Commands\Comentario;
+namespace maquinas_recreativas\Application\Commands\Comentario;
 
 /**
  * Class CrearComentario

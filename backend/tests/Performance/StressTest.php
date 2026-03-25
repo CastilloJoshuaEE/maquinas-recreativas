@@ -46,7 +46,7 @@ class StressTest extends HttpStressTestCase {
     public function init() {
         echo "\n";
         echo "╔════════════════════════════════════════════════════════════╗\n";
-        echo "║        PRUEBAS DE ESTRÉS - SISTEMA RECREASYS               ║\n";
+        echo "║        PRUEBAS DE ESTRÉS - SISTEMA maquinas_recreativas               ║\n";
         echo "╚════════════════════════════════════════════════════════════╝\n\n";
     }
     

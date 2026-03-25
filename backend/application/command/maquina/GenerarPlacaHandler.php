@@ -4,17 +4,17 @@
  *
  * Manejador del comando GenerarPlaca.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use Reconocimiento\Domain\Componente\Componente;
-use Reconocimiento\Domain\Componente\ComponenteRepository;
-use Reconocimiento\Domain\Componente\TipoComponente;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Componente\Componente;
+use maquinas_recreativas\Domain\Componente\ComponenteRepository;
+use maquinas_recreativas\Domain\Componente\TipoComponente;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class GenerarPlacaHandler
@@ -22,7 +22,7 @@ use Reconocimiento\Domain\Shared\Exceptions\DomainException;
 final class GenerarPlacaHandler
 {
     private ComponenteRepository $componenteRepository;
-    private \RecreaSys\Domain\Usuario\UsuarioRepository $usuarioRepository;
+    private \maquinas_recreativas\Domain\Usuario\UsuarioRepository $usuarioRepository;
     public function __construct(ComponenteRepository $componenteRepository, UsuarioRepository $usuarioRepository){
         $this->componenteRepository = $componenteRepository;
         $this->usuarioRepository = $usuarioRepository;

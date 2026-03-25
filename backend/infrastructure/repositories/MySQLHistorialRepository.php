@@ -4,16 +4,16 @@
  *
  * Implementación MySQL del repositorio de historial.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Historial\HistorialMaquina;
-use Reconocimiento\Domain\Historial\HistorialActividad;
-use Reconocimiento\Domain\Historial\HistorialRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Historial\HistorialMaquina;
+use maquinas_recreativas\Domain\Historial\HistorialActividad;
+use maquinas_recreativas\Domain\Historial\HistorialRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

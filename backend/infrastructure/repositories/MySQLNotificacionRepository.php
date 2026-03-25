@@ -4,16 +4,16 @@
  *
  * Implementación MySQL del repositorio de notificaciones.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Notificacion\NotificacionMaquina;
-use Reconocimiento\Domain\Notificacion\NotificacionReporte;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
+use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

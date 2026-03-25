@@ -4,16 +4,16 @@
  *
  * Manejador del comando ActualizarUsuario.
  *
- * @package Reconocimiento\Application\Commands\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  */
 
-namespace Reconocimiento\Application\Commands\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
-use Reconocimiento\Domain\Usuario\Usuario;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\ValueObjects\Email;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class ActualizarUsuarioHandler

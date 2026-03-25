@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Development Server
+ * maquinas_recreativas - Development Server
  * 
  * Script para iniciar el servidor de desarrollo PHP.
  * 
- * @package RecreaSys\Public
+ * @package maquinas_recreativas\Public
  * @author Tu Equipo
  * @version 1.0
  */

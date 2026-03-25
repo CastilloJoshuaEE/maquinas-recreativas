@@ -4,15 +4,15 @@
  *
  * Implementación MySQL del repositorio de montajes.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Montaje\Montaje;
-use Reconocimiento\Domain\Montaje\MontajeRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Montaje\Montaje;
+use maquinas_recreativas\Domain\Montaje\MontajeRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

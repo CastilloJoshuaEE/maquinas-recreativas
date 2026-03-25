@@ -4,12 +4,12 @@
  *
  * Comando para registrar una nueva máquina recreativa.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Class RegistrarMaquina

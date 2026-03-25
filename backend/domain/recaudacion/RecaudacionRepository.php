@@ -4,14 +4,14 @@
  *
  * Interfaz para el repositorio de recaudaciones.
  *
- * @package Reconocimiento\Domain\Recaudacion
+ * @package maquinas_recreativas\Domain\Recaudacion
  */
 
-namespace Reconocimiento\Domain\Recaudacion;
+namespace maquinas_recreativas\Domain\Recaudacion;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
-use Reconocimiento\Domain\Comercio\Comercio;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Comercio\Comercio;
 
 /**
  * Interface RecaudacionRepository

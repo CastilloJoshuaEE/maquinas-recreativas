@@ -4,12 +4,12 @@
  *
  * Interfaz para el repositorio de reportes.
  *
- * @package Reconocimiento\Domain\Reporte
+ * @package maquinas_recreativas\Domain\Reporte
  */
 
-namespace Reconocimiento\Domain\Reporte;
+namespace maquinas_recreativas\Domain\Reporte;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Interface ReporteRepository

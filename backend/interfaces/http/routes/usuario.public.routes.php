@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use RecreaSys\Interfaces\Http\Controllers\UsuarioController;
+use maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController;
 
 /**
  * Definición de rutas públicas para el módulo de Usuario.
  * No requieren autenticación.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @version 1.0
  */
 

@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Infrastructure\Persistence\Repository;
+namespace maquinas_recreativas\Infrastructure\Persistence\Repository;
 
-use RecreaSys\Domain\Usuario\Usuario;
-use RecreaSys\Domain\Usuario\Tecnico;
-use RecreaSys\Domain\Usuario\Logistica;
-use RecreaSys\Domain\Usuario\TipoUsuario;
-use RecreaSys\Domain\Usuario\EstadoUsuario;
-use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
-use RecreaSys\Domain\Shared\ValueObjects\Email;
-use RecreaSys\Infrastructure\Database\Database;
-use RecreaSys\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\Tecnico;
+use maquinas_recreativas\Domain\Usuario\Logistica;
+use maquinas_recreativas\Domain\Usuario\TipoUsuario;
+use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
+use maquinas_recreativas\Infrastructure\Database\Database;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use PDO;
 use PDOException;
 
 /**
  * Implementación en MySQL del repositorio de Usuarios.
  *
- * @package RecreaSys\Infrastructure\Persistence\Repository
+ * @package maquinas_recreativas\Infrastructure\Persistence\Repository
  * @version 1.0
  */
 final class MySQLUsuarioRepository implements UsuarioRepository

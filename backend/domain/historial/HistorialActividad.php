@@ -4,12 +4,12 @@
  *
  * Entidad que representa el historial de actividades de usuario.
  *
- * @package Reconocimiento\Domain\Historial
+ * @package maquinas_recreativas\Domain\Historial
  */
 
-namespace Reconocimiento\Domain\Historial;
+namespace maquinas_recreativas\Domain\Historial;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

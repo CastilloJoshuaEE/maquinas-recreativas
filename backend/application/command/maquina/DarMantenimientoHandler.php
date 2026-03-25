@@ -4,22 +4,22 @@
  *
  * Manejador del comando DarMantenimiento.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Comercio\ComercioRepository;
-use Reconocimiento\Domain\Notificacion\NotificacionMaquina;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Distribucion\DistribucionRepository;
-use Reconocimiento\Domain\Historial\HistorialMaquina;
-use Reconocimiento\Domain\Historial\HistorialRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Comercio\ComercioRepository;
+use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Distribucion\DistribucionRepository;
+use maquinas_recreativas\Domain\Historial\HistorialMaquina;
+use maquinas_recreativas\Domain\Historial\HistorialRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class DarMantenimientoHandler

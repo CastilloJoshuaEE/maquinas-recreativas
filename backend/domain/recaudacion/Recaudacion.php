@@ -4,12 +4,12 @@
  *
  * Entidad que representa una recaudación de máquina recreativa.
  *
- * @package Reconocimiento\Domain\Recaudacion
+ * @package maquinas_recreativas\Domain\Recaudacion
  */
 
-namespace Reconocimiento\Domain\Recaudacion;
+namespace maquinas_recreativas\Domain\Recaudacion;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

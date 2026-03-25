@@ -1,16 +1,16 @@
 <?php
 /**
- * RecreaSys - Role Middleware
+ * maquinas_recreativas - Role Middleware
  * 
  * Verifica que el usuario tenga el rol necesario.
  * 
- * @package RecreaSys\Middleware
+ * @package maquinas_recreativas\Middleware
  * @author Tu Equipo
  * @version 1.0
  */
-namespace RecreaSys\Middleware;
-use RecreaSys\Core\Request;
-use RecreaSys\Core\Response;
+namespace maquinas_recreativas\Middleware;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
 class RoleMiddleware{
     private array $roles;
     /**

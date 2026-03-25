@@ -4,17 +4,17 @@
  *
  * Implementación MySQL del repositorio de reportes.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Reporte\Reporte;
-use Reconocimiento\Domain\Reporte\EstadoReporte;
-use Reconocimiento\Domain\Reporte\ReporteRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
-use Reconocimiento\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Domain\Reporte\Reporte;
+use maquinas_recreativas\Domain\Reporte\EstadoReporte;
+use maquinas_recreativas\Domain\Reporte\ReporteRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use PDO;
 
 /**

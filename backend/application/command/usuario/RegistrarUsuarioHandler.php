@@ -1,20 +1,20 @@
 <?php
 /**
- * RecreaSys - Application Command Handler
+ * maquinas_recreativas - Application Command Handler
  *
  * Manejador del comando RegistrarUsuarioCommand.
  *
- * @package RecreaSys\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Command\Usuario
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Command\Usuario;
 
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
-use RecreaSys\Domain\Usuario\Usuario;
-use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Infrastructure\Security\PasswordHasher;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Infrastructure\Security\PasswordHasher;
 use InvalidArgumentException;
 
 /**

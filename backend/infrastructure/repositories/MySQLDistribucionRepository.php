@@ -4,15 +4,15 @@
  *
  * Implementación MySQL del repositorio de distribución.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Distribucion\InformeDistribucion;
-use Reconocimiento\Domain\Distribucion\DistribucionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Distribucion\InformeDistribucion;
+use maquinas_recreativas\Domain\Distribucion\DistribucionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

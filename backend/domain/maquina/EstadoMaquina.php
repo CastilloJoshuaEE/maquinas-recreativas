@@ -4,12 +4,12 @@
  *
  * Value Object que representa los posibles estados de una máquina recreativa.
  *
- * @package Reconocimiento\Domain\Maquina
+ * @package maquinas_recreativas\Domain\Maquina
  */
 
-namespace Reconocimiento\Domain\Maquina;
+namespace maquinas_recreativas\Domain\Maquina;
 
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Clase EstadoMaquina

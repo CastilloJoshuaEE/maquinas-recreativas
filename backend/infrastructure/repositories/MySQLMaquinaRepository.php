@@ -4,20 +4,20 @@
  *
  * Implementación MySQL del repositorio de máquinas.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Maquina\EstadoMaquina;
-use Reconocimiento\Domain\Maquina\EtapaMaquina;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Usuario\Usuario;
-use Reconocimiento\Domain\Comercio\Comercio;
-use Reconocimiento\Domain\Componente\Componente;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Maquina\EstadoMaquina;
+use maquinas_recreativas\Domain\Maquina\EtapaMaquina;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Comercio\Comercio;
+use maquinas_recreativas\Domain\Componente\Componente;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 use RuntimeException;
 

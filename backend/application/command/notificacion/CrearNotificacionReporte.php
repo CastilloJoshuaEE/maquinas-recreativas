@@ -4,10 +4,10 @@
  *
  * Comando para crear una notificación de reporte.
  *
- * @package Reconocimiento\Application\Commands\Notificacion
+ * @package maquinas_recreativas\Application\Commands\Notificacion
  */
 
-namespace Reconocimiento\Application\Commands\Notificacion;
+namespace maquinas_recreativas\Application\Commands\Notificacion;
 
 /**
  * Class CrearNotificacionReporte

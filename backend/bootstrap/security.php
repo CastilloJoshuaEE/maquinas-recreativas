@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Security Headers
+ * maquinas_recreativas - Security Headers
  * 
  * Aplica todos los headers de seguridad necesarios.
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */
@@ -31,7 +31,7 @@ function applySecurityHeaders():void{
     // Content Security Policy
     $cspRules = [
         "default-src 'self'",
-        "connect-src 'self' http://localhost:5173 https://recreasys.infinityfree.me",
+        "connect-src 'self' http://localhost:5173 https://maquinas_recreativas.infinityfree.me",
         "img-src 'self' data:",
         "script-src 'self'",
         "style-src 'self'",

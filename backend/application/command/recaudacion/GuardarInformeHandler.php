@@ -4,17 +4,17 @@
  *
  * Manejador del comando GuardarInforme.
  *
- * @package Reconocimiento\Application\Commands\Recaudacion
+ * @package maquinas_recreativas\Application\Commands\Recaudacion
  */
 
-namespace Reconocimiento\Application\Commands\Recaudacion;
+namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
-use Reconocimiento\Domain\Recaudacion\InformeRecaudacion;
-use Reconocimiento\Domain\Recaudacion\DetalleInforme;
-use Reconocimiento\Domain\Recaudacion\RecaudacionRepository;
-use Reconocimiento\Domain\Componente\ComponenteRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Recaudacion\InformeRecaudacion;
+use maquinas_recreativas\Domain\Recaudacion\DetalleInforme;
+use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
+use maquinas_recreativas\Domain\Componente\ComponenteRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class GuardarInformeHandler

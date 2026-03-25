@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Session Configuration
+ * maquinas_recreativas - Session Configuration
  * 
  * Configura los parámetros de sesión según el entorno.
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */

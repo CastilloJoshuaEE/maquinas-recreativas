@@ -4,12 +4,12 @@
  *
  * Entidad que representa una notificación relacionada con máquinas.
  *
- * @package Reconocimiento\Domain\Notificacion
+ * @package maquinas_recreativas\Domain\Notificacion
  */
 
-namespace Reconocimiento\Domain\Notificacion;
+namespace maquinas_recreativas\Domain\Notificacion;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

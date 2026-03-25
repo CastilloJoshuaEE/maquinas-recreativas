@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Command\Usuario;
 
-use RecreaSys\Domain\Usuario\Usuario;
-use RecreaSys\Domain\Usuario\Tecnico;
-use RecreaSys\Domain\Usuario\Logistica;
-use RecreaSys\Domain\Usuario\TipoUsuario;
-use RecreaSys\Domain\Usuario\EstadoUsuario;
-use RecreaSys\Domain\Usuario\UsuarioRepository;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
-use RecreaSys\Domain\Shared\ValueObjects\Email;
-use RecreaSys\Domain\Shared\Exceptions\DomainException;
-use RecreaSys\Application\Command\CommandHandler;
-use RecreaSys\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\Tecnico;
+use maquinas_recreativas\Domain\Usuario\Logistica;
+use maquinas_recreativas\Domain\Usuario\TipoUsuario;
+use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use InvalidArgumentException;
 
 /**
  * Manejador para el comando de registro de usuario por un administrador.
  *
- * @package RecreaSys\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Command\Usuario
  * @version 1.0
  */
 final class RegistrarUsuarioAdminHandler implements CommandHandler

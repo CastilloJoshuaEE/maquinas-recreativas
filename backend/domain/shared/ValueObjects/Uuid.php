@@ -1,13 +1,13 @@
 <?php
 /**
- * RecreaSys - Domain Shared Value Object
+ * maquinas_recreativas - Domain Shared Value Object
  * 
  * Value Object para UUIDs
- * @package RecreaSys\Domain\Shared\ValueObjects
+ * @package maquinas_recreativas\Domain\Shared\ValueObjects
  * @author Usuario <email> Tu Equipo
  * @version 2.0
  */
-namespace RecreaSys\Domain\Shared\ValueObjects;
+namespace maquinas_recreativas\Domain\Shared\ValueObjects;
 use InvalidArgumentException;  
 /**
  * Class Uuid 

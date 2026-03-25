@@ -4,16 +4,16 @@
  *
  * Implementación MySQL del repositorio de componentes.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Componente\Componente;
-use Reconocimiento\Domain\Componente\ComponenteRepository;
-use Reconocimiento\Domain\Componente\TipoComponente;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Componente\Componente;
+use maquinas_recreativas\Domain\Componente\ComponenteRepository;
+use maquinas_recreativas\Domain\Componente\TipoComponente;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

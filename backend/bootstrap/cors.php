@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - CORS Configuration
+ * maquinas_recreativas - CORS Configuration
  * 
  * Maneja las reglas CORS (Cross-Origin Resource Sharing).
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */

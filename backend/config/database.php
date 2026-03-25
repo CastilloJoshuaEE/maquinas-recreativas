@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Database Configuration
+ * maquinas_recreativas - Database Configuration
  * 
  * Configuración y conexión a la base de datos.
  * 
- * @package RecreaSys\Config
+ * @package maquinas_recreativas\Config
  * @author Tu Equipo
  * @version 1.0
  */
 
-use RecreaSys\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 class Database {
     private $connection;

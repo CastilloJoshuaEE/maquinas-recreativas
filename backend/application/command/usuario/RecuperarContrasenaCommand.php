@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Command\Usuario;
 
-use RecreaSys\Application\Command\Command;
+use maquinas_recreativas\Application\Command\Command;
 
 /**
  * Comando para recuperar/restablecer la contraseña de un usuario.
  *
- * @package RecreaSys\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Command\Usuario
  * @version 1.0
  */
 final class RecuperarContrasenaCommand implements Command

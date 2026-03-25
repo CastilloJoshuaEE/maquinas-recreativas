@@ -4,16 +4,16 @@
  *
  * Manejador del comando ActualizarRecaudacion.
  *
- * @package Reconocimiento\Application\Commands\Recaudacion
+ * @package maquinas_recreativas\Application\Commands\Recaudacion
  */
 
-namespace Reconocimiento\Application\Commands\Recaudacion;
+namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
-use Reconocimiento\Domain\Recaudacion\Recaudacion;
-use Reconocimiento\Domain\Recaudacion\RecaudacionRepository;
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Recaudacion\Recaudacion;
+use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class ActualizarRecaudacionHandler

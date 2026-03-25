@@ -1,19 +1,19 @@
 <?php
 /**
- * RecreaSys - Rate Limit Middleware
+ * maquinas_recreativas - Rate Limit Middleware
  * 
  * Aplica limitación de tasa a las peticiones.
  * 
- * @package RecreaSys\Middleware
+ * @package maquinas_recreativas\Middleware
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Middleware;
+namespace maquinas_recreativas\Middleware;
 
-use RecreaSys\Core\Request;
-use RecreaSys\Core\Response;
-use RecreaSys\Infrastructure\Security\RateLimiter;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+use maquinas_recreativas\Infrastructure\Security\RateLimiter;
 
 class RateLimitMiddleware
 {

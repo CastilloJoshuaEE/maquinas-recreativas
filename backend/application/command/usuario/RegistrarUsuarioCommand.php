@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Application Command
+ * maquinas_recreativas - Application Command
  *
  * Comando para registrar un nuevo usuario.
  *
- * @package RecreaSys\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Command\Usuario
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Command\Usuario;
 
 /**
  * Class RegistrarUsuarioCommand

@@ -4,12 +4,12 @@
  *
  * Value Object para los tipos de componente.
  *
- * @package Reconocimiento\Domain\Componente
+ * @package maquinas_recreativas\Domain\Componente
  */
 
-namespace Reconocimiento\Domain\Componente;
+namespace maquinas_recreativas\Domain\Componente;
 
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class TipoComponente

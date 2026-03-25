@@ -4,18 +4,18 @@
  *
  * Manejador del comando ActualizarEstadoReporte.
  *
- * @package Reconocimiento\Application\Commands\Reporte
+ * @package maquinas_recreativas\Application\Commands\Reporte
  */
 
-namespace Reconocimiento\Application\Commands\Reporte;
+namespace maquinas_recreativas\Application\Commands\Reporte;
 
-use Reconocimiento\Domain\Reporte\Reporte;
-use Reconocimiento\Domain\Reporte\EstadoReporte;
-use Reconocimiento\Domain\Reporte\ReporteRepository;
-use Reconocimiento\Domain\Notificacion\NotificacionReporte;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Reporte\Reporte;
+use maquinas_recreativas\Domain\Reporte\EstadoReporte;
+use maquinas_recreativas\Domain\Reporte\ReporteRepository;
+use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class ActualizarEstadoReporteHandler

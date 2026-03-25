@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Comercio Routes
+ * maquinas_recreativas - Comercio Routes
  * 
  * Rutas para gestión de comercios.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/comercio/register',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ComercioController::class, 'register'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComercioController::class, 'register'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/comercio/all',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ComercioController::class, 'obtenerComercios'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComercioController::class, 'obtenerComercios'],
         'middleware' => []
     ]
 ];

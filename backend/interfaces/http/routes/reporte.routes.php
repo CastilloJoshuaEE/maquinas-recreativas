@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Reporte Routes
+ * maquinas_recreativas - Reporte Routes
  * 
  * Rutas para gestión de reportes.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/reportes/crear',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'create'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'create'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/usuario/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'getByUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getByUser'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/chat/:uuid/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'getChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getChat'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'PUT',
         'path' => '/reportes/:uuid/estado',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'updateStatus'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'updateStatus'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/usuarios-chat',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'getUsuariosChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getUsuariosChat'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/chat-completo',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ReporteController::class, 'getCompleteChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getCompleteChat'],
         'middleware' => []
     ]
 ];

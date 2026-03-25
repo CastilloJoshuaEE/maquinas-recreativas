@@ -4,20 +4,20 @@
  *
  * Manejador del comando RegistrarMontaje.
  *
- * @package Reconocimiento\Application\Commands\Maquina
+ * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
-namespace Reconocimiento\Application\Commands\Maquina;
+namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use Reconocimiento\Domain\Maquina\MaquinaRepository;
-use Reconocimiento\Domain\Componente\ComponenteRepository;
-use Reconocimiento\Domain\Montaje\Montaje;
-use Reconocimiento\Domain\Montaje\MontajeRepository;
-use Reconocimiento\Domain\Historial\HistorialMaquina;
-use Reconocimiento\Domain\Historial\HistorialRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
+use maquinas_recreativas\Domain\Componente\ComponenteRepository;
+use maquinas_recreativas\Domain\Montaje\Montaje;
+use maquinas_recreativas\Domain\Montaje\MontajeRepository;
+use maquinas_recreativas\Domain\Historial\HistorialMaquina;
+use maquinas_recreativas\Domain\Historial\HistorialRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class RegistrarMontajeHandler

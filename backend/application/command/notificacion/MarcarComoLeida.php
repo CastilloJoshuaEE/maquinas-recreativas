@@ -4,10 +4,10 @@
  *
  * Comando para marcar una notificación como leída.
  *
- * @package Reconocimiento\Application\Commands\Notificacion
+ * @package maquinas_recreativas\Application\Commands\Notificacion
  */
 
-namespace Reconocimiento\Application\Commands\Notificacion;
+namespace maquinas_recreativas\Application\Commands\Notificacion;
 
 /**
  * Class MarcarComoLeida

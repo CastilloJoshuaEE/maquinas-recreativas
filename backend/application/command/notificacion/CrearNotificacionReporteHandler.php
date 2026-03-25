@@ -4,17 +4,17 @@
  *
  * Manejador del comando CrearNotificacionReporte.
  *
- * @package Reconocimiento\Application\Commands\Notificacion
+ * @package maquinas_recreativas\Application\Commands\Notificacion
  */
 
-namespace Reconocimiento\Application\Commands\Notificacion;
+namespace maquinas_recreativas\Application\Commands\Notificacion;
 
-use Reconocimiento\Domain\Notificacion\NotificacionReporte;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Reporte\ReporteRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Reporte\ReporteRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class CrearNotificacionReporteHandler

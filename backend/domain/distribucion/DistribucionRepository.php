@@ -4,13 +4,13 @@
  *
  * Interfaz para el repositorio de distribución.
  *
- * @package Reconocimiento\Domain\Distribucion
+ * @package maquinas_recreativas\Domain\Distribucion
  */
 
-namespace Reconocimiento\Domain\Distribucion;
+namespace maquinas_recreativas\Domain\Distribucion;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 
 /**
  * Interface DistribucionRepository

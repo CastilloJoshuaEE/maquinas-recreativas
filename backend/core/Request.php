@@ -1,14 +1,14 @@
 <?php
 /**
- * RecreaSys - Core Request
+ * maquinas_recreativas - Core Request
  * 
  * Abstracción de la petición HTTP.
  * 
- * @package RecreaSys\Core
+ * @package maquinas_recreativas\Core
  * @author Tu Equipo
  * @version 1.0
  */
-namespace RecreaSys\Core;
+namespace maquinas_recreativas\Core;
 class Request{
     private array $server;
     private array $get;

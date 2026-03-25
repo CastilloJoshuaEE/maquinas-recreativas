@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Routes Index
+ * maquinas_recreativas - Routes Index
  * 
  * Archivo principal de rutas que carga todas las rutas organizadas.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/health',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HealthController::class, 'check'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HealthController::class, 'check'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/test-db',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HealthController::class, 'testDb'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HealthController::class, 'testDb'],
         'middleware' => []
     ]
 ];

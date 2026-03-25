@@ -4,14 +4,14 @@
  *
  * Manejador del comando MarcarTodasComoLeidas.
  *
- * @package Reconocimiento\Application\Commands\Notificacion
+ * @package maquinas_recreativas\Application\Commands\Notificacion
  */
 
-namespace Reconocimiento\Application\Commands\Notificacion;
+namespace maquinas_recreativas\Application\Commands\Notificacion;
 
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class MarcarTodasComoLeidasHandler

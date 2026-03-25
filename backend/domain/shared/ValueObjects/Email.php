@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Domain\Shared\ValueObjects;
+namespace maquinas_recreativas\Domain\Shared\ValueObjects;
 
 use InvalidArgumentException;
 
 /**
  * Value Object para representar un correo electrónico validado.
  * 
- * @package RecreaSys\Domain\Shared\ValueObjects
+ * @package maquinas_recreativas\Domain\Shared\ValueObjects
  * @version 1.0
  */
 final class Email

@@ -4,19 +4,19 @@
  *
  * Manejador del comando CrearComentario.
  *
- * @package Reconocimiento\Application\Commands\Comentario
+ * @package maquinas_recreativas\Application\Commands\Comentario
  */
 
-namespace Reconocimiento\Application\Commands\Comentario;
+namespace maquinas_recreativas\Application\Commands\Comentario;
 
-use Reconocimiento\Domain\Comentario\Comentario;
-use Reconocimiento\Domain\Comentario\ComentarioRepository;
-use Reconocimiento\Domain\Reporte\ReporteRepository;
-use Reconocimiento\Domain\Notificacion\NotificacionReporte;
-use Reconocimiento\Domain\Notificacion\NotificacionRepository;
-use Reconocimiento\Domain\Usuario\UsuarioRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Comentario\Comentario;
+use maquinas_recreativas\Domain\Comentario\ComentarioRepository;
+use maquinas_recreativas\Domain\Reporte\ReporteRepository;
+use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
+use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class CrearComentarioHandler

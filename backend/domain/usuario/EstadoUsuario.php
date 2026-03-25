@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Domain\Usuario;
+namespace maquinas_recreativas\Domain\Usuario;
 
 /**
  * Enum-like class para los estados de un usuario.
  * 
- * @package RecreaSys\Domain\Usuario
+ * @package maquinas_recreativas\Domain\Usuario
  * @version 1.0
  */
 final class EstadoUsuario

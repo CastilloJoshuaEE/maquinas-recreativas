@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Rate Limiting Configuration
+ * maquinas_recreativas - Rate Limiting Configuration
  * 
  * Configura y aplica las reglas de rate limiting.
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */
 
-use RecreaSys\Infrastructure\Security\RateLimiter;
+use maquinas_recreativas\Infrastructure\Security\RateLimiter;
 
 /**
  * Aplica rate limiting a la petición actual

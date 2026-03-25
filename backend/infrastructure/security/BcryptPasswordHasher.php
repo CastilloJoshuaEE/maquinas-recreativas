@@ -1,15 +1,15 @@
 <?php
 /**
- * RecreaSys - Infrastructure Security
+ * maquinas_recreativas - Infrastructure Security
  *
  * Implementación de Bcrypt para el hashing de contraseñas.
  *
- * @package RecreaSys\Infrastructure\Security
+ * @package maquinas_recreativas\Infrastructure\Security
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace RecreaSys\Infrastructure\Security;
+namespace maquinas_recreativas\Infrastructure\Security;
 
 use InvalidArgumentException;
 

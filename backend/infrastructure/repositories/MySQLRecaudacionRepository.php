@@ -4,19 +4,19 @@
  *
  * Implementación MySQL del repositorio de recaudaciones.
  *
- * @package Reconocimiento\Infrastructure\Repositories
+ * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
-namespace Reconocimiento\Infrastructure\Repositories;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use Reconocimiento\Domain\Recaudacion\Recaudacion;
-use Reconocimiento\Domain\Recaudacion\InformeRecaudacion;
-use Reconocimiento\Domain\Recaudacion\DetalleInforme;
-use Reconocimiento\Domain\Recaudacion\RecaudacionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Maquina\MaquinaRecreativa;
-use Reconocimiento\Domain\Comercio\Comercio;
-use Reconocimiento\Infrastructure\Database\Database;
+use maquinas_recreativas\Domain\Recaudacion\Recaudacion;
+use maquinas_recreativas\Domain\Recaudacion\InformeRecaudacion;
+use maquinas_recreativas\Domain\Recaudacion\DetalleInforme;
+use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Domain\Comercio\Comercio;
+use maquinas_recreativas\Infrastructure\Database\Database;
 use PDO;
 
 /**

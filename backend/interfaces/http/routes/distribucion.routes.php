@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Distribucion Routes
+ * maquinas_recreativas - Distribucion Routes
  * 
  * Rutas para gestión de distribución.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/distribucion/informes',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\DistribucionController::class, 'obtenerInformesDistribucion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\DistribucionController::class, 'obtenerInformesDistribucion'],
         'middleware' => []
     ]
 ];

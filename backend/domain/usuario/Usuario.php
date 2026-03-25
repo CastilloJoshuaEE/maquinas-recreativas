@@ -2,14 +2,14 @@
 /**
  * RecreSys - Domain Usuario Entity
  * Define la entidad Usuario con sus reglas de negocio
- * @package RecreaSys\Domain\Usuario
+ * @package maquinas_recreativas\Domain\Usuario
  * @author Usuario <email> TU Equipo
  * @version 1.0.0
  * 
  */
-namespace RecreaSys\Domain\Usuario;
+namespace maquinas_recreativas\Domain\Usuario;
 use PhpParser\Node\Expr\Cast\Void_;
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use InvalidArgumentException;
 /**
  * Class Usuario

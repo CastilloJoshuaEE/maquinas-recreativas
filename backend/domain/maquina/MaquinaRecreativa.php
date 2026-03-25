@@ -4,12 +4,12 @@
  *
  * Entidad que representa una máquina recreativa en el dominio.
  *
- * @package Reconocimiento\Domain\Maquina
+ * @package maquinas_recreativas\Domain\Maquina
  */
 
-namespace Reconocimiento\Domain\Maquina;
+namespace maquinas_recreativas\Domain\Maquina;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

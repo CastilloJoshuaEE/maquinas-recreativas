@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Historial Routes
+ * maquinas_recreativas - Historial Routes
  * 
  * Rutas para consulta de historial.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/maquina/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorMaquina'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorMaquina'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/usuario/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorUsuario'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorUsuario'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/general',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialGeneral'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialGeneral'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/resumen',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getResumenReciente'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getResumenReciente'],
         'middleware' => []
     ]
 ];

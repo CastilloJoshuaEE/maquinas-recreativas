@@ -1,16 +1,16 @@
 <?php
 /**
- * RecreaSys - Authentication Middleware
+ * maquinas_recreativas - Authentication Middleware
  * 
  * Verifica que el usuario esté autenticado para acceder a rutas privadas.
  * 
- * @package RecreaSys\Middleware
+ * @package maquinas_recreativas\Middleware
  * @author Tu Equipo
  * @version 1.0
  */
-namespace RecreaSys\Middleware;
-use RecreaSys\Core\Request;
-use RecreaSys\Core\Response;
+namespace maquinas_recreativas\Middleware;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
 class AuthMiddleware{
     private array $publicRoutes=[
         '/health',

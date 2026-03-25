@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace RecreaSys\Domain\Usuario;
+namespace maquinas_recreativas\Domain\Usuario;
 
-use RecreaSys\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use InvalidArgumentException;
 
 /**
  * Entidad de dominio que representa a un Técnico (extiende Usuario).
  * 
- * @package RecreaSys\Domain\Usuario
+ * @package maquinas_recreativas\Domain\Usuario
  * @version 1.0
  */
 final class Tecnico extends Usuario

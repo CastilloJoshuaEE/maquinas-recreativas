@@ -4,12 +4,12 @@
  *
  * Entidad que representa un comentario en un reporte.
  *
- * @package Reconocimiento\Domain\Comentario
+ * @package maquinas_recreativas\Domain\Comentario
  */
 
-namespace Reconocimiento\Domain\Comentario;
+namespace maquinas_recreativas\Domain\Comentario;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
 /**

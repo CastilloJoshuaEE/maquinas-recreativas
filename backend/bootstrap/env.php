@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Environment Loader
+ * maquinas_recreativas - Environment Loader
  * 
  * Carga las variables de entorno desde el archivo .env
  * 
- * @package RecreaSys\Bootstrap
+ * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
  * @version 1.0
  */

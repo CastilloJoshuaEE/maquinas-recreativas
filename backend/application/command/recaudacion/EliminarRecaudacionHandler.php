@@ -4,14 +4,14 @@
  *
  * Manejador del comando EliminarRecaudacion.
  *
- * @package Reconocimiento\Application\Commands\Recaudacion
+ * @package maquinas_recreativas\Application\Commands\Recaudacion
  */
 
-namespace Reconocimiento\Application\Commands\Recaudacion;
+namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
-use Reconocimiento\Domain\Recaudacion\RecaudacionRepository;
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
-use Reconocimiento\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Class EliminarRecaudacionHandler

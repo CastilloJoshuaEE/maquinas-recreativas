@@ -1,14 +1,14 @@
 <?php
 /**
- * RecreaSys - Core Response
+ * maquinas_recreativas - Core Response
  * 
  * Abstracción de la respuesta HTTP.
  * 
- * @package RecreaSys\Core
+ * @package maquinas_recreativas\Core
  * @author Tu Equipo
  * @version 1.0
  */
-namespace RecreaSys\Core;
+namespace maquinas_recreativas\Core;
 class Response{
     private array $headers = [];
     private mixed $content = null;

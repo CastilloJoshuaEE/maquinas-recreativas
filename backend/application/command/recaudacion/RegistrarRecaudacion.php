@@ -4,10 +4,10 @@
  *
  * Comando para registrar una recaudación.
  *
- * @package Reconocimiento\Application\Commands\Recaudacion
+ * @package maquinas_recreativas\Application\Commands\Recaudacion
  */
 
-namespace Reconocimiento\Application\Commands\Recaudacion;
+namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
 /**
  * Class RegistrarRecaudacion

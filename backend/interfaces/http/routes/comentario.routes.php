@@ -1,10 +1,10 @@
 <?php
 /**
- * RecreaSys - Comentario Routes
+ * maquinas_recreativas - Comentario Routes
  * 
  * Rutas para gestión de comentarios.
  * 
- * @package RecreaSys\Interfaces\Http\Routes
+ * @package maquinas_recreativas\Interfaces\Http\Routes
  * @author Tu Equipo
  * @version 1.0
  */
@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/comentarios',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ComentarioController::class, 'create'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComentarioController::class, 'create'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/comentarios/reporte/:uuid',
-        'handler' => [\RecreaSys\Interfaces\Http\Controller\ComentarioController::class, 'getByReporte'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComentarioController::class, 'getByReporte'],
         'middleware' => []
     ]
 ];

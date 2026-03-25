@@ -45,7 +45,7 @@ define('SESSION_LIFETIME', 7200);
 /**
  * @var string NOMBRE DE LA COOKIE DE SESIÓN
  */
-define('SESSION_NAME', 'recreasys_session');
+define('SESSION_NAME', 'maquinas_recreativas_session');
 
 // =============================================
 // ROLES DE USUARIO

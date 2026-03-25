@@ -4,12 +4,12 @@
  *
  * Interfaz para el repositorio de comentarios.
  *
- * @package Reconocimiento\Domain\Comentario
+ * @package maquinas_recreativas\Domain\Comentario
  */
 
-namespace Reconocimiento\Domain\Comentario;
+namespace maquinas_recreativas\Domain\Comentario;
 
-use Reconocimiento\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Interface ComentarioRepository
