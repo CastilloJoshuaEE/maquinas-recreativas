@@ -1,0 +1,28 @@
+<?php
+/**
+ * application/commands/componente/LiberarComponentesCancelacion.php
+ *
+ * Comando para liberar componentes durante cancelación de registro.
+ *
+ * @package Reconocimiento\Application\Commands\Componente
+ */
+
+namespace Reconocimiento\Application\Commands\Componente;
+
+/**
+ * Class LiberarComponentesCancelacion
+ */
+final class LiberarComponentesCancelacion
+{
+    private ?string $idPlaca;
+    private ?string $idCarcasa;
+    private string $idUsuario;
+    public function __construct(string $idPlaca, ?string $idCarcasa, string $idUsuario){
+        $this->idPlaca = $idPlaca;
+        $this->idCarcasa = $idCarcasa;
+        $this->idUsuario = $idUsuario;
+    }
+    public function idPlaca(): ?string { return $this->idPlaca; }
+    public function idCarcasa(): ?string { return $this->idCarcasa; }
+    public function idUsuario(): string { return $this->idUsuario; }    
+}

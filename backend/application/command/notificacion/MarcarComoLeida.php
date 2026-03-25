@@ -1,0 +1,28 @@
+<?php
+/**
+ * application/commands/notificacion/MarcarComoLeida.php
+ *
+ * Comando para marcar una notificación como leída.
+ *
+ * @package Reconocimiento\Application\Commands\Notificacion
+ */
+
+namespace Reconocimiento\Application\Commands\Notificacion;
+
+/**
+ * Class MarcarComoLeida
+ */
+final class MarcarComoLeida
+{
+    private string $idNotificacion;
+    private string $idUsuario;
+
+    public function __construct(string $idNotificacion, string $idUsuario)
+    {
+        $this->idNotificacion = $idNotificacion;
+        $this->idUsuario = $idUsuario;
+    }
+
+    public function idNotificacion(): string { return $this->idNotificacion; }
+    public function idUsuario(): string { return $this->idUsuario; }
+}
