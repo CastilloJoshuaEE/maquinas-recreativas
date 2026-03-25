@@ -85,7 +85,7 @@ define('ESTADOS_USUARIO', [
     'Activo',
     'Inactivo',
     'Suspendido',
-    'Bloqueado'
+    'Pendiente_asignacion'
 ]);
 
 // =============================================

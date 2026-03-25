@@ -14,11 +14,11 @@ final class EstadoUsuario
 {
     private const ACTIVO = 'Activo';
     private const INACTIVO = 'Inactivo';
-    private const BLOQUEADO = 'Bloqueado';
+    private const PENDIENTE_ASIGNACION = 'Pendiente_asignacion';
     private const VALID_ESTADOS = [
         self::ACTIVO,
         self::INACTIVO,
-        self::BLOQUEADO,
+        self::PENDIENTE_ASIGNACION,
     ];
     private string $value;
     /**
@@ -83,13 +83,13 @@ final class EstadoUsuario
         return $this->value===self::INACTIVO;
     }    
     /**
-     * Verifica si el estado es 'Bloqueado'.
+     * Verifica si el estado es 'Pendiente_asignacion'.
      *
      * @return bool
      */
-    public function isBloqueado(): bool
+    public function isPendienteAsignacion(): bool
     {
-        return $this->value === self::BLOQUEADO;
+        return $this->value === self::PENDIENTE_ASIGNACION;
     }
 
 
