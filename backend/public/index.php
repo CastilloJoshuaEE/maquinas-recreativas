@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/public/index.php
  * maquinas_recreativas - Front Controller
  * 
  * Punto de entrada único de la aplicación. Su única responsabilidad es

@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../services/HistorialMaquinaService.php';
 
 class HistorialHelper {
     private static $instance = null;

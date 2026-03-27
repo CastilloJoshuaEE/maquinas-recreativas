@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/componente/LiberarComponente.php
+ * application/commands/componente/LiberarComponenteCommand.php
  *
  * Comando para liberar un componente.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Componente;
 /**
  * Class LiberarComponente
  */
-final class LiberarComponente
+final class LiberarComponenteCommand
 {
     private string $idComponente;
     private string $idUsuario;

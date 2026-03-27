@@ -1,6 +1,6 @@
 <?php
 /**
- * config/app.php
+ * backend/config/app.php
  *
  * Configuración general de la aplicación
  * 

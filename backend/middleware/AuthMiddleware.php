@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/middleware/AuthMiddleware
  * maquinas_recreativas - Authentication Middleware
  * 
  * Verifica que el usuario esté autenticado para acceder a rutas privadas.

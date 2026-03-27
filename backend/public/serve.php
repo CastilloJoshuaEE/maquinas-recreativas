@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/public/serve.php
  * maquinas_recreativas - Development Server
  * 
  * Script para iniciar el servidor de desarrollo PHP.

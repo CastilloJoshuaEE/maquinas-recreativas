@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/historial/ObtenerHistorialPorMaquina.php
+ * application/queries/historial/ObtenerHistorialPorMaquinaQuery.php
  *
  * Query para obtener historial de una máquina específica.
  *

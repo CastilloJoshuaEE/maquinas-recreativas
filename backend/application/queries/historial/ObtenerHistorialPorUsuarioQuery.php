@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/historial/ObtenerHistorialPorUsuario.php
+ * application/queries/historial/ObtenerHistorialPorUsuarioQuery.php
  *
  * Query para obtener historial de un usuario específico.
  *

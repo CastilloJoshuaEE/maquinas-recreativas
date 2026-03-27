@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/maquina/ObtenerMaquinasPorEtapa.php
+ * application/queries/maquina/ObtenerMaquinasPorEtapaQuery.php
  *
  * Query para obtener máquinas por etapa.
  *

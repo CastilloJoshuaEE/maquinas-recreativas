@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/bootstrap/env.php
  * maquinas_recreativas - Environment Loader
  * 
  * Carga las variables de entorno desde el archivo .env

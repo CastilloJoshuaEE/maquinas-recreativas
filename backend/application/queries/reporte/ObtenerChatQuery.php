@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/reporte/ObtenerChat.php
+ * application/queries/reporte/ObtenerChatQuery.php
  *
  * Query para obtener chat entre dos usuarios.
  *

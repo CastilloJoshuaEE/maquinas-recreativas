@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerComercioRecaudacion.php
+ * application/queries/recaudacion/ObtenerComercioRecaudacionQuery.php
  *
  * Query para obtener comercio para recaudación.
  *

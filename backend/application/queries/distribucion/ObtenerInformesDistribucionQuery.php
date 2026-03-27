@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/distribucion/ObtenerInformesDistribucion.php
+ * application/queries/distribucion/ObtenerInformesDistribucionQuery.php
  *
  * Query para obtener informes de distribución con filtros.
  *

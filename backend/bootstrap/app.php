@@ -1,6 +1,6 @@
 <?php
 /**
- * maquinas_recreativas - Bootstrap Application
+ * maquinas_recreativas/backend/bootstrap/app.php - Bootstrap Application
  * 
  * Inicializa todos los componentes del sistema en el orden correcto:
  * 1. Configuración de errores y entorno

@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/RegistrarMontaje.php
+ * application/commands/maquina/RegistrarMontajeCommand.php
  *
  * Comando para registrar el montaje de un componente.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class RegistrarMontaje
  */
-final class RegistrarMontaje
+final class RegistrarMontajeCommand
 {
     private string $idMaquina;
     private string $idComponente;

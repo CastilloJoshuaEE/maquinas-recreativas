@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/reporte/CrearReporte.php
+ * application/commands/reporte/CrearReporteCommand.php
  *
  * Comando para crear un reporte.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Reporte;
 /**
  * Class CrearReporte
  */
-final class CrearReporte
+final class CrearReporteCommand
 {
     private string $idUsuarioEmisor;
     private ?string $idUsuarioDestinatario;

@@ -1,8 +1,8 @@
 <?php
 /**
- * application/queries/maquina/ObtenerMaquinasPorTecnicoComprobador.php
+ * application/queries/maquina/ObtenerMaquinasPorTecnicoMantenimientoQuery.php
  *
- * Query para obtener máquinas asignadas a un técnico comprobador.
+ * Query para obtener máquinas asignadas a un técnico de mantenimiento.
  *
  * @package maquinas_recreativas\Application\Queries\Maquina
  */
@@ -10,9 +10,9 @@
 namespace maquinas_recreativas\Application\Queries\Maquina;
 
 /**
- * Class ObtenerMaquinasPorTecnicoComprobadorQuery
+ * Class ObtenerMaquinasPorTecnicoMantenimientoQuery
  */
-final class ObtenerMaquinasPorTecnicoComprobadorQuery
+final class ObtenerMaquinasPorTecnicoMantenimientoQuery
 {
     private string $idTecnico;
 

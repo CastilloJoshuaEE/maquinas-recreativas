@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/DarMantenimiento.php
+ * application/commands/maquina/DarMantenimientoCommand.php
  *
  * Comando para solicitar mantenimiento de una máquina.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class DarMantenimiento
  */
-final class DarMantenimiento
+final class DarMantenimientoCommand
 {
     private string $idMaquina;
     private string $mensaje;

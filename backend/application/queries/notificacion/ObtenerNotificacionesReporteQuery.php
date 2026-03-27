@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/notificacion/ObtenerNotificacionesReporte.php
+ * application/queries/notificacion/ObtenerNotificacionesReporteQuery.php
  *
  * Query para obtener notificaciones de reportes por usuario.
  *

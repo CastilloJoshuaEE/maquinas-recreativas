@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/reporte/ObtenerReportePorId.php
+ * application/queries/reporte/ObtenerReportePorIdQuery.php
  *
  * Query para obtener un reporte por ID.
  *

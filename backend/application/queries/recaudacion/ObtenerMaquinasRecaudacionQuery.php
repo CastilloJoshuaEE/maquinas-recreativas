@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerMaquinasRecaudacion.php
+ * application/queries/recaudacion/ObtenerMaquinasRecaudacionQuery.php
  *
  * Query para obtener máquinas en etapa de recaudación.
  *

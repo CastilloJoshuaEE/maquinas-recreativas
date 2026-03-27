@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/FinalizarMantenimiento.php
+ * application/commands/maquina/FinalizarMantenimientoCommand.php
  *
  * Comando para finalizar el mantenimiento de una máquina.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class FinalizarMantenimiento
  */
-final class FinalizarMantenimiento
+final class FinalizarMantenimientoCommand
 {
     private string $idMaquina;
     private string $idRemitente;

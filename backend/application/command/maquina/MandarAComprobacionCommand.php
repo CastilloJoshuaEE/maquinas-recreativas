@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/MandarAComprobacion.php
+ * application/commands/maquina/MandarAComprobacionCommand.php
  *
  * Comando para enviar una máquina a comprobación.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class MandarAComprobacion
  */
-final class MandarAComprobacion
+final class MandarAComprobacionCommand
 {
     private string $idMaquina;
     private string $idRemitente;

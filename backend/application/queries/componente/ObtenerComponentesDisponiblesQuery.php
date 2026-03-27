@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/componente/ObtenerComponentesDisponibles.php
+ * application/queries/componente/ObtenerComponentesDisponiblesQuery.php
  *
  * Query para obtener componentes disponibles (no asignados).
  *

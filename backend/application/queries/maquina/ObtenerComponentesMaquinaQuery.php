@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/maquina/ObtenerComponentesMaquina.php
+ * application/queries/maquina/ObtenerComponentesMaquinaQuery.php
  *
  * Query para obtener componentes de una máquina.
  *

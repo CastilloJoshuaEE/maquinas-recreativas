@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/historial/ObtenerHistorialGeneral.php
+ * application/queries/historial/ObtenerHistorialGeneralQuery.php
  *
  * Query para obtener historial general con filtros.
  *

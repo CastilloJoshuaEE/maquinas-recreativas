@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/recaudacion/ActualizarRecaudacion.php
+ * application/commands/recaudacion/ActualizarRecaudacionCommand.php
  *
  * Comando para actualizar una recaudación.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Recaudacion;
 /**
  * Class ActualizarRecaudacion
  */
-final class ActualizarRecaudacion
+final class ActualizarRecaudacionCommand
 {
     private string $idRecaudacion;
     private string $idMaquina;

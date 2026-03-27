@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/config/database.php
  * maquinas_recreativas - Database Configuration
  * 
  * Configuración y conexión a la base de datos.

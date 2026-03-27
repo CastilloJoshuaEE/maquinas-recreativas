@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/reporte/ObtenerUsuariosChat.php
+ * application/queries/reporte/ObtenerUsuariosChatQuery.php
  *
  * Query para obtener usuarios con los que un usuario ha chateado.
  *

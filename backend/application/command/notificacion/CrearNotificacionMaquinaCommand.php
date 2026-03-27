@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/notificacion/CrearNotificacionMaquina.php
+ * application/commands/notificacion/CrearNotificacionMaquinaCommand.php
  *
  * Comando para crear una notificación de máquina.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Notificacion;
 /**
  * Class CrearNotificacionMaquina
  */
-final class CrearNotificacionMaquina
+final class CrearNotificacionMaquinaCommand
 {
     private string $idRemitente;
     private string $idDestinatario;

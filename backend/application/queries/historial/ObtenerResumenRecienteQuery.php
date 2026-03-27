@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/historial/ObtenerResumenReciente.php
+ * application/queries/historial/ObtenerResumenRecienteQuery.php
  *
  * Query para obtener resumen de actividades recientes.
  *

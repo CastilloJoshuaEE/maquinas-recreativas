@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerResumenRecaudaciones.php
+ * application/queries/recaudacion/ObtenerResumenRecaudacionesQuery.php
  *
  * Query para obtener resumen de recaudaciones por tipo de comercio.
  *

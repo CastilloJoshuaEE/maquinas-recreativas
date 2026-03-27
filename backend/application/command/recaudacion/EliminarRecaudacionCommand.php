@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/recaudacion/EliminarRecaudacion.php
+ * application/commands/recaudacion/EliminarRecaudacionCommand.php
  *
  * Comando para eliminar una recaudación.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Recaudacion;
 /**
  * Class EliminarRecaudacion
  */
-final class EliminarRecaudacion
+final class EliminarRecaudacionCommand
 {
     private string $idRecaudacion;
 

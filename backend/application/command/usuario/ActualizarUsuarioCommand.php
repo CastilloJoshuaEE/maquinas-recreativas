@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/usuario/ActualizarUsuario.php
+ * application/commands/usuario/ActualizarUsuarioCommand.php
  *
  * Comando para actualizar un usuario (administradores).
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Usuario;
 /**
  * Class ActualizarUsuario
  */
-final class ActualizarUsuario
+final class ActualizarUsuarioCommand
 {
     private string $id;
     private string $nombre;

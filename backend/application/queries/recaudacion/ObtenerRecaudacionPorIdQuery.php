@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerRecaudacionPorId.php
+ * application/queries/recaudacion/ObtenerRecaudacionPorIdQuery.php
  *
  * Query para obtener una recaudación por ID.
  *

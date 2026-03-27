@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/bootstrap/session.php
  * maquinas_recreativas - Session Configuration
  * 
  * Configura los parámetros de sesión según el entorno.

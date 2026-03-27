@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/recaudacion/GuardarInforme.php
+ * application/commands/recaudacion/GuardarInformeCommand.php
  *
  * Comando para guardar el informe de una recaudación.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Recaudacion;
 /**
  * Class GuardarInforme
  */
-final class GuardarInforme
+final class GuardarInformeCommand
 {
     private string $idRecaudacion;
     private string $ciUsuario;

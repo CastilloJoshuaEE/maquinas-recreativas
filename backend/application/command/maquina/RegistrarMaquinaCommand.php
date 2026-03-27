@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/RegistrarMaquina.php
+ * application/commands/maquina/RegistrarMaquinaCommand.php
  *
  * Comando para registrar una nueva máquina recreativa.
  *
@@ -14,7 +14,7 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 /**
  * Class RegistrarMaquina
  */
-final class RegistrarMaquina
+final class RegistrarMaquinaCommand
 {
     private string $nombre;
     private string $tipo;

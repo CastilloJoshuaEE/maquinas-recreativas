@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/bootstrap/security.php
  * maquinas_recreativas - Security Headers
  * 
  * Aplica todos los headers de seguridad necesarios.

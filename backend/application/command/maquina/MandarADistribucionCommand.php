@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/MandarADistribucion.php
+ * application/commands/maquina/MandarADistribucionCommand.php
  *
  * Comando para enviar una máquina a distribución.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class MandarADistribucion
  */
-final class MandarADistribucion
+final class MandarADistribucionCommand
 {
     private string $idMaquina;
     private string $idRemitente;

@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/notificacion/MarcarComoLeida.php
+ * application/commands/notificacion/MarcarComoLeidaCommand.php
  *
  * Comando para marcar una notificación como leída.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Notificacion;
 /**
  * Class MarcarComoLeida
  */
-final class MarcarComoLeida
+final class MarcarComoLeidaCommand
 {
     private string $idNotificacion;
     private string $idUsuario;

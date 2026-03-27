@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/componente/AsignarCarcasa.php
+ * application/commands/componente/AsignarCarcasaCommand.php
  *
  * Comando para asignar una carcasa a un técnico.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Componente;
 /**
  * Class AsignarCarcasa
  */
-final class AsignarCarcasa
+final class AsignarCarcasaCommand
 {
     private string $idComponente;
     private string $idUsuario;

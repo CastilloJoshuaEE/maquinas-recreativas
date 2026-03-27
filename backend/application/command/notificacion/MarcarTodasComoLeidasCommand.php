@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/notificacion/MarcarTodasComoLeidas.php
+ * application/commands/notificacion/MarcarTodasComoLeidasCommand.php
  *
  * Comando para marcar todas las notificaciones como leídas.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Notificacion;
 /**
  * Class MarcarTodasComoLeidas
  */
-final class MarcarTodasComoLeidas
+final class MarcarTodasComoLeidasCommand
 {
     private string $idUsuario;
 

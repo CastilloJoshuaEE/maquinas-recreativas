@@ -1,6 +1,6 @@
 <?php
 $envPath = __DIR__ . '/../.env';
-
+// backend/infrastructure/database/Database.php
 if (!file_exists($envPath)) {
     die("Archivo .env no encontrado");
 }

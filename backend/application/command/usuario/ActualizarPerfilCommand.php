@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/usuario/ActualizarPerfil.php
+ * application/commands/usuario/ActualizarPerfilCommand.php
  *
  * Comando para que un usuario actualice su propio perfil.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Usuario;
 /**
  * Class ActualizarPerfil
  */
-final class ActualizarPerfil
+final class ActualizarPerfilCommand
 {
     private string $id;
     private string $nombre;

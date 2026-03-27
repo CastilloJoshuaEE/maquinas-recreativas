@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerMaquinasOperativasPorComercio.php
+ * application/queries/recaudacion/ObtenerMaquinasOperativasPorComercioQuery.php
  *
  * Query para obtener máquinas operativas por comercio.
  *

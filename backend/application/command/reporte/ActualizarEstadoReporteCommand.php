@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/reporte/ActualizarEstadoReporte.php
+ * application/commands/reporte/ActualizarEstadoReporteCommand.php
  *
  * Comando para actualizar el estado de un reporte.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Reporte;
 /**
  * Class ActualizarEstadoReporte
  */
-final class ActualizarEstadoReporte
+final class ActualizarEstadoReporteCommand
 {
     private string $idReporte;
     private string $estado;

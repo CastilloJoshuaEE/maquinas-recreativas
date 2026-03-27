@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/maquina/ObtenerMaquinasPorTecnicoEnsamblador.php
+ * application/queries/maquina/ObtenerMaquinasPorTecnicoEnsambladorQuery.php
  *
  * Query para obtener máquinas asignadas a un técnico ensamblador.
  *

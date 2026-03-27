@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/bootstrap/cors.php
  * maquinas_recreativas - CORS Configuration
  * 
  * Maneja las reglas CORS (Cross-Origin Resource Sharing).

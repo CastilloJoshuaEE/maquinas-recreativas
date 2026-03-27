@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/reporte/ObtenerChatCompleto.php
+ * application/queries/reporte/ObtenerChatCompletoQuery.php
  *
  * Query para obtener chat completo entre dos usuarios (reportes + comentarios).
  *

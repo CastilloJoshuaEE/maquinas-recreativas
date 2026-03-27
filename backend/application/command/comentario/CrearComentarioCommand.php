@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/comentario/CrearComentario.php
+ * application/commands/comentario/CrearComentarioCommand.php
  *
  * Comando para crear un comentario.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Comentario;
 /**
  * Class CrearComentario
  */
-final class CrearComentario
+final class CrearComentarioCommand
 {
     private string $idReporte;
     private string $idUsuarioEmisor;

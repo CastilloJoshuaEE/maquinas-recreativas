@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/componente/ObtenerComponentesEnUso.php
+ * application/queries/componente/ObtenerComponentesEnUsoQuery.php
  *
  * Query para obtener componentes en uso por un usuario.
  *

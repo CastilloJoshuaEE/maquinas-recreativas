@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/maquina/ObtenerMaquinasPorEstado.php
+ * application/queries/maquina/ObtenerMaquinasPorEstadoQuery.php
  *
  * Query para obtener máquinas por estado.
  *

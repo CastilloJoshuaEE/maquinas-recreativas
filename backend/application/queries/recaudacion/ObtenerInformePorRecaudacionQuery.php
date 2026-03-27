@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerInformePorRecaudacion.php
+ * application/queries/recaudacion/ObtenerInformePorRecaudacionQuery.php
  *
  * Query para obtener informe por recaudación.
  *

@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/notificacion/ObtenerNotificacionesMaquina.php
+ * application/queries/notificacion/ObtenerNotificacionesMaquinaQuery.php
  *
  * Query para obtener notificaciones de máquinas por usuario.
  *

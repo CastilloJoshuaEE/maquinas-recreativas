@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/GenerarPlaca.php
+ * application/commands/maquina/GenerarPlacaComand.php
  *
  * Comando para generar una placa (componente logístico).
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class GenerarPlaca
  */
-final class GenerarPlaca
+final class GenerarPlacaComand
 {
     private string $idTecnico;
     public function __construct(string $idTecnico){

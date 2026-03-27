@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/reporte/ObtenerReportesPorUsuario.php
+ * application/queries/reporte/ObtenerReportesPorUsuarioQuery.php
  *
  * Query para obtener reportes por usuario.
  *

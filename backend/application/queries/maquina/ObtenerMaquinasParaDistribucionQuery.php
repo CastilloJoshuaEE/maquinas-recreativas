@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/maquina/ObtenerMaquinasParaDistribucion.php
+ * application/queries/maquina/ObtenerMaquinasParaDistribucionQuery.php
  *
  * Query para obtener máquinas listas para distribución.
  *

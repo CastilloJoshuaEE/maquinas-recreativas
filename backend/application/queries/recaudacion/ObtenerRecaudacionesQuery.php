@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/recaudacion/ObtenerRecaudaciones.php
+ * application/queries/recaudacion/ObtenerRecaudacionesQuery.php
  *
  * Query para obtener recaudaciones con filtros.
  *

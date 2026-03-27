@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../helper/CifradoHelper.php';
-
+// backend/infrastructure/database/Inserter.php
 class Inserter {
     private $connection;
 

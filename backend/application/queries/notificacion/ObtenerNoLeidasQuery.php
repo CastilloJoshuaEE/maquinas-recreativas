@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/notificacion/ObtenerNoLeidas.php
+ * application/queries/notificacion/ObtenerNoLeidasQuery.php
  *
  * Query para obtener cantidad de notificaciones no leídas (máquinas).
  *

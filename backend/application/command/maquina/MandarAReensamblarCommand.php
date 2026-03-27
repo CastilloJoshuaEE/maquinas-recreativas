@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/MandarAReensamblar.php
+ * application/commands/maquina/MandarAReensamblarCommand.php
  *
  * Comando para enviar una máquina a reensamblar.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class MandarAReensamblar
  */
-final class MandarAReensamblar
+final class MandarAReensamblarCommand
 {
     private string $idMaquina;
     private string $idRemitente;

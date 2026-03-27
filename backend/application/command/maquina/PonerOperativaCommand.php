@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/maquina/PonerOperativa.php
+ * application/commands/maquina/PonerOperativaCommand.php
  *
  * Comando para poner una máquina como operativa.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Maquina;
 /**
  * Class PonerOperativa
  */
-final class PonerOperativa
+final class PonerOperativaCommand
 {
     private string $idMaquina;
 

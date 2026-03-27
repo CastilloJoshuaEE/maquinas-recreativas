@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/config/dependencies.php
  * Archivo de configuración de dependencias (DI Container)
  * 
  * Centraliza la creación de objetos y sus dependencias para

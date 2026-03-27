@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/componente/UsarComponente.php
+ * application/commands/componente/UsarComponenteCommand.php
  *
  * Comando para usar/asignar un componente.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Componente;
 /**
  * Class UsarComponente
  */
-final class UsarComponente
+final class UsarComponenteCommand
 {
     private string $idComponente;
     private string $idUsuario;

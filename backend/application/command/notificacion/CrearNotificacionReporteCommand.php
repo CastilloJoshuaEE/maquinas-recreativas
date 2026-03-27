@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/notificacion/CrearNotificacionReporte.php
+ * application/commands/notificacion/CrearNotificacionReporteCommand.php
  *
  * Comando para crear una notificación de reporte.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Notificacion;
 /**
  * Class CrearNotificacionReporte
  */
-final class CrearNotificacionReporte
+final class CrearNotificacionReporteCommand
 {
     private string $idReporte;
     private string $idUsuario;

@@ -1,5 +1,6 @@
 <?php
 /**
+ * backend/core/App.php
  * maquinas_recreativas - Core Application
  * 
  * Clase principal que orquesta toda la aplicación.

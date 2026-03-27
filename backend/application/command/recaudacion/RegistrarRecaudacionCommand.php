@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/recaudacion/RegistrarRecaudacion.php
+ * application/commands/recaudacion/RegistrarRecaudacionCommand.php
  *
  * Comando para registrar una recaudación.
  *
@@ -12,7 +12,7 @@ namespace maquinas_recreativas\Application\Commands\Recaudacion;
 /**
  * Class RegistrarRecaudacion
  */
-final class RegistrarRecaudacion
+final class RegistrarRecaudacionCommand
 {
     private string $idMaquina;
     private string $idUsuario;
