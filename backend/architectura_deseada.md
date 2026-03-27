@@ -2,14 +2,14 @@ Basado en TU sistema de máquinas recreativas:
 backend/
 ├── .env
 ├── .htaccess (opcional)
-├── bootstrap/
+├── Bootstrap/
 │   ├── app.php
 │   ├── cors.php
 │   ├── env.php
 │   ├── rate_limit.php
 │   ├── security.php
 │   └── session.php
-├── config/
+├── Config/
 │   ├── .usuarios_iniciales.lock
 │   ├── app.php
 │   ├── constants.php
@@ -17,63 +17,63 @@ backend/
 │   ├── dependencies.php
 │   ├── env.php
 │   └── Inserter.php
-├── core/
+├── Core/
 │   ├── App.php
 │   ├── MiddlewarePipeline.php
 │   ├── Request.php
 │   ├── Response.php
 │   └── Router.php
-├── domain/
-│   ├── comentario/
+├── Domain/
+│   ├── Comentario/
 │   │   ├── Comentario.php
 │   │   └── ComentarioRepository.php
-│   ├── comercio/
+│   ├──Comercio/
 │   │   ├── Comercio.php
 │   │   └── ComercioRepository.php
-│   ├── componente/
+│   ├── Componente/
 │   │   ├── Componente.php
 │   │   ├── ComponenteRepository.php
 │   │   ├── ComponenteUsuario.php
 │   │   └── TipoComponente.php
-│   ├── distribucion/
+│   ├── Distribucion/
 │   │   ├── DistribucionRepository.php
 │   │   └── InformeDistribucion.php
-│   ├── historial/
+│   ├── Historial/
 │   │   ├── HistorialActividad.php
 │   │   ├── HistorialMaquina.php
 │   │   └── HistorialRepository.php
-│   ├── maquina/
+│   ├── Maquina/
 │   │   ├── EstadoMaquina.php
 │   │   ├── EtapaMaquina.php
 │   │   ├── MaquinaRecreativa.php
 │   │   └── MaquinaRepository.php
-│   ├── montaje/
+│   ├── Montaje/
 │   │   ├── Montaje.php
 │   │   └── MontajeRepository.php
-│   ├── notificacion/
+│   ├── Notificacion/
 │   │   ├── NotificacionMaquina.php
 │   │   ├── NotificacionReporte.php
 │   │   └── NotificacionRepository.php
-│   ├── recaudacion/
+│   ├── Recaudacion/
 │   │   ├── DetalleInforme.php
 │   │   ├── InformeRecaudacion.php
 │   │   ├── Recaudacion.php
 │   │   └── RecaudacionRepository.php
-│   ├── reporte/
+│   ├── Reporte/
 │   │   ├── EstadoReporte.php
 │   │   ├── Reporte.php
 │   │   └── ReporteRepository.php
-│   └── shared/
-│       ├── exceptions/
+│   └── Shared/
+│       ├── Exceptions/
 │       │   └── DomainException.php
-│       └── valueobjects/
+│       └── Valueobjects/
 │           ├── Email.php
 │           └── Uuid.php
-├── infrastructure/
-│   ├── database/
+├── Infrastructure/
+│   ├── Database/
 │   │   ├── Database.php
 │   │   └── Inserter.php
-│   ├── repositories/
+│   ├── Repositories/
 │   │   ├── MySQLAdministradorRepository.php
 │   │   ├── MySQLComentarioRepository.php
 │   │   ├── MySQLComercioRepository.php
@@ -86,7 +86,7 @@ backend/
 │   │   ├── MySQLRecaudacionRepository.php
 │   │   ├── MySQLReporteRepository.php
 │   │   └── MySQLUsuarioRepository.php
-│   └── security/
+│   └── Security/
 │       ├── BcryptPasswordHasher.php
 │       ├── CifradoHelper.php
 │       ├── HistorialHelper.php
@@ -94,15 +94,15 @@ backend/
 │       ├── RateLimiter.php
 │       ├── UsuarioHelper.php
 │       └── ValidationHelper.php
-├── application/
-│   ├── commands/
-│   │   ├── comentario/
+├── Application/
+│   ├── Commands/
+│   │   ├── Comentario/
 │   │   │   ├── CrearComentarioCommand.php
 │   │   │   └── CrearComentarioHandler.php
-│   │   ├── comercio/
+│   │   ├── Comercio/
 │   │   │   ├── RegistrarComercioCommand.php
 │   │   │   └── RegistrarComercioHandler.php
-│   │   ├── componente/
+│   │   ├── Componente/
 │   │   │   ├── AsignarCarcasaCommand.php
 │   │   │   ├── AsignarCarcasaHandler.php
 │   │   │   ├── LiberarComponenteCommand.php
@@ -111,7 +111,7 @@ backend/
 │   │   │   ├── LiberarComponentesCancelacionHandler.php
 │   │   │   ├── UsarComponenteCommand.php
 │   │   │   └── UsarComponenteHandler.php
-│   │   ├── maquina/
+│   │   ├── Maquina/
 │   │   │   ├── DarMantenimientoCommand.php
 │   │   │   ├── DarMantenimientoHandler.php
 │   │   │   ├── FinalizarMantenimientoCommand.php
@@ -130,7 +130,7 @@ backend/
 │   │   │   ├── RegistrarMaquinaHandler.php
 │   │   │   ├── RegistrarMontajeCommand.php
 │   │   │   └── RegistrarMontajeHandler.php
-│   │   ├── notificacion/
+│   │   ├── Notificacion/
 │   │   │   ├── CrearNotificacionMaquinaCommand.php
 │   │   │   ├── CrearNotificacionMaquinaHandler.php
 │   │   │   ├── CrearNotificacionReporteCommand.php
@@ -139,7 +139,7 @@ backend/
 │   │   │   ├── MarcarComoLeidaHandler.php
 │   │   │   ├── MarcarTodasComoLeidasCommand.php
 │   │   │   └── MarcarTodasComoLeidasHandler.php
-│   │   ├── recaudacion/
+│   │   ├── Recaudacion/
 │   │   │   ├── ActualizarRecaudacionCommand.php
 │   │   │   ├── ActualizarRecaudacionHandler.php
 │   │   │   ├── EliminarRecaudacionCommand.php
@@ -148,12 +148,12 @@ backend/
 │   │   │   ├── GuardarInformeHandler.php
 │   │   │   ├── RegistrarRecaudacionCommand.php
 │   │   │   └── RegistrarRecaudacionHandler.php
-│   │   ├── reporte/
+│   │   ├── Reporte/
 │   │   │   ├── ActualizarEstadoReporteCommand.php
 │   │   │   ├── ActualizarEstadoReporteHandler.php
 │   │   │   ├── CrearReporteCommand.php
 │   │   │   └── CrearReporteHandler.php
-│   │   └── usuario/
+│   │   └── Usuario/
 │   │       ├── ActualizarPerfilCommand.php
 │   │       ├── ActualizarPerfilHandler.php
 │   │       ├── ActualizarUsuarioAsignadoCommand.php
@@ -176,14 +176,14 @@ backend/
 │   │       ├── RegistrarUsuarioAdminHandler.php
 │   │       ├── RegistrarUsuarioCommand.php
 │   │       └── RegistrarUsuarioHandler.php
-│   └── queries/
-│       ├── comentario/
+│   └── Queries/
+│       ├── Comentario/
 │       │   ├── ObtenerComentariosPorReporte.php
 │       │   └── ObtenerComentariosPorReporteHandler.php
-│       ├── comercio/
+│       ├── Comercio/
 │       │   ├── ObtenerComerciosHandler.php
 │       │   └── ObtenerComerciosQuery.php
-│       ├── componente/
+│       ├── Componente/
 │       │   ├── ObtenerComponentes.php
 │       │   ├── ObtenerComponentesDisponiblesHandler.php
 │       │   ├── ObtenerComponentesDisponiblesQuery.php
@@ -191,10 +191,10 @@ backend/
 │       │   ├── ObtenerComponentesEnUsoQuery.php
 │       │   ├── ObtenerComponentesHandler.php
 │       │   └── ObtenerComponentesQuery.php
-│       ├── distribucion/
+│       ├── Distribucion/
 │       │   ├── ObtenerInformesDistribucionHandler.php
 │       │   └── ObtenerInformesDistribucionQuery.php
-│       ├── historial/
+│       ├── Historial/
 │       │   ├── ObtenerHistorialGeneralHandler.php
 │       │   ├── ObtenerHistorialGeneralQuery.php
 │       │   ├── ObtenerHistorialPorMaquinaHandler.php
@@ -203,7 +203,7 @@ backend/
 │       │   ├── ObtenerHistorialPorUsuarioQuery.php
 │       │   ├── ObtenerResumenRecienteHandler.php
 │       │   └── ObtenerResumenRecienteQuery.php
-│       ├── maquina/
+│       ├── Maquina/
 │       │   ├── ObtenerComponentesMaquinaHandler.php
 │       │   ├── ObtenerComponentesMaquinaQuery.php
 │       │   ├── ObtenerMaquinasParaDistribucionHandler.php
@@ -218,7 +218,7 @@ backend/
 │       │   ├── ObtenerMaquinasPorTecnicoEnsambladorQuery.php
 │       │   ├── ObtenerMaquinasPorTecnicoMantenimientoHandler.php
 │       │   └── ObtenerMaquinasPorTecnicoMantenimientoQuery.php
-│       ├── notificacion/
+│       ├── Notificacion/
 │       │   ├── ObtenerCantidadNoLeidasHandler.php
 │       │   ├── ObtenerCantidadNoLeidasQuery.php
 │       │   ├── ObtenerNoLeidasHandler.php
@@ -227,7 +227,7 @@ backend/
 │       │   ├── ObtenerNotificacionesMaquinaQuery.php
 │       │   ├── ObtenerNotificacionesReporteHandler.php
 │       │   └── ObtenerNotificacionesReporteQuery.php
-│       ├── recaudacion/
+│       ├── Recaudacion/
 │       │   ├── ObtenerComercioRecaudacionHandler.php
 │       │   ├── ObtenerComercioRecaudacionQuery.php
 │       │   ├── ObtenerInformePorRecaudacionHandler.php
@@ -242,7 +242,7 @@ backend/
 │       │   ├── ObtenerRecaudacionPorIdQuery.php
 │       │   ├── ObtenerResumenRecaudacionesHandler.php
 │       │   └── ObtenerResumenRecaudacionesQuery.php
-│       └── usuario/
+│       └── Usuario/
 │           ├── BuscarPorEmailHandler.php
 │           ├── BuscarPorEmailQuery.php
 │           ├── ObtenerHistorialActividadesHandler.php
@@ -255,8 +255,8 @@ backend/
 │           ├── ObtenerUsuarioPorIdQuery.php
 │           ├── ObtenerUsuariosPorTipoHandler.php
 │           └── ObtenerUsuariosPorTipoQuery.php
-├── interfaces/http/
-│   ├── controllers/
+├── Interfaces/Http/
+│   ├── Controllers/
 │   │   ├── AdministradorController.php
 │   │   ├── ComentarioController.php
 │   │   ├── ComercioController.php
@@ -271,7 +271,7 @@ backend/
 │   │   ├── TecnicoEnsambladorController.php
 │   │   ├── TecnicoMantenimientoController.php
 │   │   └── UsuarioController.php
-│   └── routes/
+│   └── Routes/
 │       ├── administrador.routes.php
 │       ├── auth.routes.php
 │       ├── comentario.routes.php
@@ -286,7 +286,7 @@ backend/
 │       ├── reporte.routes.php
 │       ├── usuario.private.routes.php
 │       └── usuario.public.routes.php
-├── middleware/
+├── Middleware/
 │   ├── AuthMiddleware.php
 │   ├── CorsMiddleware.php
 │   ├── JsonResponseMiddleware.php
@@ -297,9 +297,9 @@ backend/
 │   ├── robots.txt
 │   ├── serve.php
 │   └── sitemap.xml
-├── scripts/
+├── Scripts/
 │   └── hash.php
-└── storage/
-    ├── cache/
-    ├── logs/
+└── Storage/
+    ├── Cache/
+    ├── Logs/
     └── rate_limits.json

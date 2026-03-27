@@ -14,171 +14,171 @@
 // =============================================
 // CARGAR CONFIGURACIÓN BASE
 // =============================================
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/constants.php';
 
 // =============================================
 // HELPERS Y UTILIDADES
 // =============================================
-require_once __DIR__ . '/../infrastructure/security/CifradoHelper.php';
-require_once __DIR__ . '/../infrastructure/security/RateLimiter.php';
-require_once __DIR__ . '/../infrastructure/security/UsuarioHelper.php';
-require_once __DIR__ . '/../infrastructure/security/ValidationHelper.php';
-require_once __DIR__ . '/../infrastructure/security/HistorialHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/RateLimiter.php';
+require_once __DIR__ . '/../Infrastructure/Security/UsuarioHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/ValidationHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/HistorialHelper.php';
 
 // =============================================
-// DOMAIN - VALUE OBJECTS
+// Domain - VALUE OBJECTS
 // =============================================
-require_once __DIR__ . '/../domain/shared/ValueObjects/Uuid.php';
-require_once __DIR__ . '/../domain/shared/ValueObjects/Email.php';
-
-// =============================================
-// DOMAIN - EXCEPTIONS
-// =============================================
-require_once __DIR__ . '/../domain/shared/Exceptions/DomainException.php';
+require_once __DIR__ . '/../Domain/Shared/ValueObjects/Uuid.php';
+require_once __DIR__ . '/../Domain/Shared/ValueObjects/Email.php';
 
 // =============================================
-// DOMAIN - ENTIDADES
+// Domain - EXCEPTIONS
 // =============================================
-require_once __DIR__ . '/../domain/usuario/Usuario.php';
-require_once __DIR__ . '/../domain/usuario/Tecnico.php';
-require_once __DIR__ . '/../domain/usuario/Logistica.php';
-require_once __DIR__ . '/../domain/usuario/TipoUsuario.php';
-require_once __DIR__ . '/../domain/usuario/EstadoUsuario.php';
-
-require_once __DIR__ . '/../domain/comercio/Comercio.php';
-
-require_once __DIR__ . '/../domain/maquina/MaquinaRecreativa.php';
-require_once __DIR__ . '/../domain/maquina/EstadoMaquina.php';
-require_once __DIR__ . '/../domain/maquina/EtapaMaquina.php';
-
-require_once __DIR__ . '/../domain/componente/Componente.php';
-require_once __DIR__ . '/../domain/componente/TipoComponente.php';
-require_once __DIR__ . '/../domain/componente/ComponenteUsuario.php';
-
-require_once __DIR__ . '/../domain/montaje/Montaje.php';
-
-require_once __DIR__ . '/../domain/historial/HistorialMaquina.php';
-require_once __DIR__ . '/../domain/historial/HistorialActividad.php';
-
-require_once __DIR__ . '/../domain/distribucion/InformeDistribucion.php';
-
-require_once __DIR__ . '/../domain/recaudacion/Recaudacion.php';
-require_once __DIR__ . '/../domain/recaudacion/InformeRecaudacion.php';
-require_once __DIR__ . '/../domain/recaudacion/DetalleInforme.php';
-
-require_once __DIR__ . '/../domain/notificacion/NotificacionMaquina.php';
-require_once __DIR__ . '/../domain/notificacion/NotificacionReporte.php';
-
-require_once __DIR__ . '/../domain/reporte/Reporte.php';
-require_once __DIR__ . '/../domain/reporte/EstadoReporte.php';
-
-require_once __DIR__ . '/../domain/comentario/Comentario.php';
+require_once __DIR__ . '/../Domain/Shared/Exceptions/DomainException.php';
 
 // =============================================
-// DOMAIN - REPOSITORY INTERFACES
+// Domain - ENTIDADES
 // =============================================
-require_once __DIR__ . '/../domain/usuario/UsuarioRepository.php';
-require_once __DIR__ . '/../domain/comercio/ComercioRepository.php';
-require_once __DIR__ . '/../domain/maquina/MaquinaRepository.php';
-require_once __DIR__ . '/../domain/componente/ComponenteRepository.php';
-require_once __DIR__ . '/../domain/montaje/MontajeRepository.php';
-require_once __DIR__ . '/../domain/historial/HistorialRepository.php';
-require_once __DIR__ . '/../domain/distribucion/DistribucionRepository.php';
-require_once __DIR__ . '/../domain/recaudacion/RecaudacionRepository.php';
-require_once __DIR__ . '/../domain/notificacion/NotificacionRepository.php';
-require_once __DIR__ . '/../domain/reporte/ReporteRepository.php';
-require_once __DIR__ . '/../domain/comentario/ComentarioRepository.php';
+require_once __DIR__ . '/../Domain/Usuario/Usuario.php';
+require_once __DIR__ . '/../Domain/Usuario/Tecnico.php';
+require_once __DIR__ . '/../Domain/Usuario/Logistica.php';
+require_once __DIR__ . '/../Domain/Usuario/TipoUsuario.php';
+require_once __DIR__ . '/../Domain/Usuario/EstadoUsuario.php';
+
+require_once __DIR__ . '/../Domain/comercio/Comercio.php';
+
+require_once __DIR__ . '/../Domain/Maquina/MaquinaRecreativa.php';
+require_once __DIR__ . '/../Domain/Maquina/EstadoMaquina.php';
+require_once __DIR__ . '/../Domain/Maquina/EtapaMaquina.php';
+
+require_once __DIR__ . '/../Domain/Componente/Componente.php';
+require_once __DIR__ . '/../Domain/Componente/TipoComponente.php';
+require_once __DIR__ . '/../Domain/Componente/ComponenteUsuario.php';
+
+require_once __DIR__ . '/../Domain/Montaje/Montaje.php';
+
+require_once __DIR__ . '/../Domain/Historial/HistorialMaquina.php';
+require_once __DIR__ . '/../Domain/Historial/HistorialActividad.php';
+
+require_once __DIR__ . '/../Domain/Distribucion/InformeDistribucion.php';
+
+require_once __DIR__ . '/../Domain/Recaudacion/Recaudacion.php';
+require_once __DIR__ . '/../Domain/Recaudacion/InformeRecaudacion.php';
+require_once __DIR__ . '/../Domain/Recaudacion/DetalleInforme.php';
+
+require_once __DIR__ . '/../Domain/Notificacion/NotificacionMaquina.php';
+require_once __DIR__ . '/../Domain/Notificacion/NotificacionReporte.php';
+
+require_once __DIR__ . '/../Domain/Reporte/Reporte.php';
+require_once __DIR__ . '/../Domain/Reporte/EstadoReporte.php';
+
+require_once __DIR__ . '/../Domain/comentario/Comentario.php';
+
+// =============================================
+// Domain - REPOSITORY INTERFACES
+// =============================================
+require_once __DIR__ . '/../Domain/Usuario/UsuarioRepository.php';
+require_once __DIR__ . '/../Domain/comercio/ComercioRepository.php';
+require_once __DIR__ . '/../Domain/Maquina/MaquinaRepository.php';
+require_once __DIR__ . '/../Domain/Componente/ComponenteRepository.php';
+require_once __DIR__ . '/../Domain/Montaje/MontajeRepository.php';
+require_once __DIR__ . '/../Domain/Historial/HistorialRepository.php';
+require_once __DIR__ . '/../Domain/Distribucion/DistribucionRepository.php';
+require_once __DIR__ . '/../Domain/Recaudacion/RecaudacionRepository.php';
+require_once __DIR__ . '/../Domain/Notificacion/NotificacionRepository.php';
+require_once __DIR__ . '/../Domain/Reporte/ReporteRepository.php';
+require_once __DIR__ . '/../Domain/comentario/ComentarioRepository.php';
 
 // =============================================
 // INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
 // =============================================
-require_once __DIR__ . '/../infrastructure/database/Database.php';
-require_once __DIR__ . '/../infrastructure/database/Inserter.php';
+require_once __DIR__ . '/../Infrastructure/Database/Database.php';
+require_once __DIR__ . '/../Infrastructure/Database/Inserter.php';
 
-require_once __DIR__ . '/../infrastructure/repositories/MySQLUsuarioRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLAdministradorRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLComercioRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLMaquinaRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLComponenteRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLMontajeRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLHistorialRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLDistribucionRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLRecaudacionRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLNotificacionRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLReporteRepository.php';
-require_once __DIR__ . '/../infrastructure/repositories/MySQLComentarioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLUsuarioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLAdministradorRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComercioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLMaquinaRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComponenteRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLMontajeRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLHistorialRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLDistribucionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLRecaudacionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLNotificacionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLReporteRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComentarioRepository.php';
 
 // =============================================
 // INFRASTRUCTURE - SECURITY
 // =============================================
-require_once __DIR__ . '/../infrastructure/security/CifradoHelper.php';
-require_once __DIR__ . '/../infrastructure/security/RateLimiter.php';
-require_once __DIR__ . '/../infrastructure/security/UsuarioHelper.php';
-require_once __DIR__ . '/../infrastructure/security/ValidationHelper.php';
-require_once __DIR__ . '/../infrastructure/security/HistorialHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/RateLimiter.php';
+require_once __DIR__ . '/../Infrastructure/Security/UsuarioHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/ValidationHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/HistorialHelper.php';
 
 // =============================================
 // APPLICATION - COMMANDS
 // =============================================
-// Usuario commands
-require_once __DIR__ . '/../application/commands/usuario/RegistrarUsuarioCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/RegistrarUsuarioHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/RegistrarUsuarioAdminCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/RegistrarUsuarioAdminHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/ActualizarPerfilHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/ActualizarUsuarioAsignadoCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/ActualizarUsuarioAsignadoHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/RecuperarContrasenaCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/RecuperarContrasenaHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/CambiarEstadoUsuarioCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/CambiarEstadoUsuarioHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/EliminarUsuarioCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/EliminarUsuarioHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/LoginCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/LoginHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/LogoutCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/LogoutHandler.php';
-require_once __DIR__ . '/../application/commands/usuario/RegistrarActividadCommand.php';
-require_once __DIR__ . '/../application/commands/usuario/RegistrarActividadHandler.php';
+// Usuario Commands
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioAdminCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioAdminHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarPerfilHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioAsignadoCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioAsignadoHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RecuperarContrasenaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RecuperarContrasenaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/CambiarEstadoUsuarioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/CambiarEstadoUsuarioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/EliminarUsuarioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/EliminarUsuarioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/LoginCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/LoginHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/LogoutCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/LogoutHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadHandler.php';
 
-// Comercio commands
-require_once __DIR__ . '/../application/commands/comercio/RegistrarComercioCommand.php';
-require_once __DIR__ . '/../application/commands/comercio/RegistrarComercioHandler.php';
+// Comercio Commands
+require_once __DIR__ . '/../Application/Commands/comercio/RegistrarComercioCommand.php';
+require_once __DIR__ . '/../Application/Commands/comercio/RegistrarComercioHandler.php';
 
 // =============================================
 // APPLICATION - QUERIES
 // =============================================
-// Usuario queries
-require_once __DIR__ . '/../application/queries/usuario/ObtenerUsuarioPorIdQuery.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerUsuarioPorIdHandler.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerTodosUsuariosHandler.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerTecnicosPorEspecialidadHandler.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerUsuariosPorTipoQuery.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerUsuariosPorTipoHandler.php';
-require_once __DIR__ . '/../application/queries/usuario/BuscarPorEmailQuery.php';
-require_once __DIR__ . '/../application/queries/usuario/BuscarPorEmailHandler.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerHistorialActividadesQuery.php';
-require_once __DIR__ . '/../application/queries/usuario/ObtenerHistorialActividadesHandler.php';
+// Usuario Queries
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdQuery.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTodosUsuariosHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoQuery.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/BuscarPorEmailQuery.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/BuscarPorEmailHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActividadesQuery.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActividadesHandler.php';
 
-// Comercio queries
-require_once __DIR__ . '/../application/queries/comercio/ObtenerComerciosQuery.php';
-require_once __DIR__ . '/../application/queries/comercio/ObtenerComerciosHandler.php';
+// Comercio Queries
+require_once __DIR__ . '/../Application/Queries/comercio/ObtenerComerciosQuery.php';
+require_once __DIR__ . '/../Application/Queries/comercio/ObtenerComerciosHandler.php';
 
 // =============================================
 // INTERFACES - CONTROLLERS
 // =============================================
-require_once __DIR__ . '/../interfaces/http/controllers/UsuarioController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/AdministradorController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/ComercioController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/MaquinaController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/ComponenteController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/HistorialMaquinaController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/DistribucionController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/InformeController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/NotificacionController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/ReporteController.php';
-require_once __DIR__ . '/../interfaces/http/controllers/ComentarioController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/UsuarioController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/AdministradorController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/ComercioController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/MaquinaController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/ComponenteController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/HistorialMaquinaController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/DistribucionController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/InformeController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/NotificacionController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/ReporteController.php';
+require_once __DIR__ . '/../interfaces/Http/Controllers/ComentarioController.php';
 
 /**
  * Clase contenedor de dependencias (Service Container)

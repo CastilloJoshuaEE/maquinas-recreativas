@@ -17,7 +17,7 @@ use InvalidArgumentException;
  * Contiene las reglas de negocio que debe cumplir un usuario.
  * 
  */
-final class Usuario{
+class Usuario{
     private Uuid $id;
     private string $nombre;
     private string $apellido;
