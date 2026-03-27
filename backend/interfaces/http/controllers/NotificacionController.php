@@ -1,212 +1,207 @@
 <?php
-require_once __DIR__ . '/../services/NotificacionService.php';
 /**
- * Controlador que expone puntos de acceso HTTP para gestionar notificaciones. Valida solicitudes y se comunica con NotificacionService.
+ * maquinas_recreativas - Controlador de Notificaciones
+ *
+ * Maneja las operaciones de notificaciones.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
  */
-class NotificacionController {
-    private $service;
 
-    public function __construct() {
-        $this->service = new NotificacionService();
-    }
-    
-    /**
-     * Obtiene notificaciones por usuario.
-     * @param int $idUsuario ID del usuario destinatario.
-     */
-    public function obtenerPorUsuario($idUsuario) {
-        $response = $this->service->obtenerNotificaciones($idUsuario);
-        $this->sendResponse($response);
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaCommand;
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionReporteCommand;
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionReporteHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarComoLeidaCommand;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarComoLeidaHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarTodasComoLeidasCommand;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarTodasComoLeidasHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesMaquinaQuery;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesMaquinaHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesReporteQuery;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesReporteHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerCantidadNoLeidasQuery;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerCantidadNoLeidasHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNoLeidasQuery;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNoLeidasHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class NotificacionController
+{
+    private ObtenerNotificacionesMaquinaHandler $obtenerNotificacionesMaquinaHandler;
+    private ObtenerNotificacionesReporteHandler $obtenerNotificacionesReporteHandler;
+    private ObtenerCantidadNoLeidasHandler $obtenerCantidadNoLeidasHandler;
+    private ObtenerNoLeidasHandler $obtenerNoLeidasHandler;
+    private CrearNotificacionMaquinaHandler $crearNotificacionMaquinaHandler;
+    private CrearNotificacionReporteHandler $crearNotificacionReporteHandler;
+    private MarcarComoLeidaHandler $marcarComoLeidaHandler;
+    private MarcarTodasComoLeidasHandler $marcarTodasComoLeidasHandler;
+
+    public function __construct(
+        ObtenerNotificacionesMaquinaHandler $obtenerNotificacionesMaquinaHandler,
+        ObtenerNotificacionesReporteHandler $obtenerNotificacionesReporteHandler,
+        ObtenerCantidadNoLeidasHandler $obtenerCantidadNoLeidasHandler,
+        ObtenerNoLeidasHandler $obtenerNoLeidasHandler,
+        CrearNotificacionMaquinaHandler $crearNotificacionMaquinaHandler,
+        CrearNotificacionReporteHandler $crearNotificacionReporteHandler,
+        MarcarComoLeidaHandler $marcarComoLeidaHandler,
+        MarcarTodasComoLeidasHandler $marcarTodasComoLeidasHandler
+    ) {
+        $this->obtenerNotificacionesMaquinaHandler = $obtenerNotificacionesMaquinaHandler;
+        $this->obtenerNotificacionesReporteHandler = $obtenerNotificacionesReporteHandler;
+        $this->obtenerCantidadNoLeidasHandler = $obtenerCantidadNoLeidasHandler;
+        $this->obtenerNoLeidasHandler = $obtenerNoLeidasHandler;
+        $this->crearNotificacionMaquinaHandler = $crearNotificacionMaquinaHandler;
+        $this->crearNotificacionReporteHandler = $crearNotificacionReporteHandler;
+        $this->marcarComoLeidaHandler = $marcarComoLeidaHandler;
+        $this->marcarTodasComoLeidasHandler = $marcarTodasComoLeidasHandler;
     }
 
     /**
-     * Crea una nueva notificación.
-     * Valida todos los campos requeridos para una notificación.
+     * Obtener notificaciones de máquinas por usuario
+     * @route GET /v1/notificaciones_maquina/{uuid}
      */
-  public function create() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idRemitente']) || !isset($data['idDestinatario']) || 
-            !isset($data['idMaquina']) || !isset($data['tipo']) || !isset($data['mensaje'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+    public function obtenerPorUsuario(Request $request, string $idDestinatario): Response
+    {
+        $query = new ObtenerNotificacionesMaquinaQuery($idDestinatario);
+        $result = $this->obtenerNotificacionesMaquinaHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'notificaciones' => $result['notificaciones'],
+            'count' => $result['count']
+        ]);
+    }
+
+    /**
+     * Obtener notificaciones de reportes por usuario
+     * @route GET /v1/notificaciones/{uuid}
+     */
+    public function getNotificaciones(Request $request, string $idUsuario): Response
+    {
+        $query = new ObtenerNotificacionesReporteQuery($idUsuario);
+        $result = $this->obtenerNotificacionesReporteHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'notificaciones' => $result['notificaciones'],
+            'count' => $result['count']
+        ]);
+    }
+
+    /**
+     * Marcar notificación como leída
+     * @route POST /v1/notificaciones/{uuid}/marcarla-leida
+     */
+    public function marcarComoLeidaNotificacion(Request $request, string $idNotificacion): Response
+    {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
-        
-        $response = $this->service->crearNotificacion(
+
+        $command = new MarcarComoLeidaCommand($idNotificacion, $userId);
+        $this->marcarComoLeidaHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Notificación marcada como leída'
+        ]);
+    }
+
+    /**
+     * Marcar todas las notificaciones como leídas
+     * @route POST /v1/notificaciones/marcarla-todas-leidas
+     */
+    public function marcarTodasComoLeidas(Request $request): Response
+    {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new MarcarTodasComoLeidasCommand($userId);
+        $this->marcarTodasComoLeidasHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Todas las notificaciones marcadas como leídas'
+        ]);
+    }
+
+    /**
+     * Crear notificación de máquina
+     * @route POST /v1/notificaciones/create
+     */
+    public function create(Request $request): Response
+    {
+        $data = $request->json();
+
+        $required = ['idRemitente', 'idDestinatario', 'idMaquina', 'tipo', 'mensaje'];
+        foreach ($required as $field) {
+            if (!isset($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
+            }
+        }
+
+        $command = new CrearNotificacionMaquinaCommand(
             $data['idRemitente'],
             $data['idDestinatario'],
             $data['idMaquina'],
             $data['tipo'],
             $data['mensaje']
         );
-        $this->sendResponse($response);
+        $this->crearNotificacionMaquinaHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Notificación creada exitosamente'
+        ], 201);
     }
+
     /**
-     * Marca una notificación como leída.
-     * @return void
+     * Marcar como leída (versión legacy)
+     * @route POST /v1/notificaciones/marcar-leida
      */
-    public function marcarComoLeida() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
+    public function marcarComoLeida(Request $request): Response
+    {
+        $data = $request->json();
+
         if (!isset($data['idNotificacion'])) {
-            $this->sendResponse(['success' => false, 'message' => 'ID de notificación requerido']);
-            return;
-        }
-        
-        $response = $this->service->marcarComoLeida($data['idNotificacion']);
-        $this->sendResponse($response);
-    }
-
-
-    /**
-     * Retorna las notificaciones no leídas de un usuario.
-     * @param mixed $idUsuario
-     * @return void
-     */
-    public function obtenerNoLeidas($idUsuario) {
-        $response = $this->service->obtenerNoLeidas($idUsuario);
-        $this->sendResponse($response);
-    }
-    /**
-    * Retorna notificaciones solo si el usuario de sesión coincide con $userId.   
-    */
-
-    public function getByUser($userId) {
-        session_start();
-        if ($_SESSION['ID_Usuario'] != $userId) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
+            throw new DomainException('ID de notificación requerido', 400);
         }
 
-        $response = $this->service->obtenerNotificacionesPorUsuario($userId);
-        $this->sendResponse($response);
-    }
-    /**
-     * Obtiene todas las notificaciones de un usuario.
-     * @param mixed $userId
-     * @return void
-     */
-    public function getNotificaciones($userId) {
-        try {
-            $response = $this->service->obtenerNotificacionesPorUsuario($userId);
-            
-            if (empty($response['notificaciones'])) {
-                echo json_encode(['success' => true, 'notificaciones' => []]);
-                return;
-            }
-            
-            header('Content-Type: application/json');
-            echo json_encode($response);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-    /**
-     * Marca como leída una notificación específica, verificando al usuario autenticado.
-     * @param mixed $notificacionId
-     * @throws \Exception
-     * @return void
-     */
-    // En NotificacionController.php - 
-public function marcarComoLeidaNotificacion($notificacionId) {
-    try {
-        session_start();
         $userId = $_SESSION['ID_Usuario'] ?? null;
-        
         if (!$userId) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
+            throw new DomainException('Usuario no autenticado', 401);
         }
 
-        // Validar que el ID de notificación no esté vacío
-        if (empty($notificacionId)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'ID de notificación requerido']);
-            return;
-        }
+        $command = new MarcarComoLeidaCommand($data['idNotificacion'], $userId);
+        $this->marcarComoLeidaHandler->handle($command);
 
-        $response = $this->service->marcarComoLeidaNotificacion($notificacionId, $userId);
-        
-        // Asegurarse de que la respuesta sea siempre un objeto JSON válido
-        header('Content-Type: application/json');
-        
-        if (!is_array($response)) {
-            $response = ['success' => false, 'message' => 'Respuesta inválida del servicio'];
-        }
-        
-        echo json_encode($response);
-        
-    } catch (Exception $e) {
-        error_log("Error en marcarComoLeidaNotificacion: " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error interno del servidor: ' . $e->getMessage()
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Notificación marcada como leída'
+        ]);
+    }
+
+    /**
+     * Obtener cantidad de notificaciones no leídas (reportes)
+     * @route GET /v1/notificaciones/no-leidas/{uuid}
+     */
+    public function obtenerNoLeidas(Request $request, string $idUsuario): Response
+    {
+        $query = new ObtenerCantidadNoLeidasQuery($idUsuario);
+        $result = $this->obtenerCantidadNoLeidasHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'cantidad' => $result['cantidad']
         ]);
     }
 }
-
-    /**
-     * Marca todas las notificaciones del usuario autenticado como leídas.
-     * @throws \Exception
-     * @return void
-     */
-    public function marcarTodasComoLeidas() {
-    try {
-        session_start();
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        
-        if (!$userId) {
-            throw new Exception('No autorizado');
-        }
-
-        $result = $this->service->marcarTodasComoLeidas($userId);
-
-        header('Content-Type: application/json');
-
-        echo json_encode([
-            'success' => $result,
-            'message' => $result 
-                ? 'Todas las notificaciones marcadas como leídas'
-                : 'Error al actualizar notificaciones'
-        ]);
-
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
-        ]);
-    }
-}
-
-    /**
-     * Devuelve el número de notificaciones no leídas de un usuario autenticado.
-     * @param mixed $userId
-     * @return void
-     */
-    public function getUnreadCount($userId) {
-        session_start();
-        if ($_SESSION['ID_Usuario'] != $userId) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-
-        $response = $this->service->obtenerCantidadNoLeidas($userId);
-        $this->sendResponse($response);
-    }
-    /**
-     * Método privado para enviar respuestas en formato JSON.
-     * @param mixed $response
-     * @return void
-     */
-    private function sendResponse($response) {
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
-}
-?>

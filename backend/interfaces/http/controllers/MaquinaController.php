@@ -1,212 +1,456 @@
 <?php
-require_once __DIR__ . '/../services/MaquinaService.php';
+/**
+ * maquinas_recreativas - Controlador de Máquinas
+ *
+ * Maneja las operaciones CRUD de máquinas recreativas.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
+ */
 
-class MaquinaController {
-    private $service;
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-    public function __construct() {
-        $this->service = new MaquinaService();
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMaquinaCommand;
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMaquinaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\GenerarPlacaCommand;
+use maquinas_recreativas\Application\Commands\Maquina\GenerarPlacaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMontajeCommand;
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMontajeHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAComprobacionCommand;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAComprobacionHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAReensamblarCommand;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAReensamblarHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarADistribucionCommand;
+use maquinas_recreativas\Application\Commands\Maquina\MandarADistribucionHandler;
+use maquinas_recreativas\Application\Commands\Maquina\PonerOperativaCommand;
+use maquinas_recreativas\Application\Commands\Maquina\PonerOperativaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoCommand;
+use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoHandler;
+use maquinas_recreativas\Application\Commands\Maquina\FinalizarMantenimientoCommand;
+use maquinas_recreativas\Application\Commands\Maquina\FinalizarMantenimientoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoEnsambladorQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoEnsambladorHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoComprobadorQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoComprobadorHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoMantenimientoQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoMantenimientoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEstadoQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEstadoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEtapaQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEtapaHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribucionQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribucionHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class MaquinaController
+{
+    private RegistrarMaquinaHandler $registrarMaquinaHandler;
+    private GenerarPlacaHandler $generarPlacaHandler;
+    private RegistrarMontajeHandler $registrarMontajeHandler;
+    private MandarAComprobacionHandler $mandarAComprobacionHandler;
+    private MandarAReensamblarHandler $mandarAReensamblarHandler;
+    private MandarADistribucionHandler $mandarADistribucionHandler;
+    private PonerOperativaHandler $ponerOperativaHandler;
+    private DarMantenimientoHandler $darMantenimientoHandler;
+    private FinalizarMantenimientoHandler $finalizarMantenimientoHandler;
+    private ObtenerMaquinasPorTecnicoEnsambladorHandler $obtenerPorTecnicoEnsambladorHandler;
+    private ObtenerMaquinasPorTecnicoComprobadorHandler $obtenerPorTecnicoComprobadorHandler;
+    private ObtenerMaquinasPorTecnicoMantenimientoHandler $obtenerPorTecnicoMantenimientoHandler;
+    private ObtenerMaquinasPorEstadoHandler $obtenerPorEstadoHandler;
+    private ObtenerMaquinasPorEtapaHandler $obtenerPorEtapaHandler;
+    private ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler;
+    private ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler;
+
+    public function __construct(
+        RegistrarMaquinaHandler $registrarMaquinaHandler,
+        GenerarPlacaHandler $generarPlacaHandler,
+        RegistrarMontajeHandler $registrarMontajeHandler,
+        MandarAComprobacionHandler $mandarAComprobacionHandler,
+        MandarAReensamblarHandler $mandarAReensamblarHandler,
+        MandarADistribucionHandler $mandarADistribucionHandler,
+        PonerOperativaHandler $ponerOperativaHandler,
+        DarMantenimientoHandler $darMantenimientoHandler,
+        FinalizarMantenimientoHandler $finalizarMantenimientoHandler,
+        ObtenerMaquinasPorTecnicoEnsambladorHandler $obtenerPorTecnicoEnsambladorHandler,
+        ObtenerMaquinasPorTecnicoComprobadorHandler $obtenerPorTecnicoComprobadorHandler,
+        ObtenerMaquinasPorTecnicoMantenimientoHandler $obtenerPorTecnicoMantenimientoHandler,
+        ObtenerMaquinasPorEstadoHandler $obtenerPorEstadoHandler,
+        ObtenerMaquinasPorEtapaHandler $obtenerPorEtapaHandler,
+        ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler,
+        ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler
+    ) {
+        $this->registrarMaquinaHandler = $registrarMaquinaHandler;
+        $this->generarPlacaHandler = $generarPlacaHandler;
+        $this->registrarMontajeHandler = $registrarMontajeHandler;
+        $this->mandarAComprobacionHandler = $mandarAComprobacionHandler;
+        $this->mandarAReensamblarHandler = $mandarAReensamblarHandler;
+        $this->mandarADistribucionHandler = $mandarADistribucionHandler;
+        $this->ponerOperativaHandler = $ponerOperativaHandler;
+        $this->darMantenimientoHandler = $darMantenimientoHandler;
+        $this->finalizarMantenimientoHandler = $finalizarMantenimientoHandler;
+        $this->obtenerPorTecnicoEnsambladorHandler = $obtenerPorTecnicoEnsambladorHandler;
+        $this->obtenerPorTecnicoComprobadorHandler = $obtenerPorTecnicoComprobadorHandler;
+        $this->obtenerPorTecnicoMantenimientoHandler = $obtenerPorTecnicoMantenimientoHandler;
+        $this->obtenerPorEstadoHandler = $obtenerPorEstadoHandler;
+        $this->obtenerPorEtapaHandler = $obtenerPorEtapaHandler;
+        $this->obtenerMaquinasParaDistribucionHandler = $obtenerMaquinasParaDistribucionHandler;
+        $this->obtenerComponentesPorMaquinaHandler = $obtenerComponentesPorMaquinaHandler;
     }
 
     /**
-     * Transición de estado: Enviar a comprobación.
-     * Valida que existan los campos requeridos antes de procesar.
+     * Registrar nueva máquina
+     * @route POST /v1/maquina/register
      */
-    public function mandarAComprobacion() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina']) || !isset($data['idRemitente']) || !isset($data['mensaje'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+    public function register(Request $request): Response
+    {
+        $data = $request->json();
+
+        $required = ['nombre', 'tipo', 'idComercio', 'idPlaca', 'idCarcasa'];
+        foreach ($required as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
+            }
         }
-        
-        $response = $this->service->mandarAComprobacion($data['idMaquina'], $data['idRemitente'], $data['mensaje']);
-        $this->sendResponse($response);
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new RegistrarMaquinaCommand(
+            $data['nombre'],
+            $data['tipo'],
+            $data['idComercio'],
+            $userId,
+            $data['idPlaca'],
+            $data['idCarcasa']
+        );
+
+        $idMaquina = $this->registrarMaquinaHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Máquina registrada exitosamente',
+            'idMaquina' => $idMaquina
+        ], 201);
     }
 
     /**
-     * Transición de estado: Enviar a reensamblar.
-     * Valida que existan los campos requeridos antes de procesar.
+     * Generar placa
+     * @route POST /v1/maquina/generar-placa
      */
-    public function mandarAReensamblar() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina']) || !isset($data['idRemitente']) || !isset($data['mensaje'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+    public function generarPlaca(Request $request): Response
+    {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
-        
-        $response = $this->service->mandarAReensamblar($data['idMaquina'], $data['idRemitente'], $data['mensaje']);
-        $this->sendResponse($response);
+
+        $command = new GenerarPlacaCommand($userId);
+        $result = $this->generarPlacaHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'placa' => $result['placa'],
+            'idComponente' => $result['idComponente']
+        ]);
     }
 
     /**
-     * Transición de etapa y estado: Enviar a distribución.
-     * Valida que existan los campos requeridos antes de procesar.
+     * Registrar montaje
+     * @route POST /v1/maquina/registrar-montaje
      */
-    public function mandarADistribucion() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina']) || !isset($data['idRemitente']) || !isset($data['mensaje'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
+    public function registrarMontaje(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['idComponente'])) {
+            throw new DomainException('ID de máquina y componente requeridos', 400);
         }
-        $response = $this->service->mandarADistribucion($data['idMaquina'], $data['idRemitente'], $data['mensaje']);
-        $this->sendResponse($response);
-    }
 
-    // Marcar máquina como operativa:
-    public function ponerOperativa() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina'])) {
-            $this->sendResponse(['success' => false, 'message' => 'ID de maquina requerido']);
-            return;
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
-        
-        $response = $this->service->ponerOperativa($data['idMaquina']);
-        $this->sendResponse($response);
-    }
 
-    public function obtenerPorTecnicoEnsamblador($idTecnico) {
-        $response = $this->service->obtenerMaquinasPorTecnicoEnsamblador($idTecnico);
-        $this->sendResponse($response);
-    }
-    
-    public function obtenerPorTecnicoComprobador($idTecnico) {
-        $response = $this->service->obtenerMaquinasPorTecnicoComprobador($idTecnico);
-        $this->sendResponse($response);
-    }
-
-    // Obtener máquinas asignadas a un técnico de mantenimiento:
-    public function obtenerPorTecnicoMantenimiento($idTecnico) {
-        $response = $this->service->obtenerMaquinasPorTecnicoMantenimiento($idTecnico);
-        $this->sendResponse($response);
-    }
-
-    // Iniciar proceso de mantenimiento:
-    public function darMantenimiento() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina']) || !isset($data['mensaje']) || !isset($data['idLogistica'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
-        }
-        
-        $response = $this->service->darMantenimiento($data['idMaquina'], $data['mensaje'], $data['idLogistica']);
-        $this->sendResponse($response);
-    }
-
-    public function finalizarMantenimiento() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idMaquina']) || !isset($data['idRemitente']) || 
-            !isset($data['exito']) || !isset($data['mensaje'])) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos incompletos']);
-            return;
-        }
-        
-        $response = $this->service->finalizarMantenimiento(
+        $command = new RegistrarMontajeCommand(
             $data['idMaquina'],
-            $data['idRemitente'],
-            $data['exito'],
+            $data['idComponente'],
+            $userId,
+            $data['detalle'] ?? null
+        );
+
+        $this->registrarMontajeHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Montaje registrado exitosamente'
+        ]);
+    }
+
+    /**
+     * Mandar a comprobación
+     * @route POST /v1/maquina/mandar-comprobacion
+     */
+    public function mandarAComprobacion(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['mensaje'])) {
+            throw new DomainException('ID de máquina y mensaje requeridos', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new MandarAComprobacionCommand($data['idMaquina'], $userId, $data['mensaje']);
+        $this->mandarAComprobacionHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Máquina enviada a comprobación'
+        ]);
+    }
+
+    /**
+     * Mandar a reensamblar
+     * @route POST /v1/maquina/mandar-reensamblar
+     */
+    public function mandarAReensamblar(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['mensaje'])) {
+            throw new DomainException('ID de máquina y mensaje requeridos', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new MandarAReensamblarCommand($data['idMaquina'], $userId, $data['mensaje']);
+        $this->mandarAReensamblarHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Máquina enviada a reensamblar'
+        ]);
+    }
+
+    /**
+     * Mandar a distribución
+     * @route POST /v1/maquina/mandar-distribucion
+     */
+    public function mandarADistribucion(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['mensaje'])) {
+            throw new DomainException('ID de máquina y mensaje requeridos', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new MandarADistribucionCommand($data['idMaquina'], $userId, $data['mensaje']);
+        $this->mandarADistribucionHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Máquina enviada a distribución'
+        ]);
+    }
+
+    /**
+     * Poner operativa
+     * @route POST /v1/maquina/poner-operativa
+     */
+    public function ponerOperativa(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'])) {
+            throw new DomainException('ID de máquina requerido', 400);
+        }
+
+        $command = new PonerOperativaCommand($data['idMaquina']);
+        $this->ponerOperativaHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Máquina puesta en operativa'
+        ]);
+    }
+
+    /**
+     * Dar mantenimiento
+     * @route POST /v1/maquina/dar-mantenimiento
+     */
+    public function darMantenimiento(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['mensaje'])) {
+            throw new DomainException('ID de máquina y mensaje requeridos', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new DarMantenimientoCommand($data['idMaquina'], $data['mensaje'], $userId);
+        $this->darMantenimientoHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Mantenimiento solicitado'
+        ]);
+    }
+
+    /**
+     * Finalizar mantenimiento
+     * @route POST /v1/maquina/finalizar-mantenimiento
+     */
+    public function finalizarMantenimiento(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idMaquina'], $data['exito'], $data['mensaje'])) {
+            throw new DomainException('ID de máquina, éxito y mensaje requeridos', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new FinalizarMantenimientoCommand(
+            $data['idMaquina'],
+            $userId,
+            (bool) $data['exito'],
             $data['mensaje']
         );
-        $this->sendResponse($response);
+        $this->finalizarMantenimientoHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Mantenimiento finalizado'
+        ]);
     }
 
-    // Filtros por estado:
-    public function obtenerPorEstado($estado) {
-        $response = $this->service->obtenerMaquinasPorEstado($estado);
-        $this->sendResponse($response);
+    /**
+     * Obtener máquinas por técnico ensamblador
+     * @route GET /v1/maquina/ensamblador/{uuid}
+     */
+    public function obtenerPorTecnicoEnsamblador(Request $request, string $idTecnico): Response
+    {
+        $query = new ObtenerMaquinasPorTecnicoEnsambladorQuery($idTecnico);
+        $maquinas = $this->obtenerPorTecnicoEnsambladorHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
     }
 
-    // Filtros por etapa:
-    public function obtenerPorEtapa($etapa) {
-        $response = $this->service->obtenerMaquinasPorEtapa($etapa);
-        $this->sendResponse($response);
-    }
-    public function obtenerMaquinasParaDistribucion() {
-        try {
-            $response = $this->service->obtenerMaquinasParaDistribucion();
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            error_log("Error en obtenerMaquinasParaDistribucion: " . $e->getMessage());
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al obtener máquinas para distribución'
-            ]);
-        }
-    }
-    public function obtenerComponentesMaquina($idMaquina) {
-        try {
-            $response = $this->service->obtenerComponentesMaquina($idMaquina);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            error_log("Error en obtenerComponentesMaquina: " . $e->getMessage());
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al obtener componentes de la máquina'
-            ]);
-        }
-    }
-        public function obtenerComponentesPorMaquina($idMaquina) {
-        try {
-            $response = $this->service->obtenerComponentesPorMaquina($idMaquina);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            error_log("Error en obtenerComponentesMaquina: " . $e->getMessage());
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al obtener componentes de la máquina'
-            ]);
-        }
-    }
-    
-    public function registrarMontaje() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $response = $this->service->registrarMontaje($data);
-        $this->sendResponse($response);
-    }
-    
-    public function generarPlaca() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['ID_Usuario'])) {
-            echo json_encode(['success' => false, 'message' => 'ID de usuario requerido']);
-            return;
-        }
+    /**
+     * Obtener máquinas por técnico comprobador
+     * @route GET /v1/maquina/comprobador/{uuid}
+     */
+    public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico): Response
+    {
+        $query = new ObtenerMaquinasPorTecnicoComprobadorQuery($idTecnico);
+        $maquinas = $this->obtenerPorTecnicoComprobadorHandler->handle($query);
 
-        try {
-            $response = $this->service->generarPlaca($data['ID_Usuario']);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            error_log("Error en generarPlaca: " . $e->getMessage());
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al generar placa'
-            ]);
-        }
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
     }
 
-    public function register() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['idPlaca']) || !isset($data['idCarcasa'])) {
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Debe crear ambos componentes antes de registrar la máquina'
-            ]);
-            return;
-        }
-        
-        $response = $this->service->registrarMaquina($data);
-        $this->sendResponse($response);
+    /**
+     * Obtener máquinas por técnico mantenimiento
+     * @route GET /v1/maquina/mantenimiento/{uuid}
+     */
+    public function obtenerPorTecnicoMantenimiento(Request $request, string $idTecnico): Response
+    {
+        $query = new ObtenerMaquinasPorTecnicoMantenimientoQuery($idTecnico);
+        $maquinas = $this->obtenerPorTecnicoMantenimientoHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
     }
 
-    private function sendResponse($response) {
-        header('Content-Type: application/json');
-        echo json_encode($response);
+    /**
+     * Obtener máquinas por estado
+     * @route GET /v1/maquina/estado/{estado}
+     */
+    public function obtenerPorEstado(Request $request, string $estado): Response
+    {
+        $query = new ObtenerMaquinasPorEstadoQuery($estado);
+        $maquinas = $this->obtenerPorEstadoHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
+    }
+
+    /**
+     * Obtener máquinas por etapa
+     * @route GET /v1/maquina/etapa/{etapa}
+     */
+    public function obtenerPorEtapa(Request $request, string $etapa): Response
+    {
+        $query = new ObtenerMaquinasPorEtapaQuery($etapa);
+        $maquinas = $this->obtenerPorEtapaHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
+    }
+
+    /**
+     * Obtener máquinas para distribución
+     * @route GET /v1/maquina/distribucion
+     */
+    public function obtenerMaquinasParaDistribucion(Request $request): Response
+    {
+        $query = new ObtenerMaquinasParaDistribucionQuery();
+        $maquinas = $this->obtenerMaquinasParaDistribucionHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
+    }
+
+    /**
+     * Obtener componentes por máquina
+     * @route GET /v1/maquina/componentes/{uuid}
+     */
+    public function obtenerComponentesPorMaquina(Request $request, string $idMaquina): Response
+    {
+        $query = new ObtenerComponentesMaquinaQuery($idMaquina);
+        $componentes = $this->obtenerComponentesPorMaquinaHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'componentes' => $componentes
+        ]);
     }
 }
-?>

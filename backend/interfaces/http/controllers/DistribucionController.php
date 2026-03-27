@@ -1,38 +1,54 @@
 <?php
-require_once __DIR__ . '/../models/DistribucionModel.php';
+/**
+ * maquinas_recreativas - Controlador de Distribución
+ *
+ * Maneja las operaciones de distribución.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
+ */
 
-class DistribucionController {
-    private $model;
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-    public function __construct() {
-        $this->model = new DistribucionModel();
+use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionQuery;
+use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class DistribucionController
+{
+    private ObtenerInformesDistribucionHandler $obtenerInformesDistribucionHandler;
+
+    public function __construct(
+        ObtenerInformesDistribucionHandler $obtenerInformesDistribucionHandler
+    ) {
+        $this->obtenerInformesDistribucionHandler = $obtenerInformesDistribucionHandler;
     }
 
-    public function obtenerInformesDistribucion() {
-        try {
-            $filters = [
-                'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
-                'fecha_fin' => $_GET['fecha_fin'] ?? null,
-                'ID_Maquina' => $_GET['ID_Maquina'] ?? null,
-                'estado' => $_GET['estado'] ?? null,
-                'ID_Comercio' => $_GET['ID_Comercio'] ?? null
-            ];
+    /**
+     * Obtener informes de distribución con filtros
+     * @route GET /v1/distribucion/informes
+     */
+    public function obtenerInformesDistribucion(Request $request): Response
+    {
+        $query = new ObtenerInformesDistribucionQuery(
+            $request->query('estado'),
+            $request->query('idComercio'),
+            $request->query('idMaquina'),
+            $request->query('fechaInicio'),
+            $request->query('fechaFin'),
+            (int)($request->query('limit') ?? 100),
+            (int)($request->query('offset') ?? 0)
+        );
 
-            $informes = $this->model->obtenerInformesDistribucion($filters);
-            
-            echo json_encode([
-                'success' => true,
-                'informes' => $informes
-            ]);
-        } catch (Exception $e) {
-            error_log("Error en obtenerInformesDistribucion: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al obtener informes de distribución',
-                'error' => $e->getMessage()
-            ]);
-        }
+        $result = $this->obtenerInformesDistribucionHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'informes' => $result['informes'],
+            'total' => $result['total']
+        ]);
     }
 }
-?>

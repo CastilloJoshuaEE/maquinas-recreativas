@@ -1,218 +1,319 @@
 <?php
-require_once __DIR__ . '/../services/InformeService.php';
+/**
+ * maquinas_recreativas - Controlador de Informes/Recaudación
+ *
+ * Maneja las operaciones de recaudación e informes.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
+ */
 
-class InformeController {
-    private $service;
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-    public function __construct() {
-        $this->service = new InformeService();
+use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionCommand;
+use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\ActualizarRecaudacionCommand;
+use maquinas_recreativas\Application\Commands\Recaudacion\ActualizarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\EliminarRecaudacionCommand;
+use maquinas_recreativas\Application\Commands\Recaudacion\EliminarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\GuardarInformeCommand;
+use maquinas_recreativas\Application\Commands\Recaudacion\GuardarInformeHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionesQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionesHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerResumenRecaudacionesQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerResumenRecaudacionesHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionPorIdQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionPorIdHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasRecaudacionQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasRecaudacionHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasOperativasPorComercioQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasOperativasPorComercioHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerComercioRecaudacionQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerComercioRecaudacionHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerInformePorRecaudacionQuery;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerInformePorRecaudacionHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class InformeController
+{
+    private RegistrarRecaudacionHandler $registrarRecaudacionHandler;
+    private ActualizarRecaudacionHandler $actualizarRecaudacionHandler;
+    private EliminarRecaudacionHandler $eliminarRecaudacionHandler;
+    private GuardarInformeHandler $guardarInformeHandler;
+    private ObtenerRecaudacionesHandler $obtenerRecaudacionesHandler;
+    private ObtenerResumenRecaudacionesHandler $obtenerResumenRecaudacionesHandler;
+    private ObtenerRecaudacionPorIdHandler $obtenerRecaudacionPorIdHandler;
+    private ObtenerMaquinasRecaudacionHandler $obtenerMaquinasRecaudacionHandler;
+    private ObtenerMaquinasOperativasPorComercioHandler $obtenerMaquinasOperativasPorComercioHandler;
+    private ObtenerComercioRecaudacionHandler $obtenerComercioRecaudacionHandler;
+    private ObtenerInformePorRecaudacionHandler $obtenerInformePorRecaudacionHandler;
+
+    public function __construct(
+        RegistrarRecaudacionHandler $registrarRecaudacionHandler,
+        ActualizarRecaudacionHandler $actualizarRecaudacionHandler,
+        EliminarRecaudacionHandler $eliminarRecaudacionHandler,
+        GuardarInformeHandler $guardarInformeHandler,
+        ObtenerRecaudacionesHandler $obtenerRecaudacionesHandler,
+        ObtenerResumenRecaudacionesHandler $obtenerResumenRecaudacionesHandler,
+        ObtenerRecaudacionPorIdHandler $obtenerRecaudacionPorIdHandler,
+        ObtenerMaquinasRecaudacionHandler $obtenerMaquinasRecaudacionHandler,
+        ObtenerMaquinasOperativasPorComercioHandler $obtenerMaquinasOperativasPorComercioHandler,
+        ObtenerComercioRecaudacionHandler $obtenerComercioRecaudacionHandler,
+        ObtenerInformePorRecaudacionHandler $obtenerInformePorRecaudacionHandler
+    ) {
+        $this->registrarRecaudacionHandler = $registrarRecaudacionHandler;
+        $this->actualizarRecaudacionHandler = $actualizarRecaudacionHandler;
+        $this->eliminarRecaudacionHandler = $eliminarRecaudacionHandler;
+        $this->guardarInformeHandler = $guardarInformeHandler;
+        $this->obtenerRecaudacionesHandler = $obtenerRecaudacionesHandler;
+        $this->obtenerResumenRecaudacionesHandler = $obtenerResumenRecaudacionesHandler;
+        $this->obtenerRecaudacionPorIdHandler = $obtenerRecaudacionPorIdHandler;
+        $this->obtenerMaquinasRecaudacionHandler = $obtenerMaquinasRecaudacionHandler;
+        $this->obtenerMaquinasOperativasPorComercioHandler = $obtenerMaquinasOperativasPorComercioHandler;
+        $this->obtenerComercioRecaudacionHandler = $obtenerComercioRecaudacionHandler;
+        $this->obtenerInformePorRecaudacionHandler = $obtenerInformePorRecaudacionHandler;
     }
 
-    public function registrarRecaudacion() {
-        session_start();
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
-        }
+    /**
+     * Registrar una nueva recaudación
+     * @route POST /v1/contabilidad/registrar-recaudacion
+     */
+    public function registrarRecaudacion(Request $request): Response
+    {
+        $data = $request->json();
 
-        if (!isset($_SESSION['ID_Usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado - Debe iniciar sesión']);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Datos JSON inválidos']);
-            return;
-        }
-        
-        $requiredFields = ['ID_Maquina', 'Tipo_Comercio', 'Monto_Total', 'fecha'];
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => "El campo $field es requerido"]);
-                return;
+        $required = ['idMaquina', 'tipoComercio', 'montoTotal', 'porcentajeComercio'];
+        foreach ($required as $field) {
+            if (!isset($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
             }
         }
 
-        $data['ID_Usuario'] = $_SESSION['ID_Usuario'];
-
-        $response = $this->service->registrarRecaudacion($data);
-        $this->sendResponse($response);
-    }
-
-    public function obtenerRecaudaciones() {
-        $filters = [
-            'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
-            'fecha_fin' => $_GET['fecha_fin'] ?? null,
-            'ID_Maquina' => $_GET['ID_Maquina'] ?? null,
-            'Tipo_Comercio' => $_GET['Tipo_Comercio'] ?? null
-        ];
-
-        $response = $this->service->obtenerRecaudaciones($filters);
-        $this->sendResponse($response);
-    }
-
-    public function obtenerResumenRecaudaciones($limit) {
-        if (!is_numeric($limit) ) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'El parámetro limit debe ser numérico']);
-            return;
-        }
-        
-        $limit = (int)$limit;
-        if ($limit <= 0) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'El parámetro limit debe ser mayor que 0']);
-            return;
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $response = $this->service->obtenerResumenRecaudacionesLimitado($limit);
-        $this->sendResponse($response);
+        $command = new RegistrarRecaudacionCommand(
+            $data['idMaquina'],
+            $userId,
+            $data['tipoComercio'],
+            (float) $data['montoTotal'],
+            (float) $data['porcentajeComercio'],
+            $data['detalle'] ?? ''
+        );
+
+        $idRecaudacion = $this->registrarRecaudacionHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Recaudación registrada exitosamente',
+            'idRecaudacion' => $idRecaudacion
+        ], 201);
     }
 
-    public function actualizarRecaudacion() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['ID_Recaudacion']) || empty($data['ID_Recaudacion'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => "ID de recaudación es requerido"]);
-            return;
-        }
+    /**
+     * Obtener recaudaciones con filtros
+     * @route GET /v1/contabilidad/recaudaciones
+     */
+    public function obtenerRecaudaciones(Request $request): Response
+    {
+        $query = new ObtenerRecaudacionesQuery(
+            $request->query('fechaInicio'),
+            $request->query('fechaFin'),
+            $request->query('idMaquina'),
+            $request->query('tipoComercio'),
+            (int)($request->query('limit') ?? 100),
+            (int)($request->query('offset') ?? 0)
+        );
 
-        $response = $this->service->actualizarRecaudacion($data);
-        $this->sendResponse($response);
+        $result = $this->obtenerRecaudacionesHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'recaudaciones' => $result['recaudaciones'],
+            'total' => $result['total']
+        ]);
     }
 
-    public function eliminarRecaudacion($id) {
-        if (empty($id)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => "ID de recaudación es requerido"]);
-            return;
-        }
+    /**
+     * Obtener recaudación por ID
+     * @route GET /v1/contabilidad/recaudaciones/{uuid}
+     */
+    public function obtenerRecaudacion(Request $request, string $idRecaudacion): Response
+    {
+        $query = new ObtenerRecaudacionPorIdQuery($idRecaudacion);
+        $result = $this->obtenerRecaudacionPorIdHandler->handle($query);
 
-        $response = $this->service->eliminarRecaudacion($id);
-        $this->sendResponse($response);
+        return (new Response())->json([
+            'success' => true,
+            'recaudacion' => $result['recaudacion']
+        ]);
     }
 
-    public function obtenerMaquinasRecaudacion() {
-        $response = $this->service->obtenerMaquinasRecaudacion();
-        $this->sendResponse($response);
+    /**
+     * Obtener resumen de recaudaciones
+     * @route GET /v1/contabilidad/resumen-recaudaciones
+     */
+    public function obtenerResumenRecaudaciones(Request $request): Response
+    {
+        $limit = $request->query('limit') ? (int) $request->query('limit') : null;
+        $query = new ObtenerResumenRecaudacionesQuery($limit);
+        $resumen = $this->obtenerResumenRecaudacionesHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'resumen' => $resumen
+        ]);
     }
 
-    public function obtenerMaquinasOperativasPorComercio() {
-        if (!isset($_GET['ID_Comercio'])) {
-            $this->sendResponse(['success' => false, 'message' => 'ID_Comercio es requerido']);
-            return;
+    /**
+     * Actualizar recaudación
+     * @route PUT /v1/contabilidad/actualizar-recaudacion
+     */
+    public function actualizarRecaudacion(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idRecaudacion'], $data['idMaquina'], $data['montoTotal'], $data['porcentajeComercio'])) {
+            throw new DomainException('Datos incompletos para actualizar recaudación', 400);
         }
-        
-        $id_comercio = $_GET['ID_Comercio'];
-        
-if (empty($id_comercio) || strlen($id_comercio) != 36) {
-    $this->sendResponse(['success' => false, 'message' => 'ID_Comercio inválido']);
-    return;
-}
-        
-        $response = $this->service->obtenerMaquinasOperativasPorComercio($id_comercio);
-        $this->sendResponse($response);
+
+        $command = new ActualizarRecaudacionCommand(
+            $data['idRecaudacion'],
+            $data['idMaquina'],
+            $data['tipoComercio'] ?? '',
+            (float) $data['montoTotal'],
+            (float) $data['porcentajeComercio'],
+            $data['detalle'] ?? '',
+            $data['fecha'] ?? ''
+        );
+
+        $this->actualizarRecaudacionHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Recaudación actualizada correctamente'
+        ]);
     }
 
-    public function guardarInforme() {
-        session_start();
-        
-        if (!isset($_SESSION['ID_Usuario'])) {
-            $this->sendResponse(['success' => false, 'message' => 'No autorizado']);
-            return;
+    /**
+     * Eliminar recaudación
+     * @route DELETE /v1/contabilidad/eliminar-recaudacion/{uuid}
+     */
+    public function eliminarRecaudacion(Request $request, string $idRecaudacion): Response
+    {
+        $command = new EliminarRecaudacionCommand($idRecaudacion);
+        $this->eliminarRecaudacionHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Recaudación eliminada correctamente'
+        ]);
+    }
+
+    /**
+     * Obtener máquinas para recaudación
+     * @route GET /v1/contabilidad/maquinas-recaudacion
+     */
+    public function obtenerMaquinasRecaudacion(Request $request): Response
+    {
+        $query = new ObtenerMaquinasRecaudacionQuery();
+        $maquinas = $this->obtenerMaquinasRecaudacionHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
+    }
+
+    /**
+     * Obtener máquinas operativas por comercio
+     * @route GET /v1/contabilidad/maquinas-operativas-por-comercio
+     */
+    public function obtenerMaquinasOperativasPorComercio(Request $request): Response
+    {
+        $idComercio = $request->query('idComercio');
+        if (!$idComercio) {
+            throw new DomainException('ID de comercio requerido', 400);
         }
 
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->sendResponse(['success' => false, 'message' => 'Datos JSON inválidos']);
-            return;
-        }
+        $query = new ObtenerMaquinasOperativasPorComercioQuery($idComercio);
+        $maquinas = $this->obtenerMaquinasOperativasPorComercioHandler->handle($query);
 
-        $requiredFields = [
-            'ID_Recaudacion', 
-            'CI_Usuario', 
-            'Nombre_Maquina', 
-            'ID_Comercio',
-            'Nombre_Comercio', 
-            'Direccion_Comercio', 
-            'Telefono_Comercio',
-            'Monto_Total'
-        ];
-        
-        foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                $this->sendResponse(['success' => false, 'message' => "El campo $field es requerido"]);
-                return;
+        return (new Response())->json([
+            'success' => true,
+            'maquinas' => $maquinas
+        ]);
+    }
+
+    /**
+     * Obtener comercio para recaudación
+     * @route GET /v1/contabilidad/comercio-recaudacion/{uuid}
+     */
+    public function obtenerComercioRecaudacion(Request $request, string $idComercio): Response
+    {
+        $query = new ObtenerComercioRecaudacionQuery($idComercio);
+        $comercio = $this->obtenerComercioRecaudacionHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'comercio' => $comercio
+        ]);
+    }
+
+    /**
+     * Guardar informe de recaudación
+     * @route POST /v1/contabilidad/guardar-informe
+     */
+    public function guardarInforme(Request $request): Response
+    {
+        $data = $request->json();
+
+        $required = ['idRecaudacion', 'ciUsuario', 'nombreMaquina', 'idComercio', 'nombreComercio', 'direccionComercio', 'telefonoComercio', 'montoTotal'];
+        foreach ($required as $field) {
+            if (!isset($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
             }
         }
 
-        $data['Pago_Ensamblador'] = 400.00;
-        $data['Pago_Comprobador'] = 400.00;
-        $data['Pago_Mantenimiento'] = isset($data['Pago_Mantenimiento']) ? 400.00 : 0.00;
-        $data['empresa_nombre'] = 'Recrea Sys S.A.';
-        $data['empresa_descripcion'] = 'Una empresa encargada en el ciclo de vida de las maquinas recreativas';
+        $command = new GuardarInformeCommand(
+            $data['idRecaudacion'],
+            $data['ciUsuario'],
+            $data['nombreMaquina'],
+            $data['idComercio'],
+            $data['nombreComercio'],
+            $data['direccionComercio'],
+            $data['telefonoComercio'],
+            (float) $data['montoTotal'],
+            $data['componentes'] ?? null
+        );
 
-        $response = $this->service->guardarInforme($data);
-        $this->sendResponse($response);
+        $idInforme = $this->guardarInformeHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Informe guardado exitosamente',
+            'idInforme' => $idInforme
+        ], 201);
     }
 
-    public function obtenerInformePorRecaudacion($idRecaudacion) {
-        $response = $this->service->obtenerInformePorRecaudacion($idRecaudacion);
-        $this->sendResponse($response);
-    }
-    public function obtenerRecaudacion($idRecaudacion) {
-        try {
-            $response = $this->service->obtenerRecaudacion($idRecaudacion);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al obtener recaudación: ' . $e->getMessage()
-            ]);
-        }
-    }
+    /**
+     * Obtener informe por recaudación
+     * @route GET /v1/contabilidad/informe/{uuid}
+     */
+    public function obtenerInformePorRecaudacion(Request $request, string $idRecaudacion): Response
+    {
+        $query = new ObtenerInformePorRecaudacionQuery($idRecaudacion);
+        $result = $this->obtenerInformePorRecaudacionHandler->handle($query);
 
-    public function obtenerMaquinaRecaudacion() {
-        try {
-            $idMaquina = $_GET['ID_Maquina'] ?? null;
-            if (!$idMaquina) {
-                $this->sendResponse(['success' => false, 'message' => 'ID_Maquina es requerido']);
-                return;
-            }
-
-            $response = $this->service->obtenerMaquinaRecaudacion($idMaquina);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            $this->sendResponse([
-                'success' => false,
-                'message' => 'Error al obtener máquina: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-public function obtenerComercioRecaudacion($idComercio) {
-    try {
-        $response = $this->service->obtenerComercioRecaudacion($idComercio);
-        $this->sendResponse($response);
-    } catch (Exception $e) {
-        $this->sendResponse([
-            'success' => false,
-            'message' => 'Error al obtener comercio: ' . $e->getMessage()
+        return (new Response())->json([
+            'success' => true,
+            'informe' => $result['informe'],
+            'componentes' => $result['componentes']
         ]);
     }
 }
-    private function sendResponse($response) {
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
-}
-?>

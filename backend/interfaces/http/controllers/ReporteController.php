@@ -1,162 +1,191 @@
 <?php
-require_once __DIR__ . '/../services/ReporteService.php';
 /**
- * Controlador responsable de recibir las solicitudes HTTP relacionadas con reportes y comunicarlas con ReporteService. Administra funciones como crear reportes, obtenerlos por ID o usuario, y actualizar su estado.
+ * maquinas_recreativas - Controlador de Reportes
+ *
+ * Maneja las operaciones CRUD de reportes.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
  */
-class ReporteController {
-    private $service;
 
-    public function __construct() {
-        $this->service = new ReporteService();
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
+use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
+use maquinas_recreativas\Application\Commands\Reporte\ActualizarEstadoReporteCommand;
+use maquinas_recreativas\Application\Commands\Reporte\ActualizarEstadoReporteHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportesPorUsuarioQuery;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportesPorUsuarioHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatQuery;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerUsuariosChatQuery;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerUsuariosChatHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatCompletoQuery;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatCompletoHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdQuery;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class ReporteController
+{
+    private CrearReporteHandler $crearReporteHandler;
+    private ActualizarEstadoReporteHandler $actualizarEstadoReporteHandler;
+    private ObtenerReportesPorUsuarioHandler $obtenerReportesPorUsuarioHandler;
+    private ObtenerChatHandler $obtenerChatHandler;
+    private ObtenerUsuariosChatHandler $obtenerUsuariosChatHandler;
+    private ObtenerChatCompletoHandler $obtenerChatCompletoHandler;
+    private ObtenerReportePorIdHandler $obtenerReportePorIdHandler;
+
+    public function __construct(
+        CrearReporteHandler $crearReporteHandler,
+        ActualizarEstadoReporteHandler $actualizarEstadoReporteHandler,
+        ObtenerReportesPorUsuarioHandler $obtenerReportesPorUsuarioHandler,
+        ObtenerChatHandler $obtenerChatHandler,
+        ObtenerUsuariosChatHandler $obtenerUsuariosChatHandler,
+        ObtenerChatCompletoHandler $obtenerChatCompletoHandler,
+        ObtenerReportePorIdHandler $obtenerReportePorIdHandler
+    ) {
+        $this->crearReporteHandler = $crearReporteHandler;
+        $this->actualizarEstadoReporteHandler = $actualizarEstadoReporteHandler;
+        $this->obtenerReportesPorUsuarioHandler = $obtenerReportesPorUsuarioHandler;
+        $this->obtenerChatHandler = $obtenerChatHandler;
+        $this->obtenerUsuariosChatHandler = $obtenerUsuariosChatHandler;
+        $this->obtenerChatCompletoHandler = $obtenerChatCompletoHandler;
+        $this->obtenerReportePorIdHandler = $obtenerReportePorIdHandler;
     }
+
     /**
-    * Recibe datos en formato JSON desde el cliente para crear un reporte.
-     * @throws \Exception
-     * @return void
+     * Crear un nuevo reporte
+     * @route POST /v1/reportes/crear
      */
-    public function create() {
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Datos JSON inválidos');
-            }
-            
-            $response = $this->service->crearReporte($data);
-            header('Content-Type: application/json');
-            echo json_encode($response);
-        } catch (Exception $e) {
-            header('Content-Type: application/json');
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
+    public function create(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['descripcion'])) {
+            throw new DomainException('La descripción es requerida', 400);
         }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new CrearReporteCommand(
+            $userId,
+            $data['idUsuarioDestinatario'] ?? null,
+            $data['descripcion']
+        );
+
+        $idReporte = $this->crearReporteHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Reporte creado exitosamente',
+            'id' => $idReporte
+        ], 201);
     }
+
     /**
-     * Obtiene los mensajes del chat entre dos usuarios.
-     * @param mixed $emisorId ID del remitente.
-     * @param mixed $destinatarioId  ID del destinatario.
-     * @return void
+     * Obtener reportes por usuario
+     * @route GET /v1/reportes/usuario/{uuid}
      */
-    public function getChat($emisorId, $destinatarioId) {
-        $response = $this->service->obtenerChat($emisorId, $destinatarioId);
-        $this->sendResponse($response);
-    }   
-    /**
-     * Obtiene todos los reportes relacionados con un usuario.
-     * @param mixed $userId ID del usuario.
-     * @return void
-     */
-    public function getByUser($userId) {
-        $response = $this->service->obtenerReportesPorUsuario($userId);
-        $this->sendResponse($response);
+    public function getByUser(Request $request, string $idUsuario): Response
+    {
+        $query = new ObtenerReportesPorUsuarioQuery($idUsuario);
+        $reportes = $this->obtenerReportesPorUsuarioHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'reportes' => $reportes
+        ]);
     }
+
     /**
-     * Devuelve la información detallada de un reporte.
-     * @param mixed $reporteId ID del reporte.
-     * @return void
+     * Obtener chat entre dos usuarios
+     * @route GET /v1/reportes/chat/{emisorId}/{destinatarioId}
      */
-    public function getById($reporteId) {
-        $response = $this->service->obtenerReportePorId($reporteId);
-        $this->sendResponse($response);
+    public function getChat(Request $request, string $emisorId, string $destinatarioId): Response
+    {
+        $query = new ObtenerChatQuery($emisorId, $destinatarioId);
+        $reportes = $this->obtenerChatHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'reportes' => $reportes
+        ]);
     }
+
     /**
-     * Cambia el estado de un reporte (por ejemplo, de "Pendiente" a "Resuelto").
-     * @param mixed $reporteId
-     * @return void
+     * Actualizar estado de reporte
+     * @route PUT /v1/reportes/{uuid}/estado
      */
-    public function updateStatus($reporteId) {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
+    public function updateStatus(Request $request, string $idReporte): Response
+    {
+        $data = $request->json();
+
         if (!isset($data['estado'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Estado no proporcionado']);
-            return;
+            throw new DomainException('Estado requerido', 400);
         }
-        
-        $response = $this->service->actualizarEstadoReporte($reporteId, $data['estado']);
-        $this->sendResponse($response);
-    }
-    /**
-     * Obtiene la lista de usuarios con los que el usuario actual ha chateado.
-     * 
-     */
-    public function getChatUsers() {
-        try {
-            session_start();
-            $userId = $_SESSION['ID_Usuario'] ?? null;
-            
-            if (!$userId) {
-                throw new Exception('Usuario no autenticado');
-            }
-            
-            $response = $this->service->obtenerUsuariosChat($userId);
-            
-            if (!isset($response['usuarios'])) {
-                throw new Exception('Formato de respuesta incorrecto');
-            }
-            
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            $this->sendError($e);
+
+        $estadosPermitidos = ['Pendiente', 'En proceso', 'Resuelto'];
+        if (!in_array($data['estado'], $estadosPermitidos, true)) {
+            throw new DomainException('Estado no válido', 400);
         }
+
+        $command = new ActualizarEstadoReporteCommand($idReporte, $data['estado']);
+        $this->actualizarEstadoReporteHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Estado actualizado correctamente'
+        ]);
     }
 
     /**
-     * Similar al anterior, pero se recibe el ID del usuario como parámetro explícito.
-     * @param mixed $userId
-     * @return void
+     * Obtener usuarios con los que ha chateado
+     * @route GET /v1/reportes/usuarios-chat
      */
-    public function getUsuariosChat($userId) {
-        $response = $this->service->obtenerUsuariosChat($userId);
-        $this->sendResponse($response);
+    public function getUsuariosChat(Request $request): Response
+    {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $query = new ObtenerUsuariosChatQuery($userId);
+        $usuarios = $this->obtenerUsuariosChatHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'usuarios' => $usuarios
+        ]);
     }
 
     /**
-     * Devuelve el chat completo entre dos usuarios, opcionalmente filtrado por reporte.
-     * @param mixed $emisorId
-     * @param mixed $destinatarioId
-     * @param mixed $reporteId
-     * @throws \Exception
-     * @return void
+     * Obtener chat completo con comentarios
+     * @route GET /v1/reportes/chat-completo
      */
-    public function getCompleteChat($emisorId, $destinatarioId, $reporteId = null) {
-        try {
-            session_start();
-            $currentUserId = $_SESSION['ID_Usuario'] ?? null;
-            
-            if (!$currentUserId || ($currentUserId != $emisorId && $currentUserId != $destinatarioId)) {
-                throw new Exception('No autorizado para ver este chat');
-            }
-            
-            $response = $this->service->obtenerChatCompleto($emisorId, $destinatarioId, $reporteId);
-            $this->sendResponse($response);
-        } catch (Exception $e) {
-            $this->sendError($e);
+    public function getCompleteChat(Request $request): Response
+    {
+        $emisorId = $request->query('emisorId');
+        $destinatarioId = $request->query('destinatarioId');
+        $reporteId = $request->query('reporteId');
+
+        if (!$emisorId || !$destinatarioId) {
+            throw new DomainException('IDs de emisor y destinatario requeridos', 400);
         }
-    }
-    /**
-     * Métodos internos para formatear la respuesta como JSON.
-     * @param mixed $response
-     * @return void
-     */
-    private function sendResponse($response) {
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
-    /**
-     * Métodos internos para formatear el error como JSON.
-     * @param Exception $e
-     * @return void
-     */
-    private function sendError(Exception $e) {
-        header('Content-Type: application/json');
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => $e->getMessage()
+
+        $query = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);
+        $result = $this->obtenerChatCompletoHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'reportes' => $result['reportes'],
+            'comentarios' => $result['comentarios']
         ]);
     }
 }
-?>

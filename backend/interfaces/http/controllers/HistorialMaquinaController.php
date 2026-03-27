@@ -1,119 +1,124 @@
 <?php
-require_once __DIR__ . '/../services/HistorialMaquinaService.php';
+/**
+ * maquinas_recreativas - Controlador de Historial de Máquinas
+ *
+ * Maneja las consultas de historial.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
+ */
 
-class HistorialMaquinaController {
-    private $service;
-    
-    public function __construct() {
-        $this->service = new HistorialMaquinaService();
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaQuery;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorUsuarioQuery;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorUsuarioHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialGeneralQuery;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialGeneralHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerResumenRecienteQuery;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerResumenRecienteHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class HistorialMaquinaController
+{
+    private ObtenerHistorialPorMaquinaHandler $historialPorMaquinaHandler;
+    private ObtenerHistorialPorUsuarioHandler $historialPorUsuarioHandler;
+    private ObtenerHistorialGeneralHandler $historialGeneralHandler;
+    private ObtenerResumenRecienteHandler $resumenRecienteHandler;
+
+    public function __construct(
+        ObtenerHistorialPorMaquinaHandler $historialPorMaquinaHandler,
+        ObtenerHistorialPorUsuarioHandler $historialPorUsuarioHandler,
+        ObtenerHistorialGeneralHandler $historialGeneralHandler,
+        ObtenerResumenRecienteHandler $resumenRecienteHandler
+    ) {
+        $this->historialPorMaquinaHandler = $historialPorMaquinaHandler;
+        $this->historialPorUsuarioHandler = $historialPorUsuarioHandler;
+        $this->historialGeneralHandler = $historialGeneralHandler;
+        $this->resumenRecienteHandler = $resumenRecienteHandler;
     }
-    
+
     /**
-     * Obtener historial de una máquina específica
+     * Obtener historial por máquina
+     * @route GET /v1/historial/maquina/{uuid}
      */
-    public function getHistorialPorMaquina($idMaquina) {
-        session_start();
-        
-        if (!isset($_SESSION['ID_Usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-        
-        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-        $porPagina = isset($_GET['por_pagina']) ? (int)$_GET['por_pagina'] : 50;
-        
-        $response = $this->service->obtenerHistorialPorMaquina($idMaquina, $pagina, $porPagina);
-        $this->sendResponse($response);
+    public function getHistorialPorMaquina(Request $request, string $idMaquina): Response
+    {
+        $pagina = (int)($request->query('pagina') ?? 1);
+        $porPagina = (int)($request->query('por_pagina') ?? 50);
+
+        $query = new ObtenerHistorialPorMaquinaQuery($idMaquina, $pagina, $porPagina);
+        $result = $this->historialPorMaquinaHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'historial' => $result['historial'],
+            'paginacion' => $result['paginacion']
+        ]);
     }
-    
+
     /**
-     * Obtener historial de un usuario específico
+     * Obtener historial por usuario
+     * @route GET /v1/historial/usuario/{uuid}
      */
-    public function getHistorialPorUsuario($idUsuario) {
-        session_start();
-        
-        if (!isset($_SESSION['ID_Usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-        
-        // Verificar permisos: solo admin o el propio usuario
-        if ($_SESSION['rol'] !== 'Administrador' && $_SESSION['ID_Usuario'] !== $idUsuario) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'No autorizado para ver este historial']);
-            return;
-        }
-        
-        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-        $porPagina = isset($_GET['por_pagina']) ? (int)$_GET['por_pagina'] : 50;
-        
-        $response = $this->service->obtenerHistorialPorUsuario($idUsuario, $pagina, $porPagina);
-        $this->sendResponse($response);
+    public function getHistorialPorUsuario(Request $request, string $idUsuario): Response
+    {
+        $pagina = (int)($request->query('pagina') ?? 1);
+        $porPagina = (int)($request->query('por_pagina') ?? 50);
+
+        $query = new ObtenerHistorialPorUsuarioQuery($idUsuario, $pagina, $porPagina);
+        $result = $this->historialPorUsuarioHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'historial' => $result['historial'],
+            'paginacion' => $result['paginacion']
+        ]);
     }
-    
+
     /**
-     * Obtener historial general con filtros (solo para administradores y logística)
+     * Obtener historial general con filtros
+     * @route GET /v1/historial/general
      */
-    public function getHistorialGeneral() {
-        session_start();
-        
-        if (!isset($_SESSION['ID_Usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-        
-        // Solo administradores y logística pueden ver el historial general
-        $rolesPermitidos = ['Administrador', 'Logistica', 'Tecnico'];
-        if (!in_array($_SESSION['rol'], $rolesPermitidos)) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'No autorizado para ver el historial general']);
-            return;
-        }
-        
-        $filtros = [
-            'id_maquina' => $_GET['id_maquina'] ?? null,
-            'id_usuario' => $_GET['id_usuario'] ?? null,
-            'tipo_usuario' => $_GET['tipo_usuario'] ?? null,
-            'accion' => $_GET['accion'] ?? null,
-            'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
-            'fecha_fin' => $_GET['fecha_fin'] ?? null
-        ];
-        
-        $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-        $porPagina = isset($_GET['por_pagina']) ? (int)$_GET['por_pagina'] : 100;
-        
-        $response = $this->service->obtenerHistorialGeneral($filtros, $pagina, $porPagina);
-        $this->sendResponse($response);
+    public function getHistorialGeneral(Request $request): Response
+    {
+        $query = new ObtenerHistorialGeneralQuery(
+            $request->query('idMaquina'),
+            $request->query('idUsuario'),
+            $request->query('tipoUsuario'),
+            $request->query('accion'),
+            $request->query('fechaInicio'),
+            $request->query('fechaFin'),
+            (int)($request->query('pagina') ?? 1),
+            (int)($request->query('por_pagina') ?? 100)
+        );
+
+        $result = $this->historialGeneralHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'historial' => $result['historial'],
+            'paginacion' => $result['paginacion']
+        ]);
     }
-    
+
     /**
      * Obtener resumen de actividades recientes
+     * @route GET /v1/historial/resumen
      */
-    public function getResumenReciente() {
-        session_start();
-        
-        if (!isset($_SESSION['ID_Usuario'])) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
-        }
-        
-        $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 20;
-        $resumen = $this->service->obtenerResumenReciente($limite);
-        
-        $this->sendResponse([
+    public function getResumenReciente(Request $request): Response
+    {
+        $limite = (int)($request->query('limite') ?? 20);
+        $query = new ObtenerResumenRecienteQuery($limite);
+        $resumen = $this->resumenRecienteHandler->handle($query);
+
+        return (new Response())->json([
             'success' => true,
             'resumen' => $resumen
         ]);
     }
-    
-    private function sendResponse($response, $statusCode = 200) {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
 }
-?>

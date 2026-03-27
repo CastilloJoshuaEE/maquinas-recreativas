@@ -1,78 +1,86 @@
 <?php
-require_once __DIR__ . '/../services/ComentarioService.php';
 /**
- * Es el controlador que maneja las peticiones HTTP relacionadas con los comentarios. Usa ComentarioService para realizar operaciones y devuelve respuestas en formato JSON.
+ * maquinas_recreativas - Controlador de Comentarios
+ *
+ * Maneja las operaciones CRUD de comentarios en reportes.
+ *
+ * @package maquinas_recreativas\Interfaces\Http\Controllers
+ * @author Tu Equipo
+ * @version 1.0
  */
-class ComentarioController {
-    private $service;
-    /**
-     * Crea una instancia del servicio de comentarios.
-     */
-    public function __construct() {
-        $this->service = new ComentarioService();
-    }
-    /**
-     * Crea un nuevo comentario desde una solicitud JSON.
-     * Parámetro (interno): $data extraído de php://input.
-     * @return void 
-     */
-public function create() {
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    if (empty($data['ID_Reporte']) || empty($data['comentario'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-        return;
+
+namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
+use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
+use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteQuery;
+use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Core\Request;
+use maquinas_recreativas\Core\Response;
+
+class ComentarioController
+{
+    private CrearComentarioHandler $crearComentarioHandler;
+    private ObtenerComentariosPorReporteHandler $obtenerComentariosHandler;
+
+    public function __construct(
+        CrearComentarioHandler $crearComentarioHandler,
+        ObtenerComentariosPorReporteHandler $obtenerComentariosHandler
+    ) {
+        $this->crearComentarioHandler = $crearComentarioHandler;
+        $this->obtenerComentariosHandler = $obtenerComentariosHandler;
     }
 
-    // Iniciar sesión si no está iniciada
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    $data['ID_Usuario_Emisor'] = $_SESSION['ID_Usuario'] ?? null;
-    
-    if (!$data['ID_Usuario_Emisor']) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'No autorizado - Debe iniciar sesión']);
-        return;
-    }
-
-    $response = $this->service->crearComentario($data);
-    
-    // Asegurar que la respuesta tenga el formato correcto
-    if (!isset($response['success'])) {
-        $response = ['success' => false, 'message' => 'Error interno del servidor'];
-    }
-    
-    $this->sendResponse($response);
-}
     /**
-     * Obtiene comentarios asociados a un reporte si el usuario tiene permiso.
-     * @param mixed $reporteId - ID del reporte.
-     * @return void
+     * Crear un nuevo comentario
+     * @route POST /v1/comentarios
      */
-    public function getByReporte($reporteId) {
-        session_start();
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        
-        if (!$userId) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'No autorizado']);
-            return;
+    public function create(Request $request): Response
+    {
+        $data = $request->json();
+
+        if (!isset($data['idReporte'], $data['comentario'])) {
+            throw new DomainException('Faltan datos requeridos: idReporte, comentario', 400);
         }
 
-        $response = $this->service->obtenerComentariosPorReporte($reporteId, $userId);
-        $this->sendResponse($response);
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $command = new CrearComentarioCommand(
+            $data['idReporte'],
+            $userId,
+            $data['comentario']
+        );
+
+        $idComentario = $this->crearComentarioHandler->handle($command);
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Comentario creado exitosamente',
+            'id' => $idComentario
+        ], 201);
     }
+
     /**
-     * Envía una respuesta en formato JSON al cliente.
-     * @param mixed $response
-     * @return void
+     * Obtener comentarios por reporte
+     * @route GET /v1/comentarios/reporte/{uuid}
      */
-    private function sendResponse($response) {
-        header('Content-Type: application/json');
-        echo json_encode($response);
+    public function getByReporte(Request $request, string $idReporte): Response
+    {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
+        $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
+        $comentarios = $this->obtenerComentariosHandler->handle($query);
+
+        return (new Response())->json([
+            'success' => true,
+            'comentarios' => $comentarios
+        ]);
     }
 }
-?>

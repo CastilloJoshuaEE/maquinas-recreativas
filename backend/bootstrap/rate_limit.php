@@ -1,6 +1,6 @@
 <?php
 /**
- * backend/bootstrap/rate_limit.php
+ * backend/Bootstrap/rate_limit.php
  * maquinas_recreativas - Rate Limiting Configuration
  * 
  * Configura y aplica las reglas de rate limiting.
