@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Infrastructure\Persistence\Repository;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
 use maquinas_recreativas\Domain\Usuario\Usuario;
 use maquinas_recreativas\Domain\Usuario\Tecnico;
@@ -19,19 +19,11 @@ use PDOException;
 
 /**
  * Implementación en MySQL del repositorio de Usuarios.
- *
- * @package maquinas_recreativas\Infrastructure\Persistence\Repository
- * @version 1.0
  */
-final class MySQLUsuarioRepository implements UsuarioRepository
+class MySQLUsuarioRepository implements UsuarioRepository
 {
     private Database $db;
 
-    /**
-     * Constructor del repositorio.
-     *
-     * @param Database $db
-     */
     public function __construct(Database $db)
     {
         $this->db = $db;
@@ -47,11 +39,9 @@ final class MySQLUsuarioRepository implements UsuarioRepository
         try {
             $conn->beginTransaction();
 
-            // Verificar si el usuario ya existe
-            $existing = $this->findById($usuario->getId());
+            $existing = $this->searchById($usuario->getId());
             
             if ($existing) {
-                // Actualizar
                 $sql = "UPDATE usuario SET 
                         nombre = :nombre,
                         apellido = :apellido,
@@ -76,7 +66,6 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                     'estado' => $usuario->getEstado()->value()
                 ]);
             } else {
-                // Insertar nuevo
                 $sql = "INSERT INTO usuario 
                         (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
                         VALUES 
@@ -96,9 +85,7 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 ]);
             }
 
-            // Manejar tablas específicas según el tipo
             $this->saveSpecificUserData($conn, $usuario);
-
             $conn->commit();
         } catch (PDOException $e) {
             $conn->rollBack();
@@ -106,31 +93,21 @@ final class MySQLUsuarioRepository implements UsuarioRepository
         }
     }
 
-    /**
-     * Guarda datos específicos según el tipo de usuario.
-     *
-     * @param PDO $conn
-     * @param Usuario $usuario
-     * @return void
-     */
     private function saveSpecificUserData(PDO $conn, Usuario $usuario): void
     {
         $id = $usuario->getId()->value();
 
         if ($usuario instanceof Tecnico) {
-            // Verificar si ya existe en Tecnico
             $checkSql = "SELECT ID_Tecnico FROM Tecnico WHERE ID_Tecnico = :id";
             $checkStmt = $conn->prepare($checkSql);
             $checkStmt->execute(['id' => $id]);
             
             if ($checkStmt->fetch()) {
-                // Actualizar
                 $sql = "UPDATE Tecnico SET 
                         Especialidad = :especialidad,
                         Cantidad_Actividades = :actividades
                         WHERE ID_Tecnico = :id";
             } else {
-                // Insertar
                 $sql = "INSERT INTO Tecnico (ID_Tecnico, Especialidad, Cantidad_Actividades) 
                         VALUES (:id, :especialidad, :actividades)";
             }
@@ -142,7 +119,6 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 'actividades' => $usuario->getCantidadActividades()
             ]);
         } elseif ($usuario instanceof Logistica) {
-            // Verificar si ya existe en Logistica
             $checkSql = "SELECT ID_Logistica FROM Logistica WHERE ID_Logistica = :id";
             $checkStmt = $conn->prepare($checkSql);
             $checkStmt->execute(['id' => $id]);
@@ -158,7 +134,7 @@ final class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
-    public function findById(Uuid $id): ?Usuario
+    public function searchById(Uuid $id): ?Usuario
     {
         $conn = $this->db->getConnection();
         
@@ -182,7 +158,7 @@ final class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
-    public function findByEmail(string $emailEncriptado): ?Usuario
+    public function searchByEmail(string $email): ?Usuario
     {
         $conn = $this->db->getConnection();
         
@@ -192,7 +168,7 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 WHERE u.email = :email";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['email' => $emailEncriptado]);
+        $stmt->execute(['email' => $email]);
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -206,7 +182,7 @@ final class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
-    public function findByUsuarioAsignado(string $usuarioAsignado): ?Usuario
+    public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
     {
         $conn = $this->db->getConnection();
         
@@ -230,124 +206,6 @@ final class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
-    public function findAll(): array
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                FROM usuario u 
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                ORDER BY u.nombre ASC";
-        
-        $stmt = $conn->query($sql);
-        
-        $usuarios = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $usuarios[] = $this->hydrate($row);
-        }
-        
-        return $usuarios;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                FROM usuario u 
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                WHERE u.tipo = :tipo";
-        
-        $params = ['tipo' => $tipo];
-        
-        if ($excluirId) {
-            $sql .= " AND u.ID_Usuario != :excluirId";
-            $params['excluirId'] = $excluirId->value();
-        }
-        
-        $sql .= " ORDER BY u.nombre ASC";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        
-        $usuarios = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $usuarios[] = $this->hydrate($row);
-        }
-        
-        return $usuarios;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function existsByEmail(string $emailEncriptado): bool
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE email = :email";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['email' => $emailEncriptado]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function existsByCi(string $ciEncriptada): bool
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE ci = :ci";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['ci' => $ciEncriptada]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function existsByUsuarioAsignado(string $usuarioAsignado): bool
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT COUNT(*) as total FROM usuario WHERE usuario_asignado = :usuario_asignado";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['usuario_asignado' => $usuarioAsignado]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function existsByUsuarioAsignadoAndNotId(string $usuarioAsignado, Uuid $id): bool
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT COUNT(*) as total FROM usuario 
-                WHERE usuario_asignado = :usuario_asignado AND ID_Usuario != :id";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            'usuario_asignado' => $usuarioAsignado,
-            'id' => $id->value()
-        ]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function delete(Uuid $id): void
     {
         $conn = $this->db->getConnection();
@@ -355,7 +213,6 @@ final class MySQLUsuarioRepository implements UsuarioRepository
         try {
             $conn->beginTransaction();
 
-            // Eliminar de tablas relacionadas
             $tables = [
                 'comentario' => 'ID_Usuario_Emisor',
                 'notificaciones' => 'ID_Usuario',
@@ -373,12 +230,10 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 $stmt->execute(['id' => $id->value()]);
             }
 
-            // Eliminar reportes
             $sqlReporte = "DELETE FROM reporte WHERE ID_Usuario_Emisor = :id OR ID_Usuario_Destinatario = :id";
             $stmtReporte = $conn->prepare($sqlReporte);
             $stmtReporte->execute(['id' => $id->value()]);
 
-            // Finalmente eliminar usuario
             $sqlUsuario = "DELETE FROM usuario WHERE ID_Usuario = :id";
             $stmtUsuario = $conn->prepare($sqlUsuario);
             $stmtUsuario->execute(['id' => $id->value()]);
@@ -393,6 +248,163 @@ final class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
+    public function findAll(array $filtros = []): array
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE 1=1";
+        
+        $params = [];
+        
+        if (!empty($filtros['tipo'])) {
+            $sql .= " AND u.tipo = :tipo";
+            $params[':tipo'] = $filtros['tipo'];
+        }
+        
+        if (!empty($filtros['estado'])) {
+            $sql .= " AND u.estado = :estado";
+            $params[':estado'] = $filtros['estado'];
+        }
+        
+        if (!empty($filtros['ci'])) {
+            $sql .= " AND u.ci = :ci";
+            $params[':ci'] = $filtros['ci'];
+        }
+        
+        $sql .= " ORDER BY u.nombre ASC";
+        
+        if (isset($filtros['limit'])) {
+            $sql .= " LIMIT :limit";
+            $params[':limit'] = (int)$filtros['limit'];
+        }
+        
+        if (isset($filtros['offset'])) {
+            $sql .= " OFFSET :offset";
+            $params[':offset'] = (int)$filtros['offset'];
+        }
+        
+        $stmt = $conn->prepare($sql);
+        
+        foreach ($params as $key => $value) {
+            if (is_int($value)) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
+        }
+        
+        $stmt->execute();
+        
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = $this->hydrate($row);
+        }
+        
+        return $usuarios;
+    }
+
+    /**
+     * Método adicional para obtener usuarios por tipo
+     */
+    public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.tipo = :tipo";
+        
+        $params = [':tipo' => $tipo];
+        
+        if ($excluirId) {
+            $sql .= " AND u.ID_Usuario != :excluirId";
+            $params[':excluirId'] = $excluirId->value();
+        }
+        
+        $sql .= " ORDER BY u.nombre ASC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $usuarios[] = $this->hydrate($row);
+        }
+        
+        return $usuarios;
+    }
+
+    /**
+     * Método adicional para verificar existencia por email
+     */
+    public function existsByEmail(string $emailEncriptado): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE email = :email";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':email' => $emailEncriptado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * Método adicional para verificar existencia por CI
+     */
+    public function existsByCi(string $ciEncriptada): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE ci = :ci";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':ci' => $ciEncriptada]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * Método adicional para verificar existencia por usuario asignado
+     */
+    public function existsByUsuarioAsignado(string $usuarioAsignado): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario WHERE usuario_asignado = :usuario_asignado";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':usuario_asignado' => $usuarioAsignado]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * Método adicional para verificar existencia por usuario asignado excluyendo un ID
+     */
+    public function existsByUsuarioAsignadoAndNotId(string $usuarioAsignado, Uuid $id): bool
+    {
+        $conn = $this->db->getConnection();
+        
+        $sql = "SELECT COUNT(*) as total FROM usuario 
+                WHERE usuario_asignado = :usuario_asignado AND ID_Usuario != :id";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            ':usuario_asignado' => $usuarioAsignado,
+            ':id' => $id->value()
+        ]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total'] > 0;
+    }
+
+    /**
+     * Método adicional para verificar si tiene máquinas asignadas
+     */
     public function hasMachinesAssigned(Uuid $id): bool
     {
         $conn = $this->db->getConnection();
@@ -403,14 +415,14 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                    OR ID_Tecnico_Mantenimiento = :id";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' => $id->value()]);
+        $stmt->execute([':id' => $id->value()]);
         
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row['total'] > 0;
     }
 
     /**
-     * @inheritDoc
+     * Método adicional para registrar logout
      */
     public function registrarLogout(Uuid $id): void
     {
@@ -421,11 +433,11 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 ORDER BY fecha_inicio DESC LIMIT 1";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' => $id->value()]);
+        $stmt->execute([':id' => $id->value()]);
     }
 
     /**
-     * @inheritDoc
+     * Método adicional para registrar actividad
      */
     public function registrarActividad(Uuid $id, string $descripcion): void
     {
@@ -436,13 +448,13 @@ final class MySQLUsuarioRepository implements UsuarioRepository
         
         $stmt = $conn->prepare($sql);
         $stmt->execute([
-            'id' => $id->value(),
-            'descripcion' => $descripcion
+            ':id' => $id->value(),
+            ':descripcion' => $descripcion
         ]);
     }
 
     /**
-     * @inheritDoc
+     * Método adicional para obtener historial de actividades
      */
     public function obtenerHistorialActividades(Uuid $id): array
     {
@@ -454,16 +466,13 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                 LIMIT 50";
         
         $stmt = $conn->prepare($sql);
-        $stmt->execute(['id' => $id->value()]);
+        $stmt->execute([':id' => $id->value()]);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Hidrata un objeto Usuario a partir de un array de datos.
-     *
-     * @param array $row
-     * @return Usuario|Tecnico|Logistica
      */
     public function hydrate(array $row): Usuario
     {
@@ -471,8 +480,6 @@ final class MySQLUsuarioRepository implements UsuarioRepository
         $email = new Email(CifradoHelper::desencriptar($row['email']));
         $tipo = new TipoUsuario($row['tipo']);
         $estado = new EstadoUsuario($row['estado']);
-
-        // Desencriptar CI si existe
         $ci = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
 
         switch ($tipo->value()) {
@@ -513,16 +520,5 @@ final class MySQLUsuarioRepository implements UsuarioRepository
                     $estado
                 );
         }
-    }
-
-    /**
-     * Hidrata un objeto Técnico a partir de un array de datos.
-     *
-     * @param array $row
-     * @return Tecnico
-     */
-    public function hydrateTecnico(array $row): Tecnico
-    {
-        return $this->hydrate($row);
     }
 }

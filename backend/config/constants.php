@@ -10,7 +10,17 @@
  * @author Tu Nombre
  * @version 1.0.0
  */
+/**
+ * @var string CONFIG_PATH
+ * Ruta del directorio de configuración
+ */
+define('CONFIG_PATH', __DIR__);
 
+/**
+ * @var string DATE_FORMAT
+ * Formato de fecha por defecto
+ */
+define('DATE_FORMAT', 'Y-m-d H:i:s');
 // =============================================
 // CONFIGURACIÓN DE SEGURIDAD
 // =============================================

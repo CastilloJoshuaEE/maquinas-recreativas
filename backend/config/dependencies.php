@@ -14,7 +14,8 @@
 // =============================================
 // CARGAR CONFIGURACIÓN BASE
 // =============================================
-require_once __DIR__ . '/Database.php';
+use maquinas_recreativas\Config\Database;
+use maquinas_recreativas\Infrastructure\Database\Database as InfrastructureDatabase;
 require_once __DIR__ . '/constants.php';
 
 // =============================================
@@ -46,7 +47,7 @@ require_once __DIR__ . '/../Domain/Usuario/Logistica.php';
 require_once __DIR__ . '/../Domain/Usuario/TipoUsuario.php';
 require_once __DIR__ . '/../Domain/Usuario/EstadoUsuario.php';
 
-require_once __DIR__ . '/../Domain/comercio/Comercio.php';
+require_once __DIR__ . '/../Domain/Comercio/Comercio.php';
 
 require_once __DIR__ . '/../Domain/Maquina/MaquinaRecreativa.php';
 require_once __DIR__ . '/../Domain/Maquina/EstadoMaquina.php';
@@ -73,13 +74,13 @@ require_once __DIR__ . '/../Domain/Notificacion/NotificacionReporte.php';
 require_once __DIR__ . '/../Domain/Reporte/Reporte.php';
 require_once __DIR__ . '/../Domain/Reporte/EstadoReporte.php';
 
-require_once __DIR__ . '/../Domain/comentario/Comentario.php';
+require_once __DIR__ . '/../Domain/Comentario/Comentario.php';
 
 // =============================================
 // Domain - REPOSITORY INTERFACES
 // =============================================
 require_once __DIR__ . '/../Domain/Usuario/UsuarioRepository.php';
-require_once __DIR__ . '/../Domain/comercio/ComercioRepository.php';
+require_once __DIR__ . '/../Domain/Comercio/ComercioRepository.php';
 require_once __DIR__ . '/../Domain/Maquina/MaquinaRepository.php';
 require_once __DIR__ . '/../Domain/Componente/ComponenteRepository.php';
 require_once __DIR__ . '/../Domain/Montaje/MontajeRepository.php';
@@ -88,7 +89,7 @@ require_once __DIR__ . '/../Domain/Distribucion/DistribucionRepository.php';
 require_once __DIR__ . '/../Domain/Recaudacion/RecaudacionRepository.php';
 require_once __DIR__ . '/../Domain/Notificacion/NotificacionRepository.php';
 require_once __DIR__ . '/../Domain/Reporte/ReporteRepository.php';
-require_once __DIR__ . '/../Domain/comentario/ComentarioRepository.php';
+require_once __DIR__ . '/../Domain/Comentario/ComentarioRepository.php';
 
 // =============================================
 // INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
@@ -126,9 +127,12 @@ require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioCommand
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioAdminCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioAdminHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarPerfilCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarPerfilHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioAsignadoCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioAsignadoHandler.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Usuario/ActualizarUsuarioHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RecuperarContrasenaCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RecuperarContrasenaHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/CambiarEstadoUsuarioCommand.php';
@@ -143,8 +147,68 @@ require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadComma
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadHandler.php';
 
 // Comercio Commands
-require_once __DIR__ . '/../Application/Commands/comercio/RegistrarComercioCommand.php';
-require_once __DIR__ . '/../Application/Commands/comercio/RegistrarComercioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioHandler.php';
+
+// Componente Commands
+require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponenteCommand.php';
+require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponenteHandler.php';
+require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacion.php';
+require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacionHandler.php';
+require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteCommand.php';
+require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteHandler.php';
+
+// Maquina Commands
+require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/FinalizarMantenimientoCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/FinalizarMantenimientoHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/GenerarPlacaComand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/GenerarPlacaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarAComprobacionCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarAComprobacionHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarADistribucionCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarADistribucionHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarAReensamblarCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/MandarAReensamblarHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/PonerOperativaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/PonerOperativaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMaquinaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMaquinaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMontajeCommand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMontajeHandler.php';
+
+// Notificacion Commands
+require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionMaquinaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionMaquinaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionReporteCommand.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionReporteHandler.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarComoLeidaCommand.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarComoLeidaHandler.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarTodasComoLeidasCommand.php';
+require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarTodasComoLeidasHandler.php';
+
+// Recaudacion Commands
+require_once __DIR__ . '/../Application/Commands/Recaudacion/ActualizarRecaudacionCommand.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/ActualizarRecaudacionHandler.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/EliminarRecaudacionCommand.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/EliminarRecaudacionHandler.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/GuardarInformeCommand.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/GuardarInformeHandler.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/RegistrarRecaudacionCommand.php';
+require_once __DIR__ . '/../Application/Commands/Recaudacion/RegistrarRecaudacionHandler.php';
+
+// Reporte Commands
+require_once __DIR__ . '/../Application/Commands/Reporte/ActualizarEstadoReporteCommand.php';
+require_once __DIR__ . '/../Application/Commands/Reporte/ActualizarEstadoReporteHandler.php';
+require_once __DIR__ . '/../Application/Commands/Reporte/CrearReporteCommand.php';
+require_once __DIR__ . '/../Application/Commands/Reporte/CrearReporteHandler.php';
+
+// Comentario Commands
+require_once __DIR__ . '/../Application/Commands/Comentario/CrearComentarioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Comentario/CrearComentarioHandler.php';
 
 // =============================================
 // APPLICATION - QUERIES
@@ -152,8 +216,10 @@ require_once __DIR__ . '/../Application/Commands/comercio/RegistrarComercioHandl
 // Usuario Queries
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTodosUsuariosQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTodosUsuariosHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadHandler.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/BuscarPorEmailQuery.php';
@@ -162,23 +228,107 @@ require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActivida
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActividadesHandler.php';
 
 // Comercio Queries
-require_once __DIR__ . '/../Application/Queries/comercio/ObtenerComerciosQuery.php';
-require_once __DIR__ . '/../Application/Queries/comercio/ObtenerComerciosHandler.php';
+require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosQuery.php';
+require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosHandler.php';
+
+// Componente Queries
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesQuery.php';
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesHandler.php';
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesDisponiblesQuery.php';
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesDisponiblesHandler.php';
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesEnUsoQuery.php';
+require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesEnUsoHandler.php';
+
+// Distribucion Queries
+require_once __DIR__ . '/../Application/Queries/Distribucion/ObtenerInformesDistribucionQuery.php';
+require_once __DIR__ . '/../Application/Queries/Distribucion/ObtenerInformesDistribucionHandler.php';
+
+// Historial Queries
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialGeneralQuery.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialGeneralHandler.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorMaquinaQuery.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorMaquinaHandler.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorUsuarioQuery.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorUsuarioHandler.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerResumenRecienteQuery.php';
+require_once __DIR__ . '/../Application/Queries/Historial/ObtenerResumenRecienteHandler.php';
+
+// Maquina Queries
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerComponentesMaquinaQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerComponentesMaquinaHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasParaDistribucionQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasParaDistribucionHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorEstadoQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorEstadoHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorEtapaQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorEtapaHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoComprobadorQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoComprobadorHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoEnsambladorQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoEnsambladorHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoHandler.php';
+
+// Notificacion Queries
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerCantidadNoLeidasQuery.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerCantidadNoLeidasHandler.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNoLeidasQuery.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNoLeidasHandler.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesMaquinaQuery.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesMaquinaHandler.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesReporteQuery.php';
+require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesReporteHandler.php';
+
+// Recaudacion Queries
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerComercioRecaudacionQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerComercioRecaudacionHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerInformePorRecaudacionQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerInformePorRecaudacionHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerMaquinasOperativasPorComercioQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerMaquinasOperativasPorComercioHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerMaquinasRecaudacionQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerMaquinasRecaudacionHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerRecaudacionesQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerRecaudacionesHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerRecaudacionPorIdQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerRecaudacionPorIdHandler.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerResumenRecaudacionesQuery.php';
+require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerResumenRecaudacionesHandler.php';
+
+// Reporte Queries
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatCompletoQuery.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatCompletoHandler.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatQuery.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatHandler.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerReportePorIdQuery.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerReportePorIdHandler.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerReportesPorUsuarioQuery.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerReportesPorUsuarioHandler.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatQuery.php';
+require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatHandler.php';
+
+// Comentario Queries
+require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporte.php';
+require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteHandler.php';
 
 // =============================================
 // INTERFACES - CONTROLLERS
 // =============================================
-require_once __DIR__ . '/../interfaces/Http/Controllers/UsuarioController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/AdministradorController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/ComercioController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/MaquinaController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/ComponenteController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/HistorialMaquinaController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/DistribucionController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/InformeController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/NotificacionController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/ReporteController.php';
-require_once __DIR__ . '/../interfaces/Http/Controllers/ComentarioController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/UsuarioController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/AdministradorController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/ComercioController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/MaquinaController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/ComponenteController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/HistorialMaquinaController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/DistribucionController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/InformeController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/NotificacionController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/ReporteController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/ComentarioController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoEnsambladorController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoComprobadorController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoMantenimientoController.php';
+require_once __DIR__ . '/../Interfaces/Http/Controllers/LogisticoController.php';
 
 /**
  * Clase contenedor de dependencias (Service Container)
@@ -248,8 +398,8 @@ class Dependencies {
 // =============================================
 
 // Database
-Dependencies::register(Database::class, function() {
-    return new Database();
+Dependencies::register(\maquinas_recreativas\Infrastructure\Database\Database::class, function() {
+    return new \maquinas_recreativas\Infrastructure\Database\Database();
 });
 
 // Repositories
@@ -273,7 +423,31 @@ Dependencies::register(MySQLHistorialRepository::class, function() {
     return new MySQLHistorialRepository(Dependencies::get(Database::class));
 });
 
-// Handlers
+Dependencies::register(MySQLMontajeRepository::class, function() {
+    return new MySQLMontajeRepository(Dependencies::get(Database::class));
+});
+
+Dependencies::register(MySQLDistribucionRepository::class, function() {
+    return new MySQLDistribucionRepository(Dependencies::get(Database::class));
+});
+
+Dependencies::register(MySQLRecaudacionRepository::class, function() {
+    return new MySQLRecaudacionRepository(Dependencies::get(Database::class));
+});
+
+Dependencies::register(MySQLNotificacionRepository::class, function() {
+    return new MySQLNotificacionRepository(Dependencies::get(Database::class));
+});
+
+Dependencies::register(MySQLReporteRepository::class, function() {
+    return new MySQLReporteRepository(Dependencies::get(Database::class));
+});
+
+Dependencies::register(MySQLComentarioRepository::class, function() {
+    return new MySQLComentarioRepository(Dependencies::get(Database::class));
+});
+
+// Handlers de Usuario
 Dependencies::register(LoginHandler::class, function() {
     return new LoginHandler(Dependencies::get(MySQLUsuarioRepository::class));
 });
@@ -282,24 +456,466 @@ Dependencies::register(RegistrarUsuarioHandler::class, function() {
     return new RegistrarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
 });
 
+Dependencies::register(RegistrarUsuarioAdminHandler::class, function() {
+    return new RegistrarUsuarioAdminHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ActualizarUsuarioHandler::class, function() {
+    return new ActualizarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(CambiarEstadoUsuarioHandler::class, function() {
+    return new CambiarEstadoUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(EliminarUsuarioHandler::class, function() {
+    return new EliminarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ActualizarPerfilHandler::class, function() {
+    return new ActualizarPerfilHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(RecuperarContrasenaHandler::class, function() {
+    return new RecuperarContrasenaHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ActualizarUsuarioAsignadoHandler::class, function() {
+    return new ActualizarUsuarioAsignadoHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(LogoutHandler::class, function() {
+    return new LogoutHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(RegistrarActividadHandler::class, function() {
+    return new RegistrarActividadHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+// Queries de Usuario
 Dependencies::register(ObtenerUsuarioPorIdHandler::class, function() {
     return new ObtenerUsuarioPorIdHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ObtenerTodosUsuariosHandler::class, function() {
+    return new ObtenerTodosUsuariosHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ObtenerTecnicosPorEspecialidadHandler::class, function() {
+    return new ObtenerTecnicosPorEspecialidadHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ObtenerUsuariosPorTipoHandler::class, function() {
+    return new ObtenerUsuariosPorTipoHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(BuscarPorEmailHandler::class, function() {
+    return new BuscarPorEmailHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+Dependencies::register(ObtenerHistorialActividadesHandler::class, function() {
+    return new ObtenerHistorialActividadesHandler(Dependencies::get(MySQLUsuarioRepository::class));
+});
+
+// Handlers de Comercio
+Dependencies::register(RegistrarComercioHandler::class, function() {
+    return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
 });
 
 Dependencies::register(ObtenerComerciosHandler::class, function() {
     return new ObtenerComerciosHandler(Dependencies::get(MySQLComercioRepository::class));
 });
 
-Dependencies::register(RegistrarComercioHandler::class, function() {
-    return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+// Handlers de Componente
+Dependencies::register(UsarComponenteHandler::class, function() {
+    return new UsarComponenteHandler(
+        Dependencies::get(MySQLComponenteRepository::class),
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLMontajeRepository::class)
+    );
 });
 
-// Controllers
+Dependencies::register(LiberarComponenteHandler::class, function() {
+    return new LiberarComponenteHandler(Dependencies::get(MySQLComponenteRepository::class));
+});
+
+Dependencies::register(AsignarCarcasaHandler::class, function() {
+    return new AsignarCarcasaHandler(Dependencies::get(MySQLComponenteRepository::class));
+});
+
+Dependencies::register(LiberarComponentesCancelacionHandler::class, function() {
+    return new LiberarComponentesCancelacionHandler(Dependencies::get(MySQLComponenteRepository::class));
+});
+
+Dependencies::register(ObtenerComponentesHandler::class, function() {
+    return new ObtenerComponentesHandler(Dependencies::get(MySQLComponenteRepository::class));
+});
+
+Dependencies::register(ObtenerComponentesDisponiblesHandler::class, function() {
+    return new ObtenerComponentesDisponiblesHandler(Dependencies::get(MySQLComponenteRepository::class));
+});
+
+Dependencies::register(ObtenerComponentesEnUsoHandler::class, function() {
+    return new ObtenerComponentesEnUsoHandler(
+        Dependencies::get(MySQLComponenteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+// Handlers de Maquina
+Dependencies::register(RegistrarMaquinaHandler::class, function() {
+    return new RegistrarMaquinaHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLComercioRepository::class),
+        Dependencies::get(MySQLComponenteRepository::class)
+    );
+});
+
+Dependencies::register(GenerarPlacaHandler::class, function() {
+    return new GenerarPlacaHandler(
+        Dependencies::get(MySQLComponenteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(RegistrarMontajeHandler::class, function() {
+    return new RegistrarMontajeHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLComponenteRepository::class),
+        Dependencies::get(MySQLMontajeRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(MandarAComprobacionHandler::class, function() {
+    return new MandarAComprobacionHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+Dependencies::register(MandarAReensamblarHandler::class, function() {
+    return new MandarAReensamblarHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+Dependencies::register(MandarADistribucionHandler::class, function() {
+    return new MandarADistribucionHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLComercioRepository::class),
+        Dependencies::get(MySQLDistribucionRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+Dependencies::register(PonerOperativaHandler::class, function() {
+    return new PonerOperativaHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLDistribucionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+Dependencies::register(DarMantenimientoHandler::class, function() {
+    return new DarMantenimientoHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLComercioRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLDistribucionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+Dependencies::register(FinalizarMantenimientoHandler::class, function() {
+    return new FinalizarMantenimientoHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLHistorialRepository::class)
+    );
+});
+
+// Queries de Maquina
+Dependencies::register(ObtenerMaquinasPorTecnicoEnsambladorHandler::class, function() {
+    return new ObtenerMaquinasPorTecnicoEnsambladorHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerMaquinasPorTecnicoComprobadorHandler::class, function() {
+    return new ObtenerMaquinasPorTecnicoComprobadorHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerMaquinasPorTecnicoMantenimientoHandler::class, function() {
+    return new ObtenerMaquinasPorTecnicoMantenimientoHandler(
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerMaquinasPorEstadoHandler::class, function() {
+    return new ObtenerMaquinasPorEstadoHandler(Dependencies::get(MySQLMaquinaRepository::class));
+});
+
+Dependencies::register(ObtenerMaquinasPorEtapaHandler::class, function() {
+    return new ObtenerMaquinasPorEtapaHandler(Dependencies::get(MySQLMaquinaRepository::class));
+});
+
+Dependencies::register(ObtenerMaquinasParaDistribucionHandler::class, function() {
+    return new ObtenerMaquinasParaDistribucionHandler(Dependencies::get(MySQLMaquinaRepository::class));
+});
+
+Dependencies::register(ObtenerComponentesMaquinaHandler::class, function() {
+    return new ObtenerComponentesMaquinaHandler(Dependencies::get(MySQLMaquinaRepository::class));
+});
+
+// Handlers de Notificacion
+Dependencies::register(CrearNotificacionMaquinaHandler::class, function() {
+    return new CrearNotificacionMaquinaHandler(
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLMaquinaRepository::class)
+    );
+});
+
+Dependencies::register(CrearNotificacionReporteHandler::class, function() {
+    return new CrearNotificacionReporteHandler(
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(MarcarComoLeidaHandler::class, function() {
+    return new MarcarComoLeidaHandler(Dependencies::get(MySQLNotificacionRepository::class));
+});
+
+Dependencies::register(MarcarTodasComoLeidasHandler::class, function() {
+    return new MarcarTodasComoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+});
+
+// Queries de Notificacion
+Dependencies::register(ObtenerNotificacionesMaquinaHandler::class, function() {
+    return new ObtenerNotificacionesMaquinaHandler(
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerNotificacionesReporteHandler::class, function() {
+    return new ObtenerNotificacionesReporteHandler(
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerCantidadNoLeidasHandler::class, function() {
+    return new ObtenerCantidadNoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+});
+
+Dependencies::register(ObtenerNoLeidasHandler::class, function() {
+    return new ObtenerNoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+});
+
+// Handlers de Recaudacion
+Dependencies::register(RegistrarRecaudacionHandler::class, function() {
+    return new RegistrarRecaudacionHandler(
+        Dependencies::get(MySQLRecaudacionRepository::class),
+        Dependencies::get(MySQLMaquinaRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ActualizarRecaudacionHandler::class, function() {
+    return new ActualizarRecaudacionHandler(
+        Dependencies::get(MySQLRecaudacionRepository::class),
+        Dependencies::get(MySQLMaquinaRepository::class)
+    );
+});
+
+Dependencies::register(EliminarRecaudacionHandler::class, function() {
+    return new EliminarRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+Dependencies::register(GuardarInformeHandler::class, function() {
+    return new GuardarInformeHandler(
+        Dependencies::get(MySQLRecaudacionRepository::class),
+        Dependencies::get(MySQLComponenteRepository::class)
+    );
+});
+
+// Queries de Recaudacion
+Dependencies::register(ObtenerRecaudacionesHandler::class, function() {
+    return new ObtenerRecaudacionesHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+Dependencies::register(ObtenerResumenRecaudacionesHandler::class, function() {
+    return new ObtenerResumenRecaudacionesHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+Dependencies::register(ObtenerRecaudacionPorIdHandler::class, function() {
+    return new ObtenerRecaudacionPorIdHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+Dependencies::register(ObtenerMaquinasRecaudacionHandler::class, function() {
+    return new ObtenerMaquinasRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+Dependencies::register(ObtenerMaquinasOperativasPorComercioHandler::class, function() {
+    return new ObtenerMaquinasOperativasPorComercioHandler(
+        Dependencies::get(MySQLRecaudacionRepository::class),
+        Dependencies::get(MySQLComercioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerComercioRecaudacionHandler::class, function() {
+    return new ObtenerComercioRecaudacionHandler(Dependencies::get(MySQLComercioRepository::class));
+});
+
+Dependencies::register(ObtenerInformePorRecaudacionHandler::class, function() {
+    return new ObtenerInformePorRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+});
+
+// Handlers de Reporte
+Dependencies::register(CrearReporteHandler::class, function() {
+    return new CrearReporteHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ActualizarEstadoReporteHandler::class, function() {
+    return new ActualizarEstadoReporteHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class)
+    );
+});
+
+// Queries de Reporte
+Dependencies::register(ObtenerReportesPorUsuarioHandler::class, function() {
+    return new ObtenerReportesPorUsuarioHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerChatHandler::class, function() {
+    return new ObtenerChatHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerUsuariosChatHandler::class, function() {
+    return new ObtenerUsuariosChatHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerChatCompletoHandler::class, function() {
+    return new ObtenerChatCompletoHandler(
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLComentarioRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerReportePorIdHandler::class, function() {
+    return new ObtenerReportePorIdHandler(Dependencies::get(MySQLReporteRepository::class));
+});
+
+// Handlers de Comentario
+Dependencies::register(CrearComentarioHandler::class, function() {
+    return new CrearComentarioHandler(
+        Dependencies::get(MySQLComentarioRepository::class),
+        Dependencies::get(MySQLReporteRepository::class),
+        Dependencies::get(MySQLNotificacionRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerComentariosPorReporteHandler::class, function() {
+    return new ObtenerComentariosPorReporteHandler(
+        Dependencies::get(MySQLComentarioRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+// Handlers de Historial
+Dependencies::register(ObtenerHistorialPorMaquinaHandler::class, function() {
+    return new ObtenerHistorialPorMaquinaHandler(
+        Dependencies::get(MySQLHistorialRepository::class),
+        Dependencies::get(MySQLMaquinaRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerHistorialPorUsuarioHandler::class, function() {
+    return new ObtenerHistorialPorUsuarioHandler(
+        Dependencies::get(MySQLHistorialRepository::class),
+        Dependencies::get(MySQLUsuarioRepository::class)
+    );
+});
+
+Dependencies::register(ObtenerHistorialGeneralHandler::class, function() {
+    return new ObtenerHistorialGeneralHandler(Dependencies::get(MySQLHistorialRepository::class));
+});
+
+Dependencies::register(ObtenerResumenRecienteHandler::class, function() {
+    return new ObtenerResumenRecienteHandler(Dependencies::get(MySQLHistorialRepository::class));
+});
+
+// Handlers de Distribucion
+Dependencies::register(ObtenerInformesDistribucionHandler::class, function() {
+    return new ObtenerInformesDistribucionHandler(Dependencies::get(MySQLDistribucionRepository::class));
+});
+
+// =============================================
+// CONTROLLERS
+// =============================================
 Dependencies::register(UsuarioController::class, function() {
     return new UsuarioController(
         Dependencies::get(LoginHandler::class),
         Dependencies::get(RegistrarUsuarioHandler::class),
-        Dependencies::get(ObtenerUsuarioPorIdHandler::class)
+        Dependencies::get(ObtenerUsuarioPorIdHandler::class),
+        Dependencies::get(LogoutHandler::class),
+        Dependencies::get(ActualizarPerfilHandler::class),
+        Dependencies::get(RecuperarContrasenaHandler::class),
+        Dependencies::get(ObtenerTodosUsuariosHandler::class),
+        Dependencies::get(ObtenerTecnicosPorEspecialidadHandler::class),
+        Dependencies::get(ObtenerUsuariosPorTipoHandler::class),
+        Dependencies::get(BuscarPorEmailHandler::class),
+        Dependencies::get(ObtenerHistorialActividadesHandler::class),
+        Dependencies::get(RegistrarActividadHandler::class)
+    );
+});
+
+Dependencies::register(AdministradorController::class, function() {
+    return new AdministradorController(
+        Dependencies::get(RegistrarUsuarioAdminHandler::class),
+        Dependencies::get(ActualizarUsuarioHandler::class),
+        Dependencies::get(CambiarEstadoUsuarioHandler::class),
+        Dependencies::get(EliminarUsuarioHandler::class),
+        Dependencies::get(ObtenerUsuarioPorIdHandler::class),
+        Dependencies::get(ObtenerTodosUsuariosHandler::class),
+        Dependencies::get(ObtenerHistorialActividadesHandler::class)
     );
 });
 
@@ -309,7 +925,103 @@ Dependencies::register(ComercioController::class, function() {
         Dependencies::get(RegistrarComercioHandler::class)
     );
 });
-// Controllers específicos por rol
+
+Dependencies::register(MaquinaController::class, function() {
+    return new MaquinaController(
+        Dependencies::get(RegistrarMaquinaHandler::class),
+        Dependencies::get(GenerarPlacaHandler::class),
+        Dependencies::get(RegistrarMontajeHandler::class),
+        Dependencies::get(MandarAComprobacionHandler::class),
+        Dependencies::get(MandarAReensamblarHandler::class),
+        Dependencies::get(MandarADistribucionHandler::class),
+        Dependencies::get(PonerOperativaHandler::class),
+        Dependencies::get(DarMantenimientoHandler::class),
+        Dependencies::get(FinalizarMantenimientoHandler::class),
+        Dependencies::get(ObtenerMaquinasPorTecnicoEnsambladorHandler::class),
+        Dependencies::get(ObtenerMaquinasPorTecnicoComprobadorHandler::class),
+        Dependencies::get(ObtenerMaquinasPorTecnicoMantenimientoHandler::class),
+        Dependencies::get(ObtenerMaquinasPorEstadoHandler::class),
+        Dependencies::get(ObtenerMaquinasPorEtapaHandler::class),
+        Dependencies::get(ObtenerMaquinasParaDistribucionHandler::class),
+        Dependencies::get(ObtenerComponentesMaquinaHandler::class)
+    );
+});
+
+Dependencies::register(ComponenteController::class, function() {
+    return new ComponenteController(
+        Dependencies::get(ObtenerComponentesHandler::class),
+        Dependencies::get(ObtenerComponentesDisponiblesHandler::class),
+        Dependencies::get(UsarComponenteHandler::class),
+        Dependencies::get(LiberarComponenteHandler::class),
+        Dependencies::get(AsignarCarcasaHandler::class),
+        Dependencies::get(LiberarComponentesCancelacionHandler::class),
+        Dependencies::get(ObtenerComponentesEnUsoHandler::class)
+    );
+});
+
+Dependencies::register(NotificacionController::class, function() {
+    return new NotificacionController(
+        Dependencies::get(ObtenerNotificacionesMaquinaHandler::class),
+        Dependencies::get(ObtenerNotificacionesReporteHandler::class),
+        Dependencies::get(ObtenerCantidadNoLeidasHandler::class),
+        Dependencies::get(ObtenerNoLeidasHandler::class),
+        Dependencies::get(CrearNotificacionMaquinaHandler::class),
+        Dependencies::get(CrearNotificacionReporteHandler::class),
+        Dependencies::get(MarcarComoLeidaHandler::class),
+        Dependencies::get(MarcarTodasComoLeidasHandler::class)
+    );
+});
+
+Dependencies::register(ReporteController::class, function() {
+    return new ReporteController(
+        Dependencies::get(CrearReporteHandler::class),
+        Dependencies::get(ActualizarEstadoReporteHandler::class),
+        Dependencies::get(ObtenerReportesPorUsuarioHandler::class),
+        Dependencies::get(ObtenerChatHandler::class),
+        Dependencies::get(ObtenerUsuariosChatHandler::class),
+        Dependencies::get(ObtenerChatCompletoHandler::class),
+        Dependencies::get(ObtenerReportePorIdHandler::class)
+    );
+});
+
+Dependencies::register(ComentarioController::class, function() {
+    return new ComentarioController(
+        Dependencies::get(CrearComentarioHandler::class),
+        Dependencies::get(ObtenerComentariosPorReporteHandler::class)
+    );
+});
+
+Dependencies::register(InformeController::class, function() {
+    return new InformeController(
+        Dependencies::get(RegistrarRecaudacionHandler::class),
+        Dependencies::get(ActualizarRecaudacionHandler::class),
+        Dependencies::get(EliminarRecaudacionHandler::class),
+        Dependencies::get(GuardarInformeHandler::class),
+        Dependencies::get(ObtenerRecaudacionesHandler::class),
+        Dependencies::get(ObtenerResumenRecaudacionesHandler::class),
+        Dependencies::get(ObtenerRecaudacionPorIdHandler::class),
+        Dependencies::get(ObtenerMaquinasRecaudacionHandler::class),
+        Dependencies::get(ObtenerMaquinasOperativasPorComercioHandler::class),
+        Dependencies::get(ObtenerComercioRecaudacionHandler::class),
+        Dependencies::get(ObtenerInformePorRecaudacionHandler::class)
+    );
+});
+
+Dependencies::register(HistorialMaquinaController::class, function() {
+    return new HistorialMaquinaController(
+        Dependencies::get(ObtenerHistorialPorMaquinaHandler::class),
+        Dependencies::get(ObtenerHistorialPorUsuarioHandler::class),
+        Dependencies::get(ObtenerHistorialGeneralHandler::class),
+        Dependencies::get(ObtenerResumenRecienteHandler::class)
+    );
+});
+
+Dependencies::register(DistribucionController::class, function() {
+    return new DistribucionController(
+        Dependencies::get(ObtenerInformesDistribucionHandler::class)
+    );
+});
+
 Dependencies::register(TecnicoEnsambladorController::class, function() {
     return new TecnicoEnsambladorController(
         Dependencies::get(ObtenerMaquinasPorTecnicoEnsambladorHandler::class),
@@ -338,17 +1050,5 @@ Dependencies::register(LogisticoController::class, function() {
         Dependencies::get(ObtenerMaquinasParaDistribucionHandler::class),
         Dependencies::get(ObtenerInformesDistribucionHandler::class),
         Dependencies::get(DarMantenimientoHandler::class)
-    );
-});
-
-Dependencies::register(ContabilidadController::class, function() {
-    return new ContabilidadController(
-        Dependencies::get(RegistrarRecaudacionHandler::class),
-        Dependencies::get(GuardarInformeHandler::class),
-        Dependencies::get(ObtenerRecaudacionesHandler::class),
-        Dependencies::get(ObtenerResumenRecaudacionesHandler::class),
-        Dependencies::get(ObtenerRecaudacionPorIdHandler::class),
-        Dependencies::get(ObtenerMaquinasRecaudacionHandler::class),
-        Dependencies::get(ObtenerMaquinasOperativasPorComercioHandler::class)
     );
 });

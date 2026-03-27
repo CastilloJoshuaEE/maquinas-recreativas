@@ -1,6 +1,12 @@
 <?php
-require_once __DIR__ . '/../helper/CifradoHelper.php';
-// backend/infrastructure/database/Inserter.php
+/**
+ * backend/infrastructure/database/Inserter.php
+ */
+
+namespace maquinas_recreativas\Infrastructure\Database;
+
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
+
 class Inserter {
     private $connection;
 
@@ -85,7 +91,6 @@ class Inserter {
     }
 
     private function insertarUsuarioSiNoExiste($datosUsuario) {
-        // Verificar si el usuario ya existe por email o CI
         if (!$this->usuarioExiste($datosUsuario['email'], $datosUsuario['ci'])) {
             $this->insertarUsuario($datosUsuario);
             return true;
@@ -110,18 +115,15 @@ class Inserter {
     }
 
     private function insertarUsuario($datos) {
-        // Encriptar datos sensibles
         $ciEnc = CifradoHelper::encriptar($datos['ci']);
         $emailEnc = CifradoHelper::encriptar($datos['email']);
         $contrasenaHash = password_hash($datos['contrasena'], PASSWORD_BCRYPT);
 
-        // Obtener UUID para el nuevo usuario
         $uuidResult = $this->connection->query("SELECT UUID() as uuid");
         $uuidRow = $uuidResult->fetch_assoc();
         $userId = $uuidRow['uuid'];
         $uuidResult->close();
 
-        // Insertar en usuario
         $query = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, contrasena, tipo, usuario_asignado, estado)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->connection->prepare($query);
