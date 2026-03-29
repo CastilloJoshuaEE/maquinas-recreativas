@@ -7,9 +7,9 @@
  * infraestructura de persistencia para la entidad Comercio.
  */
 
-namespace Domain\Comercio;
+namespace  maquinas_recreativas\Domain\Comercio;
 
-use Domain\Shared\Exceptions\DomainException;
+use  maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
 /**
  * Interface ComercioRepository

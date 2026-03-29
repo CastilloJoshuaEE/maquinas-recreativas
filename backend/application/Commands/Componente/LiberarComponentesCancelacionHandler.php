@@ -9,6 +9,7 @@
 
 namespace maquinas_recreativas\Application\Commands\Componente;
 
+use maquinas_recreativas\Application\Commands\Command;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
@@ -25,7 +26,7 @@ final class LiberarComponentesCancelacionHandler
         $this->componenteRepository = $componenteRepository;
     }
 
-    public function handle(LiberarComponentesCancelacion $command): array
+    public function handle(Command $command): array
     {
         $idUsuario = new Uuid($command->idUsuario());
         $componentesLiberados = 0;

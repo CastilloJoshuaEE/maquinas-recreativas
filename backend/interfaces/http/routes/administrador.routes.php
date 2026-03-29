@@ -22,7 +22,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/administrador/usuarios',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'registerAdmin'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'registerAdmin'],
         'middleware' => ['role:Administrador']
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/administrador/usuarios/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'getUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'getUser'],
         'middleware' => ['role:Administrador']
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'PUT',
         'path' => '/administrador/usuarios/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'updateUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'updateUser'],
         'middleware' => ['role:Administrador']
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'PATCH',
         'path' => '/administrador/usuarios/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'partialUpdateUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'partialUpdateUser'],
         'middleware' => ['role:Administrador']
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'DELETE',
         'path' => '/administrador/usuarios/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'deleteUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'deleteUser'],
         'middleware' => ['role:Administrador']
     ]
 ];

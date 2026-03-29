@@ -1,15 +1,7 @@
 <?php
-/**
- * maquinas_recreativas - Controlador de Comentarios
- *
- * Maneja las operaciones CRUD de comentarios en reportes.
- *
- * @package maquinas_recreativas\Interfaces\Http\Controllers
- * @author Tu Equipo
- * @version 1.0
- */
-
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use OpenApi\Annotations as OA;
 
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
@@ -28,13 +20,27 @@ class ComentarioController
         CrearComentarioHandler $crearComentarioHandler,
         ObtenerComentariosPorReporteHandler $obtenerComentariosHandler
     ) {
-        $this->crearComentarioHandler = $crearComentarioHandler;
+        $this->crearComentarioHandler    = $crearComentarioHandler;
         $this->obtenerComentariosHandler = $obtenerComentariosHandler;
     }
 
     /**
-     * Crear un nuevo comentario
-     * @route POST /v1/comentarios
+     * @OA\Post(
+     *     path="/v1/comentarios",
+     *     summary="Crear un nuevo comentario en un reporte",
+     *     tags={"Comentarios"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"idReporte","comentario"},
+     *             @OA\Property(property="idReporte", type="string", format="uuid"),
+     *             @OA\Property(property="comentario", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Comentario creado exitosamente"),
+     *     @OA\Response(response=400, description="Faltan datos requeridos"),
+     *     @OA\Response(response=401, description="Usuario no autenticado")
+     * )
      */
     public function create(Request $request): Response
     {
@@ -49,24 +55,21 @@ class ComentarioController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $command = new CrearComentarioCommand(
-            $data['idReporte'],
-            $userId,
-            $data['comentario']
-        );
-
+        $command     = new CrearComentarioCommand($data['idReporte'], $userId, $data['comentario']);
         $idComentario = $this->crearComentarioHandler->handle($command);
 
-        return (new Response())->json([
-            'success' => true,
-            'message' => 'Comentario creado exitosamente',
-            'id' => $idComentario
-        ], 201);
+        return (new Response())->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
     }
 
     /**
-     * Obtener comentarios por reporte
-     * @route GET /v1/comentarios/reporte/{uuid}
+     * @OA\Get(
+     *     path="/v1/comentarios/reporte/{uuid}",
+     *     summary="Obtener comentarios de un reporte",
+     *     tags={"Comentarios"},
+     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Response(response=200, description="Lista de comentarios"),
+     *     @OA\Response(response=401, description="Usuario no autenticado")
+     * )
      */
     public function getByReporte(Request $request, string $idReporte): Response
     {
@@ -75,12 +78,9 @@ class ComentarioController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
+        $query       = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
         $comentarios = $this->obtenerComentariosHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'comentarios' => $comentarios
-        ]);
+        return (new Response())->json(['success' => true, 'comentarios' => $comentarios]);
     }
 }

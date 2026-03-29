@@ -1,15 +1,7 @@
 <?php
-/**
- * maquinas_recreativas - Controlador de Reportes
- *
- * Maneja las operaciones CRUD de reportes.
- *
- * @package maquinas_recreativas\Interfaces\Http\Controllers
- * @author Tu Equipo
- * @version 1.0
- */
-
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use OpenApi\Annotations as OA;
 
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
@@ -48,23 +40,36 @@ class ReporteController
         ObtenerChatCompletoHandler $obtenerChatCompletoHandler,
         ObtenerReportePorIdHandler $obtenerReportePorIdHandler
     ) {
-        $this->crearReporteHandler = $crearReporteHandler;
-        $this->actualizarEstadoReporteHandler = $actualizarEstadoReporteHandler;
+        $this->crearReporteHandler              = $crearReporteHandler;
+        $this->actualizarEstadoReporteHandler   = $actualizarEstadoReporteHandler;
         $this->obtenerReportesPorUsuarioHandler = $obtenerReportesPorUsuarioHandler;
-        $this->obtenerChatHandler = $obtenerChatHandler;
-        $this->obtenerUsuariosChatHandler = $obtenerUsuariosChatHandler;
-        $this->obtenerChatCompletoHandler = $obtenerChatCompletoHandler;
-        $this->obtenerReportePorIdHandler = $obtenerReportePorIdHandler;
+        $this->obtenerChatHandler               = $obtenerChatHandler;
+        $this->obtenerUsuariosChatHandler       = $obtenerUsuariosChatHandler;
+        $this->obtenerChatCompletoHandler       = $obtenerChatCompletoHandler;
+        $this->obtenerReportePorIdHandler       = $obtenerReportePorIdHandler;
     }
 
     /**
-     * Crear un nuevo reporte
-     * @route POST /v1/reportes/crear
+     * @OA\Post(
+     *     path="/v1/reportes/crear",
+     *     summary="Crear un nuevo reporte",
+     *     tags={"Reportes"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"descripcion"},
+     *             @OA\Property(property="descripcion", type="string"),
+     *             @OA\Property(property="idUsuarioDestinatario", type="string", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Reporte creado exitosamente"),
+     *     @OA\Response(response=400, description="Descripción requerida"),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function create(Request $request): Response
     {
         $data = $request->json();
-
         if (!isset($data['descripcion'])) {
             throw new DomainException('La descripción es requerida', 400);
         }
@@ -74,59 +79,67 @@ class ReporteController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $command = new CrearReporteCommand(
-            $userId,
-            $data['idUsuarioDestinatario'] ?? null,
-            $data['descripcion']
-        );
-
+        $command   = new CrearReporteCommand($userId, $data['idUsuarioDestinatario'] ?? null, $data['descripcion']);
         $idReporte = $this->crearReporteHandler->handle($command);
 
-        return (new Response())->json([
-            'success' => true,
-            'message' => 'Reporte creado exitosamente',
-            'id' => $idReporte
-        ], 201);
+        return (new Response())->json(['success' => true, 'message' => 'Reporte creado exitosamente', 'id' => $idReporte], 201);
     }
 
     /**
-     * Obtener reportes por usuario
-     * @route GET /v1/reportes/usuario/{uuid}
+     * @OA\Get(
+     *     path="/v1/reportes/usuario/{uuid}",
+     *     summary="Obtener reportes de un usuario",
+     *     tags={"Reportes"},
+     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Response(response=200, description="Lista de reportes del usuario")
+     * )
      */
     public function getByUser(Request $request, string $idUsuario): Response
     {
-        $query = new ObtenerReportesPorUsuarioQuery($idUsuario);
+        $query    = new ObtenerReportesPorUsuarioQuery($idUsuario);
         $reportes = $this->obtenerReportesPorUsuarioHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'reportes' => $reportes
-        ]);
+        return (new Response())->json(['success' => true, 'reportes' => $reportes]);
     }
 
     /**
-     * Obtener chat entre dos usuarios
-     * @route GET /v1/reportes/chat/{emisorId}/{destinatarioId}
+     * @OA\Get(
+     *     path="/v1/reportes/chat/{emisorId}/{destinatarioId}",
+     *     summary="Obtener hilo de chat entre dos usuarios",
+     *     tags={"Reportes"},
+     *     @OA\Parameter(name="emisorId", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Parameter(name="destinatarioId", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Response(response=200, description="Reportes del chat")
+     * )
      */
     public function getChat(Request $request, string $emisorId, string $destinatarioId): Response
     {
-        $query = new ObtenerChatQuery($emisorId, $destinatarioId);
+        $query    = new ObtenerChatQuery($emisorId, $destinatarioId);
         $reportes = $this->obtenerChatHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'reportes' => $reportes
-        ]);
+        return (new Response())->json(['success' => true, 'reportes' => $reportes]);
     }
 
     /**
-     * Actualizar estado de reporte
-     * @route PUT /v1/reportes/{uuid}/estado
+     * @OA\Put(
+     *     path="/v1/reportes/{uuid}/estado",
+     *     summary="Actualizar el estado de un reporte",
+     *     tags={"Reportes"},
+     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"estado"},
+     *             @OA\Property(property="estado", type="string", enum={"Pendiente","En proceso","Resuelto"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Estado actualizado"),
+     *     @OA\Response(response=400, description="Estado no válido")
+     * )
      */
     public function updateStatus(Request $request, string $idReporte): Response
     {
         $data = $request->json();
-
         if (!isset($data['estado'])) {
             throw new DomainException('Estado requerido', 400);
         }
@@ -139,15 +152,17 @@ class ReporteController
         $command = new ActualizarEstadoReporteCommand($idReporte, $data['estado']);
         $this->actualizarEstadoReporteHandler->handle($command);
 
-        return (new Response())->json([
-            'success' => true,
-            'message' => 'Estado actualizado correctamente'
-        ]);
+        return (new Response())->json(['success' => true, 'message' => 'Estado actualizado correctamente']);
     }
 
     /**
-     * Obtener usuarios con los que ha chateado
-     * @route GET /v1/reportes/usuarios-chat
+     * @OA\Get(
+     *     path="/v1/reportes/usuarios-chat",
+     *     summary="Obtener usuarios con los que el usuario autenticado ha chateado",
+     *     tags={"Reportes"},
+     *     @OA\Response(response=200, description="Lista de usuarios del chat"),
+     *     @OA\Response(response=401, description="No autenticado")
+     * )
      */
     public function getUsuariosChat(Request $request): Response
     {
@@ -156,36 +171,37 @@ class ReporteController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $query = new ObtenerUsuariosChatQuery($userId);
+        $query    = new ObtenerUsuariosChatQuery($userId);
         $usuarios = $this->obtenerUsuariosChatHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'usuarios' => $usuarios
-        ]);
+        return (new Response())->json(['success' => true, 'usuarios' => $usuarios]);
     }
 
     /**
-     * Obtener chat completo con comentarios
-     * @route GET /v1/reportes/chat-completo
+     * @OA\Get(
+     *     path="/v1/reportes/chat-completo",
+     *     summary="Obtener chat completo incluyendo comentarios",
+     *     tags={"Reportes"},
+     *     @OA\Parameter(name="emisorId", in="query", required=true, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="destinatarioId", in="query", required=true, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="reporteId", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Chat completo con comentarios"),
+     *     @OA\Response(response=400, description="IDs de emisor y destinatario requeridos")
+     * )
      */
     public function getCompleteChat(Request $request): Response
     {
-        $emisorId = $request->query('emisorId');
+        $emisorId       = $request->query('emisorId');
         $destinatarioId = $request->query('destinatarioId');
-        $reporteId = $request->query('reporteId');
+        $reporteId      = $request->query('reporteId');
 
         if (!$emisorId || !$destinatarioId) {
             throw new DomainException('IDs de emisor y destinatario requeridos', 400);
         }
 
-        $query = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);
+        $query  = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);
         $result = $this->obtenerChatCompletoHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'reportes' => $result['reportes'],
-            'comentarios' => $result['comentarios']
-        ]);
+        return (new Response())->json(['success' => true, 'reportes' => $result['reportes'], 'comentarios' => $result['comentarios']]);
     }
 }

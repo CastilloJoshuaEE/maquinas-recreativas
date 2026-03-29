@@ -1,15 +1,7 @@
 <?php
-/**
- * maquinas_recreativas - Controlador de Historial de Máquinas
- *
- * Maneja las consultas de historial.
- *
- * @package maquinas_recreativas\Interfaces\Http\Controllers
- * @author Tu Equipo
- * @version 1.0
- */
-
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use OpenApi\Annotations as OA;
 
 use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaQuery;
 use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaHandler;
@@ -38,87 +30,99 @@ class HistorialMaquinaController
     ) {
         $this->historialPorMaquinaHandler = $historialPorMaquinaHandler;
         $this->historialPorUsuarioHandler = $historialPorUsuarioHandler;
-        $this->historialGeneralHandler = $historialGeneralHandler;
-        $this->resumenRecienteHandler = $resumenRecienteHandler;
+        $this->historialGeneralHandler    = $historialGeneralHandler;
+        $this->resumenRecienteHandler     = $resumenRecienteHandler;
     }
 
     /**
-     * Obtener historial por máquina
-     * @route GET /v1/historial/maquina/{uuid}
+     * @OA\Get(
+     *     path="/v1/historial/maquina/{uuid}",
+     *     summary="Obtener historial de eventos de una máquina",
+     *     tags={"Historial"},
+     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Parameter(name="pagina", in="query", required=false, @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="por_pagina", in="query", required=false, @OA\Schema(type="integer", default=50)),
+     *     @OA\Response(response=200, description="Historial de la máquina con paginación")
+     * )
      */
     public function getHistorialPorMaquina(Request $request, string $idMaquina): Response
     {
-        $pagina = (int)($request->query('pagina') ?? 1);
-        $porPagina = (int)($request->query('por_pagina') ?? 50);
+        $pagina   = (int) ($request->query('pagina') ?? 1);
+        $porPagina = (int) ($request->query('por_pagina') ?? 50);
 
-        $query = new ObtenerHistorialPorMaquinaQuery($idMaquina, $pagina, $porPagina);
+        $query  = new ObtenerHistorialPorMaquinaQuery($idMaquina, $pagina, $porPagina);
         $result = $this->historialPorMaquinaHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'historial' => $result['historial'],
-            'paginacion' => $result['paginacion']
-        ]);
+        return (new Response())->json(['success' => true, 'historial' => $result['historial'], 'paginacion' => $result['paginacion']]);
     }
 
     /**
-     * Obtener historial por usuario
-     * @route GET /v1/historial/usuario/{uuid}
+     * @OA\Get(
+     *     path="/v1/historial/usuario/{uuid}",
+     *     summary="Obtener historial de actividades de un usuario",
+     *     tags={"Historial"},
+     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Parameter(name="pagina", in="query", required=false, @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="por_pagina", in="query", required=false, @OA\Schema(type="integer", default=50)),
+     *     @OA\Response(response=200, description="Historial del usuario con paginación")
+     * )
      */
     public function getHistorialPorUsuario(Request $request, string $idUsuario): Response
     {
-        $pagina = (int)($request->query('pagina') ?? 1);
-        $porPagina = (int)($request->query('por_pagina') ?? 50);
+        $pagina   = (int) ($request->query('pagina') ?? 1);
+        $porPagina = (int) ($request->query('por_pagina') ?? 50);
 
-        $query = new ObtenerHistorialPorUsuarioQuery($idUsuario, $pagina, $porPagina);
+        $query  = new ObtenerHistorialPorUsuarioQuery($idUsuario, $pagina, $porPagina);
         $result = $this->historialPorUsuarioHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'historial' => $result['historial'],
-            'paginacion' => $result['paginacion']
-        ]);
+        return (new Response())->json(['success' => true, 'historial' => $result['historial'], 'paginacion' => $result['paginacion']]);
     }
 
     /**
-     * Obtener historial general con filtros
-     * @route GET /v1/historial/general
+     * @OA\Get(
+     *     path="/v1/historial/general",
+     *     summary="Obtener historial general con filtros avanzados",
+     *     tags={"Historial"},
+     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="idUsuario", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="tipoUsuario", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="accion", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="fechaInicio", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="fechaFin", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="pagina", in="query", required=false, @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="por_pagina", in="query", required=false, @OA\Schema(type="integer", default=100)),
+     *     @OA\Response(response=200, description="Historial general con paginación")
+     * )
      */
     public function getHistorialGeneral(Request $request): Response
     {
-        $query = new ObtenerHistorialGeneralQuery(
-            $request->query('idMaquina'),
-            $request->query('idUsuario'),
-            $request->query('tipoUsuario'),
-            $request->query('accion'),
-            $request->query('fechaInicio'),
-            $request->query('fechaFin'),
-            (int)($request->query('pagina') ?? 1),
-            (int)($request->query('por_pagina') ?? 100)
+        $query  = new ObtenerHistorialGeneralQuery(
+            $request->query('idMaquina'), $request->query('idUsuario'),
+            $request->query('tipoUsuario'), $request->query('accion'),
+            $request->query('fechaInicio'), $request->query('fechaFin'),
+            (int) ($request->query('pagina') ?? 1),
+            (int) ($request->query('por_pagina') ?? 100)
         );
-
         $result = $this->historialGeneralHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'historial' => $result['historial'],
-            'paginacion' => $result['paginacion']
-        ]);
+        return (new Response())->json(['success' => true, 'historial' => $result['historial'], 'paginacion' => $result['paginacion']]);
     }
 
     /**
-     * Obtener resumen de actividades recientes
-     * @route GET /v1/historial/resumen
+     * @OA\Get(
+     *     path="/v1/historial/resumen",
+     *     summary="Obtener resumen de actividades recientes",
+     *     tags={"Historial"},
+     *     @OA\Parameter(name="limite", in="query", required=false, @OA\Schema(type="integer", default=20)),
+     *     @OA\Response(response=200, description="Resumen de actividades recientes")
+     * )
      */
     public function getResumenReciente(Request $request): Response
     {
-        $limite = (int)($request->query('limite') ?? 20);
-        $query = new ObtenerResumenRecienteQuery($limite);
+        $limite  = (int) ($request->query('limite') ?? 20);
+        $query   = new ObtenerResumenRecienteQuery($limite);
         $resumen = $this->resumenRecienteHandler->handle($query);
 
-        return (new Response())->json([
-            'success' => true,
-            'resumen' => $resumen
-        ]);
+        return (new Response())->json(['success' => true, 'resumen' => $resumen]);
     }
 }

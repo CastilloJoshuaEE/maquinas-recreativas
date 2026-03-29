@@ -1,13 +1,7 @@
 <?php
-/**
- * Controlador para usuarios de logística.
- *
- * @package maquinas_recreativas\Interfaces\Http\Controllers
- * @author Tu Equipo
- * @version 1.0
- */
-
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use OpenApi\Annotations as OA;
 
 use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoCommand;
 use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoHandler;
@@ -31,45 +25,70 @@ class LogisticoController
         DarMantenimientoHandler $darMantenimientoHandler
     ) {
         $this->obtenerMaquinasParaDistribucionHandler = $obtenerMaquinasParaDistribucionHandler;
-        $this->obtenerInformesDistribucionHandler = $obtenerInformesDistribucionHandler;
-        $this->darMantenimientoHandler = $darMantenimientoHandler;
+        $this->obtenerInformesDistribucionHandler     = $obtenerInformesDistribucionHandler;
+        $this->darMantenimientoHandler                = $darMantenimientoHandler;
     }
 
     /**
-     * Obtener máquinas listas para distribución.
+     * @OA\Get(
+     *     path="/v1/logistico/maquinas-distribucion",
+     *     summary="Obtener máquinas listas para distribución",
+     *     tags={"Logístico"},
+     *     @OA\Response(response=200, description="Lista de máquinas listas para distribuir")
+     * )
      */
     public function obtenerMaquinasParaDistribucion(Request $request): Response
     {
-        $query = new ObtenerMaquinasParaDistribucionQuery();
+        $query   = new ObtenerMaquinasParaDistribucionQuery();
         $maquinas = $this->obtenerMaquinasParaDistribucionHandler->handle($query);
+
         return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
     }
 
     /**
-     * Obtener informes de distribución.
+     * @OA\Get(
+     *     path="/v1/logistico/informes-distribucion",
+     *     summary="Obtener informes de distribución",
+     *     tags={"Logístico"},
+     *     @OA\Parameter(name="estado", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="idComercio", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="fechaInicio", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="fechaFin", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Response(response=200, description="Informes de distribución")
+     * )
      */
     public function obtenerInformesDistribucion(Request $request): Response
     {
-        $filters = [
-            'estado' => $request->query('estado'),
-            'ID_Comercio' => $request->query('idComercio'),
-            'ID_Maquina' => $request->query('idMaquina'),
-            'fecha_inicio' => $request->query('fechaInicio'),
-            'fecha_fin' => $request->query('fechaFin')
-        ];
-        $query = new ObtenerInformesDistribucionQuery(
-            $filters['estado'],
-            $filters['ID_Comercio'],
-            $filters['ID_Maquina'],
-            $filters['fecha_inicio'],
-            $filters['fecha_fin']
+        $query   = new ObtenerInformesDistribucionQuery(
+            $request->query('estado'),
+            $request->query('idComercio'),
+            $request->query('idMaquina'),
+            $request->query('fechaInicio'),
+            $request->query('fechaFin')
         );
         $informes = $this->obtenerInformesDistribucionHandler->handle($query);
+
         return (new Response())->json(['success' => true, 'informes' => $informes]);
     }
 
     /**
-     * Solicitar mantenimiento de una máquina.
+     * @OA\Post(
+     *     path="/v1/logistico/solicitar-mantenimiento",
+     *     summary="Solicitar mantenimiento para una máquina",
+     *     tags={"Logístico"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"idMaquina","mensaje"},
+     *             @OA\Property(property="idMaquina", type="string"),
+     *             @OA\Property(property="mensaje", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Mantenimiento solicitado"),
+     *     @OA\Response(response=400, description="Datos requeridos faltantes"),
+     *     @OA\Response(response=401, description="No autorizado")
+     * )
      */
     public function solicitarMantenimiento(Request $request): Response
     {
@@ -79,7 +98,9 @@ class LogisticoController
         }
 
         $logisticaId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$logisticaId) throw new DomainException('No autorizado', 401);
+        if (!$logisticaId) {
+            throw new DomainException('No autorizado', 401);
+        }
 
         $command = new DarMantenimientoCommand($data['idMaquina'], $data['mensaje'], $logisticaId);
         $this->darMantenimientoHandler->handle($command);

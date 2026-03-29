@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/usuario/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorUsuario'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\HistorialMaquinaController::class, 'getHistorialPorUsuario'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/general',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialGeneral'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\HistorialMaquinaController::class, 'getHistorialGeneral'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/resumen',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getResumenReciente'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\HistorialMaquinaController::class, 'getResumenReciente'],
         'middleware' => []
     ]
 ];

@@ -1,0 +1,69 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API Maquinas Recreativas",
+        "description": "Documentación de la API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost/maquinas-recreativas/backend/public",
+            "description": "Servidor local"
+        }
+    ],
+    "paths": {
+        "/v1/administrador/usuarios": {
+            "get": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Obtener todos los usuarios",
+                "operationId": "f0f48d4e84238cbf0fe50c411aeb30ab",
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuarios"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    },
+                    "403": {
+                        "description": "Sin permisos suficientes"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Administrador",
+            "description": "Administrador"
+        }
+    ]
+}

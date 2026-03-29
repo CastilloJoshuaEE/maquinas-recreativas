@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Query\Usuario;
+namespace maquinas_recreativas\Application\Queries\Usuario;
 
 use maquinas_recreativas\Application\Queries\Query;
 

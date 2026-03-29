@@ -297,9 +297,13 @@ backend/
 │   ├── robots.txt
 │   ├── serve.php
 │   └── sitemap.xml
+
+├── public/docs/index.html y swagger-initializer.js
 ├── Scripts/
 │   └── hash.php
 └── Storage/
     ├── Cache/
     ├── Logs/
     └── rate_limits.json
+
+backend/Swagger/SwaggerConfig.php

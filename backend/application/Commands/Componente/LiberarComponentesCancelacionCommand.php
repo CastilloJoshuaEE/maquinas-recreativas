@@ -1,6 +1,6 @@
 <?php
 /**
- * application/commands/componente/LiberarComponentesCancelacion.php
+ * application/commands/componente/LiberarComponentesCancelacionCommand.php
  *
  * Comando para liberar componentes durante cancelación de registro.
  *
@@ -10,9 +10,9 @@
 namespace maquinas_recreativas\Application\Commands\Componente;
 
 /**
- * Class LiberarComponentesCancelacion
+ * Class LiberarComponentesCancelacionCommand
  */
-final class LiberarComponentesCancelacion
+final class LiberarComponentesCancelacionCommand
 {
     private ?string $idPlaca;
     private ?string $idCarcasa;

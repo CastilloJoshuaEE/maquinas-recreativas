@@ -3,7 +3,8 @@
     "description": "Backend para sistema de gestión de máquinas recreativas",
     "type": "project",
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "zircote/swagger-php": "^6.0"
     },
     "autoload": {
         "psr-4": {

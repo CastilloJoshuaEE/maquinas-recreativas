@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Infrastructure\Persistence\Repository;
+namespace maquinas_recreativas\Infrastructure\Repositories;
 
 use maquinas_recreativas\Domain\Usuario\Tecnico;
 use maquinas_recreativas\Domain\Usuario\TecnicoRepository;
@@ -13,7 +13,7 @@ use PDO;
 /**
  * Implementación en MySQL del repositorio de Técnicos.
  *
- * @package maquinas_recreativas\Infrastructure\Persistence\Repository
+ * @package maquinas_recreativas\Infrastructure\Repositories
  * @version 1.0
  */
 final class MySQLTecnicoRepository implements TecnicoRepository

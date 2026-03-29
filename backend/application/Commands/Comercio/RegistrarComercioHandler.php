@@ -8,6 +8,7 @@
 
 namespace maquinas_recreativas\Application\Commands\Comercio;
 
+use maquinas_recreativas\Application\Commands\Command;
 use maquinas_recreativas\Domain\Comercio\Comercio;
 use maquinas_recreativas\Domain\Comercio\ComercioRepository;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
@@ -41,7 +42,7 @@ class RegistrarComercioHandler {
      * @return Comercio La entidad de comercio recién creada.
      * @throws DomainException Si hay un error de negocio.
      */
-    public function handle(RegistrarComercioCommand $command): Comercio {
+    public function handle(Command $command): Comercio {
         // 1. Validaciones de negocio
         if ($this->comercioRepository->existePorNombre($command->getNombre())) {
             throw new DomainException('Ya existe un comercio con ese nombre');

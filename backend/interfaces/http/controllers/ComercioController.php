@@ -1,13 +1,7 @@
 <?php
-/**
- * Controlador HTTP para operaciones de comercios
- * 
- * @package maquinas_recreativas\Interfaces\Http\Controllers
- * @author Tu Nombre
- * @version 2.0.0 (DDD + CQRS)
- */
-
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
+
+use OpenApi\Annotations as OA;
 
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioCommand;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
@@ -27,57 +21,82 @@ class ComercioController
         ObtenerComerciosHandler $obtenerComerciosHandler,
         RegistrarComercioHandler $registrarComercioHandler
     ) {
-        $this->obtenerComerciosHandler = $obtenerComerciosHandler;
+        $this->obtenerComerciosHandler  = $obtenerComerciosHandler;
         $this->registrarComercioHandler = $registrarComercioHandler;
     }
 
+    /**
+     * @OA\Post(
+     *     path="/v1/comercios",
+     *     summary="Registrar un nuevo comercio",
+     *     tags={"Comercios"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"nombre","tipo","direccion","telefono"},
+     *             @OA\Property(property="nombre", type="string"),
+     *             @OA\Property(property="tipo", type="string", enum={"Minorista","Mayorista"}),
+     *             @OA\Property(property="direccion", type="string"),
+     *             @OA\Property(property="telefono", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Comercio registrado correctamente"),
+     *     @OA\Response(response=400, description="Datos inválidos")
+     * )
+     */
     public function register(Request $request): Response
     {
-        $data = $request->json();
-        
+        $data     = $request->json();
         $required = ['nombre', 'tipo', 'direccion', 'telefono'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
                 throw new DomainException("El campo {$field} es requerido", 400);
             }
         }
-        
+
         $tiposPermitidos = ['Minorista', 'Mayorista'];
         if (!in_array($data['tipo'], $tiposPermitidos)) {
             throw new DomainException('Tipo de comercio no válido. Debe ser Minorista o Mayorista', 400);
         }
-        
+
         if (!preg_match('/^[0-9+\-\s]+$/', $data['telefono'])) {
             throw new DomainException('Formato de teléfono inválido', 400);
         }
-        
-        $data = ValidationHelper::sanitizeInput($data);
-        
+
+        $data    = ValidationHelper::sanitizeInput($data);
         $command = new RegistrarComercioCommand(
-            $data['nombre'],
-            $data['tipo'],
-            $data['direccion'],
-            $data['telefono'],
-            $_SESSION['ID_Usuario'] ?? 'system'
+            $data['nombre'], $data['tipo'], $data['direccion'],
+            $data['telefono'], $_SESSION['ID_Usuario'] ?? 'system'
         );
-        
+
         $comercio = $this->registrarComercioHandler->handle($command);
-        
-        return (new Response())->json([
-            'success' => true,
-            'message' => 'Comercio registrado correctamente',
-            'idComercio' => $comercio->getId()
-        ], 201);
+
+        return (new Response())->json(['success' => true, 'message' => 'Comercio registrado correctamente', 'idComercio' => $comercio->getId()], 201);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/v1/comercios",
+     *     summary="Obtener lista de comercios con filtros opcionales",
+     *     tags={"Comercios"},
+     *     @OA\Parameter(name="nombre", in="query", required=false, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="tipo", in="query", required=false, @OA\Schema(type="string", enum={"Minorista","Mayorista"})),
+     *     @OA\Parameter(name="pagina", in="query", required=false, @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="por_pagina", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="ordenar_por", in="query", required=false, @OA\Schema(type="string", default="nombre")),
+     *     @OA\Parameter(name="direccion", in="query", required=false, @OA\Schema(type="string", enum={"ASC","DESC"}, default="ASC")),
+     *     @OA\Response(response=200, description="Lista de comercios"),
+     *     @OA\Response(response=400, description="Tipo de comercio no válido")
+     * )
+     */
     public function obtenerComercios(Request $request): Response
     {
         $filtros = [];
-        
+
         if ($request->query('nombre')) {
             $filtros['nombre'] = ValidationHelper::sanitizeInput($request->query('nombre'));
         }
-        
+
         if ($request->query('tipo')) {
             $tipo = $request->query('tipo');
             if (!in_array($tipo, ['Minorista', 'Mayorista'])) {
@@ -85,24 +104,17 @@ class ComercioController
             }
             $filtros['tipo'] = $tipo;
         }
-        
-        $pagina = (int)($request->query('pagina') ?? 1);
-        $porPagina = (int)($request->query('por_pagina') ?? ITEMS_POR_PAGINA);
-        
+
+        $pagina   = (int) ($request->query('pagina') ?? 1);
+        $porPagina = (int) ($request->query('por_pagina') ?? ITEMS_POR_PAGINA);
+
         if ($porPagina > MAX_ITEMS_POR_PAGINA) {
             $porPagina = MAX_ITEMS_POR_PAGINA;
         }
-        
-        $query = new ObtenerComerciosQuery(
-            $filtros,
-            $pagina,
-            $porPagina,
-            $request->query('ordenar_por') ?? 'nombre',
-            $request->query('direccion') ?? 'ASC'
-        );
-        
+
+        $query  = new ObtenerComerciosQuery($filtros, $pagina, $porPagina, $request->query('ordenar_por') ?? 'nombre', $request->query('direccion') ?? 'ASC');
         $result = $this->obtenerComerciosHandler->handle($query);
-        
+
         return (new Response())->json($result);
     }
 }
