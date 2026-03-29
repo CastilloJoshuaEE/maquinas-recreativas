@@ -182,26 +182,26 @@ class MySQLUsuarioRepository implements UsuarioRepository
     /**
      * @inheritDoc
      */
-    public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                FROM usuario u 
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                WHERE u.usuario_asignado = :usuario_asignado";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->execute(['usuario_asignado' => $usuarioAsignado]);
-        
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$row) {
-            return null;
-        }
-
-        return $this->hydrate($row);
+public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
+{
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+            FROM usuario u 
+            LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+            WHERE u.usuario_asignado = :usuario_asignado";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([':usuario_asignado' => $usuarioAsignado]);
+    
+    $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+    
+    if (!$row) {
+        return null;
     }
+    
+    return $this->hydrate($row);
+}
 
     /**
      * @inheritDoc

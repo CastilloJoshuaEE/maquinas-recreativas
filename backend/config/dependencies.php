@@ -320,22 +320,122 @@ require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPor
 // =============================================
 // INTERFACES - CONTROLLERS
 // =============================================
-require_once __DIR__ . '/../Interfaces/Http/Controllers/UsuarioController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/AdministradorController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/ComercioController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/MaquinaController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/ComponenteController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/HistorialMaquinaController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/DistribucionController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/InformeController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/NotificacionController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/ReporteController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/ComentarioController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoEnsambladorController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoComprobadorController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/TecnicoMantenimientoController.php';
-require_once __DIR__ . '/../Interfaces/Http/Controllers/LogisticoController.php';
+// =============================================
+// USE STATEMENTS PARA CLASES COMUNES
+// =============================================
+use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLMaquinaRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLComponenteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLRecaudacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
 
+use maquinas_recreativas\Application\Commands\Usuario\LoginHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
+use maquinas_recreativas\Application\Commands\Usuario\ActualizarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\EliminarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\ActualizarPerfilHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RecuperarContrasenaHandler;
+use maquinas_recreativas\Application\Commands\Usuario\ActualizarUsuarioAsignadoHandler;
+use maquinas_recreativas\Application\Commands\Usuario\LogoutHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarActividadHandler;
+
+use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdHandler;
+use maquinas_recreativas\Application\Queries\Usuario\ObtenerTodosUsuariosHandler;
+use maquinas_recreativas\Application\Queries\Usuario\ObtenerTecnicosPorEspecialidadHandler;
+use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuariosPorTipoHandler;
+use maquinas_recreativas\Application\Queries\Usuario\BuscarPorEmailHandler;
+use maquinas_recreativas\Application\Queries\Usuario\ObtenerHistorialActividadesHandler;
+
+use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
+use maquinas_recreativas\Application\Queries\Comercio\ObtenerComerciosHandler;
+
+use maquinas_recreativas\Application\Commands\Componente\UsarComponenteHandler;
+use maquinas_recreativas\Application\Commands\Componente\LiberarComponenteHandler;
+use maquinas_recreativas\Application\Commands\Componente\AsignarCarcasaHandler;
+use maquinas_recreativas\Application\Commands\Componente\LiberarComponentesCancelacionHandler;
+use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesHandler;
+use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesDisponiblesHandler;
+use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesEnUsoHandler;
+
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMaquinaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\GenerarPlacaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\RegistrarMontajeHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAComprobacionHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarAReensamblarHandler;
+use maquinas_recreativas\Application\Commands\Maquina\MandarADistribucionHandler;
+use maquinas_recreativas\Application\Commands\Maquina\PonerOperativaHandler;
+use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoHandler;
+use maquinas_recreativas\Application\Commands\Maquina\FinalizarMantenimientoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoEnsambladorHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoComprobadorHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoMantenimientoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEstadoHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEtapaHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribucionHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaHandler;
+
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionReporteHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarComoLeidaHandler;
+use maquinas_recreativas\Application\Commands\Notificacion\MarcarTodasComoLeidasHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesMaquinaHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNotificacionesReporteHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerCantidadNoLeidasHandler;
+use maquinas_recreativas\Application\Queries\Notificacion\ObtenerNoLeidasHandler;
+
+use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\ActualizarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\EliminarRecaudacionHandler;
+use maquinas_recreativas\Application\Commands\Recaudacion\GuardarInformeHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionesHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerResumenRecaudacionesHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerRecaudacionPorIdHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasRecaudacionHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerMaquinasOperativasPorComercioHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerComercioRecaudacionHandler;
+use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerInformePorRecaudacionHandler;
+
+use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
+use maquinas_recreativas\Application\Commands\Reporte\ActualizarEstadoReporteHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportesPorUsuarioHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerUsuariosChatHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatCompletoHandler;
+use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdHandler;
+
+use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
+use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
+
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorUsuarioHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialGeneralHandler;
+use maquinas_recreativas\Application\Queries\Historial\ObtenerResumenRecienteHandler;
+
+use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionHandler;
+
+use maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController;
+use maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController;
+use maquinas_recreativas\Interfaces\Http\Controllers\ComercioController;
+use maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController;
+use maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController;
+use maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController;
+use maquinas_recreativas\Interfaces\Http\Controllers\ReporteController;
+use maquinas_recreativas\Interfaces\Http\Controllers\ComentarioController;
+use maquinas_recreativas\Interfaces\Http\Controllers\InformeController;
+use maquinas_recreativas\Interfaces\Http\Controllers\HistorialMaquinaController;
+use maquinas_recreativas\Interfaces\Http\Controllers\DistribucionController;
+use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoEnsambladorController;
+use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoComprobadorController;
+use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoMantenimientoController;
+use maquinas_recreativas\Interfaces\Http\Controllers\LogisticoController;
 /**
  * Clase contenedor de dependencias (Service Container)
  * 
@@ -344,41 +444,20 @@ require_once __DIR__ . '/../Interfaces/Http/Controllers/LogisticoController.php'
  * 
  * @package Config
  */
+/**
+ * Clase contenedor de dependencias (Service Container)
+ */
 class Dependencies {
     
-    /**
-     * @var array Instancias de servicios
-     */
     private static $instances = [];
-    
-    /**
-     * @var array Definiciones de fábricas
-     */
     private static $factories = [];
     
-    /**
-     * Constructor privado para evitar instanciación
-     */
     private function __construct() {}
     
-    /**
-     * Registra una fábrica para una clase
-     * 
-     * @param string $class Nombre de la clase
-     * @param callable $factory Función fábrica
-     * @return void
-     */
     public static function register($class, callable $factory) {
         self::$factories[$class] = $factory;
     }
     
-    /**
-     * Obtiene una instancia de una clase
-     * 
-     * @param string $class Nombre de la clase
-     * @return mixed Instancia de la clase
-     * @throws Exception Si no hay fábrica registrada
-     */
     public static function get($class) {
         if (!isset(self::$instances[$class])) {
             if (!isset(self::$factories[$class])) {
@@ -389,11 +468,6 @@ class Dependencies {
         return self::$instances[$class];
     }
     
-    /**
-     * Resetea todas las instancias (útil para tests)
-     * 
-     * @return void
-     */
     public static function reset() {
         self::$instances = [];
     }
@@ -404,54 +478,58 @@ class Dependencies {
 // =============================================
 
 // Database
-Dependencies::register(\maquinas_recreativas\Infrastructure\Database\Database::class, function() {
-    return new \maquinas_recreativas\Infrastructure\Database\Database();
+Dependencies::register(MySQLUsuarioRepository::class, function() {
+    return new MySQLUsuarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 // Repositories
 Dependencies::register(MySQLUsuarioRepository::class, function() {
-    return new MySQLUsuarioRepository(Dependencies::get(Database::class));
+    return new MySQLUsuarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLComercioRepository::class, function() {
-    return new MySQLComercioRepository(Dependencies::get(Database::class));
+    return new MySQLComercioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLMaquinaRepository::class, function() {
-    return new MySQLMaquinaRepository(Dependencies::get(Database::class));
+    return new MySQLMaquinaRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLComponenteRepository::class, function() {
-    return new MySQLComponenteRepository(Dependencies::get(Database::class));
+    return new MySQLComponenteRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLHistorialRepository::class, function() {
-    return new MySQLHistorialRepository(Dependencies::get(Database::class));
+    return new MySQLHistorialRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLMontajeRepository::class, function() {
-    return new MySQLMontajeRepository(Dependencies::get(Database::class));
+    return new MySQLMontajeRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLDistribucionRepository::class, function() {
-    return new MySQLDistribucionRepository(Dependencies::get(Database::class));
+    return new MySQLDistribucionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLRecaudacionRepository::class, function() {
-    return new MySQLRecaudacionRepository(Dependencies::get(Database::class));
+    return new MySQLRecaudacionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLNotificacionRepository::class, function() {
-    return new MySQLNotificacionRepository(Dependencies::get(Database::class));
+    return new MySQLNotificacionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLReporteRepository::class, function() {
-    return new MySQLReporteRepository(Dependencies::get(Database::class));
+    return new MySQLReporteRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
 
 Dependencies::register(MySQLComentarioRepository::class, function() {
-    return new MySQLComentarioRepository(Dependencies::get(Database::class));
+    return new MySQLComentarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
 });
+
+// =============================================
+// REGISTRO DE HANDLERS Y CONTROLLERS
+// =============================================
 
 // Handlers de Usuario
 Dependencies::register(LoginHandler::class, function() {
@@ -522,7 +600,6 @@ Dependencies::register(BuscarPorEmailHandler::class, function() {
 Dependencies::register(ObtenerHistorialActividadesHandler::class, function() {
     return new ObtenerHistorialActividadesHandler(Dependencies::get(MySQLUsuarioRepository::class));
 });
-
 // Handlers de Comercio
 Dependencies::register(RegistrarComercioHandler::class, function() {
     return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class));

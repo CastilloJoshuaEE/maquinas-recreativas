@@ -199,27 +199,69 @@ $routesPath = __DIR__ . '/../interfaces/http/routes/';
         return false;
     }
     
-    /**
-     * Resuelve un controlador desde el contenedor
-     * 
-     * @param string $class
-     * @return object|null
-     */
-    private function resolveController(string $class): ?object
-    {
-        global $container;
-        
-        if (isset($container[$class])) {
-            return $container[$class];
+/**
+ * Resuelve un controlador desde el contenedor
+ * 
+ * @param string $class
+ * @return object|null
+ */
+private function resolveController(string $class): ?object
+{
+    // Intentar obtener del contenedor Dependencies
+    try {
+        if (class_exists('/../Config/Dependencies')) {
+            return Dependencies::get($class);
         }
-        
-        // Intentar crear instancia (fallback)
+    } catch (\Exception $e) {
+        // Si falla, intentar crear instancia directa
         if (class_exists($class)) {
-            return new $class();
+            error_log("Error obteniendo {$class} del contenedor: " . $e->getMessage());
         }
-        
-        return null;
     }
+    
+    // Intentar crear instancia con parámetros por defecto (fallback)
+    if (class_exists($class)) {
+        try {
+            // Intentar obtener los parámetros del constructor
+            $reflection = new \ReflectionClass($class);
+            $constructor = $reflection->getConstructor();
+            
+            if (!$constructor) {
+                return new $class();
+            }
+            
+            $params = $constructor->getParameters();
+            $args = [];
+            
+            foreach ($params as $param) {
+                $paramType = $param->getType();
+                if ($paramType && !$paramType->isBuiltin()) {
+                    $paramClass = $paramType->getName();
+                    try {
+                        $args[] = $this->resolveController($paramClass);
+                    } catch (\Exception $e) {
+                        if ($param->isDefaultValueAvailable()) {
+                            $args[] = $param->getDefaultValue();
+                        } else {
+                            throw new \RuntimeException("No se puede resolver el parámetro {$param->getName()} para {$class}");
+                        }
+                    }
+                } elseif ($param->isDefaultValueAvailable()) {
+                    $args[] = $param->getDefaultValue();
+                } else {
+                    $args[] = null;
+                }
+            }
+            
+            return $reflection->newInstanceArgs($args);
+        } catch (\ArgumentCountError $e) {
+            error_log("No se puede instanciar {$class}: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    return null;
+}
     
     /**
      * Maneja excepciones no capturadas
