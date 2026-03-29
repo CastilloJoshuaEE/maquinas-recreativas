@@ -6,7 +6,7 @@
  * Contiene la lógica de aplicación (caso de uso) para registrar un comercio.
  */
 
-namespace maquinas_recreativas\Application\Command\Comercio;
+namespace maquinas_recreativas\Application\Commands\Comercio;
 
 use maquinas_recreativas\Domain\Comercio\Comercio;
 use maquinas_recreativas\Domain\Comercio\ComercioRepository;

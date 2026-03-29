@@ -1,12 +1,17 @@
 <?php
-// backend/helper/RateLimiter.php
+/**
+ * backend/infrastructure/security/RateLimiter.php
+ */
+
+namespace maquinas_recreativas\Infrastructure\Security;
 
 class RateLimiter {
     private static $instance = null;
     private $limits = [];
-    private $storageFile = __DIR__ . '/../storage/rate_limits.json';
-    
+    private $storageFile;
+
     private function __construct() {
+        $this->storageFile = __DIR__ . '/../../storage/rate_limits.json';
         $dir = dirname($this->storageFile);
         if (!is_dir($dir)) {
             mkdir($dir, 0777, true);
@@ -50,9 +55,6 @@ class RateLimiter {
         return max(0, $maxRequests - $used);
     }
 
-    /**
-     * Resetea los contadores de una IP específica (usado entre pruebas).
-     */
     public function resetKey($key) {
         foreach (array_keys($this->limits) as $storageKey) {
             if (strpos($storageKey, $key . '_') === 0) {
@@ -62,9 +64,6 @@ class RateLimiter {
         $this->save();
     }
 
-    /**
-     * Resetea TODOS los contadores (solo para entorno de pruebas).
-     */
     public function resetAll() {
         $this->limits = [];
         $this->save();

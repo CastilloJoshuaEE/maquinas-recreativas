@@ -7,7 +7,8 @@ namespace maquinas_recreativas\Application\Query\Usuario;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Query\QueryHandler;
+use maquinas_recreativas\Application\Queries\QueryHandler;
+use maquinas_recreativas\Application\Queries\Query;
 
 /**
  * Manejador para la query de obtener historial de actividades de un usuario.
@@ -36,7 +37,7 @@ final class ObtenerHistorialActividadesHandler implements QueryHandler
      * @return array
      * @throws DomainException
      */
-    public function handle(ObtenerHistorialActividadesQuery $query): array
+    public function handle(Query $query): array
     {
         // Verificar que el usuario existe
         $usuario = $this->usuarioRepository->findById($query->usuarioId);

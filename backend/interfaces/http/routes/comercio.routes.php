@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/comercio/register',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComercioController::class, 'register'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComercioController::class, 'register'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/comercio/all',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComercioController::class, 'obtenerComercios'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComercioController::class, 'obtenerComercios'],
         'middleware' => []
     ]
 ];

@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/reportes/crear',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'create'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'create'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/usuario/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getByUser'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'getByUser'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/chat/:uuid/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'getChat'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'PUT',
         'path' => '/reportes/:uuid/estado',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'updateStatus'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'updateStatus'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/usuarios-chat',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getUsuariosChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'getUsuariosChat'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/reportes/chat-completo',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ReporteController::class, 'getCompleteChat'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ReporteController::class, 'getCompleteChat'],
         'middleware' => []
     ]
 ];

@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/administrador/usuarios',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\AdministradorController::class, 'getAllUsers'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'getAllUsers'],
         'middleware' => ['role:Administrador']
     ],
     

@@ -14,42 +14,42 @@ return [
     [
         'method'=>'POST',
         'path'=> '/usuario/login',
-        'handler'=> [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'login'],
+        'handler'=> [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'login'],
         'middleware' =>[]
     ],
     // Logout
     [
         'method'=> 'POST',
         'path'=> '/usuario/logout',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'logout'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'logout'],
         'middleware'=>[]
     ],
     // Registro público
     [
         'method'=> 'POST',
         'path'=> '/usuario/register',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'register'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'register'],
         'middleware'=>[]
     ],
     // Recuperar contraseña
     [
         'method'=> 'POST',
         'path'=> '/usuario/recuperar-contrasena',
-        'handler'=> [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'resetPassword'],
+        'handler'=> [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'resetPassword'],
         'middleware'=>[]
     ],
     // Recuperar usuario (cambiar username)
     [
         'method'=> 'POST',
         'path'=> '/usuario/recuperar-usuario',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'updateUsername'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'updateUsername'],
         'middleware'=>[]
     ],
     // Buscar por email
     [
         'method'=> 'POST',
         'path'=> '/usuario/buscar-email',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'buscarPorEmail'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'buscarPorEmail'],
         'middleware'=>[]
 
     ]

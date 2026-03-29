@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace maquinas_recreativas\Application\Query\Usuario;
 
-use maquinas_recreativas\Application\Query\Query;
+use maquinas_recreativas\Application\Queries\Query;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**

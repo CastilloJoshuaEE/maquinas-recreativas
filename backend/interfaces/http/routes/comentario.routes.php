@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/comentarios',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComentarioController::class, 'create'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComentarioController::class, 'create'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/comentarios/reporte/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComentarioController::class, 'getByReporte'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComentarioController::class, 'getByReporte'],
         'middleware' => []
     ]
 ];

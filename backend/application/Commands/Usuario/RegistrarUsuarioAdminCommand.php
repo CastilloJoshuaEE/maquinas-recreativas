@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
-use maquinas_recreativas\Application\Command\Command;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Comando para registrar un usuario por un administrador.
- *
- * @package maquinas_recreativas\Application\Command\Usuario
- * @version 1.0
  */
 final class RegistrarUsuarioAdminCommand implements Command
 {
@@ -24,19 +21,6 @@ final class RegistrarUsuarioAdminCommand implements Command
     public string $estado;
     public ?string $especialidad;
 
-    /**
-     * Constructor del comando.
-     *
-     * @param string $nombre
-     * @param string $apellido
-     * @param string $ci
-     * @param string $email
-     * @param string $usuarioAsignado
-     * @param string $contrasena
-     * @param string $tipo
-     * @param string $estado
-     * @param string|null $especialidad
-     */
     public function __construct(
         string $nombre,
         string $apellido,

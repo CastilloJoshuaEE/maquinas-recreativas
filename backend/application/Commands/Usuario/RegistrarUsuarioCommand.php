@@ -1,15 +1,15 @@
 <?php
 /**
- * maquinas_recreativas - Application Command
+ * maquinas_recreativas - Application Commands
  *
  * Comando para registrar un nuevo usuario.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 /**
  * Class RegistrarUsuarioCommand

@@ -6,7 +6,7 @@
  * Contiene los datos necesarios para ejecutar el caso de uso.
  */
 
-namespace maquinas_recreativas\Command\Comercio;
+namespace maquinas_recreativas\Commands\Comercio;
 
 /**
  * Class RegistrarComercioCommand

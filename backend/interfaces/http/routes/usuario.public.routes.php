@@ -1,37 +1,76 @@
 <?php
-
-declare(strict_types=1);
-
-use maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController;
-
 /**
- * Definición de rutas públicas para el módulo de Usuario.
- * No requieren autenticación.
+ * maquinas_recreativas - Usuario Public Routes
+ * 
+ * Rutas públicas de usuario (no requieren autenticación).
  * 
  * @package maquinas_recreativas\Interfaces\Http\Routes
+ * @author Tu Equipo
  * @version 1.0
  */
 
-// Registro de nuevo usuario
-$router->post('/usuario/register', UsuarioController::class, 'register');
-
-// Inicio de sesión
-$router->post('/usuario/login', UsuarioController::class, 'login');
-
-// Buscar usuario por email (público por necesidad de recuperación)
-$router->post('/usuario/buscar-email', UsuarioController::class, 'buscarPorEmail');
-
-// Recuperar contraseña
-$router->post('/usuario/recuperar-contrasena', UsuarioController::class, 'resetPassword');
-
-// Recuperar/actualizar nombre de usuario
-$router->post('/usuario/recuperar-usuario', UsuarioController::class, 'updateUsername');
-
-// Cierre de sesión (requiere sesión iniciada, pero no tiene contenido en el cuerpo)
-$router->post('/usuario/logout', UsuarioController::class, 'logout');
-
-// Obtener técnicos por especialidad (público porque se usa en formularios)
-$router->get('/usuario/tecnicos/{especialidad}', UsuarioController::class, 'obtenerTecnicos');
-
-// Obtener usuarios por tipo (con parámetros en query string)
-$router->get('/usuarios/por-tipo', UsuarioController::class, 'getByTipo');
+return [
+    // Registro de nuevo usuario
+    [
+        'method' => 'POST',
+        'path' => '/usuario/register',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'register'],
+        'middleware' => []
+    ],
+    
+    // Inicio de sesión
+    [
+        'method' => 'POST',
+        'path' => '/usuario/login',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'login'],
+        'middleware' => []
+    ],
+    
+    // Buscar usuario por email
+    [
+        'method' => 'POST',
+        'path' => '/usuario/buscar-email',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'buscarPorEmail'],
+        'middleware' => []
+    ],
+    
+    // Recuperar contraseña
+    [
+        'method' => 'POST',
+        'path' => '/usuario/recuperar-contrasena',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'resetPassword'],
+        'middleware' => []
+    ],
+    
+    // Recuperar/actualizar nombre de usuario
+    [
+        'method' => 'POST',
+        'path' => '/usuario/recuperar-usuario',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'updateUsername'],
+        'middleware' => []
+    ],
+    
+    // Cierre de sesión
+    [
+        'method' => 'POST',
+        'path' => '/usuario/logout',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'logout'],
+        'middleware' => []
+    ],
+    
+    // Obtener técnicos por especialidad
+    [
+        'method' => 'GET',
+        'path' => '/usuario/tecnicos/:slug',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'obtenerTecnicos'],
+        'middleware' => []
+    ],
+    
+    // Obtener usuarios por tipo
+    [
+        'method' => 'GET',
+        'path' => '/usuarios/por-tipo',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'getByTipo'],
+        'middleware' => []
+    ]
+];

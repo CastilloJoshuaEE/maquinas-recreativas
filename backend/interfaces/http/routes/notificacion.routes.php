@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/notificaciones_maquina/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'obtenerPorUsuario'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'obtenerPorUsuario'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/notificaciones/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'getNotificaciones'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'getNotificaciones'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/notificaciones/:uuid/marcarla-leida',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'marcarComoLeidaNotificacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'marcarComoLeidaNotificacion'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/notificaciones/marcarla-todas-leidas',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'marcarTodasComoLeidas'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'marcarTodasComoLeidas'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/notificaciones/create',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'create'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'create'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/notificaciones/marcar-leida',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'marcarComoLeida'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'marcarComoLeida'],
         'middleware' => []
     ],
     
@@ -62,7 +62,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/notificaciones/no-leidas/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\NotificacionController::class, 'obtenerNoLeidas'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'obtenerNoLeidas'],
         'middleware' => []
     ]
 ];

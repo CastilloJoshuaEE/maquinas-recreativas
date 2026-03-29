@@ -1,6 +1,6 @@
 <?php
 /**
- * application/queries/comentario/ObtenerComentariosPorReporte.php
+ * application/queries/comentario/ObtenerComentariosPorReporteQuery.php
  *
  * Query para obtener comentarios por reporte.
  *

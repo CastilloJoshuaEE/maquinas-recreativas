@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/componentes',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'obtenerComponentes'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'obtenerComponentes'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/componentes/disponibles',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'obtenerComponentesDisponibles'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'obtenerComponentesDisponibles'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/componentes/usar',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'usarComponente'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'usarComponente'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/componentes/liberar',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'liberarComponente'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'liberarComponente'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/componentes/asignar-carcasa',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'asignarCarcasa'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'asignarCarcasa'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/componentes/liberar-cancelacion',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'liberarComponentesCancelacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'liberarComponentesCancelacion'],
         'middleware' => []
     ],
     
@@ -62,7 +62,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/componentes/en-uso/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\ComponenteController::class, 'obtenerComponentesEnUso'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComponenteController::class, 'obtenerComponentesEnUso'],
         'middleware' => []
     ]
 ];

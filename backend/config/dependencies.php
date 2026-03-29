@@ -17,7 +17,13 @@
 use maquinas_recreativas\Config\Database;
 use maquinas_recreativas\Infrastructure\Database\Database as InfrastructureDatabase;
 require_once __DIR__ . '/constants.php';
-
+// =============================================
+// APPLICATION - BASE INTERFACES
+// =============================================
+require_once __DIR__ . '/../Application/Commands/Command.php';
+require_once __DIR__ . '/../Application/Commands/CommandHandler.php';
+require_once __DIR__ . '/../Application/Queries/Query.php';
+require_once __DIR__ . '/../Application/Queries/QueryHandler.php';
 // =============================================
 // HELPERS Y UTILIDADES
 // =============================================
@@ -155,7 +161,7 @@ require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaComman
 require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaHandler.php';
 require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponenteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponenteHandler.php';
-require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacion.php';
+require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacionCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacionHandler.php';
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteHandler.php';
@@ -165,7 +171,7 @@ require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoCommand
 require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoHandler.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/FinalizarMantenimientoCommand.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/FinalizarMantenimientoHandler.php';
-require_once __DIR__ . '/../Application/Commands/Maquina/GenerarPlacaComand.php';
+require_once __DIR__ . '/../Application/Commands/Maquina/GenerarPlacaCommand.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/GenerarPlacaHandler.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/MandarAComprobacionCommand.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/MandarAComprobacionHandler.php';
@@ -308,7 +314,7 @@ require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatQuery
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatHandler.php';
 
 // Comentario Queries
-require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporte.php';
+require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteQuery.php';
 require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteHandler.php';
 
 // =============================================

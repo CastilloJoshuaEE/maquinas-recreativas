@@ -14,7 +14,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/register',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'register'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'register'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/generar-placa',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'generarPlaca'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'generarPlaca'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/registrar-montaje',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'registrarMontaje'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'registrarMontaje'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/mandar-comprobacion',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'mandarAComprobacion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'mandarAComprobacion'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/mandar-reensamblar',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'mandarAReensamblar'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'mandarAReensamblar'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/mandar-distribucion',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'mandarADistribucion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'mandarADistribucion'],
         'middleware' => []
     ],
     
@@ -62,7 +62,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/poner-operativa',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'ponerOperativa'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'ponerOperativa'],
         'middleware' => []
     ],
     
@@ -70,7 +70,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/dar-mantenimiento',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'darMantenimiento'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'darMantenimiento'],
         'middleware' => []
     ],
     
@@ -78,7 +78,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/maquina/finalizar-mantenimiento',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'finalizarMantenimiento'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'finalizarMantenimiento'],
         'middleware' => []
     ],
     
@@ -86,7 +86,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/ensamblador/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerPorTecnicoEnsamblador'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorTecnicoEnsamblador'],
         'middleware' => []
     ],
     
@@ -94,7 +94,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/comprobador/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerPorTecnicoComprobador'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorTecnicoComprobador'],
         'middleware' => []
     ],
     
@@ -102,7 +102,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/mantenimiento/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerPorTecnicoMantenimiento'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorTecnicoMantenimiento'],
         'middleware' => []
     ],
     
@@ -110,7 +110,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/estado/:slug',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerPorEstado'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorEstado'],
         'middleware' => []
     ],
     
@@ -118,7 +118,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/etapa/:slug',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerPorEtapa'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorEtapa'],
         'middleware' => []
     ],
     
@@ -126,7 +126,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/distribucion',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerMaquinasParaDistribucion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerMaquinasParaDistribucion'],
         'middleware' => []
     ],
     
@@ -134,7 +134,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/maquina/componentes/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\MaquinaController::class, 'obtenerComponentesPorMaquina'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerComponentesPorMaquina'],
         'middleware' => []
     ]
 ];

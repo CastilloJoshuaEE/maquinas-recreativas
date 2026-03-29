@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Application\Commands\CommandHandler;
+use maquinas_recreativas\Application\Commands\Command;
+
 
 /**
  * Manejador para el comando de cierre de sesión (Logout).
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @version 1.0
  */
 final class LogoutHandler implements CommandHandler
@@ -36,7 +38,7 @@ final class LogoutHandler implements CommandHandler
      * @return void
      * @throws DomainException
      */
-    public function handle(LogoutCommand $command): void
+    public function handle(Command $command): void
     {
         // Verificar que el usuario existe
         $usuario = $this->usuarioRepository->findById($command->usuarioId);

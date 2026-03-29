@@ -2,7 +2,7 @@
 /**
  * application/queries/comentario/ObtenerComentariosPorReporteHandler.php
  *
- * Manejador del query ObtenerComentariosPorReporte.
+ * Manejador del query ObtenerComentariosPorReporteHandler.
  *
  * @package maquinas_recreativas\Application\Queries\Comentario
  */

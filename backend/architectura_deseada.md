@@ -95,7 +95,7 @@ backend/
 │       ├── UsuarioHelper.php
 │       └── ValidationHelper.php
 ├── Application/
-│   ├── Commands/
+│   ├── Commands/Command.php y CommandHandler.php
 │   │   ├── Comentario/
 │   │   │   ├── CrearComentarioCommand.php
 │   │   │   └── CrearComentarioHandler.php
@@ -176,9 +176,9 @@ backend/
 │   │       ├── RegistrarUsuarioAdminHandler.php
 │   │       ├── RegistrarUsuarioCommand.php
 │   │       └── RegistrarUsuarioHandler.php
-│   └── Queries/
+│   └── Queries/Query.php y QueryHandler.php
 │       ├── Comentario/
-│       │   ├── ObtenerComentariosPorReporte.php
+│       │   ├── ObtenerComentariosPorReporteQuery.php
 │       │   └── ObtenerComentariosPorReporteHandler.php
 │       ├── Comercio/
 │       │   ├── ObtenerComerciosHandler.php

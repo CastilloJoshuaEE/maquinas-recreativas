@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/distribucion/informes',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\DistribucionController::class, 'obtenerInformesDistribucion'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\DistribucionController::class, 'obtenerInformesDistribucion'],
         'middleware' => []
     ]
 ];

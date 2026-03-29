@@ -6,8 +6,10 @@ namespace maquinas_recreativas\Application\Query\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Usuario\TipoUsuario;
-use maquinas_recreativas\Application\Query\QueryHandler;
+use maquinas_recreativas\Application\Queries\QueryHandler;
 use InvalidArgumentException;
+use maquinas_recreativas\Application\Queries\Query;
+
 
 /**
  * Manejador para la query de obtener usuarios por tipo.
@@ -33,7 +35,7 @@ final class ObtenerUsuariosPorTipoHandler implements QueryHandler
      * @return array
      * @throws InvalidArgumentException
      */
-    public function handle(ObtenerUsuariosPorTipoQuery $query):array{
+    public function handle(Query $query):array{
         // Validar que el tipo sea válido
         $tiposValidos = TipoUsuario::validValues();
         if(!in_array($query->tipo, $tiposValidos, true)){

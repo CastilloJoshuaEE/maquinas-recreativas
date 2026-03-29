@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial/maquina/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\HistorialMaquinaController::class, 'getHistorialPorMaquina'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\HistorialMaquinaController::class, 'getHistorialPorMaquina'],
         'middleware' => []
     ],
     

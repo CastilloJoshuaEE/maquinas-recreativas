@@ -6,7 +6,9 @@ namespace maquinas_recreativas\Application\Query\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Query\QueryHandler;
+use maquinas_recreativas\Application\Queries\QueryHandler;
+use maquinas_recreativas\Application\Queries\Query;
+
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 /**
@@ -36,7 +38,7 @@ final class BuscarPorEmailHandler implements QueryHandler
      * @return array
      * @throws DomainException
      */
-    public function handle(BuscarPorEmailQuery $query): array
+    public function handle(Query $query): array
     {
         // Validar formato del email
         if (!filter_var($query->email, FILTER_VALIDATE_EMAIL)) {

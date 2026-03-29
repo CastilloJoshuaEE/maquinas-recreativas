@@ -2,43 +2,36 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Application\Commands\CommandHandler;
+use maquinas_recreativas\Application\Commands\Command;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 /**
  * Manejador para el comando de actualización del nombre de usuario asignado.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @version 1.0
  */
 final class ActualizarUsuarioAsignadoHandler implements CommandHandler
 {
     private UsuarioRepository $usuarioRepository;
 
-    /**
-     * Constructor del handler.
-     *
-     * @param UsuarioRepository $usuarioRepository
-     */
     public function __construct(UsuarioRepository $usuarioRepository)
     {
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    /**
-     * Maneja el comando de actualización de usuario asignado.
-     *
-     * @param ActualizarUsuarioAsignadoCommand $command
-     * @return void
-     * @throws DomainException
-     */
-    public function handle(ActualizarUsuarioAsignadoCommand $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof ActualizarUsuarioAsignadoCommand) {
+            throw new \InvalidArgumentException('Comando inválido para este handler');
+        }
+
         // Validar formato del email
         if (!filter_var($command->email, FILTER_VALIDATE_EMAIL)) {
             throw new DomainException(
@@ -49,7 +42,7 @@ final class ActualizarUsuarioAsignadoHandler implements CommandHandler
 
         // Buscar el usuario por email
         $emailEncriptado = CifradoHelper::encriptar($command->email);
-        $usuario = $this->usuarioRepository->findByEmail($emailEncriptado);
+        $usuario = $this->usuarioRepository->searchByEmail($emailEncriptado);
 
         if (!$usuario) {
             throw new DomainException(

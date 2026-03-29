@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
+use maquinas_recreativas\Application\Commands\Command;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 
 /**
  * Manejador para el comando de registro de actividad de usuario.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @version 1.0
  */
 final class RegistrarActividadHandler implements CommandHandler
@@ -36,7 +37,7 @@ final class RegistrarActividadHandler implements CommandHandler
      * @return void
      * @throws DomainException
      */
-    public function handle(RegistrarActividadCommand $command): void
+    public function handle(Command $command): void
     {
         // Verificar que el usuario existe
         $usuario = $this->usuarioRepository->findById($command->usuarioId);

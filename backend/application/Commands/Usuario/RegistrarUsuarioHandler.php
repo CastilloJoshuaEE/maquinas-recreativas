@@ -1,15 +1,15 @@
 <?php
 /**
- * maquinas_recreativas - Application Command Handler
+ * maquinas_recreativas - Application Commands Handler
  *
  * Manejador del comando RegistrarUsuarioCommand.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @author Tu Equipo
  * @version 1.0
  */
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Usuario\Usuario;

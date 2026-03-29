@@ -2,18 +2,20 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Application\Commands\Command;
+
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 
 /**
  * Manejador para el comando de cambio de estado de un usuario.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @version 1.0
  */
 final class CambiarEstadoUsuarioHandler implements CommandHandler
@@ -37,7 +39,7 @@ final class CambiarEstadoUsuarioHandler implements CommandHandler
      * @return void
      * @throws DomainException
      */
-    public function handle(CambiarEstadoUsuarioCommand $command): void
+    public function handle(Command $command): void
     {
         // Buscar el usuario por ID
         $usuario = $this->usuarioRepository->findById($command->usuarioId);

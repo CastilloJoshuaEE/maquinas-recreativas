@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
-namespace maquinas_recreativas\Application\Command\Usuario;
+namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-use maquinas_recreativas\Application\Command\CommandHandler;
+use maquinas_recreativas\Application\Commands\CommandHandler;
+use maquinas_recreativas\Application\Commands\Command;
+
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 /**
  * Manejador para el comando de recuperación de contraseña.
  *
- * @package maquinas_recreativas\Application\Command\Usuario
+ * @package maquinas_recreativas\Application\Commands\Usuario
  * @version 1.0
  */
 final class RecuperarContrasenaHandler implements CommandHandler
@@ -36,7 +38,7 @@ final class RecuperarContrasenaHandler implements CommandHandler
      * @return void
      * @throws DomainException
      */
-    public function handle(RecuperarContrasenaCommand $command): void
+    public function handle(Command  $command): void
     {
         // Validar la nueva contraseña
         if (strlen($command->nuevaContrasena) < 8) {

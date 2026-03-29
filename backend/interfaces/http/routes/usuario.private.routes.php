@@ -14,7 +14,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/usuario/perfil',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'getProfile'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'getProfile'],
         'middleware' => []
     ],
     
@@ -22,7 +22,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/usuario/profile/:uuid',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'getProfile'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'getProfile'],
         'middleware' => []
     ],
     
@@ -30,7 +30,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/usuario/actualizar-perfil',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'updateProfile'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'updateProfile'],
         'middleware' => []
     ],
     
@@ -38,7 +38,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/usuario/tecnicos/:slug',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'obtenerTecnicos'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'obtenerTecnicos'],
         'middleware' => []
     ],
     
@@ -46,7 +46,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/usuarios/por-tipo',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'getByTipo'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'getByTipo'],
         'middleware' => []
     ],
     
@@ -54,7 +54,7 @@ return [
     [
         'method' => 'POST',
         'path' => '/historial-actividades',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'registrarActividad'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'registrarActividad'],
         'middleware' => []
     ],
     
@@ -62,7 +62,7 @@ return [
     [
         'method' => 'GET',
         'path' => '/historial-actividades',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controller\UsuarioController::class, 'obtenerHistorialActividades'],
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'obtenerHistorialActividades'],
         'middleware' => []
     ]
 ];
