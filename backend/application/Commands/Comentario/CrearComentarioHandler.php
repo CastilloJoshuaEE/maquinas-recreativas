@@ -2,7 +2,7 @@
 /**
  * application/commands/comentario/CrearComentarioHandler.php
  *
- * Manejador del comando CrearComentario.
+ * Manejador del comando CrearComentarioCommand.
  *
  * @package maquinas_recreativas\Application\Commands\Comentario
  */
@@ -17,11 +17,13 @@ use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 
 /**
  * Class CrearComentarioHandler
  */
-final class CrearComentarioHandler
+final class CrearComentarioHandler implements CommandHandler
 {
     private ComentarioRepository $comentarioRepository;
     private ReporteRepository $reporteRepository;
@@ -40,8 +42,12 @@ final class CrearComentarioHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    public function handle(CrearComentario $command): string
+    public function handle(Command $command): string
     {
+        if (!$command instanceof CrearComentarioCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idReporte = new Uuid($command->idReporte());
         $idUsuarioEmisor = new Uuid($command->idUsuarioEmisor());
 
@@ -50,7 +56,7 @@ final class CrearComentarioHandler
             throw new DomainException('Reporte no encontrado');
         }
 
-        $usuario = $this->usuarioRepository->findById($idUsuarioEmisor);
+        $usuario = $this->usuarioRepository->searchById($idUsuarioEmisor);
         if (!$usuario) {
             throw new DomainException('Usuario no encontrado');
         }

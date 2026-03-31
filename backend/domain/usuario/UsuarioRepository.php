@@ -15,9 +15,6 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Interface UsuarioRepository
- *
- * Define las operaciones de persistencia para la entidad Usuario.
- * La implementación concreta (MySQL, Mock, etc.) residirá en la capa de Infrastructure.
  */
 interface UsuarioRepository
 {
@@ -28,6 +25,14 @@ interface UsuarioRepository
      * @return void
      */
     public function save(Usuario $usuario): void;
+
+    /**
+     * Busca un usuario por su ID (alias de searchById para compatibilidad).
+     *
+     * @param Uuid $id
+     * @return Usuario|null
+     */
+    public function findById(Uuid $id): ?Usuario;
 
     /**
      * Busca un usuario por su ID.
@@ -68,4 +73,16 @@ interface UsuarioRepository
      * @return Usuario[]
      */
     public function findAll(array $filtros = []): array;
+public function existsByEmail(string $emailEncriptado): bool;
+    public function existsByCi(string $ciEncriptada): bool;
+    public function existsByUsuarioAsignado(string $usuarioAsignado): bool;
+    public function existsByUsuarioAsignadoAndNotId(string $usuarioAsignado, Uuid $id): bool;
+    public function hasMachinesAssigned(Uuid $id): bool;
+    public function registrarLogout(Uuid $id): void;
+    public function registrarActividad(Uuid $id, string $descripcion): void;
+    public function obtenerHistorialActividades(Uuid $id): array;
+    public function findByTipo(string $tipo, ?Uuid $excluirId = null): array;
+    public function findTecnicosByEspecialidad(string $especialidad): array;
+    public function findByEmail(string $email): ?Usuario;
+
 }

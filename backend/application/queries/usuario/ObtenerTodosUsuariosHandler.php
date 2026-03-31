@@ -26,8 +26,13 @@ final class ObtenerTodosUsuariosHandler
         if ($query->getCi()) {
             $filters['ci'] = CifradoHelper::encriptar($query->getCi());
         }
+        
+        // Agregar limit y offset a los filtros
+        $filters['limit'] = $query->getLimit();
+        $filters['offset'] = $query->getOffset();
 
-        $usuarios = $this->usuarioRepository->findAll($filters, $query->getLimit(), $query->getOffset());
+        // findAll() ahora recibe solo un array de filtros
+        $usuarios = $this->usuarioRepository->findAll($filters);
 
         return array_map(fn($usuario) => $usuario->toArray(), $usuarios);
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace maquinas_recreativas\Domain\Usuario;
 
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
 use InvalidArgumentException;
 
 /**

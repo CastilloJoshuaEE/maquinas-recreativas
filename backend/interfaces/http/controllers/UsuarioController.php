@@ -104,28 +104,31 @@ class UsuarioController
             new OA\Response(response: 400, description: "Datos incompletos")
         ]
     )]
-    public function register(Request $request): Response
-    {
-        $data = $request->json();
-        if (!isset($data['contrasena'])) {
-            throw new DomainException('Datos incompletos', 400);
-        }
-
-        $command = new RegistrarUsuarioCommand(
-            $data['nombre'] ?? '', $data['apellido'] ?? '', $data['ci'] ?? '',
-            $data['email'] ?? '', $data['contrasena'], $data['tipo'] ?? 'Usuario',
-            $data['especialidad'] ?? null
-        );
-
-        $result = $this->registrarUsuarioHandler->handle($command);
-
-        return (new Response())->json([
-            'success'          => true,
-            'message'          => 'Usuario registrado correctamente',
-            'userId'           => $result->value(),
-            'usuario_asignado' => $result->getUsuarioAsignado(),
-        ], 201);
+public function register(Request $request): Response
+{
+    $data = $request->json();
+    if (!isset($data['contrasena'])) {
+        throw new DomainException('Datos incompletos', 400);
     }
+
+    $command = new RegistrarUsuarioCommand(
+        $data['nombre'] ?? '', $data['apellido'] ?? '', $data['ci'] ?? '',
+        $data['email'] ?? '', $data['contrasena'], $data['tipo'] ?? 'Usuario',
+        $data['especialidad'] ?? null
+    );
+
+    $result = $this->registrarUsuarioHandler->handle($command); // $result es Uuid
+
+    // Debes obtener el usuario creado para obtener su usuario_asignado
+    $usuarioCreado = $this->obtenerUsuarioPorIdHandler->handle(new ObtenerUsuarioPorIdQuery($result, true));
+
+    return (new Response())->json([
+        'success'          => true,
+        'message'          => 'Usuario registrado correctamente',
+        'userId'           => $result->value(),
+        'usuario_asignado' => $usuarioCreado['usuario_asignado'] ?? '',
+    ], 201);
+}
 
     #[OA\Post(
         path: "/v1/usuario/login",

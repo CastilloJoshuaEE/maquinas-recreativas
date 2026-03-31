@@ -7,6 +7,7 @@ use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
 use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteQuery;
 use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
@@ -51,6 +52,10 @@ class ComentarioController
             throw new DomainException('Faltan datos requeridos: idReporte, comentario', 400);
         }
 
+        if (!ValidationHelper::isValidUUID($data['idReporte'])) {
+            throw new DomainException('ID de reporte inválido', 400);
+        }
+
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
@@ -59,7 +64,8 @@ class ComentarioController
         $command     = new CrearComentarioCommand($data['idReporte'], $userId, $data['comentario']);
         $idComentario = $this->crearComentarioHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
+        $response = new Response();
+        return $response->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
     }
 
     #[OA\Get(
@@ -76,6 +82,10 @@ class ComentarioController
     )]
     public function getByReporte(Request $request, string $idReporte): Response
     {
+        if (!ValidationHelper::isValidUUID($idReporte)) {
+            throw new DomainException('ID de reporte inválido', 400);
+        }
+
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
@@ -84,6 +94,7 @@ class ComentarioController
         $query       = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
         $comentarios = $this->obtenerComentariosHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'comentarios' => $comentarios]);
+        $response = new Response();
+        return $response->json(['success' => true, 'comentarios' => $comentarios]);
     }
 }

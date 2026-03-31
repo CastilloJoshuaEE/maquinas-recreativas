@@ -11,69 +11,43 @@ namespace maquinas_recreativas\Application\Queries\Usuario;
 
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
-/**
- * @package Application\Queries\Usuario
- * 
- * Manejador responsable de obtener un usuario por su ID
- */
-class ObtenerUsuarioPorIdHandler {
+class ObtenerUsuarioPorIdHandler 
+{    
+    private UsuarioRepository $usuarioRepository;
     
-    /**
-     * @var UsuarioRepository Repositorio de usuarios
-     */
-    private $usuarioRepository;
-    
-    /**
-     * Constructor del manejador
-     * 
-     * @param UsuarioRepository $usuarioRepository
-     */
-    public function __construct(UsuarioRepository $usuarioRepository) {
+    public function __construct(UsuarioRepository $usuarioRepository) 
+    {
         $this->usuarioRepository = $usuarioRepository;
     }
     
-    /**
-     * Maneja el query de obtener usuario por ID
-     * 
-     * @param ObtenerUsuarioPorIdQuery $query Query con ID del usuario
-     * @return array Datos del usuario encontrado
-     * @throws DomainException Si el usuario no existe
-     */
-    public function handle(ObtenerUsuarioPorIdQuery $query): array {
+    public function handle(ObtenerUsuarioPorIdQuery $query): array 
+    {
+        $usuarioId = $query->getUsuarioId();
         
-        $usuarioId = $query->getUsuarioId()->getValue();
-        
-        // Buscar usuario
+        // Buscar usuario - usar findById directamente
         $usuario = $this->usuarioRepository->findById($usuarioId);
         
         if (!$usuario) {
-            throw new DomainException(
-                'Usuario no encontrado',
-                DomainException::HTTP_NOT_FOUND
-            );
+            throw new DomainException('Usuario no encontrado');
         }
         
-        // Construir respuesta según permisos
+        // Construir respuesta
         $data = [
-            'id' => $usuario->getId(),
+            'id' => $usuario->getId()->value(),
             'nombre' => $usuario->getNombre(),
             'apellido' => $usuario->getApellido(),
             'usuario_asignado' => $usuario->getUsuarioAsignado(),
-            'tipo' => $usuario->getTipo(),
-            'estado' => $usuario->getEstado(),
-            'fecha_registro' => $usuario->getFechaRegistro()
+            'tipo' => $usuario->getTipo()->value(),
+            'estado' => $usuario->getEstado()->value(),
+            'especialidad' => $usuario->getEspecialidad()
         ];
         
         // Incluir email solo si está permitido
         if ($query->shouldIncludeSensitive()) {
-            $data['email'] = $usuario->getEmail();
-            $data['ci'] = $usuario->getCi();
-        }
-        
-        // Incluir especialidad si es técnico
-        if ($usuario->esTecnico()) {
-            $data['especialidad'] = $usuario->getEspecialidad();
+            $data['email'] = CifradoHelper::desencriptar($usuario->getEmailValue());
+            $data['ci'] = CifradoHelper::desencriptar($usuario->getCi());
         }
         
         return $data;

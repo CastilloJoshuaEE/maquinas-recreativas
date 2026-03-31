@@ -50,7 +50,8 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
             throw new DomainException("La cédula '{$command->ci}' ya está registrada");
         }
 
-        $id = Uuid::random();
+        // Usar Uuid::v4() en lugar de random()
+        $id = Uuid::v4();
         $contrasenaHash = password_hash($command->contrasena, PASSWORD_BCRYPT);
         $estado = new EstadoUsuario($command->estado);
         $emailVO = new Email($command->email);

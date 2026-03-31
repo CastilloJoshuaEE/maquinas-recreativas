@@ -12,61 +12,53 @@
 namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
 use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\TipoUsuario;
+use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Infrastructure\Security\PasswordHasher;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use InvalidArgumentException;
 
 /**
  * Class RegistrarUsuarioHandler
- *
- * Contiene la lógica de aplicación para el caso de uso "Registrar Usuario".
- * Orquesta las entidades del dominio y los servicios de infraestructura.
  */
 class RegistrarUsuarioHandler
 {
     private UsuarioRepository $usuarioRepository;
     private PasswordHasher $passwordHasher;
 
-    /**
-     * RegistrarUsuarioHandler constructor.
-     *
-     * @param UsuarioRepository $usuarioRepository
-     * @param PasswordHasher $passwordHasher
-     */
     public function __construct(UsuarioRepository $usuarioRepository, PasswordHasher $passwordHasher)
     {
         $this->usuarioRepository = $usuarioRepository;
         $this->passwordHasher = $passwordHasher;
     }
 
-    /**
-     * Maneja el comando de registro de usuario.
-     *
-     * @param RegistrarUsuarioCommand $command
-     * @return Uuid El ID del nuevo usuario registrado.
-     * @throws InvalidArgumentException Si los datos no son válidos o el usuario ya existe.
-     */
     public function handle(RegistrarUsuarioCommand $command): Uuid
     {
-        // 1. Validaciones de negocio que requieren acceso a datos (unicidad)
+        // 1. Validaciones de negocio
         $this->ensureEmailIsUnique($command->getEmail());
         $this->ensureUsuarioAsignadoIsUnique($this->generarUsuarioAsignado($command));
 
-        // 2. Crear la entidad Usuario (aplicando reglas de negocio)
-        $nuevoId = Uuid::random();
+        // 2. Crear la entidad Usuario
+        $nuevoId = Uuid::v4();  // Cambiar random() por v4()
         $hashContrasena = $this->passwordHasher->hash($command->getContrasenaPlana());
+        
+        // Encriptar datos sensibles
+        $ciEncriptada = CifradoHelper::encriptar($command->getCi());
+        $emailEncriptado = CifradoHelper::encriptar($command->getEmail());
 
         $usuario = new Usuario(
             $nuevoId,
             $command->getNombre(),
             $command->getApellido(),
-            $command->getEmail(),
-            $command->getCi(),
+            $ciEncriptada,
+            new Email($command->getEmail()),  // Usar Email Value Object
             $this->generarUsuarioAsignado($command),
             $hashContrasena,
-            $command->getTipo(),
-            'Activo', // Estado por defecto
+            new TipoUsuario($command->getTipo()),  // Convertir a TipoUsuario
+            new EstadoUsuario('Activo'),  // Estado por defecto como Value Object
             $command->getEspecialidad()
         );
 
@@ -76,19 +68,14 @@ class RegistrarUsuarioHandler
         return $nuevoId;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     private function ensureEmailIsUnique(string $email): void
     {
-        if ($this->usuarioRepository->searchByEmail($email) !== null) {
+        $emailEncriptado = CifradoHelper::encriptar($email);
+        if ($this->usuarioRepository->searchByEmail($emailEncriptado) !== null) {
             throw new InvalidArgumentException('El correo electrónico ya está registrado.');
         }
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     private function ensureUsuarioAsignadoIsUnique(string $usuarioAsignado): void
     {
         if ($this->usuarioRepository->searchByUsuarioAsignado($usuarioAsignado) !== null) {
@@ -96,11 +83,6 @@ class RegistrarUsuarioHandler
         }
     }
 
-    /**
-     * Lógica simple para generar un nombre de usuario (puede ser más compleja).
-     * @param RegistrarUsuarioCommand $command
-     * @return string
-     */
     private function generarUsuarioAsignado(RegistrarUsuarioCommand $command): string
     {
         $base = strtolower(substr($command->getNombre(), 0, 1) . substr($command->getApellido(), 0, 3));

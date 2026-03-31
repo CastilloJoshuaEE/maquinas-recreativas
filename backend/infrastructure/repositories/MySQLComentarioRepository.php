@@ -1,10 +1,6 @@
 <?php
 /**
  * infrastructure/repositories/MySQLComentarioRepository.php
- *
- * Implementación MySQL del repositorio de comentarios.
- *
- * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
 namespace maquinas_recreativas\Infrastructure\Repositories;
@@ -16,9 +12,6 @@ use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use PDO;
 
-/**
- * Class MySQLComentarioRepository
- */
 class MySQLComentarioRepository implements ComentarioRepository
 {
     private Database $db;
@@ -56,8 +49,12 @@ class MySQLComentarioRepository implements ComentarioRepository
         $stmt = $conn->prepare($sql);
         $stmt->execute([':id' => $id->value()]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data === false) {
+            return null;
+        }
 
-        return $data ? Comentario::fromArray($data) : null;
+        return Comentario::fromArray($data);
     }
 
     public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array
@@ -78,10 +75,12 @@ class MySQLComentarioRepository implements ComentarioRepository
 
         $comentarios = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (isset($row['email'])) {
+            if ($row !== false && isset($row['email'])) {
                 $row['email'] = CifradoHelper::desencriptar($row['email']);
             }
-            $comentarios[] = $row;
+            if ($row !== false) {
+                $comentarios[] = $row;
+            }
         }
         return $comentarios;
     }
@@ -106,10 +105,12 @@ class MySQLComentarioRepository implements ComentarioRepository
 
         $comentarios = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (isset($row['email'])) {
+            if ($row !== false && isset($row['email'])) {
                 $row['email'] = CifradoHelper::desencriptar($row['email']);
             }
-            $comentarios[] = $row;
+            if ($row !== false) {
+                $comentarios[] = $row;
+            }
         }
         return $comentarios;
     }
