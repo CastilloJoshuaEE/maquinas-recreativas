@@ -1,8 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
-
+use OpenApi\Attributes as OA;
 use maquinas_recreativas\Application\Commands\Componente\UsarComponenteCommand;
 use maquinas_recreativas\Application\Commands\Componente\UsarComponenteHandler;
 use maquinas_recreativas\Application\Commands\Componente\LiberarComponenteCommand;
@@ -49,17 +48,19 @@ class ComponenteController
         $this->obtenerComponentesEnUsoHandler       = $obtenerComponentesEnUsoHandler;
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/componentes",
-     *     summary="Obtener componentes con paginación",
-     *     tags={"Componentes"},
-     *     @OA\Parameter(name="tipo", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", default=10)),
-     *     @OA\Parameter(name="offset", in="query", required=false, @OA\Schema(type="integer", default=0)),
-     *     @OA\Response(response=200, description="Lista de componentes con total")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/componentes",
+        summary: "Obtener componentes con paginación",
+        tags: ["Componentes"],
+        parameters: [
+            new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 10)),
+            new OA\Parameter(name: "offset", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 0))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de componentes con total")
+        ]
+    )]
     public function obtenerComponentes(Request $request): Response
     {
         $tipo   = $request->query('tipo');
@@ -72,15 +73,17 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'componentes' => $result['componentes'], 'total' => $result['total']]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/componentes/disponibles",
-     *     summary="Obtener componentes disponibles",
-     *     tags={"Componentes"},
-     *     @OA\Parameter(name="tipo", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Lista de componentes disponibles")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/componentes/disponibles",
+        summary: "Obtener componentes disponibles",
+        tags: ["Componentes"],
+        parameters: [
+            new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de componentes disponibles")
+        ]
+    )]
     public function obtenerComponentesDisponibles(Request $request): Response
     {
         $tipo        = $request->query('tipo');
@@ -90,24 +93,26 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'componentes' => $componentes]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/componentes/usar",
-     *     summary="Asignar/usar un componente",
-     *     tags={"Componentes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idComponente"},
-     *             @OA\Property(property="idComponente", type="string"),
-     *             @OA\Property(property="idMaquina", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Componente asignado correctamente"),
-     *     @OA\Response(response=400, description="ID de componente requerido"),
-     *     @OA\Response(response=401, description="Usuario no autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/componentes/usar",
+        summary: "Asignar/usar un componente",
+        tags: ["Componentes"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idComponente"],
+                properties: [
+                    new OA\Property(property: "idComponente", type: "string"),
+                    new OA\Property(property: "idMaquina", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Componente asignado correctamente"),
+            new OA\Response(response: 400, description: "ID de componente requerido"),
+            new OA\Response(response: 401, description: "Usuario no autenticado")
+        ]
+    )]
     public function usarComponente(Request $request): Response
     {
         $data = $request->json();
@@ -126,23 +131,25 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'message' => 'Componente asignado correctamente']);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/componentes/liberar",
-     *     summary="Liberar un componente",
-     *     tags={"Componentes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idComponente"},
-     *             @OA\Property(property="idComponente", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Componente liberado correctamente"),
-     *     @OA\Response(response=400, description="ID de componente requerido"),
-     *     @OA\Response(response=401, description="Usuario no autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/componentes/liberar",
+        summary: "Liberar un componente",
+        tags: ["Componentes"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idComponente"],
+                properties: [
+                    new OA\Property(property: "idComponente", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Componente liberado correctamente"),
+            new OA\Response(response: 400, description: "ID de componente requerido"),
+            new OA\Response(response: 401, description: "Usuario no autenticado")
+        ]
+    )]
     public function liberarComponente(Request $request): Response
     {
         $data = $request->json();
@@ -161,22 +168,24 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'message' => 'Componente liberado correctamente']);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/componentes/asignar-carcasa",
-     *     summary="Asignar carcasa a un técnico",
-     *     tags={"Componentes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idComponente"},
-     *             @OA\Property(property="idComponente", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Carcasa asignada correctamente"),
-     *     @OA\Response(response=401, description="Usuario no autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/componentes/asignar-carcasa",
+        summary: "Asignar carcasa a un técnico",
+        tags: ["Componentes"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idComponente"],
+                properties: [
+                    new OA\Property(property: "idComponente", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Carcasa asignada correctamente"),
+            new OA\Response(response: 401, description: "Usuario no autenticado")
+        ]
+    )]
     public function asignarCarcasa(Request $request): Response
     {
         $data = $request->json();
@@ -195,22 +204,24 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'message' => 'Carcasa asignada correctamente']);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/componentes/liberar-cancelacion",
-     *     summary="Liberar componentes por cancelación",
-     *     tags={"Componentes"},
-     *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="idPlaca", type="string", nullable=true),
-     *             @OA\Property(property="idCarcasa", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Componentes liberados"),
-     *     @OA\Response(response=401, description="Usuario no autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/componentes/liberar-cancelacion",
+        summary: "Liberar componentes por cancelación",
+        tags: ["Componentes"],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "idPlaca", type: "string", nullable: true),
+                    new OA\Property(property: "idCarcasa", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Componentes liberados"),
+            new OA\Response(response: 401, description: "Usuario no autenticado")
+        ]
+    )]
     public function liberarComponentesCancelacion(Request $request): Response
     {
         $data   = $request->json();
@@ -225,16 +236,18 @@ class ComponenteController
         return (new Response())->json(['success' => true, 'message' => $result['message']]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/componentes/en-uso/{uuid}",
-     *     summary="Obtener componentes en uso por un usuario",
-     *     tags={"Componentes"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Componentes en uso")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/componentes/en-uso/{uuid}",
+        summary: "Obtener componentes en uso por un usuario",
+        tags: ["Componentes"],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid")),
+            new OA\Parameter(name: "idMaquina", in: "query", required: false, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Componentes en uso")
+        ]
+    )]
     public function obtenerComponentesEnUso(Request $request, string $idUsuario): Response
     {
         $idMaquina   = $request->query('idMaquina');

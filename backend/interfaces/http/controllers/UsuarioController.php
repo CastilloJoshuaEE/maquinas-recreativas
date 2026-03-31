@@ -1,7 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 
 use maquinas_recreativas\Application\Commands\Usuario\LoginCommand;
 use maquinas_recreativas\Application\Commands\Usuario\LoginHandler;
@@ -15,6 +15,8 @@ use maquinas_recreativas\Application\Commands\Usuario\RecuperarContrasenaCommand
 use maquinas_recreativas\Application\Commands\Usuario\RecuperarContrasenaHandler;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarActividadCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarActividadHandler;
+use maquinas_recreativas\Application\Commands\Usuario\ActualizarUsuarioAsignadoCommand;
+use maquinas_recreativas\Application\Commands\Usuario\ActualizarUsuarioAsignadoHandler;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdQuery;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdHandler;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerTodosUsuariosQuery;
@@ -46,6 +48,7 @@ class UsuarioController
     private BuscarPorEmailHandler $buscarPorEmailHandler;
     private ObtenerHistorialActividadesHandler $historialHandler;
     private RegistrarActividadHandler $registrarActividadHandler;
+    private ActualizarUsuarioAsignadoHandler $actualizarUsuarioAsignadoHandler;
 
     public function __construct(
         LoginHandler $loginHandler,
@@ -59,7 +62,8 @@ class UsuarioController
         ObtenerUsuariosPorTipoHandler $obtenerUsuariosPorTipoHandler,
         BuscarPorEmailHandler $buscarPorEmailHandler,
         ObtenerHistorialActividadesHandler $historialHandler,
-        RegistrarActividadHandler $registrarActividadHandler
+        RegistrarActividadHandler $registrarActividadHandler,
+        ActualizarUsuarioAsignadoHandler $actualizarUsuarioAsignadoHandler
     ) {
         $this->loginHandler                  = $loginHandler;
         $this->registrarUsuarioHandler       = $registrarUsuarioHandler;
@@ -73,30 +77,33 @@ class UsuarioController
         $this->buscarPorEmailHandler         = $buscarPorEmailHandler;
         $this->historialHandler              = $historialHandler;
         $this->registrarActividadHandler     = $registrarActividadHandler;
+        $this->actualizarUsuarioAsignadoHandler = $actualizarUsuarioAsignadoHandler;
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/register",
-     *     summary="Registrar un nuevo usuario",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"contrasena"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="apellido", type="string"),
-     *             @OA\Property(property="ci", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="contrasena", type="string"),
-     *             @OA\Property(property="tipo", type="string", default="Usuario"),
-     *             @OA\Property(property="especialidad", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Usuario registrado correctamente"),
-     *     @OA\Response(response=400, description="Datos incompletos")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/register",
+        summary: "Registrar un nuevo usuario",
+        tags: ["Usuarios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["contrasena"],
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "apellido", type: "string"),
+                    new OA\Property(property: "ci", type: "string"),
+                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "contrasena", type: "string"),
+                    new OA\Property(property: "tipo", type: "string", default: "Usuario"),
+                    new OA\Property(property: "especialidad", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Usuario registrado correctamente"),
+            new OA\Response(response: 400, description: "Datos incompletos")
+        ]
+    )]
     public function register(Request $request): Response
     {
         $data = $request->json();
@@ -120,24 +127,26 @@ class UsuarioController
         ], 201);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/login",
-     *     summary="Iniciar sesión",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"usuario_asignado","contrasena"},
-     *             @OA\Property(property="usuario_asignado", type="string"),
-     *             @OA\Property(property="contrasena", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Inicio de sesión exitoso"),
-     *     @OA\Response(response=400, description="Credenciales requeridas"),
-     *     @OA\Response(response=401, description="Credenciales incorrectas")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/login",
+        summary: "Iniciar sesión",
+        tags: ["Usuarios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["usuario_asignado", "contrasena"],
+                properties: [
+                    new OA\Property(property: "usuario_asignado", type: "string"),
+                    new OA\Property(property: "contrasena", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Inicio de sesión exitoso"),
+            new OA\Response(response: 400, description: "Credenciales requeridas"),
+            new OA\Response(response: 401, description: "Credenciales incorrectas")
+        ]
+    )]
     public function login(Request $request): Response
     {
         $data = $request->json();
@@ -159,14 +168,14 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/logout",
-     *     summary="Cerrar sesión",
-     *     tags={"Usuarios"},
-     *     @OA\Response(response=200, description="Sesión cerrada correctamente")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/logout",
+        summary: "Cerrar sesión",
+        tags: ["Usuarios"],
+        responses: [
+            new OA\Response(response: 200, description: "Sesión cerrada correctamente")
+        ]
+    )]
     public function logout(Request $request): Response
     {
         $userId = $_SESSION['ID_Usuario'] ?? null;
@@ -179,17 +188,18 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'message' => 'Sesión cerrada']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/usuario/perfil/{id}",
-     *     summary="Obtener perfil de un usuario",
-     *     tags={"Usuarios"},
-     *     @OA\Parameter(name="id", in="path", required=false, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Parameter(name="id", in="query", required=false, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Datos del usuario"),
-     *     @OA\Response(response=400, description="ID no proporcionado o inválido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/usuario/perfil/{id}",
+        summary: "Obtener perfil de un usuario",
+        tags: ["Usuarios"],
+        parameters: [
+            new OA\Parameter(name: "id", in: "path", required: false, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Datos del usuario"),
+            new OA\Response(response: 400, description: "ID no proporcionado o inválido")
+        ]
+    )]
     public function getProfile(Request $request, ?string $id = null): Response
     {
         if (!$id) {
@@ -209,27 +219,30 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'usuario' => $usuario]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/actualizar-perfil",
-     *     summary="Actualizar perfil del usuario autenticado",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"id"},
-     *             @OA\Property(property="id", type="string"),
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="apellido", type="string"),
-     *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="ci", type="string"),
-     *             @OA\Property(property="contrasena", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Perfil actualizado"),
-     *     @OA\Response(response=403, description="No autorizado para editar este perfil")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/actualizar-perfil",
+        summary: "Actualizar perfil del usuario autenticado",
+        tags: ["Usuarios"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["id"],
+                properties: [
+                    new OA\Property(property: "id", type: "string"),
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "apellido", type: "string"),
+                    new OA\Property(property: "email", type: "string"),
+                    new OA\Property(property: "ci", type: "string"),
+                    new OA\Property(property: "contrasena", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Perfil actualizado"),
+            new OA\Response(response: 403, description: "No autorizado para editar este perfil")
+        ]
+    )]
     public function updateProfile(Request $request): Response
     {
         $data = $request->json();
@@ -250,16 +263,24 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'message' => 'Perfil actualizado']);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/buscar-email",
-     *     summary="Buscar un usuario por su correo electrónico",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(required=true, @OA\JsonContent(required={"email"}, @OA\Property(property="email", type="string", format="email"))),
-     *     @OA\Response(response=200, description="Usuario encontrado"),
-     *     @OA\Response(response=400, description="Correo requerido")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/buscar-email",
+        summary: "Buscar un usuario por su correo electrónico",
+        tags: ["Usuarios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Usuario encontrado"),
+            new OA\Response(response: 400, description: "Correo requerido")
+        ]
+    )]
     public function buscarPorEmail(Request $request): Response
     {
         $data = $request->json();
@@ -273,23 +294,25 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'usuario' => $usuario]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/usuario/recuperar-contrasena",
-     *     summary="Recuperar / restablecer contraseña",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","nueva_contrasena"},
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="nueva_contrasena", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Contraseña actualizada"),
-     *     @OA\Response(response=400, description="Datos requeridos faltantes")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/recuperar-contrasena",
+        summary: "Recuperar / restablecer contraseña",
+        tags: ["Usuarios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "nueva_contrasena"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "nueva_contrasena", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Contraseña actualizada"),
+            new OA\Response(response: 400, description: "Datos requeridos faltantes")
+        ]
+    )]
     public function resetPassword(Request $request): Response
     {
         $data = $request->json();
@@ -303,15 +326,49 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'message' => 'Contraseña actualizada']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/usuario/tecnicos/{especialidad}",
-     *     summary="Obtener técnicos filtrados por especialidad",
-     *     tags={"Usuarios"},
-     *     @OA\Parameter(name="especialidad", in="path", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Lista de técnicos por especialidad")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/usuario/recuperar-usuario",
+        summary: "Recuperar/actualizar nombre de usuario",
+        tags: ["Usuarios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["email", "nuevo_usuario"],
+                properties: [
+                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "nuevo_usuario", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Nombre de usuario actualizado"),
+            new OA\Response(response: 400, description: "Datos requeridos faltantes")
+        ]
+    )]
+    public function updateUsername(Request $request): Response
+    {
+        $data = $request->json();
+        if (!isset($data['email'], $data['nuevo_usuario'])) {
+            throw new DomainException('Email y nuevo nombre de usuario requeridos', 400);
+        }
+
+        $command = new ActualizarUsuarioAsignadoCommand($data['email'], $data['nuevo_usuario']);
+        $this->actualizarUsuarioAsignadoHandler->handle($command);
+
+        return (new Response())->json(['success' => true, 'message' => 'Nombre de usuario actualizado']);
+    }
+
+    #[OA\Get(
+        path: "/v1/usuario/tecnicos/{especialidad}",
+        summary: "Obtener técnicos filtrados por especialidad",
+        tags: ["Usuarios"],
+        parameters: [
+            new OA\Parameter(name: "especialidad", in: "path", required: true, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de técnicos por especialidad")
+        ]
+    )]
     public function obtenerTecnicos(Request $request, string $especialidad): Response
     {
         $query    = new ObtenerTecnicosPorEspecialidadQuery($especialidad);
@@ -320,17 +377,19 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'tecnicos' => $tecnicos]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/usuarios/por-tipo",
-     *     summary="Obtener usuarios filtrados por tipo",
-     *     tags={"Usuarios"},
-     *     @OA\Parameter(name="tipo", in="query", required=true, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="excluirId", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Lista de usuarios por tipo"),
-     *     @OA\Response(response=400, description="Tipo requerido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/usuarios/por-tipo",
+        summary: "Obtener usuarios filtrados por tipo",
+        tags: ["Usuarios"],
+        parameters: [
+            new OA\Parameter(name: "tipo", in: "query", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "excluirId", in: "query", required: false, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de usuarios por tipo"),
+            new OA\Response(response: 400, description: "Tipo requerido")
+        ]
+    )]
     public function getByTipo(Request $request): Response
     {
         $tipo      = $request->query('tipo');
@@ -345,15 +404,24 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'usuarios' => $usuarios]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/historial-actividades",
-     *     summary="Registrar una actividad del usuario autenticado",
-     *     tags={"Usuarios"},
-     *     @OA\RequestBody(required=false, @OA\JsonContent(@OA\Property(property="descripcion", type="string"))),
-     *     @OA\Response(response=200, description="Actividad registrada")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/historial-actividades",
+        summary: "Registrar una actividad del usuario autenticado",
+        tags: ["Usuarios"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "descripcion", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Actividad registrada"),
+            new OA\Response(response: 401, description: "No autenticado")
+        ]
+    )]
     public function registrarActividad(Request $request): Response
     {
         $data        = $request->json();
@@ -365,16 +433,19 @@ class UsuarioController
         return (new Response())->json(['success' => true, 'message' => 'Actividad registrada']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/historial-actividades",
-     *     summary="Obtener historial de actividades del usuario",
-     *     tags={"Usuarios"},
-     *     @OA\Parameter(name="usuarioId", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Historial de actividades"),
-     *     @OA\Response(response=400, description="ID de usuario requerido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/historial-actividades",
+        summary: "Obtener historial de actividades del usuario",
+        tags: ["Usuarios"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "usuarioId", in: "query", required: false, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Historial de actividades"),
+            new OA\Response(response: 400, description: "ID de usuario requerido")
+        ]
+    )]
     public function obtenerHistorialActividades(Request $request): Response
     {
         $usuarioId = $request->query('usuarioId') ?? $_SESSION['ID_Usuario'] ?? null;

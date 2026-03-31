@@ -1,31 +1,32 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
-
+use OpenApi\Attributes as OA;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
 class HealthController
 {
-    /**
-     * @OA\Get(
-     *     path="/v1/health",
-     *     summary="Verificar estado de la API",
-     *     tags={"Health"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="API funcionando correctamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="status", type="string", example="ok"),
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="timestamp", type="string", format="date-time"),
-     *             @OA\Property(property="version", type="string", example="1.0.0")
-     *         )
-     *     )
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/health",
+        summary: "Verificar estado de la API",
+        tags: ["Health"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "API funcionando correctamente",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: "success", type: "boolean", example: true),
+                        new OA\Property(property: "status", type: "string", example: "ok"),
+                        new OA\Property(property: "message", type: "string"),
+                        new OA\Property(property: "timestamp", type: "string", format: "date-time"),
+                        new OA\Property(property: "version", type: "string", example: "1.0.0")
+                    ]
+                )
+            )
+        ]
+    )]
     public function check(Request $request): Response
     {
         return (new Response())->json([
@@ -37,15 +38,15 @@ class HealthController
         ]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/health/db",
-     *     summary="Verificar conexión a la base de datos",
-     *     tags={"Health"},
-     *     @OA\Response(response=200, description="Conexión exitosa"),
-     *     @OA\Response(response=500, description="Error de conexión")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/health/db",
+        summary: "Verificar conexión a la base de datos",
+        tags: ["Health"],
+        responses: [
+            new OA\Response(response: 200, description: "Conexión exitosa"),
+            new OA\Response(response: 500, description: "Error de conexión")
+        ]
+    )]
     public function testDb(Request $request): Response
     {
         try {

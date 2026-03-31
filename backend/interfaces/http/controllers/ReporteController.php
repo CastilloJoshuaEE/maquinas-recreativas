@@ -1,7 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
@@ -18,6 +18,7 @@ use maquinas_recreativas\Application\Queries\Reporte\ObtenerChatCompletoHandler;
 use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdQuery;
 use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
@@ -49,24 +50,27 @@ class ReporteController
         $this->obtenerReportePorIdHandler       = $obtenerReportePorIdHandler;
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/reportes/crear",
-     *     summary="Crear un nuevo reporte",
-     *     tags={"Reportes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"descripcion"},
-     *             @OA\Property(property="descripcion", type="string"),
-     *             @OA\Property(property="idUsuarioDestinatario", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Reporte creado exitosamente"),
-     *     @OA\Response(response=400, description="Descripción requerida"),
-     *     @OA\Response(response=401, description="No autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/reportes/crear",
+        summary: "Crear un nuevo reporte",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["descripcion"],
+                properties: [
+                    new OA\Property(property: "descripcion", type: "string"),
+                    new OA\Property(property: "idUsuarioDestinatario", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Reporte creado exitosamente"),
+            new OA\Response(response: 400, description: "Descripción requerida"),
+            new OA\Response(response: 401, description: "No autenticado")
+        ]
+    )]
     public function create(Request $request): Response
     {
         $data = $request->json();
@@ -85,60 +89,88 @@ class ReporteController
         return (new Response())->json(['success' => true, 'message' => 'Reporte creado exitosamente', 'id' => $idReporte], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/reportes/usuario/{uuid}",
-     *     summary="Obtener reportes de un usuario",
-     *     tags={"Reportes"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Lista de reportes del usuario")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/reportes/usuario/{uuid}",
+        summary: "Obtener reportes de un usuario",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de reportes del usuario"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function getByUser(Request $request, string $idUsuario): Response
     {
+        if (!ValidationHelper::isValidUUID($idUsuario)) {
+            throw new DomainException('ID de usuario inválido', 400);
+        }
+
         $query    = new ObtenerReportesPorUsuarioQuery($idUsuario);
         $reportes = $this->obtenerReportesPorUsuarioHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'reportes' => $reportes]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/reportes/chat/{emisorId}/{destinatarioId}",
-     *     summary="Obtener hilo de chat entre dos usuarios",
-     *     tags={"Reportes"},
-     *     @OA\Parameter(name="emisorId", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Parameter(name="destinatarioId", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Reportes del chat")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/reportes/chat/{emisorId}/{destinatarioId}",
+        summary: "Obtener hilo de chat entre dos usuarios",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "emisorId", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid")),
+            new OA\Parameter(name: "destinatarioId", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Reportes del chat"),
+            new OA\Response(response: 400, description: "IDs inválidos"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function getChat(Request $request, string $emisorId, string $destinatarioId): Response
     {
+        if (!ValidationHelper::isValidUUID($emisorId) || !ValidationHelper::isValidUUID($destinatarioId)) {
+            throw new DomainException('IDs de usuario inválidos', 400);
+        }
+
         $query    = new ObtenerChatQuery($emisorId, $destinatarioId);
         $reportes = $this->obtenerChatHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'reportes' => $reportes]);
     }
 
-    /**
-     * @OA\Put(
-     *     path="/v1/reportes/{uuid}/estado",
-     *     summary="Actualizar el estado de un reporte",
-     *     tags={"Reportes"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"estado"},
-     *             @OA\Property(property="estado", type="string", enum={"Pendiente","En proceso","Resuelto"})
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Estado actualizado"),
-     *     @OA\Response(response=400, description="Estado no válido")
-     * )
-     */
+    #[OA\Put(
+        path: "/v1/reportes/{uuid}/estado",
+        summary: "Actualizar el estado de un reporte",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["estado"],
+                properties: [
+                    new OA\Property(property: "estado", type: "string", enum: ["Pendiente", "En proceso", "Resuelto"])
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Estado actualizado"),
+            new OA\Response(response: 400, description: "Estado no válido o UUID inválido"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function updateStatus(Request $request, string $idReporte): Response
     {
+        if (!ValidationHelper::isValidUUID($idReporte)) {
+            throw new DomainException('ID de reporte inválido', 400);
+        }
+
         $data = $request->json();
         if (!isset($data['estado'])) {
             throw new DomainException('Estado requerido', 400);
@@ -155,15 +187,16 @@ class ReporteController
         return (new Response())->json(['success' => true, 'message' => 'Estado actualizado correctamente']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/reportes/usuarios-chat",
-     *     summary="Obtener usuarios con los que el usuario autenticado ha chateado",
-     *     tags={"Reportes"},
-     *     @OA\Response(response=200, description="Lista de usuarios del chat"),
-     *     @OA\Response(response=401, description="No autenticado")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/reportes/usuarios-chat",
+        summary: "Obtener usuarios con los que el usuario autenticado ha chateado",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de usuarios del chat"),
+            new OA\Response(response: 401, description: "No autenticado")
+        ]
+    )]
     public function getUsuariosChat(Request $request): Response
     {
         $userId = $_SESSION['ID_Usuario'] ?? null;
@@ -177,18 +210,22 @@ class ReporteController
         return (new Response())->json(['success' => true, 'usuarios' => $usuarios]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/reportes/chat-completo",
-     *     summary="Obtener chat completo incluyendo comentarios",
-     *     tags={"Reportes"},
-     *     @OA\Parameter(name="emisorId", in="query", required=true, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="destinatarioId", in="query", required=true, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="reporteId", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Chat completo con comentarios"),
-     *     @OA\Response(response=400, description="IDs de emisor y destinatario requeridos")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/reportes/chat-completo",
+        summary: "Obtener chat completo incluyendo comentarios",
+        tags: ["Reportes"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "emisorId", in: "query", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "destinatarioId", in: "query", required: true, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "reporteId", in: "query", required: false, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Chat completo con comentarios"),
+            new OA\Response(response: 400, description: "IDs de emisor y destinatario requeridos"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function getCompleteChat(Request $request): Response
     {
         $emisorId       = $request->query('emisorId');
@@ -197,6 +234,10 @@ class ReporteController
 
         if (!$emisorId || !$destinatarioId) {
             throw new DomainException('IDs de emisor y destinatario requeridos', 400);
+        }
+
+        if (!ValidationHelper::isValidUUID($emisorId) || !ValidationHelper::isValidUUID($destinatarioId)) {
+            throw new DomainException('IDs de usuario inválidos', 400);
         }
 
         $query  = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);

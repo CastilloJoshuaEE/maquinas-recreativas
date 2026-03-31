@@ -1,8 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
-
+use OpenApi\Attributes as OA;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioCommand;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
 use maquinas_recreativas\Application\Queries\Comercio\ObtenerComerciosQuery;
@@ -25,25 +24,27 @@ class ComercioController
         $this->registrarComercioHandler = $registrarComercioHandler;
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/comercios",
-     *     summary="Registrar un nuevo comercio",
-     *     tags={"Comercios"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"nombre","tipo","direccion","telefono"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="tipo", type="string", enum={"Minorista","Mayorista"}),
-     *             @OA\Property(property="direccion", type="string"),
-     *             @OA\Property(property="telefono", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Comercio registrado correctamente"),
-     *     @OA\Response(response=400, description="Datos inválidos")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/comercios",
+        summary: "Registrar un nuevo comercio",
+        tags: ["Comercios"],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["nombre", "tipo", "direccion", "telefono"],
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "tipo", type: "string", enum: ["Minorista", "Mayorista"]),
+                    new OA\Property(property: "direccion", type: "string"),
+                    new OA\Property(property: "telefono", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Comercio registrado correctamente"),
+            new OA\Response(response: 400, description: "Datos inválidos")
+        ]
+    )]
     public function register(Request $request): Response
     {
         $data     = $request->json();
@@ -74,21 +75,23 @@ class ComercioController
         return (new Response())->json(['success' => true, 'message' => 'Comercio registrado correctamente', 'idComercio' => $comercio->getId()], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/comercios",
-     *     summary="Obtener lista de comercios con filtros opcionales",
-     *     tags={"Comercios"},
-     *     @OA\Parameter(name="nombre", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="tipo", in="query", required=false, @OA\Schema(type="string", enum={"Minorista","Mayorista"})),
-     *     @OA\Parameter(name="pagina", in="query", required=false, @OA\Schema(type="integer", default=1)),
-     *     @OA\Parameter(name="por_pagina", in="query", required=false, @OA\Schema(type="integer")),
-     *     @OA\Parameter(name="ordenar_por", in="query", required=false, @OA\Schema(type="string", default="nombre")),
-     *     @OA\Parameter(name="direccion", in="query", required=false, @OA\Schema(type="string", enum={"ASC","DESC"}, default="ASC")),
-     *     @OA\Response(response=200, description="Lista de comercios"),
-     *     @OA\Response(response=400, description="Tipo de comercio no válido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/comercios",
+        summary: "Obtener lista de comercios con filtros opcionales",
+        tags: ["Comercios"],
+        parameters: [
+            new OA\Parameter(name: "nombre", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["Minorista", "Mayorista"])),
+            new OA\Parameter(name: "pagina", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 1)),
+            new OA\Parameter(name: "por_pagina", in: "query", required: false, schema: new OA\Schema(type: "integer")),
+            new OA\Parameter(name: "ordenar_por", in: "query", required: false, schema: new OA\Schema(type: "string", default: "nombre")),
+            new OA\Parameter(name: "direccion", in: "query", required: false, schema: new OA\Schema(type: "string", enum: ["ASC", "DESC"], default: "ASC"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de comercios"),
+            new OA\Response(response: 400, description: "Tipo de comercio no válido")
+        ]
+    )]
     public function obtenerComercios(Request $request): Response
     {
         $filtros = [];

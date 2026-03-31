@@ -1,7 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 
 use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionCommand;
 use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionHandler;
@@ -26,6 +26,7 @@ use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerComercioRecaudac
 use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerInformePorRecaudacionQuery;
 use maquinas_recreativas\Application\Queries\Recaudacion\ObtenerInformePorRecaudacionHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
@@ -69,27 +70,30 @@ class InformeController
         $this->obtenerInformePorRecaudacionHandler          = $obtenerInformePorRecaudacionHandler;
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/contabilidad/registrar-recaudacion",
-     *     summary="Registrar una nueva recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idMaquina","tipoComercio","montoTotal","porcentajeComercio"},
-     *             @OA\Property(property="idMaquina", type="string"),
-     *             @OA\Property(property="tipoComercio", type="string"),
-     *             @OA\Property(property="montoTotal", type="number", format="float"),
-     *             @OA\Property(property="porcentajeComercio", type="number", format="float"),
-     *             @OA\Property(property="detalle", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Recaudación registrada exitosamente"),
-     *     @OA\Response(response=400, description="Datos incompletos"),
-     *     @OA\Response(response=401, description="Usuario no autenticado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/contabilidad/registrar-recaudacion",
+        summary: "Registrar una nueva recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idMaquina", "tipoComercio", "montoTotal", "porcentajeComercio"],
+                properties: [
+                    new OA\Property(property: "idMaquina", type: "string"),
+                    new OA\Property(property: "tipoComercio", type: "string"),
+                    new OA\Property(property: "montoTotal", type: "number", format: "float"),
+                    new OA\Property(property: "porcentajeComercio", type: "number", format: "float"),
+                    new OA\Property(property: "detalle", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Recaudación registrada exitosamente"),
+            new OA\Response(response: 400, description: "Datos incompletos"),
+            new OA\Response(response: 401, description: "Usuario no autenticado")
+        ]
+    )]
     public function registrarRecaudacion(Request $request): Response
     {
         $data     = $request->json();
@@ -98,6 +102,10 @@ class InformeController
             if (!isset($data[$field])) {
                 throw new DomainException("El campo {$field} es requerido", 400);
             }
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idMaquina'])) {
+            throw new DomainException('ID de máquina inválido', 400);
         }
 
         $userId = $_SESSION['ID_Usuario'] ?? null;
@@ -111,22 +119,31 @@ class InformeController
         return (new Response())->json(['success' => true, 'message' => 'Recaudación registrada exitosamente', 'idRecaudacion' => $idRecaudacion], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/recaudaciones",
-     *     summary="Obtener recaudaciones con filtros",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="fechaInicio", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Parameter(name="fechaFin", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="tipoComercio", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", default=100)),
-     *     @OA\Parameter(name="offset", in="query", required=false, @OA\Schema(type="integer", default=0)),
-     *     @OA\Response(response=200, description="Lista de recaudaciones")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/recaudaciones",
+        summary: "Obtener recaudaciones con filtros",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "fechaInicio", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "fechaFin", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "idMaquina", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "tipoComercio", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 100)),
+            new OA\Parameter(name: "offset", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 0))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de recaudaciones"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerRecaudaciones(Request $request): Response
     {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $query  = new ObtenerRecaudacionesQuery(
             $request->query('fechaInicio'), $request->query('fechaFin'),
             $request->query('idMaquina'), $request->query('tipoComercio'),
@@ -137,35 +154,58 @@ class InformeController
         return (new Response())->json(['success' => true, 'recaudaciones' => $result['recaudaciones'], 'total' => $result['total']]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/recaudaciones/{uuid}",
-     *     summary="Obtener una recaudación por ID",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Datos de la recaudación"),
-     *     @OA\Response(response=404, description="Recaudación no encontrada")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/recaudaciones/{uuid}",
+        summary: "Obtener una recaudación por ID",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Datos de la recaudación"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 404, description: "Recaudación no encontrada"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerRecaudacion(Request $request, string $idRecaudacion): Response
     {
+        if (!ValidationHelper::isValidUUID($idRecaudacion)) {
+            throw new DomainException('ID de recaudación inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $query  = new ObtenerRecaudacionPorIdQuery($idRecaudacion);
         $result = $this->obtenerRecaudacionPorIdHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'recaudacion' => $result['recaudacion']]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/resumen-recaudaciones",
-     *     summary="Obtener resumen agregado de recaudaciones",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Resumen de recaudaciones")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/resumen-recaudaciones",
+        summary: "Obtener resumen agregado de recaudaciones",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Resumen de recaudaciones"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerResumenRecaudaciones(Request $request): Response
     {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $limit   = $request->query('limit') ? (int) $request->query('limit') : null;
         $query   = new ObtenerResumenRecaudacionesQuery($limit);
         $resumen = $this->obtenerResumenRecaudacionesHandler->handle($query);
@@ -173,33 +213,50 @@ class InformeController
         return (new Response())->json(['success' => true, 'resumen' => $resumen]);
     }
 
-    /**
-     * @OA\Put(
-     *     path="/v1/contabilidad/actualizar-recaudacion",
-     *     summary="Actualizar una recaudación existente",
-     *     tags={"Contabilidad"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idRecaudacion","idMaquina","montoTotal","porcentajeComercio"},
-     *             @OA\Property(property="idRecaudacion", type="string"),
-     *             @OA\Property(property="idMaquina", type="string"),
-     *             @OA\Property(property="montoTotal", type="number"),
-     *             @OA\Property(property="porcentajeComercio", type="number"),
-     *             @OA\Property(property="tipoComercio", type="string"),
-     *             @OA\Property(property="detalle", type="string"),
-     *             @OA\Property(property="fecha", type="string", format="date")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Recaudación actualizada"),
-     *     @OA\Response(response=400, description="Datos incompletos")
-     * )
-     */
+    #[OA\Put(
+        path: "/v1/contabilidad/actualizar-recaudacion",
+        summary: "Actualizar una recaudación existente",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idRecaudacion", "idMaquina", "montoTotal", "porcentajeComercio"],
+                properties: [
+                    new OA\Property(property: "idRecaudacion", type: "string"),
+                    new OA\Property(property: "idMaquina", type: "string"),
+                    new OA\Property(property: "montoTotal", type: "number"),
+                    new OA\Property(property: "porcentajeComercio", type: "number"),
+                    new OA\Property(property: "tipoComercio", type: "string"),
+                    new OA\Property(property: "detalle", type: "string"),
+                    new OA\Property(property: "fecha", type: "string", format: "date")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Recaudación actualizada"),
+            new OA\Response(response: 400, description: "Datos incompletos o IDs inválidos"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function actualizarRecaudacion(Request $request): Response
     {
         $data = $request->json();
         if (!isset($data['idRecaudacion'], $data['idMaquina'], $data['montoTotal'], $data['porcentajeComercio'])) {
             throw new DomainException('Datos incompletos para actualizar recaudación', 400);
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idRecaudacion'])) {
+            throw new DomainException('ID de recaudación inválido', 400);
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idMaquina'])) {
+            throw new DomainException('ID de máquina inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
 
         $command = new ActualizarRecaudacionCommand(
@@ -212,55 +269,89 @@ class InformeController
         return (new Response())->json(['success' => true, 'message' => 'Recaudación actualizada correctamente']);
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/v1/contabilidad/eliminar-recaudacion/{uuid}",
-     *     summary="Eliminar una recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Recaudación eliminada"),
-     *     @OA\Response(response=404, description="No encontrada")
-     * )
-     */
+    #[OA\Delete(
+        path: "/v1/contabilidad/eliminar-recaudacion/{uuid}",
+        summary: "Eliminar una recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Recaudación eliminada"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 404, description: "No encontrada"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function eliminarRecaudacion(Request $request, string $idRecaudacion): Response
     {
+        if (!ValidationHelper::isValidUUID($idRecaudacion)) {
+            throw new DomainException('ID de recaudación inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $command = new EliminarRecaudacionCommand($idRecaudacion);
         $this->eliminarRecaudacionHandler->handle($command);
 
         return (new Response())->json(['success' => true, 'message' => 'Recaudación eliminada correctamente']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/maquinas-recaudacion",
-     *     summary="Obtener máquinas disponibles para recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\Response(response=200, description="Lista de máquinas")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/maquinas-recaudacion",
+        summary: "Obtener máquinas disponibles para recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de máquinas"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerMaquinasRecaudacion(Request $request): Response
     {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $query   = new ObtenerMaquinasRecaudacionQuery();
         $maquinas = $this->obtenerMaquinasRecaudacionHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/maquinas-operativas-por-comercio",
-     *     summary="Obtener máquinas operativas filtradas por comercio",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="idComercio", in="query", required=true, @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="Lista de máquinas operativas"),
-     *     @OA\Response(response=400, description="ID de comercio requerido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/maquinas-operativas-por-comercio",
+        summary: "Obtener máquinas operativas filtradas por comercio",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "idComercio", in: "query", required: true, schema: new OA\Schema(type: "string"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de máquinas operativas"),
+            new OA\Response(response: 400, description: "ID de comercio requerido o inválido"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerMaquinasOperativasPorComercio(Request $request): Response
     {
         $idComercio = $request->query('idComercio');
         if (!$idComercio) {
             throw new DomainException('ID de comercio requerido', 400);
+        }
+
+        if (!ValidationHelper::isValidUUID($idComercio)) {
+            throw new DomainException('ID de comercio inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
 
         $query   = new ObtenerMaquinasOperativasPorComercioQuery($idComercio);
@@ -269,47 +360,65 @@ class InformeController
         return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/comercio-recaudacion/{uuid}",
-     *     summary="Obtener datos de comercio para recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Datos del comercio")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/comercio-recaudacion/{uuid}",
+        summary: "Obtener datos de comercio para recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Datos del comercio"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerComercioRecaudacion(Request $request, string $idComercio): Response
     {
+        if (!ValidationHelper::isValidUUID($idComercio)) {
+            throw new DomainException('ID de comercio inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $query   = new ObtenerComercioRecaudacionQuery($idComercio);
         $comercio = $this->obtenerComercioRecaudacionHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'comercio' => $comercio]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/contabilidad/guardar-informe",
-     *     summary="Guardar informe de recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idRecaudacion","ciUsuario","nombreMaquina","idComercio","nombreComercio","direccionComercio","telefonoComercio","montoTotal"},
-     *             @OA\Property(property="idRecaudacion", type="string"),
-     *             @OA\Property(property="ciUsuario", type="string"),
-     *             @OA\Property(property="nombreMaquina", type="string"),
-     *             @OA\Property(property="idComercio", type="string"),
-     *             @OA\Property(property="nombreComercio", type="string"),
-     *             @OA\Property(property="direccionComercio", type="string"),
-     *             @OA\Property(property="telefonoComercio", type="string"),
-     *             @OA\Property(property="montoTotal", type="number"),
-     *             @OA\Property(property="componentes", type="array", @OA\Items(type="object"), nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Informe guardado exitosamente"),
-     *     @OA\Response(response=400, description="Datos incompletos")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/contabilidad/guardar-informe",
+        summary: "Guardar informe de recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idRecaudacion", "ciUsuario", "nombreMaquina", "idComercio", "nombreComercio", "direccionComercio", "telefonoComercio", "montoTotal"],
+                properties: [
+                    new OA\Property(property: "idRecaudacion", type: "string"),
+                    new OA\Property(property: "ciUsuario", type: "string"),
+                    new OA\Property(property: "nombreMaquina", type: "string"),
+                    new OA\Property(property: "idComercio", type: "string"),
+                    new OA\Property(property: "nombreComercio", type: "string"),
+                    new OA\Property(property: "direccionComercio", type: "string"),
+                    new OA\Property(property: "telefonoComercio", type: "string"),
+                    new OA\Property(property: "montoTotal", type: "number"),
+                    new OA\Property(property: "componentes", type: "array", items: new OA\Items(type: "object"), nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Informe guardado exitosamente"),
+            new OA\Response(response: 400, description: "Datos incompletos o IDs inválidos"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function guardarInforme(Request $request): Response
     {
         $data     = $request->json();
@@ -318,6 +427,19 @@ class InformeController
             if (!isset($data[$field])) {
                 throw new DomainException("El campo {$field} es requerido", 400);
             }
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idRecaudacion'])) {
+            throw new DomainException('ID de recaudación inválido', 400);
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idComercio'])) {
+            throw new DomainException('ID de comercio inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
         }
 
         $command  = new GuardarInformeCommand(
@@ -330,21 +452,43 @@ class InformeController
         return (new Response())->json(['success' => true, 'message' => 'Informe guardado exitosamente', 'idInforme' => $idInforme], 201);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/contabilidad/informe/{uuid}",
-     *     summary="Obtener informe asociado a una recaudación",
-     *     tags={"Contabilidad"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Informe y componentes asociados"),
-     *     @OA\Response(response=404, description="No encontrado")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/contabilidad/informe/{uuid}",
+        summary: "Obtener informe asociado a una recaudación",
+        tags: ["Contabilidad"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Informe y componentes asociados"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 404, description: "No encontrado"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerInformePorRecaudacion(Request $request, string $idRecaudacion): Response
     {
+        if (!ValidationHelper::isValidUUID($idRecaudacion)) {
+            throw new DomainException('ID de recaudación inválido', 400);
+        }
+
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+
         $query  = new ObtenerInformePorRecaudacionQuery($idRecaudacion);
         $result = $this->obtenerInformePorRecaudacionHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'informe' => $result['informe'], 'componentes' => $result['componentes']]);
+    }
+
+    /**
+     * @deprecated Este método está obsoleto. Usar obtenerMaquinasRecaudacion() en su lugar.
+     */
+    public function obtenerMaquinaRecaudacion(Request $request): Response
+    {
+        return $this->obtenerMaquinasRecaudacion($request);
     }
 }

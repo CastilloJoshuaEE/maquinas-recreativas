@@ -1,8 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
-
+use OpenApi\Attributes as OA;
 use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionQuery;
 use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
@@ -18,21 +17,23 @@ class DistribucionController
         $this->obtenerInformesDistribucionHandler = $obtenerInformesDistribucionHandler;
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/distribucion/informes",
-     *     summary="Obtener informes de distribución con filtros",
-     *     tags={"Distribución"},
-     *     @OA\Parameter(name="estado", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="idComercio", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="fechaInicio", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Parameter(name="fechaFin", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", default=100)),
-     *     @OA\Parameter(name="offset", in="query", required=false, @OA\Schema(type="integer", default=0)),
-     *     @OA\Response(response=200, description="Lista de informes de distribución")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/distribucion/informes",
+        summary: "Obtener informes de distribución con filtros",
+        tags: ["Distribución"],
+        parameters: [
+            new OA\Parameter(name: "estado", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "idComercio", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "idMaquina", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fechaInicio", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "fechaFin", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 100)),
+            new OA\Parameter(name: "offset", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 0))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de informes de distribución")
+        ]
+    )]
     public function obtenerInformesDistribucion(Request $request): Response
     {
         $query  = new ObtenerInformesDistribucionQuery(

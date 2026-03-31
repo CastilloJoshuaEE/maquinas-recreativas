@@ -26,6 +26,7 @@ use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
+#[OA\Tag(name: "Administrador", description: "Operaciones exclusivas para administradores")]
 class AdministradorController
 {
     private RegistrarUsuarioAdminHandler $registrarUsuarioAdminHandler;
@@ -54,20 +55,24 @@ class AdministradorController
         $this->historialHandler = $historialHandler;
     }
 
-  #[OA\Get(
-    path: "/v1/administrador/usuarios",
-    summary: "Obtener todos los usuarios",
-    tags: ["Administrador"],
-    parameters: [
-        new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string")),
-        new OA\Parameter(name: "estado", in: "query", required: false, schema: new OA\Schema(type: "string")),
-    ],
-    responses: [
-        new OA\Response(response: 200, description: "Lista de usuarios"),
-        new OA\Response(response: 401, description: "No autorizado"),
-        new OA\Response(response: 403, description: "Sin permisos suficientes")
-    ]
-)]
+    #[OA\Get(
+        path: "/v1/administrador/usuarios",
+        summary: "Obtener todos los usuarios",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "estado", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "ci", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 100)),
+            new OA\Parameter(name: "offset", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 0))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de usuarios"),
+            new OA\Response(response: 401, description: "No autorizado"),
+            new OA\Response(response: 403, description: "Sin permisos suficientes")
+        ]
+    )]
     public function getAllUsers(Request $request): Response
     {
         if (!isset($_SESSION['ID_Usuario'])) {
@@ -78,93 +83,102 @@ class AdministradorController
         }
 
         $filters = [
-            'tipo'   => $request->query('tipo'),
+            'tipo' => $request->query('tipo'),
             'estado' => $request->query('estado'),
-            'ci'     => $request->query('ci'),
-            'limit'  => $request->query('limit') ? (int) $request->query('limit') : 100,
+            'ci' => $request->query('ci'),
+            'limit' => $request->query('limit') ? (int) $request->query('limit') : 100,
             'offset' => $request->query('offset') ? (int) $request->query('offset') : 0,
         ];
 
-        $query    = new ObtenerTodosUsuariosQuery($filters['tipo'], $filters['estado'], $filters['ci'], $filters['limit'], $filters['offset']);
+        $query = new ObtenerTodosUsuariosQuery($filters['tipo'], $filters['estado'], $filters['ci'], $filters['limit'], $filters['offset']);
         $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'usuarios' => $usuarios, 'total' => count($usuarios), 'filtros' => $filters]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/administrador/usuarios/{uuid}",
-     *     summary="Obtener un usuario por ID",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Datos del usuario"),
-     *     @OA\Response(response=400, description="UUID inválido"),
-     *     @OA\Response(response=404, description="Usuario no encontrado")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/administrador/usuarios/{uuid}",
+        summary: "Obtener un usuario por ID",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Datos del usuario"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 404, description: "Usuario no encontrado")
+        ]
+    )]
     public function getUser(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $query   = new ObtenerUsuarioPorIdQuery($id, true);
+        $query = new ObtenerUsuarioPorIdQuery($id, true);
         $usuario = $this->obtenerUsuarioPorIdHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'usuario' => $usuario]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/administrador/usuarios/{uuid}/historial",
-     *     summary="Obtener historial de actividades de un usuario",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Parameter(name="limite", in="query", required=false, @OA\Schema(type="integer", default=50)),
-     *     @OA\Response(response=200, description="Historial de actividades"),
-     *     @OA\Response(response=400, description="UUID inválido")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/administrador/usuarios/{uuid}/historial",
+        summary: "Obtener historial de actividades de un usuario",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid")),
+            new OA\Parameter(name: "limite", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 50))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Historial de actividades"),
+            new OA\Response(response: 400, description: "UUID inválido")
+        ]
+    )]
     public function getHistorialActividades(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $limite   = $request->query('limite') ? (int) $request->query('limite') : 50;
-        $query    = new ObtenerHistorialActividadesQuery(new Uuid($id), $limite);
+        $limite = $request->query('limite') ? (int) $request->query('limite') : 50;
+        $query = new ObtenerHistorialActividadesQuery(new Uuid($id), $limite);
         $historial = $this->historialHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'historial' => $historial, 'usuario_id' => $id]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/administrador/usuarios",
-     *     summary="Registrar un nuevo usuario (admin)",
-     *     tags={"Administrador"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"nombre","apellido","ci","email","usuario_asignado","contrasena","tipo"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="apellido", type="string"),
-     *             @OA\Property(property="ci", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="usuario_asignado", type="string"),
-     *             @OA\Property(property="contrasena", type="string"),
-     *             @OA\Property(property="tipo", type="string", enum={"Administrador","Tecnico","Logistica","Contabilidad","Usuario"}),
-     *             @OA\Property(property="estado", type="string", default="Activo"),
-     *             @OA\Property(property="especialidad", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="Usuario creado correctamente"),
-     *     @OA\Response(response=400, description="Datos inválidos")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/administrador/usuarios",
+        summary: "Registrar un nuevo usuario (admin)",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["nombre", "apellido", "ci", "email", "usuario_asignado", "contrasena", "tipo"],
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "apellido", type: "string"),
+                    new OA\Property(property: "ci", type: "string"),
+                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "usuario_asignado", type: "string"),
+                    new OA\Property(property: "contrasena", type: "string"),
+                    new OA\Property(property: "tipo", type: "string", enum: ["Administrador", "Tecnico", "Logistica", "Contabilidad", "Usuario"]),
+                    new OA\Property(property: "estado", type: "string", default: "Activo"),
+                    new OA\Property(property: "especialidad", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: "Usuario creado correctamente"),
+            new OA\Response(response: 400, description: "Datos inválidos")
+        ]
+    )]
     public function registerAdmin(Request $request): Response
     {
-        $data     = $request->json();
+        $data = $request->json();
         $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
         foreach ($required as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
@@ -198,52 +212,57 @@ class AdministradorController
         return (new Response())->json([
             'success' => true,
             'message' => 'Usuario registrado correctamente',
-            'id'      => $usuario->getId()->value(),
+            'id' => $usuario->getId()->value(),
             'usuario' => [
-                'id'               => $usuario->getId()->value(),
-                'nombre'           => $usuario->getNombre(),
-                'apellido'         => $usuario->getApellido(),
-                'email'            => $usuario->getEmail(),
+                'id' => $usuario->getId()->value(),
+                'nombre' => $usuario->getNombre(),
+                'apellido' => $usuario->getApellido(),
+                'email' => $usuario->getEmail(),
                 'usuario_asignado' => $usuario->getUsuarioAsignado(),
-                'tipo'             => $usuario->getTipo()->value(),
-                'estado'           => $usuario->getEstado()->value(),
-                'especialidad'     => $usuario->getEspecialidad(),
+                'tipo' => $usuario->getTipo()->value(),
+                'estado' => $usuario->getEstado()->value(),
+                'especialidad' => $usuario->getEspecialidad(),
             ],
         ], 201);
     }
 
-    /**
-     * @OA\Put(
-     *     path="/v1/administrador/usuarios/{uuid}",
-     *     summary="Actualizar un usuario completo",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"nombre","apellido","email","ci","tipo","estado","usuario_asignado"},
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="apellido", type="string"),
-     *             @OA\Property(property="email", type="string", format="email"),
-     *             @OA\Property(property="ci", type="string"),
-     *             @OA\Property(property="tipo", type="string"),
-     *             @OA\Property(property="estado", type="string"),
-     *             @OA\Property(property="usuario_asignado", type="string"),
-     *             @OA\Property(property="especialidad", type="string", nullable=true),
-     *             @OA\Property(property="contrasena", type="string", nullable=true)
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Usuario actualizado"),
-     *     @OA\Response(response=400, description="Datos inválidos")
-     * )
-     */
+    #[OA\Put(
+        path: "/v1/administrador/usuarios/{uuid}",
+        summary: "Actualizar un usuario completo",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["nombre", "apellido", "email", "ci", "tipo", "estado", "usuario_asignado"],
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "apellido", type: "string"),
+                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "ci", type: "string"),
+                    new OA\Property(property: "tipo", type: "string"),
+                    new OA\Property(property: "estado", type: "string"),
+                    new OA\Property(property: "usuario_asignado", type: "string"),
+                    new OA\Property(property: "especialidad", type: "string", nullable: true),
+                    new OA\Property(property: "contrasena", type: "string", nullable: true)
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Usuario actualizado"),
+            new OA\Response(response: 400, description: "Datos inválidos")
+        ]
+    )]
     public function updateUser(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $data     = $request->json();
+        $data = $request->json();
         $required = ['nombre', 'apellido', 'email', 'ci', 'tipo', 'estado', 'usuario_asignado'];
         foreach ($required as $field) {
             if (!isset($data[$field])) {
@@ -274,25 +293,30 @@ class AdministradorController
         return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
     }
 
-    /**
-     * @OA\Patch(
-     *     path="/v1/administrador/usuarios/{uuid}",
-     *     summary="Actualizar parcialmente un usuario",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="apellido", type="string"),
-     *             @OA\Property(property="email", type="string"),
-     *             @OA\Property(property="estado", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Usuario actualizado"),
-     *     @OA\Response(response=400, description="Sin datos para actualizar")
-     * )
-     */
+    #[OA\Patch(
+        path: "/v1/administrador/usuarios/{uuid}",
+        summary: "Actualizar parcialmente un usuario",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "apellido", type: "string"),
+                    new OA\Property(property: "email", type: "string"),
+                    new OA\Property(property: "estado", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Usuario actualizado"),
+            new OA\Response(response: 400, description: "Sin datos para actualizar")
+        ]
+    )]
     public function partialUpdateUser(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
@@ -310,20 +334,20 @@ class AdministradorController
             return (new Response())->json(['success' => true, 'message' => 'Estado de usuario actualizado correctamente']);
         }
 
-        $query        = new ObtenerUsuarioPorIdQuery($id, true);
+        $query = new ObtenerUsuarioPorIdQuery($id, true);
         $usuarioActual = $this->obtenerUsuarioPorIdHandler->handle($query);
 
         $command = new ActualizarUsuarioCommand(
             $id,
-            $data['nombre']           ?? $usuarioActual['nombre'],
-            $data['apellido']         ?? $usuarioActual['apellido'],
-            $data['email']            ?? $usuarioActual['email'],
-            $data['ci']               ?? $usuarioActual['ci'],
-            $data['tipo']             ?? $usuarioActual['tipo'],
-            $data['estado']           ?? $usuarioActual['estado'],
+            $data['nombre'] ?? $usuarioActual['nombre'],
+            $data['apellido'] ?? $usuarioActual['apellido'],
+            $data['email'] ?? $usuarioActual['email'],
+            $data['ci'] ?? $usuarioActual['ci'],
+            $data['tipo'] ?? $usuarioActual['tipo'],
+            $data['estado'] ?? $usuarioActual['estado'],
             $data['usuario_asignado'] ?? $usuarioActual['usuario_asignado'],
-            $data['especialidad']     ?? $usuarioActual['especialidad'] ?? null,
-            $data['contrasena']       ?? null
+            $data['especialidad'] ?? $usuarioActual['especialidad'] ?? null,
+            $data['contrasena'] ?? null
         );
 
         $this->actualizarUsuarioHandler->handle($command);
@@ -331,23 +355,28 @@ class AdministradorController
         return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
     }
 
-    /**
-     * @OA\Patch(
-     *     path="/v1/administrador/usuarios/{uuid}/estado",
-     *     summary="Cambiar estado de un usuario",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"estado"},
-     *             @OA\Property(property="estado", type="string", enum={"Activo","Inactivo","Suspendido","Pendiente_asignacion"})
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Estado actualizado"),
-     *     @OA\Response(response=400, description="Estado no válido")
-     * )
-     */
+    #[OA\Patch(
+        path: "/v1/administrador/usuarios/{uuid}/estado",
+        summary: "Cambiar estado de un usuario",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["estado"],
+                properties: [
+                    new OA\Property(property: "estado", type: "string", enum: ["Activo", "Inactivo", "Suspendido", "Pendiente_asignacion"])
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Estado actualizado"),
+            new OA\Response(response: 400, description: "Estado no válido")
+        ]
+    )]
     public function cambiarEstado(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
@@ -370,17 +399,20 @@ class AdministradorController
         return (new Response())->json(['success' => true, 'message' => 'Estado de usuario actualizado correctamente']);
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/v1/administrador/usuarios/{uuid}",
-     *     summary="Eliminar un usuario",
-     *     tags={"Administrador"},
-     *     @OA\Parameter(name="uuid", in="path", required=true, @OA\Schema(type="string", format="uuid")),
-     *     @OA\Response(response=200, description="Usuario eliminado"),
-     *     @OA\Response(response=400, description="UUID inválido"),
-     *     @OA\Response(response=403, description="No puedes eliminarte a ti mismo")
-     * )
-     */
+    #[OA\Delete(
+        path: "/v1/administrador/usuarios/{uuid}",
+        summary: "Eliminar un usuario",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Usuario eliminado"),
+            new OA\Response(response: 400, description: "UUID inválido"),
+            new OA\Response(response: 403, description: "No puedes eliminarte a ti mismo")
+        ]
+    )]
     public function deleteUser(Request $request, string $id): Response
     {
         if (!ValidationHelper::isValidUUID($id)) {
@@ -396,25 +428,26 @@ class AdministradorController
         return (new Response())->json(['success' => true, 'message' => 'Usuario eliminado correctamente']);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/administrador/estadisticas",
-     *     summary="Obtener estadísticas generales del sistema",
-     *     tags={"Administrador"},
-     *     @OA\Response(response=200, description="Estadísticas del sistema")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/administrador/estadisticas",
+        summary: "Obtener estadísticas generales del sistema",
+        tags: ["Administrador"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(response: 200, description: "Estadísticas del sistema")
+        ]
+    )]
     public function getEstadisticas(Request $request): Response
     {
-        $query    = new ObtenerTodosUsuariosQuery(null, null, null, 1000, 0);
+        $query = new ObtenerTodosUsuariosQuery(null, null, null, 1000, 0);
         $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
 
         $estadisticas = ['total_usuarios' => count($usuarios), 'por_tipo' => [], 'por_estado' => []];
 
         foreach ($usuarios as $usuario) {
-            $tipo   = $usuario['tipo'];
+            $tipo = $usuario['tipo'];
             $estado = $usuario['estado'];
-            $estadisticas['por_tipo'][$tipo]     = ($estadisticas['por_tipo'][$tipo] ?? 0) + 1;
+            $estadisticas['por_tipo'][$tipo] = ($estadisticas['por_tipo'][$tipo] ?? 0) + 1;
             $estadisticas['por_estado'][$estado] = ($estadisticas['por_estado'][$estado] ?? 0) + 1;
         }
 

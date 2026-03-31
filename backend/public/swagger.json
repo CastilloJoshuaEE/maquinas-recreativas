@@ -35,6 +35,32 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "ci",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
                     }
                 ],
                 "responses": {
@@ -47,7 +73,3763 @@
                     "403": {
                         "description": "Sin permisos suficientes"
                     }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Registrar un nuevo usuario (admin)",
+                "operationId": "e3b97ce11bb3079b4b6ed60aff3c5fba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "apellido",
+                                    "ci",
+                                    "email",
+                                    "usuario_asignado",
+                                    "contrasena",
+                                    "tipo"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "apellido": {
+                                        "type": "string"
+                                    },
+                                    "ci": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "usuario_asignado": {
+                                        "type": "string"
+                                    },
+                                    "contrasena": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Administrador",
+                                            "Tecnico",
+                                            "Logistica",
+                                            "Contabilidad",
+                                            "Usuario"
+                                        ]
+                                    },
+                                    "estado": {
+                                        "type": "string",
+                                        "default": "Activo"
+                                    },
+                                    "especialidad": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario creado correctamente"
+                    },
+                    "400": {
+                        "description": "Datos inválidos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/administrador/usuarios/{uuid}": {
+            "get": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Obtener un usuario por ID",
+                "operationId": "939f337e8216f53d305d2c0ba2da0e87",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Actualizar un usuario completo",
+                "operationId": "f8fbfa3f71753deb2dcf158cf6ce0ed1",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "apellido",
+                                    "email",
+                                    "ci",
+                                    "tipo",
+                                    "estado",
+                                    "usuario_asignado"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "apellido": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "ci": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string"
+                                    },
+                                    "estado": {
+                                        "type": "string"
+                                    },
+                                    "usuario_asignado": {
+                                        "type": "string"
+                                    },
+                                    "especialidad": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "contrasena": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado"
+                    },
+                    "400": {
+                        "description": "Datos inválidos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Eliminar un usuario",
+                "operationId": "276b69c93f56c6367550bdd2c13393b4",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario eliminado"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "403": {
+                        "description": "No puedes eliminarte a ti mismo"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Actualizar parcialmente un usuario",
+                "operationId": "c139d520fb37098ba651ca6be2a0b1c2",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "apellido": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "estado": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado"
+                    },
+                    "400": {
+                        "description": "Sin datos para actualizar"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/administrador/usuarios/{uuid}/historial": {
+            "get": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Obtener historial de actividades de un usuario",
+                "operationId": "3d46af87e1c18b5b7a3c035cad0bdd5e",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "limite",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de actividades"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/administrador/usuarios/{uuid}/estado": {
+            "patch": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Cambiar estado de un usuario",
+                "operationId": "3f3cedfc2448f9fb9137e94e47049578",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "estado"
+                                ],
+                                "properties": {
+                                    "estado": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Activo",
+                                            "Inactivo",
+                                            "Suspendido",
+                                            "Pendiente_asignacion"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Estado actualizado"
+                    },
+                    "400": {
+                        "description": "Estado no válido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/administrador/estadisticas": {
+            "get": {
+                "tags": [
+                    "Administrador"
+                ],
+                "summary": "Obtener estadísticas generales del sistema",
+                "operationId": "83c2a42f4480c9608cb7632476c627cf",
+                "responses": {
+                    "200": {
+                        "description": "Estadísticas del sistema"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/comentarios": {
+            "post": {
+                "tags": [
+                    "Comentarios"
+                ],
+                "summary": "Crear un nuevo comentario en un reporte",
+                "operationId": "7b517397e89e95a7affca4b7e3f2d7b4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idReporte",
+                                    "comentario"
+                                ],
+                                "properties": {
+                                    "idReporte": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "comentario": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comentario creado exitosamente"
+                    },
+                    "400": {
+                        "description": "Faltan datos requeridos"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
                 }
+            }
+        },
+        "/v1/comentarios/reporte/{uuid}": {
+            "get": {
+                "tags": [
+                    "Comentarios"
+                ],
+                "summary": "Obtener comentarios de un reporte",
+                "operationId": "6bbfed190555e3c84fc008a26834cc03",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de comentarios"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                }
+            }
+        },
+        "/v1/comercios": {
+            "get": {
+                "tags": [
+                    "Comercios"
+                ],
+                "summary": "Obtener lista de comercios con filtros opcionales",
+                "operationId": "b452f1f2f5ce1648089e8514cb3bf7f1",
+                "parameters": [
+                    {
+                        "name": "nombre",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Minorista",
+                                "Mayorista"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ordenar_por",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "nombre"
+                        }
+                    },
+                    {
+                        "name": "direccion",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "ASC",
+                            "enum": [
+                                "ASC",
+                                "DESC"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de comercios"
+                    },
+                    "400": {
+                        "description": "Tipo de comercio no válido"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Comercios"
+                ],
+                "summary": "Registrar un nuevo comercio",
+                "operationId": "3bc1fdcb3b225a3180ef11b698a7b427",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "tipo",
+                                    "direccion",
+                                    "telefono"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Minorista",
+                                            "Mayorista"
+                                        ]
+                                    },
+                                    "direccion": {
+                                        "type": "string"
+                                    },
+                                    "telefono": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comercio registrado correctamente"
+                    },
+                    "400": {
+                        "description": "Datos inválidos"
+                    }
+                }
+            }
+        },
+        "/v1/componentes": {
+            "get": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Obtener componentes con paginación",
+                "operationId": "e49744970ec3ba60733e29ee6cc587b5",
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de componentes con total"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/disponibles": {
+            "get": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Obtener componentes disponibles",
+                "operationId": "9fb104cb8d57e6bab2a076dcb6e19f84",
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de componentes disponibles"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/usar": {
+            "post": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Asignar/usar un componente",
+                "operationId": "2755a8030d193c36ed0a0e03b1b361fc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idComponente"
+                                ],
+                                "properties": {
+                                    "idComponente": {
+                                        "type": "string"
+                                    },
+                                    "idMaquina": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Componente asignado correctamente"
+                    },
+                    "400": {
+                        "description": "ID de componente requerido"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/liberar": {
+            "post": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Liberar un componente",
+                "operationId": "fb60154e91b7831b99a777e0f92dcdf4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idComponente"
+                                ],
+                                "properties": {
+                                    "idComponente": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Componente liberado correctamente"
+                    },
+                    "400": {
+                        "description": "ID de componente requerido"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/asignar-carcasa": {
+            "post": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Asignar carcasa a un técnico",
+                "operationId": "ca0945f498a3726e650d96970c6e2f04",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idComponente"
+                                ],
+                                "properties": {
+                                    "idComponente": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Carcasa asignada correctamente"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/liberar-cancelacion": {
+            "post": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Liberar componentes por cancelación",
+                "operationId": "ceba483f662c1fca19e7244046b2da27",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "idPlaca": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "idCarcasa": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Componentes liberados"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                }
+            }
+        },
+        "/v1/componentes/en-uso/{uuid}": {
+            "get": {
+                "tags": [
+                    "Componentes"
+                ],
+                "summary": "Obtener componentes en uso por un usuario",
+                "operationId": "3827c0ed21c3a06a1929d2d50dfba2b0",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "idMaquina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Componentes en uso"
+                    }
+                }
+            }
+        },
+        "/v1/distribucion/informes": {
+            "get": {
+                "tags": [
+                    "Distribución"
+                ],
+                "summary": "Obtener informes de distribución con filtros",
+                "operationId": "ce5f595f0df7bc3e4e2b07966e8e6b14",
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idComercio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idMaquina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fechaInicio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fechaFin",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de informes de distribución"
+                    }
+                }
+            }
+        },
+        "/v1/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Verificar estado de la API",
+                "operationId": "66cbfa771f1b7814299fafd92335ce4d",
+                "responses": {
+                    "200": {
+                        "description": "API funcionando correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "ok"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "version": {
+                                            "type": "string",
+                                            "example": "1.0.0"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/health/db": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Verificar conexión a la base de datos",
+                "operationId": "d42bf89b48e27e83ab402d417627b4c1",
+                "responses": {
+                    "200": {
+                        "description": "Conexión exitosa"
+                    },
+                    "500": {
+                        "description": "Error de conexión"
+                    }
+                }
+            }
+        },
+        "/v1/historial/maquina/{uuid}": {
+            "get": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Obtener historial de eventos de una máquina",
+                "operationId": "9bb18401579b611496ac66ab32588a0e",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de la máquina con paginación"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                }
+            }
+        },
+        "/v1/historial/usuario/{uuid}": {
+            "get": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Obtener historial de actividades de un usuario",
+                "operationId": "733959c0cb02cd5cfea8f860cdd3ed02",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial del usuario con paginación"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                }
+            }
+        },
+        "/v1/historial/general": {
+            "get": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Obtener historial general con filtros avanzados",
+                "operationId": "dfe8a777b23c691b58d7ad6d9a05b346",
+                "parameters": [
+                    {
+                        "name": "idMaquina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idUsuario",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tipoUsuario",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accion",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fechaInicio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fechaFin",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "por_pagina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial general con paginación"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                }
+            }
+        },
+        "/v1/historial/resumen": {
+            "get": {
+                "tags": [
+                    "Historial"
+                ],
+                "summary": "Obtener resumen de actividades recientes",
+                "operationId": "5586625c83edfc1d4f2ae1428c31b737",
+                "parameters": [
+                    {
+                        "name": "limite",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resumen de actividades recientes"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                }
+            }
+        },
+        "/v1/contabilidad/registrar-recaudacion": {
+            "post": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Registrar una nueva recaudación",
+                "operationId": "d79b523c953897dd1c0104e6082e6fa2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "tipoComercio",
+                                    "montoTotal",
+                                    "porcentajeComercio"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "tipoComercio": {
+                                        "type": "string"
+                                    },
+                                    "montoTotal": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "porcentajeComercio": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "detalle": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recaudación registrada exitosamente"
+                    },
+                    "400": {
+                        "description": "Datos incompletos"
+                    },
+                    "401": {
+                        "description": "Usuario no autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/recaudaciones": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener recaudaciones con filtros",
+                "operationId": "13b17dfbcb77a16cdafb5a858431b3b3",
+                "parameters": [
+                    {
+                        "name": "fechaInicio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fechaFin",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "idMaquina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tipoComercio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de recaudaciones"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/recaudaciones/{uuid}": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener una recaudación por ID",
+                "operationId": "f97f3ecf9c7dcc3c5528831125a93831",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos de la recaudación"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "404": {
+                        "description": "Recaudación no encontrada"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/resumen-recaudaciones": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener resumen agregado de recaudaciones",
+                "operationId": "7a8ddf16535d2e88c3a2104da9a84d90",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Resumen de recaudaciones"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/actualizar-recaudacion": {
+            "put": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Actualizar una recaudación existente",
+                "operationId": "108c82784d5de62a61d1319fb778ac61",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idRecaudacion",
+                                    "idMaquina",
+                                    "montoTotal",
+                                    "porcentajeComercio"
+                                ],
+                                "properties": {
+                                    "idRecaudacion": {
+                                        "type": "string"
+                                    },
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "montoTotal": {
+                                        "type": "number"
+                                    },
+                                    "porcentajeComercio": {
+                                        "type": "number"
+                                    },
+                                    "tipoComercio": {
+                                        "type": "string"
+                                    },
+                                    "detalle": {
+                                        "type": "string"
+                                    },
+                                    "fecha": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Recaudación actualizada"
+                    },
+                    "400": {
+                        "description": "Datos incompletos o IDs inválidos"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/eliminar-recaudacion/{uuid}": {
+            "delete": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Eliminar una recaudación",
+                "operationId": "130dee20482f4d18b4dd8869276d2f75",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recaudación eliminada"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "404": {
+                        "description": "No encontrada"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/maquinas-recaudacion": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener máquinas disponibles para recaudación",
+                "operationId": "86199a7b8a5edc26f4c277573246a02f",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/maquinas-operativas-por-comercio": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener máquinas operativas filtradas por comercio",
+                "operationId": "37f830b199014b894cb7e0794f2d3d70",
+                "parameters": [
+                    {
+                        "name": "idComercio",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas operativas"
+                    },
+                    "400": {
+                        "description": "ID de comercio requerido o inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/comercio-recaudacion/{uuid}": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener datos de comercio para recaudación",
+                "operationId": "b5bd01b66acc92be899eb91c75f4a9b8",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del comercio"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/guardar-informe": {
+            "post": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Guardar informe de recaudación",
+                "operationId": "64d1717e9343063816ec1134204d7f2f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idRecaudacion",
+                                    "ciUsuario",
+                                    "nombreMaquina",
+                                    "idComercio",
+                                    "nombreComercio",
+                                    "direccionComercio",
+                                    "telefonoComercio",
+                                    "montoTotal"
+                                ],
+                                "properties": {
+                                    "idRecaudacion": {
+                                        "type": "string"
+                                    },
+                                    "ciUsuario": {
+                                        "type": "string"
+                                    },
+                                    "nombreMaquina": {
+                                        "type": "string"
+                                    },
+                                    "idComercio": {
+                                        "type": "string"
+                                    },
+                                    "nombreComercio": {
+                                        "type": "string"
+                                    },
+                                    "direccionComercio": {
+                                        "type": "string"
+                                    },
+                                    "telefonoComercio": {
+                                        "type": "string"
+                                    },
+                                    "montoTotal": {
+                                        "type": "number"
+                                    },
+                                    "componentes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Informe guardado exitosamente"
+                    },
+                    "400": {
+                        "description": "Datos incompletos o IDs inválidos"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/contabilidad/informe/{uuid}": {
+            "get": {
+                "tags": [
+                    "Contabilidad"
+                ],
+                "summary": "Obtener informe asociado a una recaudación",
+                "operationId": "303e4ac012c9df37a6f624c6a4eeea57",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Informe y componentes asociados"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "404": {
+                        "description": "No encontrado"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/logistico/maquinas-distribucion": {
+            "get": {
+                "tags": [
+                    "Logístico"
+                ],
+                "summary": "Obtener máquinas listas para distribución",
+                "operationId": "b121abc12f4e12e433d038f37bd60c3e",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas listas para distribuir"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/logistico/informes-distribucion": {
+            "get": {
+                "tags": [
+                    "Logístico"
+                ],
+                "summary": "Obtener informes de distribución",
+                "operationId": "42b029ccab94b5ef6d989e4a3dd73e6e",
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idComercio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idMaquina",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fechaInicio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fechaFin",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Informes de distribución"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/logistico/solicitar-mantenimiento": {
+            "post": {
+                "tags": [
+                    "Logístico"
+                ],
+                "summary": "Solicitar mantenimiento para una máquina",
+                "operationId": "16830dfd977edb2b7ae15181e20570b0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mantenimiento solicitado"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/register": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Registrar una nueva máquina recreativa",
+                "operationId": "e53debb71994c23b08c89537354f21fb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nombre",
+                                    "tipo",
+                                    "idComercio",
+                                    "idPlaca",
+                                    "idCarcasa"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string"
+                                    },
+                                    "idComercio": {
+                                        "type": "string"
+                                    },
+                                    "idPlaca": {
+                                        "type": "string"
+                                    },
+                                    "idCarcasa": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Máquina registrada exitosamente"
+                    },
+                    "400": {
+                        "description": "Datos incompletos"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/generar-placa": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Generar una nueva placa de componente",
+                "operationId": "acd0c039088d13583b167511eed218b4",
+                "responses": {
+                    "200": {
+                        "description": "Placa generada con su ID de componente"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/registrar-montaje": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Registrar montaje de un componente en una máquina",
+                "operationId": "fb56a1e9907f7e4e0e3408b1e639feb9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "idComponente"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "idComponente": {
+                                        "type": "string"
+                                    },
+                                    "detalle": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Montaje registrado exitosamente"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/mandar-comprobacion": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Enviar máquina a etapa de comprobación",
+                "operationId": "0c418e1d98db2e8bfe042e459371bd5b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina enviada a comprobación"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/mandar-reensamblar": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Enviar máquina a reensamblar",
+                "operationId": "57548821da465b7cddc472ad46e43070",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina enviada a reensamblar"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/mandar-distribucion": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Enviar máquina a distribución",
+                "operationId": "4f210b1ef0805a3a865053c6dab9ad50",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina enviada a distribución"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/poner-operativa": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Marcar una máquina como operativa",
+                "operationId": "e860c6488c9c569e952922db9556d02c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina puesta en operativa"
+                    },
+                    "400": {
+                        "description": "ID de máquina requerido"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/dar-mantenimiento": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Solicitar mantenimiento para una máquina",
+                "operationId": "1cfd2caec9c9134dbc008172dfcf07a4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mantenimiento solicitado"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/finalizar-mantenimiento": {
+            "post": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Finalizar el mantenimiento de una máquina",
+                "operationId": "e2c43a654d726554aa748fc4414a315f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "exito",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "exito": {
+                                        "type": "boolean"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mantenimiento finalizado"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/ensamblador/{uuid}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas asignadas a un técnico ensamblador",
+                "operationId": "9b119792f87fa430a7e77bc2ac31ecfa",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/comprobador/{uuid}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas asignadas a un técnico comprobador",
+                "operationId": "57f9cb0fceb3b8fbceddfd51bfb01833",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/mantenimiento/{uuid}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas asignadas a un técnico de mantenimiento",
+                "operationId": "a8c92777b6e2f8e4ec67f27b02d139e4",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/estado/{estado}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas filtradas por estado",
+                "operationId": "7649a981ed893bce56d9b9307121b61e",
+                "parameters": [
+                    {
+                        "name": "estado",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas por estado"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/etapa/{etapa}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas filtradas por etapa",
+                "operationId": "39d75a976cf2c4cb34c9c32c9867ab60",
+                "parameters": [
+                    {
+                        "name": "etapa",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas por etapa"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/distribucion": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener máquinas disponibles para distribución",
+                "operationId": "0daf1aef8959fcfd0ee80c0f2b27feaf",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas para distribución"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/maquina/componentes/{uuid}": {
+            "get": {
+                "tags": [
+                    "Máquinas"
+                ],
+                "summary": "Obtener componentes instalados en una máquina",
+                "operationId": "d0eac6250937f83963803be0ff3c87ab",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de componentes de la máquina"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones_maquina/{uuid}": {
+            "get": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Obtener notificaciones de máquinas de un usuario",
+                "operationId": "4f332b71a18620d322e905ed8038593c",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de notificaciones de máquinas"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/{uuid}": {
+            "get": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Obtener notificaciones de reportes de un usuario",
+                "operationId": "91732681a6b365441a7777f19ba4a46d",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de notificaciones de reportes"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/{uuid}/marcarla-leida": {
+            "post": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Marcar una notificación específica como leída",
+                "operationId": "daee8e9ca7b4b37af7998ce558ac5cef",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notificación marcada como leída"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/marcarla-todas-leidas": {
+            "post": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Marcar todas las notificaciones del usuario como leídas",
+                "operationId": "5bdd0ce55247d380c37ea0124fe20a3e",
+                "responses": {
+                    "200": {
+                        "description": "Todas las notificaciones marcadas como leídas"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/create": {
+            "post": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Crear una notificación de máquina",
+                "operationId": "f1930479811d1f5a50e8ac60495ed777",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idRemitente",
+                                    "idDestinatario",
+                                    "idMaquina",
+                                    "tipo",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idRemitente": {
+                                        "type": "string"
+                                    },
+                                    "idDestinatario": {
+                                        "type": "string"
+                                    },
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Notificación creada exitosamente"
+                    },
+                    "400": {
+                        "description": "Datos incompletos"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/marcar-leida": {
+            "post": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Marcar una notificación como leída (versión legacy por body)",
+                "operationId": "85c82150fbc050567e7e9d7fc15bfce2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idNotificacion"
+                                ],
+                                "properties": {
+                                    "idNotificacion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notificación marcada como leída"
+                    },
+                    "400": {
+                        "description": "ID requerido"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/notificaciones/no-leidas/{uuid}": {
+            "get": {
+                "tags": [
+                    "Notificaciones"
+                ],
+                "summary": "Obtener cantidad de notificaciones no leídas de un usuario",
+                "operationId": "96c6d4134df72a0e5902a901c68173c3",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cantidad de notificaciones no leídas"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/crear": {
+            "post": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Crear un nuevo reporte",
+                "operationId": "1d78945acf9baab73350329f595615c2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "descripcion"
+                                ],
+                                "properties": {
+                                    "descripcion": {
+                                        "type": "string"
+                                    },
+                                    "idUsuarioDestinatario": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Reporte creado exitosamente"
+                    },
+                    "400": {
+                        "description": "Descripción requerida"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/usuario/{uuid}": {
+            "get": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Obtener reportes de un usuario",
+                "operationId": "5eab5edf5d85718d4fa5bd9409924bc2",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de reportes del usuario"
+                    },
+                    "400": {
+                        "description": "UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/chat/{emisorId}/{destinatarioId}": {
+            "get": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Obtener hilo de chat entre dos usuarios",
+                "operationId": "c243faccc3e58c0cb466e5267bd5f8d3",
+                "parameters": [
+                    {
+                        "name": "emisorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "destinatarioId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reportes del chat"
+                    },
+                    "400": {
+                        "description": "IDs inválidos"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/{uuid}/estado": {
+            "put": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Actualizar el estado de un reporte",
+                "operationId": "c437aa9e58a74509c4903251cdcbf70b",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "estado"
+                                ],
+                                "properties": {
+                                    "estado": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pendiente",
+                                            "En proceso",
+                                            "Resuelto"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Estado actualizado"
+                    },
+                    "400": {
+                        "description": "Estado no válido o UUID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/usuarios-chat": {
+            "get": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Obtener usuarios con los que el usuario autenticado ha chateado",
+                "operationId": "f08124c6baf5b8fbd32a1338cbe53304",
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuarios del chat"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/reportes/chat-completo": {
+            "get": {
+                "tags": [
+                    "Reportes"
+                ],
+                "summary": "Obtener chat completo incluyendo comentarios",
+                "operationId": "102cedce102ad30e4953c3feb0314428",
+                "parameters": [
+                    {
+                        "name": "emisorId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "destinatarioId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reporteId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chat completo con comentarios"
+                    },
+                    "400": {
+                        "description": "IDs de emisor y destinatario requeridos"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/comprobador/maquinas": {
+            "get": {
+                "tags": [
+                    "Técnico Comprobador"
+                ],
+                "summary": "Obtener máquinas pendientes de comprobación del técnico autenticado",
+                "operationId": "70cf00a4f6f0942746427645375ad606",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas pendientes de comprobación"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/comprobador/aprobar-distribucion": {
+            "post": {
+                "tags": [
+                    "Técnico Comprobador"
+                ],
+                "summary": "Aprobar máquina y enviarla a distribución",
+                "operationId": "3b508c2ebe21207d0f50ec1ce256f51f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina enviada a distribución"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes o ID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/comprobador/rechazar-reensamblar": {
+            "post": {
+                "tags": [
+                    "Técnico Comprobador"
+                ],
+                "summary": "Rechazar máquina y enviarla a reensamblar",
+                "operationId": "66e948a23f8a2983aa5b5e663998e8e4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Máquina enviada a reensamblar"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes o ID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/ensamblador/maquinas": {
+            "get": {
+                "tags": [
+                    "Técnico Ensamblador"
+                ],
+                "summary": "Obtener máquinas asignadas al técnico ensamblador autenticado",
+                "operationId": "2316f69033a5fdc17ae46de9588af6f6",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas asignadas"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/ensamblador/montaje": {
+            "post": {
+                "tags": [
+                    "Técnico Ensamblador"
+                ],
+                "summary": "Registrar montaje de un componente en una máquina",
+                "operationId": "987ccef67b952baf9584b47e05e99829",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "idComponente"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "idComponente": {
+                                        "type": "string"
+                                    },
+                                    "detalle": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Montaje registrado"
+                    },
+                    "400": {
+                        "description": "Datos obligatorios faltantes o IDs inválidos"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/ensamblador/generar-placa": {
+            "post": {
+                "tags": [
+                    "Técnico Ensamblador"
+                ],
+                "summary": "Generar una nueva placa de componente logístico",
+                "operationId": "9dc696ba1a60b695d3d1977387655bef",
+                "responses": {
+                    "200": {
+                        "description": "Placa generada con ID de componente"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/mantenimiento/maquinas": {
+            "get": {
+                "tags": [
+                    "Técnico Mantenimiento"
+                ],
+                "summary": "Obtener máquinas asignadas para mantenimiento del técnico autenticado",
+                "operationId": "aedc0b7afdbbfe0c7a21145b882e0fe8",
+                "responses": {
+                    "200": {
+                        "description": "Lista de máquinas en mantenimiento"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/tecnico/mantenimiento/finalizar": {
+            "post": {
+                "tags": [
+                    "Técnico Mantenimiento"
+                ],
+                "summary": "Finalizar el mantenimiento de una máquina",
+                "operationId": "a26f569fe7f2620d343030b0e59e9a29",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "idMaquina",
+                                    "exito",
+                                    "mensaje"
+                                ],
+                                "properties": {
+                                    "idMaquina": {
+                                        "type": "string"
+                                    },
+                                    "exito": {
+                                        "type": "boolean"
+                                    },
+                                    "mensaje": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mantenimiento finalizado"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes o ID inválido"
+                    },
+                    "401": {
+                        "description": "No autorizado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/usuario/register": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "operationId": "446d3ba78d7badb895d4b630f04977f1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "contrasena"
+                                ],
+                                "properties": {
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "apellido": {
+                                        "type": "string"
+                                    },
+                                    "ci": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "contrasena": {
+                                        "type": "string"
+                                    },
+                                    "tipo": {
+                                        "type": "string",
+                                        "default": "Usuario"
+                                    },
+                                    "especialidad": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario registrado correctamente"
+                    },
+                    "400": {
+                        "description": "Datos incompletos"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/login": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Iniciar sesión",
+                "operationId": "00d817e6f3506191f0f9570315b6ac5f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "usuario_asignado",
+                                    "contrasena"
+                                ],
+                                "properties": {
+                                    "usuario_asignado": {
+                                        "type": "string"
+                                    },
+                                    "contrasena": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Inicio de sesión exitoso"
+                    },
+                    "400": {
+                        "description": "Credenciales requeridas"
+                    },
+                    "401": {
+                        "description": "Credenciales incorrectas"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/logout": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Cerrar sesión",
+                "operationId": "2d180094b47d6ba812fa439f44abecff",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada correctamente"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/perfil/{id}": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener perfil de un usuario",
+                "operationId": "79370ef786475f32b3f49a978073f4b6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario"
+                    },
+                    "400": {
+                        "description": "ID no proporcionado o inválido"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/actualizar-perfil": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Actualizar perfil del usuario autenticado",
+                "operationId": "5c8127fdf220aa4d60d437ac6c927754",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "nombre": {
+                                        "type": "string"
+                                    },
+                                    "apellido": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "ci": {
+                                        "type": "string"
+                                    },
+                                    "contrasena": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Perfil actualizado"
+                    },
+                    "403": {
+                        "description": "No autorizado para editar este perfil"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1/usuario/buscar-email": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Buscar un usuario por su correo electrónico",
+                "operationId": "ab41a7e492d86fd674f180de14a500f0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario encontrado"
+                    },
+                    "400": {
+                        "description": "Correo requerido"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/recuperar-contrasena": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Recuperar / restablecer contraseña",
+                "operationId": "1a4966b666f970b5451f6a65aa1b17e2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "nueva_contrasena"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "nueva_contrasena": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contraseña actualizada"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/recuperar-usuario": {
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Recuperar/actualizar nombre de usuario",
+                "operationId": "b3c77e4b188bdb986716b78d1183fa31",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "nuevo_usuario"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "nuevo_usuario": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nombre de usuario actualizado"
+                    },
+                    "400": {
+                        "description": "Datos requeridos faltantes"
+                    }
+                }
+            }
+        },
+        "/v1/usuario/tecnicos/{especialidad}": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener técnicos filtrados por especialidad",
+                "operationId": "94e18f7fae838065bf971446f5004ffe",
+                "parameters": [
+                    {
+                        "name": "especialidad",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de técnicos por especialidad"
+                    }
+                }
+            }
+        },
+        "/v1/usuarios/por-tipo": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener usuarios filtrados por tipo",
+                "operationId": "d44b89674074bb2a6856d3236a52be46",
+                "parameters": [
+                    {
+                        "name": "tipo",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "excluirId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de usuarios por tipo"
+                    },
+                    "400": {
+                        "description": "Tipo requerido"
+                    }
+                }
+            }
+        },
+        "/v1/historial-actividades": {
+            "get": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Obtener historial de actividades del usuario",
+                "operationId": "667235765893c30e898189a8afd74887",
+                "parameters": [
+                    {
+                        "name": "usuarioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de actividades"
+                    },
+                    "400": {
+                        "description": "ID de usuario requerido"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Usuarios"
+                ],
+                "summary": "Registrar una actividad del usuario autenticado",
+                "operationId": "0b5bf4cfc1f1209bf52290af2e3a6b72",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "descripcion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Actividad registrada"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         }
     },
@@ -63,7 +3845,67 @@
     "tags": [
         {
             "name": "Administrador",
-            "description": "Administrador"
+            "description": "Operaciones exclusivas para administradores"
+        },
+        {
+            "name": "Comentarios",
+            "description": "Comentarios"
+        },
+        {
+            "name": "Comercios",
+            "description": "Comercios"
+        },
+        {
+            "name": "Componentes",
+            "description": "Componentes"
+        },
+        {
+            "name": "Distribución",
+            "description": "Distribución"
+        },
+        {
+            "name": "Health",
+            "description": "Health"
+        },
+        {
+            "name": "Historial",
+            "description": "Historial"
+        },
+        {
+            "name": "Contabilidad",
+            "description": "Contabilidad"
+        },
+        {
+            "name": "Logístico",
+            "description": "Logístico"
+        },
+        {
+            "name": "Máquinas",
+            "description": "Máquinas"
+        },
+        {
+            "name": "Notificaciones",
+            "description": "Notificaciones"
+        },
+        {
+            "name": "Reportes",
+            "description": "Reportes"
+        },
+        {
+            "name": "Técnico Comprobador",
+            "description": "Técnico Comprobador"
+        },
+        {
+            "name": "Técnico Ensamblador",
+            "description": "Técnico Ensamblador"
+        },
+        {
+            "name": "Técnico Mantenimiento",
+            "description": "Técnico Mantenimiento"
+        },
+        {
+            "name": "Usuarios",
+            "description": "Usuarios"
         }
     ]
 }

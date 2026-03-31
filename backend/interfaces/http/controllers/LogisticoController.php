@@ -1,7 +1,7 @@
 <?php
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
 
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 
 use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoCommand;
 use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoHandler;
@@ -10,6 +10,7 @@ use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribu
 use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionQuery;
 use maquinas_recreativas\Application\Queries\Distribucion\ObtenerInformesDistribucionHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
@@ -29,37 +30,53 @@ class LogisticoController
         $this->darMantenimientoHandler                = $darMantenimientoHandler;
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/logistico/maquinas-distribucion",
-     *     summary="Obtener máquinas listas para distribución",
-     *     tags={"Logístico"},
-     *     @OA\Response(response=200, description="Lista de máquinas listas para distribuir")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/logistico/maquinas-distribucion",
+        summary: "Obtener máquinas listas para distribución",
+        tags: ["Logístico"],
+        security: [["bearerAuth" => []]],
+        responses: [
+            new OA\Response(response: 200, description: "Lista de máquinas listas para distribuir"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerMaquinasParaDistribucion(Request $request): Response
     {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('No autorizado', 401);
+        }
+
         $query   = new ObtenerMaquinasParaDistribucionQuery();
         $maquinas = $this->obtenerMaquinasParaDistribucionHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
     }
 
-    /**
-     * @OA\Get(
-     *     path="/v1/logistico/informes-distribucion",
-     *     summary="Obtener informes de distribución",
-     *     tags={"Logístico"},
-     *     @OA\Parameter(name="estado", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="idComercio", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="idMaquina", in="query", required=false, @OA\Schema(type="string")),
-     *     @OA\Parameter(name="fechaInicio", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Parameter(name="fechaFin", in="query", required=false, @OA\Schema(type="string", format="date")),
-     *     @OA\Response(response=200, description="Informes de distribución")
-     * )
-     */
+    #[OA\Get(
+        path: "/v1/logistico/informes-distribucion",
+        summary: "Obtener informes de distribución",
+        tags: ["Logístico"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "estado", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "idComercio", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "idMaquina", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "fechaInicio", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+            new OA\Parameter(name: "fechaFin", in: "query", required: false, schema: new OA\Schema(type: "string", format: "date")),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: "Informes de distribución"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function obtenerInformesDistribucion(Request $request): Response
     {
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if (!$userId) {
+            throw new DomainException('No autorizado', 401);
+        }
+
         $query   = new ObtenerInformesDistribucionQuery(
             $request->query('estado'),
             $request->query('idComercio'),
@@ -72,24 +89,27 @@ class LogisticoController
         return (new Response())->json(['success' => true, 'informes' => $informes]);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/v1/logistico/solicitar-mantenimiento",
-     *     summary="Solicitar mantenimiento para una máquina",
-     *     tags={"Logístico"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"idMaquina","mensaje"},
-     *             @OA\Property(property="idMaquina", type="string"),
-     *             @OA\Property(property="mensaje", type="string")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Mantenimiento solicitado"),
-     *     @OA\Response(response=400, description="Datos requeridos faltantes"),
-     *     @OA\Response(response=401, description="No autorizado")
-     * )
-     */
+    #[OA\Post(
+        path: "/v1/logistico/solicitar-mantenimiento",
+        summary: "Solicitar mantenimiento para una máquina",
+        tags: ["Logístico"],
+        security: [["bearerAuth" => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["idMaquina", "mensaje"],
+                properties: [
+                    new OA\Property(property: "idMaquina", type: "string"),
+                    new OA\Property(property: "mensaje", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Mantenimiento solicitado"),
+            new OA\Response(response: 400, description: "Datos requeridos faltantes"),
+            new OA\Response(response: 401, description: "No autorizado")
+        ]
+    )]
     public function solicitarMantenimiento(Request $request): Response
     {
         $data = $request->json();
@@ -100,6 +120,10 @@ class LogisticoController
         $logisticaId = $_SESSION['ID_Usuario'] ?? null;
         if (!$logisticaId) {
             throw new DomainException('No autorizado', 401);
+        }
+
+        if (!ValidationHelper::isValidUUID($data['idMaquina'])) {
+            throw new DomainException('ID de máquina inválido', 400);
         }
 
         $command = new DarMantenimientoCommand($data['idMaquina'], $data['mensaje'], $logisticaId);
