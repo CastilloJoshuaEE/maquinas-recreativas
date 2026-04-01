@@ -61,13 +61,13 @@ class Response{
      * @param int $statusCode
      * @return void
      */
-    public function json($data, int $statusCode = 200): void
-    {
-        $this->status($statusCode);
-        $this->header('Content-Type', 'application/json; charset=utf-8');
-        $this->content = json_encode($data, JSON_UNESCAPED_UNICODE);
-        $this->send();
-    }
+public function json($data, int $statusCode = 200): self
+{
+    $this->status($statusCode);
+    $this->header('Content-Type', 'application/json; charset=utf-8');
+    $this->content = json_encode($data, JSON_UNESCAPED_UNICODE);
+    return $this;
+}
     /**
      * Envía la respuesta
      * 

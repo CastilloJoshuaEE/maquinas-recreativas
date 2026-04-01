@@ -47,6 +47,13 @@ class DistribucionController
         );
         $result = $this->obtenerInformesDistribucionHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'informes' => $result['informes'], 'total' => $result['total']]);
+$response = new Response();
+$response->json([
+    'success' => true,
+    'informes' => $result['informes'],
+    'total' => $result['total']
+]);
+
+return $response;
     }
 }
