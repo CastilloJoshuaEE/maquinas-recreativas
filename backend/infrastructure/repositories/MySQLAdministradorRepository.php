@@ -9,23 +9,19 @@
 
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use maquinas_recreativas\Domain\Usuario\Usuario;
 use maquinas_recreativas\Domain\Usuario\AdministradorRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
-use PDO;
 
-/**
- * Class MySQLAdministradorRepository
- */
 class MySQLAdministradorRepository extends MySQLUsuarioRepository implements AdministradorRepository
 {
-        private Database $db;
+    private Database $db;
 
     public function __construct(Database $db)
     {
         parent::__construct($db);
+        $this->db = $db;
     }
 
     public function findAllWithFilters(array $filters = []): array
@@ -38,75 +34,79 @@ class MySQLAdministradorRepository extends MySQLUsuarioRepository implements Adm
                 WHERE 1=1";
 
         $params = [];
+        $types = "";
 
         if (!empty($filters['tipo'])) {
-            $sql .= " AND u.tipo = :tipo";
-            $params[':tipo'] = $filters['tipo'];
+            $sql .= " AND u.tipo = ?";
+            $params[] = $filters['tipo'];
+            $types .= "s";
         }
 
         if (!empty($filters['estado'])) {
-            $sql .= " AND u.estado = :estado";
-            $params[':estado'] = $filters['estado'];
+            $sql .= " AND u.estado = ?";
+            $params[] = $filters['estado'];
+            $types .= "s";
         }
 
         if (!empty($filters['ci'])) {
             $ciEncriptada = CifradoHelper::encriptar($filters['ci']);
-            $sql .= " AND u.ci = :ci";
-            $params[':ci'] = $ciEncriptada;
+            $sql .= " AND u.ci = ?";
+            $params[] = $ciEncriptada;
+            $types .= "s";
         }
 
         $sql .= " ORDER BY u.nombre ASC";
 
         if (isset($filters['limit'])) {
-            $sql .= " LIMIT :limit";
-            $params[':limit'] = (int)$filters['limit'];
+            $sql .= " LIMIT ?";
+            $params[] = (int)$filters['limit'];
+            $types .= "i";
         }
 
         if (isset($filters['offset'])) {
-            $sql .= " OFFSET :offset";
-            $params[':offset'] = (int)$filters['offset'];
+            $sql .= " OFFSET ?";
+            $params[] = (int)$filters['offset'];
+            $types .= "i";
         }
 
         $stmt = $conn->prepare($sql);
-        foreach ($params as $key => $value) {
-            if (is_int($value)) {
-                $stmt->bindValue($key, $value, PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue($key, $value);
-            }
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
         $stmt->execute();
+        $result = $stmt->get_result();
 
-        $result = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
             if (!empty($row['email'])) {
                 $row['email'] = CifradoHelper::desencriptar($row['email']);
             }
             if (!empty($row['ci'])) {
                 $row['ci'] = CifradoHelper::desencriptar($row['ci']);
             }
-            $result[] = $row;
+            $rows[] = $row;
         }
+        $stmt->close();
 
-        return $result;
+        return $rows;
     }
 
     public function getEstadisticas(): array
     {
         $conn = $this->db->getConnection();
 
-        $stmt = $conn->query("SELECT COUNT(*) as total FROM usuario");
-        $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        $result = $conn->query("SELECT COUNT(*) as total FROM usuario");
+        $total = $result->fetch_assoc()['total'];
 
-        $stmt = $conn->query("SELECT tipo, COUNT(*) as cantidad FROM usuario GROUP BY tipo");
+        $result = $conn->query("SELECT tipo, COUNT(*) as cantidad FROM usuario GROUP BY tipo");
         $porTipo = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $porTipo[$row['tipo']] = (int)$row['cantidad'];
         }
 
-        $stmt = $conn->query("SELECT estado, COUNT(*) as cantidad FROM usuario GROUP BY estado");
+        $result = $conn->query("SELECT estado, COUNT(*) as cantidad FROM usuario GROUP BY estado");
         $porEstado = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $porEstado[$row['estado']] = (int)$row['cantidad'];
         }
 
@@ -121,12 +121,14 @@ class MySQLAdministradorRepository extends MySQLUsuarioRepository implements Adm
     {
         $conn = $this->db->getConnection();
 
-        $sql = "UPDATE usuario SET estado = :estado WHERE ID_Usuario = :id";
+        $sql = "UPDATE usuario SET estado = ? WHERE ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            ':estado' => $nuevoEstado,
-            ':id' => $usuarioId->value(),
-        ]);
+        $idValue = $usuarioId->value();
+        $stmt->bind_param('ss', $nuevoEstado, $idValue);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
     }
 
     public function buscarPorNombre(string $termino, int $limit = 10): array
@@ -137,26 +139,27 @@ class MySQLAdministradorRepository extends MySQLUsuarioRepository implements Adm
         $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
                 FROM usuario u 
                 LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                WHERE u.nombre LIKE :termino OR u.apellido LIKE :termino
+                WHERE u.nombre LIKE ? OR u.apellido LIKE ?
                 ORDER BY u.nombre ASC
-                LIMIT :limit";
+                LIMIT ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':termino', $termino);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bind_param('ssi', $termino, $termino, $limit);
         $stmt->execute();
+        $result = $stmt->get_result();
 
-        $result = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
             if (!empty($row['email'])) {
                 $row['email'] = CifradoHelper::desencriptar($row['email']);
             }
             if (!empty($row['ci'])) {
                 $row['ci'] = CifradoHelper::desencriptar($row['ci']);
             }
-            $result[] = $row;
+            $rows[] = $row;
         }
+        $stmt->close();
 
-        return $result;
+        return $rows;
     }
 }

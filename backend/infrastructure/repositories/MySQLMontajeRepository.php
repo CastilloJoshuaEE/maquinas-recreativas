@@ -13,11 +13,7 @@ use maquinas_recreativas\Domain\Montaje\Montaje;
 use maquinas_recreativas\Domain\Montaje\MontajeRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
-/**
- * Class MySQLMontajeRepository
- */
 class MySQLMontajeRepository implements MontajeRepository
 {
     private Database $db;
@@ -33,57 +29,76 @@ class MySQLMontajeRepository implements MontajeRepository
         $data = $montaje->toArray();
 
         $sql = "INSERT INTO montaje (ID_Montaje, ID_Maquina, ID_Componente, ID_Tecnico, detalle, fecha) 
-                VALUES (:id, :idMaquina, :idComponente, :idTecnico, :detalle, :fecha)";
+                VALUES (?, ?, ?, ?, ?, ?)";
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Montaje'],
-            ':idMaquina' => $data['ID_Maquina'],
-            ':idComponente' => $data['ID_Componente'],
-            ':idTecnico' => $data['ID_Tecnico'],
-            ':detalle' => $data['detalle'],
-            ':fecha' => $data['fecha']
-        ]);
+        $stmt->bind_param(
+            'ssssss',
+            $data['ID_Montaje'],
+            $data['ID_Maquina'],
+            $data['ID_Componente'],
+            $data['ID_Tecnico'],
+            $data['detalle'],
+            $data['fecha']
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function findByMaquina(Uuid $idMaquina): array
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM montaje WHERE ID_Maquina = :idMaquina ORDER BY fecha DESC";
+        $sql = "SELECT * FROM montaje WHERE ID_Maquina = ? ORDER BY fecha DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idMaquina' => $idMaquina->value()]);
-
+        $idValue = $idMaquina->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $montajes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $montajes[] = Montaje::fromArray($row);
         }
+        $stmt->close();
+        
         return $montajes;
     }
 
     public function findByComponente(Uuid $idComponente): array
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM montaje WHERE ID_Componente = :idComponente ORDER BY fecha DESC";
+        $sql = "SELECT * FROM montaje WHERE ID_Componente = ? ORDER BY fecha DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idComponente' => $idComponente->value()]);
-
+        $idValue = $idComponente->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $montajes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $montajes[] = Montaje::fromArray($row);
         }
+        $stmt->close();
+        
         return $montajes;
     }
 
     public function findByTecnico(Uuid $idTecnico): array
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM montaje WHERE ID_Tecnico = :idTecnico ORDER BY fecha DESC";
+        $sql = "SELECT * FROM montaje WHERE ID_Tecnico = ? ORDER BY fecha DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idTecnico' => $idTecnico->value()]);
-
+        $idValue = $idTecnico->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $montajes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $montajes[] = Montaje::fromArray($row);
         }
+        $stmt->close();
+        
         return $montajes;
     }
 }

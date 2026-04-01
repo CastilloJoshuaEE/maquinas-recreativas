@@ -64,7 +64,6 @@ class ComentarioController
         $command = new CrearComentarioCommand($data['idReporte'], $userId, $data['comentario']);
         $idComentario = $this->crearComentarioHandler->handle($command);
 
-        // CORREGIDO: json() retorna void, no se puede usar return
         $response = new Response();
         $response->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
         return $response;

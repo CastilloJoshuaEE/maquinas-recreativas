@@ -143,8 +143,8 @@ class AdministradorController
         }
 
         $limite = $request->query('limite') ? (int) $request->query('limite') : 50;
-        $query = new ObtenerHistorialActividadesQuery(new Uuid($id), $limite);
-        $historial = $this->historialHandler->handle($query);
+$query = new ObtenerHistorialActividadesQuery(new Uuid($id));
+$historial = $this->historialHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'historial' => $historial, 'usuario_id' => $id]);
     }

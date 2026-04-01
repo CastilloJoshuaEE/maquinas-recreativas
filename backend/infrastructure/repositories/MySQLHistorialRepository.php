@@ -14,11 +14,7 @@ use maquinas_recreativas\Domain\Historial\HistorialActividad;
 use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
-/**
- * Class MySQLHistorialRepository
- */
 class MySQLHistorialRepository implements HistorialRepository
 {
     private Database $db;
@@ -37,27 +33,26 @@ class MySQLHistorialRepository implements HistorialRepository
                     ID_Maquina, ID_Usuario, tipo_usuario, accion, descripcion,
                     estado_anterior, estado_nuevo, etapa_anterior, etapa_nueva,
                     ip_address, detalles_adicionales, fecha_hora
-                ) VALUES (
-                    :idMaquina, :idUsuario, :tipoUsuario, :accion, :descripcion,
-                    :estadoAnterior, :estadoNuevo, :etapaAnterior, :etapaNueva,
-                    :ipAddress, :detalles, :fechaHora
-                )";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':idMaquina' => $data['ID_Maquina'],
-            ':idUsuario' => $data['ID_Usuario'],
-            ':tipoUsuario' => $data['tipo_usuario'],
-            ':accion' => $data['accion'],
-            ':descripcion' => $data['descripcion'],
-            ':estadoAnterior' => $data['estado_anterior'],
-            ':estadoNuevo' => $data['estado_nuevo'],
-            ':etapaAnterior' => $data['etapa_anterior'],
-            ':etapaNueva' => $data['etapa_nueva'],
-            ':ipAddress' => $data['ip_address'],
-            ':detalles' => $data['detalles_adicionales'],
-            ':fechaHora' => $data['fecha_hora']
-        ]);
+        $stmt->bind_param(
+            'ssssssssssss',
+            $data['ID_Maquina'],
+            $data['ID_Usuario'],
+            $data['tipo_usuario'],
+            $data['accion'],
+            $data['descripcion'],
+            $data['estado_anterior'],
+            $data['estado_nuevo'],
+            $data['etapa_anterior'],
+            $data['etapa_nueva'],
+            $data['ip_address'],
+            $data['detalles_adicionales'],
+            $data['fecha_hora']
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function saveActividad(HistorialActividad $actividad): void
@@ -66,13 +61,15 @@ class MySQLHistorialRepository implements HistorialRepository
         $data = $actividad->toArray();
 
         $sql = "INSERT INTO historial_actividades (ID_Usuario, descripcion, fecha_registro) 
-                VALUES (:idUsuario, :descripcion, :fechaRegistro)";
+                VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':idUsuario' => $data['ID_Usuario'],
-            ':descripcion' => $data['descripcion'],
-            ':fechaRegistro' => $data['fecha_registro']
-        ]);
+        $stmt->bind_param('sss',
+            $data['ID_Usuario'],
+            $data['descripcion'],
+            $data['fecha_registro']
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0): array
@@ -83,20 +80,22 @@ class MySQLHistorialRepository implements HistorialRepository
                 FROM historial_maquinas h
                 INNER JOIN usuario u ON h.ID_Usuario = u.ID_Usuario
                 INNER JOIN MaquinaRecreativa m ON h.ID_Maquina = m.ID_Maquina
-                WHERE h.ID_Maquina = :idMaquina
+                WHERE h.ID_Maquina = ?
                 ORDER BY h.fecha_hora DESC
-                LIMIT :limit OFFSET :offset";
+                LIMIT ? OFFSET ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':idMaquina', $idMaquina->value());
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $idValue = $idMaquina->value();
+        $stmt->bind_param('sii', $idValue, $limit, $offset);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $historial = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
+        $stmt->close();
+
         return $historial;
     }
 
@@ -108,20 +107,22 @@ class MySQLHistorialRepository implements HistorialRepository
                 FROM historial_maquinas h
                 INNER JOIN usuario u ON h.ID_Usuario = u.ID_Usuario
                 INNER JOIN MaquinaRecreativa m ON h.ID_Maquina = m.ID_Maquina
-                WHERE h.ID_Usuario = :idUsuario
+                WHERE h.ID_Usuario = ?
                 ORDER BY h.fecha_hora DESC
-                LIMIT :limit OFFSET :offset";
+                LIMIT ? OFFSET ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':idUsuario', $idUsuario->value());
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $idValue = $idUsuario->value();
+        $stmt->bind_param('sii', $idValue, $limit, $offset);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $historial = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
+        $stmt->close();
+
         return $historial;
     }
 
@@ -129,20 +130,22 @@ class MySQLHistorialRepository implements HistorialRepository
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT * FROM historial_maquinas 
-                WHERE accion LIKE :accion
+                WHERE accion LIKE ?
                 ORDER BY fecha_hora DESC
-                LIMIT :limit OFFSET :offset";
+                LIMIT ? OFFSET ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':accion', "%{$accion}%");
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $likeAccion = "%{$accion}%";
+        $stmt->bind_param('sii', $likeAccion, $limit, $offset);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $historial = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
+        $stmt->close();
+
         return $historial;
     }
 
@@ -166,57 +169,60 @@ class MySQLHistorialRepository implements HistorialRepository
                 WHERE 1=1";
 
         $params = [];
+        $types = "";
 
         if ($idMaquina !== null) {
-            $sql .= " AND h.ID_Maquina = :idMaquina";
-            $params[':idMaquina'] = $idMaquina->value();
+            $sql .= " AND h.ID_Maquina = ?";
+            $params[] = $idMaquina->value();
+            $types .= "s";
         }
 
         if ($idUsuario !== null) {
-            $sql .= " AND h.ID_Usuario = :idUsuario";
-            $params[':idUsuario'] = $idUsuario->value();
+            $sql .= " AND h.ID_Usuario = ?";
+            $params[] = $idUsuario->value();
+            $types .= "s";
         }
 
         if ($tipoUsuario !== null) {
-            $sql .= " AND h.tipo_usuario = :tipoUsuario";
-            $params[':tipoUsuario'] = $tipoUsuario;
+            $sql .= " AND h.tipo_usuario = ?";
+            $params[] = $tipoUsuario;
+            $types .= "s";
         }
 
         if ($accion !== null) {
-            $sql .= " AND h.accion LIKE :accion";
-            $params[':accion'] = "%{$accion}%";
+            $sql .= " AND h.accion LIKE ?";
+            $params[] = "%{$accion}%";
+            $types .= "s";
         }
 
         if ($fechaInicio !== null) {
-            $sql .= " AND DATE(h.fecha_hora) >= :fechaInicio";
-            $params[':fechaInicio'] = $fechaInicio;
+            $sql .= " AND DATE(h.fecha_hora) >= ?";
+            $params[] = $fechaInicio;
+            $types .= "s";
         }
 
         if ($fechaFin !== null) {
-            $sql .= " AND DATE(h.fecha_hora) <= :fechaFin";
-            $params[':fechaFin'] = $fechaFin;
+            $sql .= " AND DATE(h.fecha_hora) <= ?";
+            $params[] = $fechaFin;
+            $types .= "s";
         }
 
-        $sql .= " ORDER BY h.fecha_hora DESC LIMIT :limit OFFSET :offset";
-        $params[':limit'] = $limit;
-        $params[':offset'] = $offset;
+        $sql .= " ORDER BY h.fecha_hora DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
 
         $stmt = $conn->prepare($sql);
-
-        foreach ($params as $key => $value) {
-            if (is_int($value)) {
-                $stmt->bindValue($key, $value, PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue($key, $value);
-            }
-        }
-
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $historial = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
+        $stmt->close();
+
         return $historial;
     }
 
@@ -230,45 +236,55 @@ class MySQLHistorialRepository implements HistorialRepository
     ): int {
         $conn = $this->db->getConnection();
         $sql = "SELECT COUNT(*) as total FROM historial_maquinas h WHERE 1=1";
+
         $params = [];
+        $types = "";
 
         if ($idMaquina !== null) {
-            $sql .= " AND h.ID_Maquina = :idMaquina";
-            $params[':idMaquina'] = $idMaquina->value();
+            $sql .= " AND h.ID_Maquina = ?";
+            $params[] = $idMaquina->value();
+            $types .= "s";
         }
 
         if ($idUsuario !== null) {
-            $sql .= " AND h.ID_Usuario = :idUsuario";
-            $params[':idUsuario'] = $idUsuario->value();
+            $sql .= " AND h.ID_Usuario = ?";
+            $params[] = $idUsuario->value();
+            $types .= "s";
         }
 
         if ($tipoUsuario !== null) {
-            $sql .= " AND h.tipo_usuario = :tipoUsuario";
-            $params[':tipoUsuario'] = $tipoUsuario;
+            $sql .= " AND h.tipo_usuario = ?";
+            $params[] = $tipoUsuario;
+            $types .= "s";
         }
 
         if ($accion !== null) {
-            $sql .= " AND h.accion LIKE :accion";
-            $params[':accion'] = "%{$accion}%";
+            $sql .= " AND h.accion LIKE ?";
+            $params[] = "%{$accion}%";
+            $types .= "s";
         }
 
         if ($fechaInicio !== null) {
-            $sql .= " AND DATE(h.fecha_hora) >= :fechaInicio";
-            $params[':fechaInicio'] = $fechaInicio;
+            $sql .= " AND DATE(h.fecha_hora) >= ?";
+            $params[] = $fechaInicio;
+            $types .= "s";
         }
 
         if ($fechaFin !== null) {
-            $sql .= " AND DATE(h.fecha_hora) <= :fechaFin";
-            $params[':fechaFin'] = $fechaFin;
+            $sql .= " AND DATE(h.fecha_hora) <= ?";
+            $params[] = $fechaFin;
+            $types .= "s";
         }
 
         $stmt = $conn->prepare($sql);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
         $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)$row['total'];
     }
 
@@ -276,19 +292,22 @@ class MySQLHistorialRepository implements HistorialRepository
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT * FROM historial_actividades 
-                WHERE ID_Usuario = :idUsuario 
+                WHERE ID_Usuario = ? 
                 ORDER BY fecha_registro DESC 
-                LIMIT :limit";
+                LIMIT ?";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':idUsuario', $idUsuario->value());
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $idValue = $idUsuario->value();
+        $stmt->bind_param('si', $idValue, $limit);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $actividades = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $actividades[] = HistorialActividad::fromArray($row);
         }
+        $stmt->close();
+
         return $actividades;
     }
 
