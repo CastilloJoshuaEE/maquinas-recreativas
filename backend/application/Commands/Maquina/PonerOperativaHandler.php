@@ -1,15 +1,8 @@
 <?php
-/**
- * application/commands/maquina/PonerOperativaHandler.php
- *
- * Manejador del comando PonerOperativa.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
- */
-
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Distribucion\DistribucionRepository;
 use maquinas_recreativas\Domain\Historial\HistorialMaquina;
@@ -17,10 +10,7 @@ use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class PonerOperativaHandler
- */
-final class PonerOperativaHandler
+final class PonerOperativaHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private DistribucionRepository $distribucionRepository;
@@ -36,8 +26,12 @@ final class PonerOperativaHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(PonerOperativa $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof PonerOperativaCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $maquina = $this->maquinaRepository->findById($idMaquina);
 
@@ -48,10 +42,8 @@ final class PonerOperativaHandler
         $maquina->ponerOperativa();
         $this->maquinaRepository->save($maquina);
 
-        // Actualizar informe de distribución
         $this->distribucionRepository->updateEstado($idMaquina, 'Operativa');
 
-        // Registrar historial
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             new Uuid($_SESSION['ID_Usuario'] ?? 'sistema'),

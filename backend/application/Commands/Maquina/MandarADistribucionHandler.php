@@ -1,15 +1,8 @@
 <?php
-/**
- * application/commands/maquina/MandarADistribucionHandler.php
- *
- * Manejador del comando MandarADistribucion.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
- */
-
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Comercio\ComercioRepository;
@@ -22,10 +15,7 @@ use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class MandarADistribucionHandler
- */
-final class MandarADistribucionHandler
+final class MandarADistribucionHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private UsuarioRepository $usuarioRepository;
@@ -50,8 +40,12 @@ final class MandarADistribucionHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(MandarADistribucion $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof MandarADistribucionCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $maquina = $this->maquinaRepository->findById($idMaquina);
 
@@ -66,17 +60,16 @@ final class MandarADistribucionHandler
             throw new DomainException('Usuario remitente no encontrado');
         }
 
-        $comercio = $this->comercioRepository->findById($maquina->idComercio());
+        $comercio = $this->comercioRepository->buscarPorId($maquina->idComercio()->value());
 
         $maquina->enviarADistribucion();
         $this->maquinaRepository->save($maquina);
 
-        // Registrar historial
-        $nombreComercio = $comercio ? $comercio->nombre() : 'N/A';
+        $nombreComercio = $comercio ? $comercio->getNombre() : 'N/A';
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             $idRemitente,
-            $remitente->tipo()->value(),
+            $remitente->getTipo()->value(),
             'Envío a distribución',
             "Máquina aprobada y enviada a distribución. Comercio: {$nombreComercio}. Mensaje: {$command->mensaje()}",
             'Comprobandose',
@@ -88,7 +81,6 @@ final class MandarADistribucionHandler
         );
         $this->historialRepository->save($historial);
 
-        // Crear informe de distribución
         $informe = InformeDistribucion::crear(
             $idMaquina,
             $maquina->idTecnicoComprobador(),
@@ -96,14 +88,13 @@ final class MandarADistribucionHandler
         );
         $this->distribucionRepository->save($informe);
 
-        // Notificar a todos los logísticos
         $logisticos = $this->usuarioRepository->findByTipo('Logistica');
-        $mensajeCompleto = $command->mensaje() . " - Máquina: {$maquina->nombre()}, Comercio: {$nombreComercio}";
+        $mensajeCompleto = $command->mensaje() . " - Máquina: {$maquina->getNombre()}, Comercio: {$nombreComercio}";
 
         foreach ($logisticos as $logistico) {
             $notificacion = NotificacionMaquina::crear(
                 $idRemitente,
-                $logistico->id(),
+                $logistico->getId(),
                 $idMaquina,
                 'Distribuir máquina recreativa',
                 $mensajeCompleto

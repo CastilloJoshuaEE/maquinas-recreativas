@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class FinalizarMantenimiento
  */
-final class FinalizarMantenimientoCommand
+final class FinalizarMantenimientoCommand implements Command
 {
     private string $idMaquina;
     private string $idRemitente;

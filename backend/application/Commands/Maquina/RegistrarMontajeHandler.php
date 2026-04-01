@@ -1,14 +1,8 @@
 <?php
-/**
- * application/commands/maquina/RegistrarMontajeHandler.php
- *
- * Manejador del comando RegistrarMontaje.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
- */
-
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Montaje\Montaje;
@@ -19,10 +13,7 @@ use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class RegistrarMontajeHandler
- */
-final class RegistrarMontajeHandler
+final class RegistrarMontajeHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private ComponenteRepository $componenteRepository;
@@ -44,8 +35,12 @@ final class RegistrarMontajeHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    public function handle(RegistrarMontaje $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof RegistrarMontajeCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $idComponente = new Uuid($command->idComponente());
         $idTecnico = new Uuid($command->idTecnico());
@@ -71,14 +66,12 @@ final class RegistrarMontajeHandler
             $idTecnico,
             $command->detalle() ?? ''
         );
-
         $this->montajeRepository->save($montaje);
 
-        // Registrar en historial
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             $idTecnico,
-            $tecnico->tipo()->value(),
+            $tecnico->getTipo()->value(),
             'Montaje de componente',
             "Componente montado: {$componente->nombre()}. {$command->detalle()}",
             null,

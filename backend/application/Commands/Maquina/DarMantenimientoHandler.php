@@ -1,14 +1,12 @@
 <?php
 /**
  * application/commands/maquina/DarMantenimientoHandler.php
- *
- * Manejador del comando DarMantenimiento.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -21,10 +19,7 @@ use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class DarMantenimientoHandler
- */
-final class DarMantenimientoHandler
+final class DarMantenimientoHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private UsuarioRepository $usuarioRepository;
@@ -49,8 +44,12 @@ final class DarMantenimientoHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(DarMantenimiento $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof DarMantenimientoCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $maquina = $this->maquinaRepository->findById($idMaquina);
 
@@ -61,7 +60,8 @@ final class DarMantenimientoHandler
         $idLogistica = new Uuid($command->idLogistica());
         $logistica = $this->usuarioRepository->findById($idLogistica);
 
-        if (!$logistica || !$logistica->esLogistica()) {
+        // Usar getTipo() en lugar de esLogistica() y tipo()
+        if (!$logistica || $logistica->getTipo()->value() !== 'Logistica') {
             throw new DomainException('Usuario logística no válido');
         }
 
@@ -72,34 +72,34 @@ final class DarMantenimientoHandler
         }
 
         $tecnico = $tecnicosMantenimiento[0];
-        $comercio = $this->comercioRepository->findById($maquina->idComercio());
+        $comercio = $this->comercioRepository->buscarPorId($maquina->idComercio()->value());
 
-        $maquina->solicitarMantenimiento($tecnico->id());
+        $maquina->solicitarMantenimiento($tecnico->getId());
         $this->maquinaRepository->save($maquina);
 
         // Registrar historial
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             $idLogistica,
-            $logistica->tipo()->value(),
+            $logistica->getTipo()->value(),
             'Solicitud de mantenimiento',
-            "Máquina enviada a mantenimiento. Técnico asignado: {$tecnico->nombreCompleto()}. Motivo: {$command->mensaje()}",
+            "Máquina enviada a mantenimiento. Técnico asignado: {$tecnico->getNombre()} {$tecnico->getApellido()}. Motivo: {$command->mensaje()}",
             'Operativa',
             'No operativa',
             'Recaudacion',
             'Montaje',
             $_SERVER['REMOTE_ADDR'] ?? null,
-            ['tecnico_asignado' => $tecnico->nombreCompleto(), 'motivo' => $command->mensaje()]
+            ['tecnico_asignado' => $tecnico->getNombre(), 'motivo' => $command->mensaje()]
         );
         $this->historialRepository->save($historial);
 
         // Crear notificación al técnico
-        $nombreComercio = $comercio ? $comercio->nombre() : 'N/A';
+        $nombreComercio = $comercio ? $comercio->getNombre() : 'N/A';
         $mensajeCompleto = $command->mensaje() . " - Máquina: {$maquina->nombre()}, Comercio: {$nombreComercio}";
 
         $notificacion = NotificacionMaquina::crear(
             $idLogistica,
-            $tecnico->id(),
+            $tecnico->getId(),
             $idMaquina,
             'Dar mantenimiento a máquina recreativa',
             $mensajeCompleto

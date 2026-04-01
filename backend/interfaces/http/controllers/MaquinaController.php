@@ -137,7 +137,9 @@ class MaquinaController
         $command  = new RegistrarMaquinaCommand($data['nombre'], $data['tipo'], $data['idComercio'], $userId, $data['idPlaca'], $data['idCarcasa']);
         $idMaquina = $this->registrarMaquinaHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Máquina registrada exitosamente', 'idMaquina' => $idMaquina], 201);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Máquina registrada exitosamente', 'idMaquina' => $idMaquina], 201);
+        return $response;
     }
 
     #[OA\Post(
@@ -160,7 +162,9 @@ class MaquinaController
         $command = new GenerarPlacaCommand($userId);
         $result  = $this->generarPlacaHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'placa' => $result['placa'], 'idComponente' => $result['idComponente']]);
+        $response = new Response();
+        $response->json(['success' => true, 'placa' => $result['placa'], 'idComponente' => $result['idComponente']]);
+        return $response;
     }
 
     #[OA\Post(
@@ -204,7 +208,9 @@ class MaquinaController
         $command = new RegistrarMontajeCommand($data['idMaquina'], $data['idComponente'], $userId, $data['detalle'] ?? null);
         $this->registrarMontajeHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Montaje registrado exitosamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Montaje registrado exitosamente']);
+        return $response;
     }
 
     #[OA\Post(
@@ -247,7 +253,9 @@ class MaquinaController
         $command = new MandarAComprobacionCommand($data['idMaquina'], $userId, $data['mensaje']);
         $this->mandarAComprobacionHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Máquina enviada a comprobación']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Máquina enviada a comprobación']);
+        return $response;
     }
 
     #[OA\Post(
@@ -290,7 +298,9 @@ class MaquinaController
         $command = new MandarAReensamblarCommand($data['idMaquina'], $userId, $data['mensaje']);
         $this->mandarAReensamblarHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Máquina enviada a reensamblar']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Máquina enviada a reensamblar']);
+        return $response;
     }
 
     #[OA\Post(
@@ -333,7 +343,9 @@ class MaquinaController
         $command = new MandarADistribucionCommand($data['idMaquina'], $userId, $data['mensaje']);
         $this->mandarADistribucionHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Máquina enviada a distribución']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Máquina enviada a distribución']);
+        return $response;
     }
 
     #[OA\Post(
@@ -370,7 +382,9 @@ class MaquinaController
         $command = new PonerOperativaCommand($data['idMaquina']);
         $this->ponerOperativaHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Máquina puesta en operativa']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Máquina puesta en operativa']);
+        return $response;
     }
 
     #[OA\Post(
@@ -413,7 +427,9 @@ class MaquinaController
         $command = new DarMantenimientoCommand($data['idMaquina'], $data['mensaje'], $userId);
         $this->darMantenimientoHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Mantenimiento solicitado']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Mantenimiento solicitado']);
+        return $response;
     }
 
     #[OA\Post(
@@ -457,7 +473,9 @@ class MaquinaController
         $command = new FinalizarMantenimientoCommand($data['idMaquina'], $userId, (bool) $data['exito'], $data['mensaje']);
         $this->finalizarMantenimientoHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Mantenimiento finalizado']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Mantenimiento finalizado']);
+        return $response;
     }
 
     #[OA\Get(
@@ -483,7 +501,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasPorTecnicoEnsambladorQuery($idTecnico);
         $maquinas = $this->obtenerPorTecnicoEnsambladorHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -509,7 +529,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasPorTecnicoComprobadorQuery($idTecnico);
         $maquinas = $this->obtenerPorTecnicoComprobadorHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -535,7 +557,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasPorTecnicoMantenimientoQuery($idTecnico);
         $maquinas = $this->obtenerPorTecnicoMantenimientoHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -556,7 +580,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasPorEstadoQuery($estado);
         $maquinas = $this->obtenerPorEstadoHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -577,7 +603,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasPorEtapaQuery($etapa);
         $maquinas = $this->obtenerPorEtapaHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -595,7 +623,9 @@ class MaquinaController
         $query   = new ObtenerMaquinasParaDistribucionQuery();
         $maquinas = $this->obtenerMaquinasParaDistribucionHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -621,6 +651,8 @@ class MaquinaController
         $query       = new ObtenerComponentesMaquinaQuery($idMaquina);
         $componentes = $this->obtenerComponentesPorMaquinaHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'componentes' => $componentes]);
+        $response = new Response();
+        $response->json(['success' => true, 'componentes' => $componentes]);
+        return $response;
     }
 }

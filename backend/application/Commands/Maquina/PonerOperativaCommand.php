@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class PonerOperativa
  */
-final class PonerOperativaCommand
+final class PonerOperativaCommand implements Command
 {
     private string $idMaquina;
 

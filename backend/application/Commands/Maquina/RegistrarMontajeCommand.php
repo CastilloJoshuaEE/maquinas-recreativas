@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class RegistrarMontaje
  */
-final class RegistrarMontajeCommand
+final class RegistrarMontajeCommand implements Command
 {
     private string $idMaquina;
     private string $idComponente;

@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class MandarAReensamblar
  */
-final class MandarAReensamblarCommand
+final class MandarAReensamblarCommand implements Command
 {
     private string $idMaquina;
     private string $idRemitente;

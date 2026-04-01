@@ -1,14 +1,12 @@
 <?php
 /**
  * application/commands/maquina/FinalizarMantenimientoHandler.php
- *
- * Manejador del comando FinalizarMantenimiento.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -19,10 +17,7 @@ use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class FinalizarMantenimientoHandler
- */
-final class FinalizarMantenimientoHandler
+final class FinalizarMantenimientoHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private UsuarioRepository $usuarioRepository;
@@ -41,8 +36,12 @@ final class FinalizarMantenimientoHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(FinalizarMantenimiento $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof FinalizarMantenimientoCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $maquina = $this->maquinaRepository->findById($idMaquina);
 
@@ -70,7 +69,7 @@ final class FinalizarMantenimientoHandler
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             $idRemitente,
-            $remitente->tipo()->value(),
+            $remitente->getTipo()->value(),
             'Finalización de mantenimiento',
             $descripcion,
             'No operativa',
@@ -89,7 +88,7 @@ final class FinalizarMantenimientoHandler
         foreach ($logisticos as $logistica) {
             $notificacion = NotificacionMaquina::crear(
                 $idRemitente,
-                $logistica->id(),
+                $logistica->getId(),
                 $idMaquina,
                 $tipoNotificacion,
                 $command->mensaje()

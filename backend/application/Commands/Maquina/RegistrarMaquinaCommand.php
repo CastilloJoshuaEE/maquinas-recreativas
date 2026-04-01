@@ -10,11 +10,12 @@
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class RegistrarMaquina
  */
-final class RegistrarMaquinaCommand
+final class RegistrarMaquinaCommand implements Command
 {
     private string $nombre;
     private string $tipo;

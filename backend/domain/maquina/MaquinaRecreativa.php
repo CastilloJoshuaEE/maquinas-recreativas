@@ -86,7 +86,15 @@ class MaquinaRecreativa
             new DateTimeImmutable()
         );
     }
+public function getNombre(): string
+{
+    return $this->nombre;
+}
 
+public function getTipo(): string
+{
+    return $this->tipo;
+}
     /**
      * Reconstruye una entidad desde datos persistentes.
      *

@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class GenerarPlaca
  */
-final class GenerarPlacaCommand
+final class GenerarPlacaCommand implements Command
 {
     private string $idTecnico;
     public function __construct(string $idTecnico){

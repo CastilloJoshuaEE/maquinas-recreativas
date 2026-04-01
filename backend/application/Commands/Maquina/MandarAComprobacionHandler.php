@@ -1,15 +1,8 @@
 <?php
-/**
- * application/commands/maquina/MandarAComprobacionHandler.php
- *
- * Manejador del comando MandarAComprobacion.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
- */
-
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
-use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
@@ -19,10 +12,7 @@ use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class MandarAComprobacionHandler
- */
-final class MandarAComprobacionHandler
+final class MandarAComprobacionHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private UsuarioRepository $usuarioRepository;
@@ -41,8 +31,12 @@ final class MandarAComprobacionHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(MandarAComprobacion $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof MandarAComprobacionCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idMaquina = new Uuid($command->idMaquina());
         $maquina = $this->maquinaRepository->findById($idMaquina);
 
@@ -60,11 +54,10 @@ final class MandarAComprobacionHandler
         $maquina->enviarAComprobacion();
         $this->maquinaRepository->save($maquina);
 
-        // Registrar historial
         $historial = HistorialMaquina::registrar(
             $idMaquina,
             $idRemitente,
-            $remitente->tipo()->value(),
+            $remitente->getTipo()->value(),
             'Envío a comprobación',
             "Máquina enviada a comprobación. Mensaje: {$command->mensaje()}",
             'Ensamblandose/Reensamblandose',
@@ -76,7 +69,6 @@ final class MandarAComprobacionHandler
         );
         $this->historialRepository->save($historial);
 
-        // Crear notificación al comprobador
         $notificacion = NotificacionMaquina::crear(
             $idRemitente,
             $maquina->idTecnicoComprobador(),

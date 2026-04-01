@@ -1,14 +1,8 @@
 <?php
-/**
- * application/commands/maquina/RegistrarMaquinaHandler.php
- *
- * Manejador del comando RegistrarMaquina.
- *
- * @package maquinas_recreativas\Application\Commands\Maquina
- */
-
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -17,10 +11,7 @@ use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class RegistrarMaquinaHandler
- */
-final class RegistrarMaquinaHandler
+final class RegistrarMaquinaHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
     private UsuarioRepository $usuarioRepository;
@@ -39,10 +30,14 @@ final class RegistrarMaquinaHandler
         $this->componenteRepository = $componenteRepository;
     }
 
-    public function handle(RegistrarMaquina $command): string
+    public function handle(Command $command): string
     {
+        if (!$command instanceof RegistrarMaquinaCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idComercio = new Uuid($command->idComercio());
-        $comercio = $this->comercioRepository->findById($idComercio);
+        $comercio = $this->comercioRepository->buscarPorId($idComercio->value());
         if (!$comercio) {
             throw new DomainException('Comercio no encontrado');
         }
@@ -54,8 +49,8 @@ final class RegistrarMaquinaHandler
             throw new DomainException('No hay técnicos disponibles para asignar');
         }
 
-        $idEnsamblador = $ensambladores[0]->id();
-        $idComprobador = $comprobadores[0]->id();
+        $idEnsamblador = $ensambladores[0]->getId();
+        $idComprobador = $comprobadores[0]->getId();
 
         $maquina = MaquinaRecreativa::crear(
             $command->nombre(),
@@ -67,39 +62,6 @@ final class RegistrarMaquinaHandler
 
         $this->maquinaRepository->save($maquina);
 
-        $idPlaca = new Uuid($command->idPlaca());
-        $placa = $this->componenteRepository->findById($idPlaca);
-        if ($placa) {
-            $placa->asignarAUso($idEnsamblador, $maquina->id());
-            $this->componenteRepository->save($placa);
-            $this->registrarMontaje($maquina->id(), $idEnsamblador, $idPlaca, 'Placa base generada automáticamente');
-        }
-
-        $idCarcasa = new Uuid($command->idCarcasa());
-        $carcasa = $this->componenteRepository->findById($idCarcasa);
-        if ($carcasa) {
-            $carcasa->asignarAUso($idEnsamblador, $maquina->id());
-            $this->componenteRepository->save($carcasa);
-            $this->registrarMontaje($maquina->id(), $idEnsamblador, $idCarcasa, 'Carcasa asignada');
-        }
-
-        $this->usuarioRepository->incrementarActividadesTecnico($idEnsamblador);
-        $this->usuarioRepository->incrementarActividadesTecnico($idComprobador);
-
         return $maquina->id()->value();
-    }
-
-    private function registrarMontaje(Uuid $idMaquina, Uuid $idTecnico, string $idComponente, string $detalle): void
-    {
-        $conn = (new \maquinas_recreativas\Infrastructure\Database\Database())->getConnection();
-        $sql = "INSERT INTO montaje (ID_Montaje, fecha, ID_Maquina, ID_Componente, ID_Tecnico, detalle) 
-                VALUES (UUID(), NOW(), :idMaquina, :idComponente, :idTecnico, :detalle)";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':idMaquina' => $idMaquina->value(),
-            ':idComponente' => $idComponente,
-            ':idTecnico' => $idTecnico->value(),
-            ':detalle' => $detalle
-        ]);
     }
 }
