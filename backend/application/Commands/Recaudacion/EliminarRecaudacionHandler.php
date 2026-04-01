@@ -9,14 +9,13 @@
 
 namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class EliminarRecaudacionHandler
- */
-final class EliminarRecaudacionHandler
+final class EliminarRecaudacionHandler implements CommandHandler
 {
     private RecaudacionRepository $recaudacionRepository;
 
@@ -25,8 +24,12 @@ final class EliminarRecaudacionHandler
         $this->recaudacionRepository = $recaudacionRepository;
     }
 
-    public function handle(EliminarRecaudacion $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof EliminarRecaudacionCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idRecaudacion = new Uuid($command->idRecaudacion());
         $recaudacion = $this->recaudacionRepository->findById($idRecaudacion);
 

@@ -9,6 +9,8 @@
 
 namespace maquinas_recreativas\Application\Commands\Recaudacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Recaudacion\InformeRecaudacion;
 use maquinas_recreativas\Domain\Recaudacion\DetalleInforme;
 use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
@@ -16,10 +18,7 @@ use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class GuardarInformeHandler
- */
-final class GuardarInformeHandler
+final class GuardarInformeHandler implements CommandHandler
 {
     private RecaudacionRepository $recaudacionRepository;
     private ComponenteRepository $componenteRepository;
@@ -32,8 +31,12 @@ final class GuardarInformeHandler
         $this->componenteRepository = $componenteRepository;
     }
 
-    public function handle(GuardarInforme $command): string
+    public function handle(Command $command): string
     {
+        if (!$command instanceof GuardarInformeCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idRecaudacion = new Uuid($command->idRecaudacion());
         $recaudacion = $this->recaudacionRepository->findById($idRecaudacion);
 

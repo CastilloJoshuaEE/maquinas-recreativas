@@ -41,7 +41,7 @@ final class ObtenerMaquinasOperativasPorComercioHandler
     {
         $idComercio = new Uuid($query->getIdComercio());
 
-        $comercio = $this->comercioRepository->findById($idComercio);
+        $comercio = $this->comercioRepository->buscarPorId($idComercio);
         if (!$comercio) {
             throw new DomainException('Comercio no encontrado.');
         }

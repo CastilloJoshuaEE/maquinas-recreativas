@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Recaudacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class EliminarRecaudacion
  */
-final class EliminarRecaudacionCommand
+final class EliminarRecaudacionCommand implements Command
 {
     private string $idRecaudacion;
 

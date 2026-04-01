@@ -138,5 +138,8 @@ class InformeRecaudacion
     public function telefonoComercio(): string { return $this->telefonoComercio; }
     public function pagoEnsamblador(): float { return $this->pagoEnsamblador; }
     public function pagoComprobador(): float { return $this->pagoComprobador; }
-    public function pagoMantenimiento(): float { return $this->pagoMantenimiento; }
+    public function pagoMantenimiento(): float { return $this->pagoMantenimiento;
+     }
+     public function empresaNombre(): string { return $this->empresaNombre; }
+public function empresaDescripcion(): string { return $this->empresaDescripcion; }
 }

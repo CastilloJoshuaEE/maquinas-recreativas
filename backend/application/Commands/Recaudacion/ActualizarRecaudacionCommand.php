@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Recaudacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class ActualizarRecaudacion
  */
-final class ActualizarRecaudacionCommand
+final class ActualizarRecaudacionCommand implements Command
 {
     private string $idRecaudacion;
     private string $idMaquina;

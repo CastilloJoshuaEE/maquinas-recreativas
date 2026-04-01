@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Recaudacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class GuardarInforme
  */
-final class GuardarInformeCommand
+final class GuardarInformeCommand implements Command
 {
     private string $idRecaudacion;
     private string $ciUsuario;

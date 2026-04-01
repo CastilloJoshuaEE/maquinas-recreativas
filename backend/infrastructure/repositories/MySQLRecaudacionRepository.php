@@ -1,12 +1,4 @@
 <?php
-/**
- * infrastructure/repositories/MySQLRecaudacionRepository.php
- *
- * Implementación MySQL del repositorio de recaudaciones.
- *
- * @package maquinas_recreativas\Infrastructure\Repositories
- */
-
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
 use maquinas_recreativas\Domain\Recaudacion\Recaudacion;
@@ -17,11 +9,7 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Maquina\MaquinaRecreativa;
 use maquinas_recreativas\Domain\Comercio\Comercio;
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
-/**
- * Class MySQLRecaudacionRepository
- */
 class MySQLRecaudacionRepository implements RecaudacionRepository
 {
     private Database $db;
@@ -31,107 +19,17 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
         $this->db = $db;
     }
 
-    public function save(Recaudacion $recaudacion): void
-    {
-        $conn = $this->db->getConnection();
-        $data = $recaudacion->toArray();
-
-        $sql = "INSERT INTO recaudaciones (
-                    ID_Recaudacion, Tipo_Comercio, ID_Maquina, ID_Usuario,
-                    Monto_Total, Monto_Empresa, Monto_Comercio, fecha,
-                    detalle, Porcentaje_Comercio
-                ) VALUES (
-                    :id, :tipoComercio, :idMaquina, :idUsuario,
-                    :montoTotal, :montoEmpresa, :montoComercio, :fecha,
-                    :detalle, :porcentaje
-                ) ON DUPLICATE KEY UPDATE
-                    Tipo_Comercio = VALUES(Tipo_Comercio),
-                    Monto_Total = VALUES(Monto_Total),
-                    Monto_Empresa = VALUES(Monto_Empresa),
-                    Monto_Comercio = VALUES(Monto_Comercio),
-                    detalle = VALUES(detalle),
-                    Porcentaje_Comercio = VALUES(Porcentaje_Comercio)";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Recaudacion'],
-            ':tipoComercio' => $data['Tipo_Comercio'],
-            ':idMaquina' => $data['ID_Maquina'],
-            ':idUsuario' => $data['ID_Usuario'],
-            ':montoTotal' => $data['Monto_Total'],
-            ':montoEmpresa' => $data['Monto_Empresa'],
-            ':montoComercio' => $data['Monto_Comercio'],
-            ':fecha' => $data['fecha'],
-            ':detalle' => $data['detalle'],
-            ':porcentaje' => $data['Porcentaje_Comercio']
-        ]);
-    }
-
-    public function saveInforme(InformeRecaudacion $informe): void
-    {
-        $conn = $this->db->getConnection();
-        $data = $informe->toArray();
-
-        $sql = "INSERT INTO informes_recaudacion (
-                    ID_Informe, ID_Recaudacion, CI_Usuario, Nombre_Maquina,
-                    ID_Comercio, Nombre_Comercio, Direccion_Comercio, Telefono_Comercio,
-                    Pago_Ensamblador, Pago_Comprobador, Pago_Mantenimiento,
-                    empresa_nombre, empresa_descripcion
-                ) VALUES (
-                    :id, :idRecaudacion, :ciUsuario, :nombreMaquina,
-                    :idComercio, :nombreComercio, :direccionComercio, :telefonoComercio,
-                    :pagoEnsamblador, :pagoComprobador, :pagoMantenimiento,
-                    :empresaNombre, :empresaDescripcion
-                ) ON DUPLICATE KEY UPDATE
-                    CI_Usuario = VALUES(CI_Usuario),
-                    Nombre_Maquina = VALUES(Nombre_Maquina),
-                    Nombre_Comercio = VALUES(Nombre_Comercio),
-                    Direccion_Comercio = VALUES(Direccion_Comercio),
-                    Telefono_Comercio = VALUES(Telefono_Comercio),
-                    Pago_Ensamblador = VALUES(Pago_Ensamblador),
-                    Pago_Comprobador = VALUES(Pago_Comprobador),
-                    Pago_Mantenimiento = VALUES(Pago_Mantenimiento)";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Informe'],
-            ':idRecaudacion' => $data['ID_Recaudacion'],
-            ':ciUsuario' => $data['CI_Usuario'],
-            ':nombreMaquina' => $data['Nombre_Maquina'],
-            ':idComercio' => $data['ID_Comercio'],
-            ':nombreComercio' => $data['Nombre_Comercio'],
-            ':direccionComercio' => $data['Direccion_Comercio'],
-            ':telefonoComercio' => $data['Telefono_Comercio'],
-            ':pagoEnsamblador' => $data['Pago_Ensamblador'],
-            ':pagoComprobador' => $data['Pago_Comprobador'],
-            ':pagoMantenimiento' => $data['Pago_Mantenimiento'],
-            ':empresaNombre' => $data['empresa_nombre'],
-            ':empresaDescripcion' => $data['empresa_descripcion']
-        ]);
-    }
-
-    public function saveDetalle(DetalleInforme $detalle): void
-    {
-        $conn = $this->db->getConnection();
-        $data = $detalle->toArray();
-
-        $sql = "INSERT INTO informe_detalle (ID_Informe_Detalle, ID_Informe, ID_Componente) 
-                VALUES (:id, :idInforme, :idComponente)";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Informe_Detalle'],
-            ':idInforme' => $data['ID_Informe'],
-            ':idComponente' => $data['ID_Componente']
-        ]);
-    }
-
     public function findById(Uuid $id): ?Recaudacion
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM recaudaciones WHERE ID_Recaudacion = :id";
+        $sql = "SELECT * FROM recaudaciones WHERE ID_Recaudacion = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':id' => $id->value()]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $id->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
 
         return $data ? Recaudacion::fromArray($data) : null;
     }
@@ -139,10 +37,14 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
     public function findInformeByRecaudacion(Uuid $idRecaudacion): ?InformeRecaudacion
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM informes_recaudacion WHERE ID_Recaudacion = :idRecaudacion";
+        $sql = "SELECT * FROM informes_recaudacion WHERE ID_Recaudacion = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idRecaudacion' => $idRecaudacion->value()]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $idRecaudacion->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
 
         return $data ? InformeRecaudacion::fromArray($data) : null;
     }
@@ -153,115 +55,20 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
         $sql = "SELECT c.* 
                 FROM informe_detalle id
                 JOIN componente c ON id.ID_Componente = c.ID_Componente
-                WHERE id.ID_Informe = :idInforme";
+                WHERE id.ID_Informe = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idInforme' => $idInforme->value()]);
+        $idValue = $idInforme->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         $detalles = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $detalles[] = $row;
         }
+        $stmt->close();
+
         return $detalles;
-    }
-
-    public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
-    {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT 
-                    r.*,
-                    c.Nombre as Nombre_Comercio,
-                    m.Nombre_Maquina,
-                    u.nombre as nombre_usuario,
-                    u.apellido as apellido_usuario,
-                    (SELECT ID_Informe FROM informes_recaudacion WHERE ID_Recaudacion = r.ID_Recaudacion LIMIT 1) as ID_Informe
-                FROM recaudaciones r
-                INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
-                INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
-                WHERE 1=1";
-
-        $params = [];
-
-        if (!empty($filters['fecha_inicio'])) {
-            $sql .= " AND DATE(r.fecha) >= :fechaInicio";
-            $params[':fechaInicio'] = $filters['fecha_inicio'];
-        }
-
-        if (!empty($filters['fecha_fin'])) {
-            $sql .= " AND DATE(r.fecha) <= :fechaFin";
-            $params[':fechaFin'] = $filters['fecha_fin'];
-        }
-
-        if (!empty($filters['ID_Maquina'])) {
-            $sql .= " AND r.ID_Maquina = :idMaquina";
-            $params[':idMaquina'] = $filters['ID_Maquina'];
-        }
-
-        if (!empty($filters['Tipo_Comercio'])) {
-            $sql .= " AND r.Tipo_Comercio = :tipoComercio";
-            $params[':tipoComercio'] = $filters['Tipo_Comercio'];
-        }
-
-        $sql .= " ORDER BY r.fecha DESC LIMIT :limit OFFSET :offset";
-        $params[':limit'] = $limit;
-        $params[':offset'] = $offset;
-
-        $stmt = $conn->prepare($sql);
-        foreach ($params as $key => $value) {
-            if (is_int($value)) {
-                $stmt->bindValue($key, $value, PDO::PARAM_INT);
-            } else {
-                $stmt->bindValue($key, $value);
-            }
-        }
-        $stmt->execute();
-
-        $recaudaciones = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $recaudaciones[] = $row;
-        }
-        return $recaudaciones;
-    }
-
-    public function findResumenByTipoComercio(?int $limit = null): array
-    {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT 
-                    Tipo_Comercio,
-                    COUNT(*) as TotalRecaudaciones,
-                    SUM(Monto_Total) as TotalRecaudado,
-                    SUM(Monto_Empresa) as TotalEmpresa,
-                    SUM(Monto_Comercio) as TotalComercio
-                FROM recaudaciones
-                GROUP BY Tipo_Comercio
-                ORDER BY TotalRecaudado DESC";
-
-        if ($limit !== null) {
-            $sql .= " LIMIT :limit";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        } else {
-            $stmt = $conn->prepare($sql);
-        }
-
-        $stmt->execute();
-
-        $resumen = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $resumen[] = $row;
-        }
-
-        if (empty($resumen)) {
-            $resumen[] = [
-                'Tipo_Comercio' => 'Sin datos',
-                'TotalRecaudaciones' => 0,
-                'TotalRecaudado' => 0,
-                'TotalEmpresa' => 0,
-                'TotalComercio' => 0
-            ];
-        }
-
-        return $resumen;
     }
 
     public function findMaquinasRecaudacion(): array
@@ -279,31 +86,105 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
 
         $stmt = $conn->prepare($sql);
         $stmt->execute();
+        $result = $stmt->get_result();
 
         $maquinas = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $maquinas[] = $row;
         }
+        $stmt->close();
+
         return $maquinas;
     }
 
-    public function findMaquinasOperativasPorComercio(Comercio $comercio): array
+    public function save(Recaudacion $recaudacion): void
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT m.* FROM MaquinaRecreativa m
-                WHERE m.ID_Comercio = :idComercio 
-                AND m.Estado = 'Operativa' 
-                AND m.Etapa = 'Recaudacion'
-                ORDER BY m.Nombre_Maquina ASC";
+        $data = $recaudacion->toArray();
+
+        $sql = "INSERT INTO recaudaciones (
+                    ID_Recaudacion, Tipo_Comercio, ID_Maquina, ID_Usuario,
+                    Monto_Total, Monto_Empresa, Monto_Comercio, fecha,
+                    detalle, Porcentaje_Comercio
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    Tipo_Comercio = VALUES(Tipo_Comercio),
+                    Monto_Total = VALUES(Monto_Total),
+                    Monto_Empresa = VALUES(Monto_Empresa),
+                    Monto_Comercio = VALUES(Monto_Comercio),
+                    detalle = VALUES(detalle),
+                    Porcentaje_Comercio = VALUES(Porcentaje_Comercio)";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idComercio' => $comercio->id()->value()]);
+        $stmt->bind_param(
+            'ssssdddsds',
+            $data['ID_Recaudacion'],
+            $data['Tipo_Comercio'],
+            $data['ID_Maquina'],
+            $data['ID_Usuario'],
+            $data['Monto_Total'],
+            $data['Monto_Empresa'],
+            $data['Monto_Comercio'],
+            $data['fecha'],
+            $data['detalle'],
+            $data['Porcentaje_Comercio']
+        );
+        $stmt->execute();
+        $stmt->close();
+    }
 
-        $maquinas = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = $row;
-        }
-        return $maquinas;
+    public function saveInforme(InformeRecaudacion $informe): void
+    {
+        $conn = $this->db->getConnection();
+        $data = $informe->toArray();
+
+        $sql = "INSERT INTO informes_recaudacion (
+                    ID_Informe, ID_Recaudacion, CI_Usuario, Nombre_Maquina,
+                    ID_Comercio, Nombre_Comercio, Direccion_Comercio, Telefono_Comercio,
+                    Pago_Ensamblador, Pago_Comprobador, Pago_Mantenimiento,
+                    empresa_nombre, empresa_descripcion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    CI_Usuario = VALUES(CI_Usuario),
+                    Nombre_Maquina = VALUES(Nombre_Maquina),
+                    Nombre_Comercio = VALUES(Nombre_Comercio),
+                    Direccion_Comercio = VALUES(Direccion_Comercio),
+                    Telefono_Comercio = VALUES(Telefono_Comercio),
+                    Pago_Ensamblador = VALUES(Pago_Ensamblador),
+                    Pago_Comprobador = VALUES(Pago_Comprobador),
+                    Pago_Mantenimiento = VALUES(Pago_Mantenimiento)";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'ssssssssddsss',
+            $data['ID_Informe'],
+            $data['ID_Recaudacion'],
+            $data['CI_Usuario'],
+            $data['Nombre_Maquina'],
+            $data['ID_Comercio'],
+            $data['Nombre_Comercio'],
+            $data['Direccion_Comercio'],
+            $data['Telefono_Comercio'],
+            $data['Pago_Ensamblador'],
+            $data['Pago_Comprobador'],
+            $data['Pago_Mantenimiento'],
+            $data['empresa_nombre'],
+            $data['empresa_descripcion']
+        );
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    public function saveDetalle(DetalleInforme $detalle): void
+    {
+        $conn = $this->db->getConnection();
+        $data = $detalle->toArray();
+
+        $sql = "INSERT INTO informe_detalle (ID_Informe_Detalle, ID_Informe, ID_Componente) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('sss', $data['ID_Informe_Detalle'], $data['ID_Informe'], $data['ID_Componente']);
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function delete(Uuid $id): bool
@@ -311,31 +192,163 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
         $conn = $this->db->getConnection();
 
         try {
-            $conn->beginTransaction();
+            $conn->begin_transaction();
 
-            // Eliminar detalles del informe
             $sqlDetalles = "DELETE d FROM informe_detalle d 
                             INNER JOIN informes_recaudacion i ON d.ID_Informe = i.ID_Informe
-                            WHERE i.ID_Recaudacion = :id";
+                            WHERE i.ID_Recaudacion = ?";
             $stmtDetalles = $conn->prepare($sqlDetalles);
-            $stmtDetalles->execute([':id' => $id->value()]);
+            $idValue = $id->value();
+            $stmtDetalles->bind_param('s', $idValue);
+            $stmtDetalles->execute();
+            $stmtDetalles->close();
 
-            // Eliminar informe principal
-            $sqlInforme = "DELETE FROM informes_recaudacion WHERE ID_Recaudacion = :id";
+            $sqlInforme = "DELETE FROM informes_recaudacion WHERE ID_Recaudacion = ?";
             $stmtInforme = $conn->prepare($sqlInforme);
-            $stmtInforme->execute([':id' => $id->value()]);
+            $stmtInforme->bind_param('s', $idValue);
+            $stmtInforme->execute();
+            $stmtInforme->close();
 
-            // Eliminar recaudación
-            $sql = "DELETE FROM recaudaciones WHERE ID_Recaudacion = :id";
+            $sql = "DELETE FROM recaudaciones WHERE ID_Recaudacion = ?";
             $stmt = $conn->prepare($sql);
-            $result = $stmt->execute([':id' => $id->value()]);
+            $stmt->bind_param('s', $idValue);
+            $result = $stmt->execute();
+            $stmt->close();
 
             $conn->commit();
             return $result;
         } catch (\Exception $e) {
-            $conn->rollBack();
+            $conn->rollback();
             error_log("Error al eliminar recaudación: " . $e->getMessage());
             return false;
         }
+    }
+
+    // Métodos adicionales necesarios
+    public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
+    {
+        // Implementar usando MySQLi
+        $conn = $this->db->getConnection();
+        $sql = "SELECT r.*, c.Nombre as Nombre_Comercio, m.Nombre_Maquina,
+                       u.nombre as nombre_usuario, u.apellido as apellido_usuario
+                FROM recaudaciones r
+                INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+                INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+                WHERE 1=1";
+        
+        $params = [];
+        $types = "";
+        
+        if (!empty($filters['fecha_inicio'])) {
+            $sql .= " AND DATE(r.fecha) >= ?";
+            $params[] = $filters['fecha_inicio'];
+            $types .= "s";
+        }
+        
+        if (!empty($filters['fecha_fin'])) {
+            $sql .= " AND DATE(r.fecha) <= ?";
+            $params[] = $filters['fecha_fin'];
+            $types .= "s";
+        }
+        
+        if (!empty($filters['ID_Maquina'])) {
+            $sql .= " AND r.ID_Maquina = ?";
+            $params[] = $filters['ID_Maquina'];
+            $types .= "s";
+        }
+        
+        if (!empty($filters['Tipo_Comercio'])) {
+            $sql .= " AND r.Tipo_Comercio = ?";
+            $params[] = $filters['Tipo_Comercio'];
+            $types .= "s";
+        }
+        
+        $sql .= " ORDER BY r.fecha DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $recaudaciones = [];
+        while ($row = $result->fetch_assoc()) {
+            $recaudaciones[] = $row;
+        }
+        $stmt->close();
+        
+        return $recaudaciones;
+    }
+
+    public function findResumenByTipoComercio(?int $limit = null): array
+    {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT 
+                    Tipo_Comercio,
+                    COUNT(*) as TotalRecaudaciones,
+                    SUM(Monto_Total) as TotalRecaudado,
+                    SUM(Monto_Empresa) as TotalEmpresa,
+                    SUM(Monto_Comercio) as TotalComercio
+                FROM recaudaciones
+                GROUP BY Tipo_Comercio
+                ORDER BY TotalRecaudado DESC";
+        
+        if ($limit !== null) {
+            $sql .= " LIMIT ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $limit);
+        } else {
+            $stmt = $conn->prepare($sql);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $resumen = [];
+        while ($row = $result->fetch_assoc()) {
+            $resumen[] = $row;
+        }
+        $stmt->close();
+        
+        if (empty($resumen)) {
+            $resumen[] = [
+                'Tipo_Comercio' => 'Sin datos',
+                'TotalRecaudaciones' => 0,
+                'TotalRecaudado' => 0,
+                'TotalEmpresa' => 0,
+                'TotalComercio' => 0
+            ];
+        }
+        
+        return $resumen;
+    }
+        /**
+     * {@inheritdoc}
+     */
+    public function findMaquinasOperativasPorComercio(Comercio $comercio): array
+    {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT m.* FROM MaquinaRecreativa m
+                WHERE m.ID_Comercio = ? 
+                AND m.Estado = 'Operativa' 
+                AND m.Etapa = 'Recaudacion'
+                ORDER BY m.Nombre_Maquina ASC";
+
+        $stmt = $conn->prepare($sql);
+        $comercioId = $comercio->getId();
+        $stmt->bind_param('s', $comercioId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $maquinas = [];
+        while ($row = $result->fetch_assoc()) {
+            $maquinas[] = $row;
+        }
+        $stmt->close();
+
+        return $maquinas;
     }
 }

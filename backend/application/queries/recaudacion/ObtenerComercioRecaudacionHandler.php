@@ -36,18 +36,18 @@ final class ObtenerComercioRecaudacionHandler
     {
         $idComercio = new Uuid($query->getIdComercio());
 
-        $comercio = $this->comercioRepository->findById($idComercio);
+        $comercio = $this->comercioRepository->buscarPorId($idComercio);
         if (!$comercio) {
             throw new DomainException('Comercio no encontrado.');
         }
 
         return [
-            'id' => $comercio->id()->value(),
-            'nombre' => $comercio->nombre(),
-            'tipo' => $comercio->tipo(),
-            'direccion' => $comercio->direccion(),
-            'telefono' => $comercio->telefono(),
-            'cantidad_maquinas' => $comercio->cantidadMaquinas()
+            'id' => $comercio->getId(),
+            'nombre' => $comercio->getNombre(),
+            'tipo' => $comercio->getTipo(),
+            'direccion' => $comercio->getDireccion(),
+            'telefono' => $comercio->getTelefono(),
+            'cantidad_maquinas' => $comercio->getCantidadMaquinas()
         ];
     }
 }

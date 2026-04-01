@@ -115,8 +115,10 @@ class InformeController
 
         $command      = new RegistrarRecaudacionCommand($data['idMaquina'], $userId, $data['tipoComercio'], (float) $data['montoTotal'], (float) $data['porcentajeComercio'], $data['detalle'] ?? '');
         $idRecaudacion = $this->registrarRecaudacionHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Recaudación registrada exitosamente', 'idRecaudacion' => $idRecaudacion], 201);
+        
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Recaudación registrada exitosamente', 'idRecaudacion' => $idRecaudacion], 201);
+        return $response;
     }
 
     #[OA\Get(
@@ -151,7 +153,9 @@ class InformeController
         );
         $result = $this->obtenerRecaudacionesHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'recaudaciones' => $result['recaudaciones'], 'total' => $result['total']]);
+        $response = new Response();
+        $response->json(['success' => true, 'recaudaciones' => $result['recaudaciones'], 'total' => $result['total']]);
+        return $response;
     }
 
     #[OA\Get(
@@ -183,7 +187,9 @@ class InformeController
         $query  = new ObtenerRecaudacionPorIdQuery($idRecaudacion);
         $result = $this->obtenerRecaudacionPorIdHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'recaudacion' => $result['recaudacion']]);
+        $response = new Response();
+        $response->json(['success' => true, 'recaudacion' => $result['recaudacion']]);
+        return $response;
     }
 
     #[OA\Get(
@@ -210,7 +216,9 @@ class InformeController
         $query   = new ObtenerResumenRecaudacionesQuery($limit);
         $resumen = $this->obtenerResumenRecaudacionesHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'resumen' => $resumen]);
+        $response = new Response();
+        $response->json(['success' => true, 'resumen' => $resumen]);
+        return $response;
     }
 
     #[OA\Put(
@@ -266,7 +274,9 @@ class InformeController
         );
         $this->actualizarRecaudacionHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Recaudación actualizada correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Recaudación actualizada correctamente']);
+        return $response;
     }
 
     #[OA\Delete(
@@ -298,7 +308,9 @@ class InformeController
         $command = new EliminarRecaudacionCommand($idRecaudacion);
         $this->eliminarRecaudacionHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Recaudación eliminada correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Recaudación eliminada correctamente']);
+        return $response;
     }
 
     #[OA\Get(
@@ -321,7 +333,9 @@ class InformeController
         $query   = new ObtenerMaquinasRecaudacionQuery();
         $maquinas = $this->obtenerMaquinasRecaudacionHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -357,7 +371,9 @@ class InformeController
         $query   = new ObtenerMaquinasOperativasPorComercioQuery($idComercio);
         $maquinas = $this->obtenerMaquinasOperativasPorComercioHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'maquinas' => $maquinas]);
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        return $response;
     }
 
     #[OA\Get(
@@ -388,7 +404,9 @@ class InformeController
         $query   = new ObtenerComercioRecaudacionQuery($idComercio);
         $comercio = $this->obtenerComercioRecaudacionHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'comercio' => $comercio]);
+        $response = new Response();
+        $response->json(['success' => true, 'comercio' => $comercio]);
+        return $response;
     }
 
     #[OA\Post(
@@ -449,7 +467,9 @@ class InformeController
         );
         $idInforme = $this->guardarInformeHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Informe guardado exitosamente', 'idInforme' => $idInforme], 201);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Informe guardado exitosamente', 'idInforme' => $idInforme], 201);
+        return $response;
     }
 
     #[OA\Get(
@@ -481,7 +501,9 @@ class InformeController
         $query  = new ObtenerInformePorRecaudacionQuery($idRecaudacion);
         $result = $this->obtenerInformePorRecaudacionHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'informe' => $result['informe'], 'componentes' => $result['componentes']]);
+        $response = new Response();
+        $response->json(['success' => true, 'informe' => $result['informe'], 'componentes' => $result['componentes']]);
+        return $response;
     }
 
     /**
