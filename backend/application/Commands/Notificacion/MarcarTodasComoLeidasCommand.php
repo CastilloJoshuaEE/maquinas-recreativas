@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Notificacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class MarcarTodasComoLeidas
  */
-final class MarcarTodasComoLeidasCommand
+final class MarcarTodasComoLeidasCommand implements Command 
 {
     private string $idUsuario;
 

@@ -9,14 +9,13 @@
 
 namespace maquinas_recreativas\Application\Commands\Notificacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class MarcarTodasComoLeidasHandler
- */
-final class MarcarTodasComoLeidasHandler
+final class MarcarTodasComoLeidasHandler implements CommandHandler
 {
     private NotificacionRepository $notificacionRepository;
 
@@ -25,14 +24,13 @@ final class MarcarTodasComoLeidasHandler
         $this->notificacionRepository = $notificacionRepository;
     }
 
-    public function handle(MarcarTodasComoLeidas $command): void
+    public function handle(Command $command): void
     {
-        $idUsuario = new Uuid($command->idUsuario());
-
-        $usuario = $this->usuarioRepository->findById($idUsuario);
-        if (!$usuario) {
-            throw new DomainException('Usuario no encontrado');
+        if (!$command instanceof MarcarTodasComoLeidasCommand) {
+            throw new DomainException('Comando inválido');
         }
+
+        $idUsuario = new Uuid($command->idUsuario());
 
         $this->notificacionRepository->marcarTodasLeidasReporte($idUsuario);
     }

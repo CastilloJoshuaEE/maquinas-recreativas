@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Notificacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class CrearNotificacionMaquina
  */
-final class CrearNotificacionMaquinaCommand
+final class CrearNotificacionMaquinaCommand implements Command
 {
     private string $idRemitente;
     private string $idDestinatario;

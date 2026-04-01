@@ -1,14 +1,8 @@
 <?php
-/**
- * application/commands/notificacion/CrearNotificacionMaquinaHandler.php
- *
- * Manejador del comando CrearNotificacionMaquina.
- *
- * @package maquinas_recreativas\Application\Commands\Notificacion
- */
-
 namespace maquinas_recreativas\Application\Commands\Notificacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -16,10 +10,7 @@ use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class CrearNotificacionMaquinaHandler
- */
-final class CrearNotificacionMaquinaHandler
+final class CrearNotificacionMaquinaHandler implements CommandHandler
 {
     private NotificacionRepository $notificacionRepository;
     private UsuarioRepository $usuarioRepository;
@@ -35,8 +26,12 @@ final class CrearNotificacionMaquinaHandler
         $this->maquinaRepository = $maquinaRepository;
     }
 
-    public function handle(CrearNotificacionMaquina $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof CrearNotificacionMaquinaCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idRemitente = new Uuid($command->idRemitente());
         $idDestinatario = new Uuid($command->idDestinatario());
         $idMaquina = new Uuid($command->idMaquina());

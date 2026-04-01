@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Notificacion;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class CrearNotificacionReporte
  */
-final class CrearNotificacionReporteCommand
+final class CrearNotificacionReporteCommand implements Command
 {
     private string $idReporte;
     private string $idUsuario;

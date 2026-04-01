@@ -1,14 +1,8 @@
 <?php
-/**
- * application/commands/notificacion/CrearNotificacionReporteHandler.php
- *
- * Manejador del comando CrearNotificacionReporte.
- *
- * @package maquinas_recreativas\Application\Commands\Notificacion
- */
-
 namespace maquinas_recreativas\Application\Commands\Notificacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Reporte\ReporteRepository;
@@ -16,10 +10,7 @@ use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class CrearNotificacionReporteHandler
- */
-final class CrearNotificacionReporteHandler
+final class CrearNotificacionReporteHandler implements CommandHandler
 {
     private NotificacionRepository $notificacionRepository;
     private ReporteRepository $reporteRepository;
@@ -35,8 +26,12 @@ final class CrearNotificacionReporteHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    public function handle(CrearNotificacionReporte $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof CrearNotificacionReporteCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idReporte = new Uuid($command->idReporte());
         $idUsuario = new Uuid($command->idUsuario());
 

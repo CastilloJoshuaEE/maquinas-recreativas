@@ -64,17 +64,19 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerPorUsuario(Request $request, string $idDestinatario): Response
-    {
-        if (!ValidationHelper::isValidUUID($idDestinatario)) {
-            throw new DomainException('ID de destinatario inválido', 400);
-        }
-
-        $query  = new ObtenerNotificacionesMaquinaQuery($idDestinatario);
-        $result = $this->obtenerNotificacionesMaquinaHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'notificaciones' => $result['notificaciones'], 'count' => $result['count']]);
+public function obtenerPorUsuario(Request $request, string $idDestinatario): Response
+{
+    if (!ValidationHelper::isValidUUID($idDestinatario)) {
+        throw new DomainException('ID de destinatario inválido', 400);
     }
+
+    $query  = new ObtenerNotificacionesMaquinaQuery($idDestinatario);
+    $result = $this->obtenerNotificacionesMaquinaHandler->handle($query);
+
+    $response = new Response();
+    $response->json(['success' => true, 'notificaciones' => $result['notificaciones'], 'count' => $result['count']]);
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/notificaciones/{uuid}",
@@ -90,17 +92,19 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function getNotificaciones(Request $request, string $idUsuario): Response
-    {
-        if (!ValidationHelper::isValidUUID($idUsuario)) {
-            throw new DomainException('ID de usuario inválido', 400);
-        }
-
-        $query  = new ObtenerNotificacionesReporteQuery($idUsuario);
-        $result = $this->obtenerNotificacionesReporteHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'notificaciones' => $result['notificaciones'], 'count' => $result['count']]);
+ public function getNotificaciones(Request $request, string $idUsuario): Response
+{
+    if (!ValidationHelper::isValidUUID($idUsuario)) {
+        throw new DomainException('ID de usuario inválido', 400);
     }
+
+    $query  = new ObtenerNotificacionesReporteQuery($idUsuario);
+    $result = $this->obtenerNotificacionesReporteHandler->handle($query);
+
+    $response = new Response();
+    $response->json(['success' => true, 'notificaciones' => $result['notificaciones'], 'count' => $result['count']]);
+    return $response;
+}
 
     #[OA\Post(
         path: "/v1/notificaciones/{uuid}/marcarla-leida",
@@ -116,23 +120,24 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autenticado")
         ]
     )]
-    public function marcarComoLeidaNotificacion(Request $request, string $idNotificacion): Response
-    {
-        if (!ValidationHelper::isValidUUID($idNotificacion)) {
-            throw new DomainException('ID de notificación inválido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $command = new MarcarComoLeidaCommand($idNotificacion, $userId);
-        $this->marcarComoLeidaHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Notificación marcada como leída']);
+   public function marcarComoLeidaNotificacion(Request $request, string $idNotificacion): Response
+{
+    if (!ValidationHelper::isValidUUID($idNotificacion)) {
+        throw new DomainException('ID de notificación inválido', 400);
     }
 
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    $command = new MarcarComoLeidaCommand($idNotificacion, $userId);
+    $this->marcarComoLeidaHandler->handle($command);
+
+    $response = new Response();
+    $response->json(['success' => true, 'message' => 'Notificación marcada como leída']);
+    return $response;
+}
     #[OA\Post(
         path: "/v1/notificaciones/marcarla-todas-leidas",
         summary: "Marcar todas las notificaciones del usuario como leídas",
@@ -143,18 +148,20 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autenticado")
         ]
     )]
-    public function marcarTodasComoLeidas(Request $request): Response
-    {
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $command = new MarcarTodasComoLeidasCommand($userId);
-        $this->marcarTodasComoLeidasHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Todas las notificaciones marcadas como leídas']);
+  public function marcarTodasComoLeidas(Request $request): Response
+{
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
     }
+
+    $command = new MarcarTodasComoLeidasCommand($userId);
+    $this->marcarTodasComoLeidasHandler->handle($command);
+
+    $response = new Response();
+    $response->json(['success' => true, 'message' => 'Todas las notificaciones marcadas como leídas']);
+    return $response;
+}
 
     #[OA\Post(
         path: "/v1/notificaciones/create",
@@ -181,20 +188,23 @@ class NotificacionController
         ]
     )]
     public function create(Request $request): Response
-    {
-        $data     = $request->json();
-        $required = ['idRemitente', 'idDestinatario', 'idMaquina', 'tipo', 'mensaje'];
-        foreach ($required as $field) {
-            if (!isset($data[$field])) {
-                throw new DomainException("El campo {$field} es requerido", 400);
-            }
+{
+    $data     = $request->json();
+    $required = ['idRemitente', 'idDestinatario', 'idMaquina', 'tipo', 'mensaje'];
+    foreach ($required as $field) {
+        if (!isset($data[$field])) {
+            throw new DomainException("El campo {$field} es requerido", 400);
         }
-
-        $command = new CrearNotificacionMaquinaCommand($data['idRemitente'], $data['idDestinatario'], $data['idMaquina'], $data['tipo'], $data['mensaje']);
-        $this->crearNotificacionMaquinaHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Notificación creada exitosamente'], 201);
     }
+
+    $command = new CrearNotificacionMaquinaCommand($data['idRemitente'], $data['idDestinatario'], $data['idMaquina'], $data['tipo'], $data['mensaje']);
+    $this->crearNotificacionMaquinaHandler->handle($command);
+
+    $response = new Response();
+    $response->json(['success' => true, 'message' => 'Notificación creada exitosamente'], 201);
+    return $response;
+}
+
 
     #[OA\Post(
         path: "/v1/notificaciones/marcar-leida",
@@ -216,27 +226,29 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autenticado")
         ]
     )]
-    public function marcarComoLeida(Request $request): Response
-    {
-        $data = $request->json();
-        if (!isset($data['idNotificacion'])) {
-            throw new DomainException('ID de notificación requerido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        if (!ValidationHelper::isValidUUID($data['idNotificacion'])) {
-            throw new DomainException('ID de notificación inválido', 400);
-        }
-
-        $command = new MarcarComoLeidaCommand($data['idNotificacion'], $userId);
-        $this->marcarComoLeidaHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Notificación marcada como leída']);
+ public function marcarComoLeida(Request $request): Response
+{
+    $data = $request->json();
+    if (!isset($data['idNotificacion'])) {
+        throw new DomainException('ID de notificación requerido', 400);
     }
+
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    if (!ValidationHelper::isValidUUID($data['idNotificacion'])) {
+        throw new DomainException('ID de notificación inválido', 400);
+    }
+
+    $command = new MarcarComoLeidaCommand($data['idNotificacion'], $userId);
+    $this->marcarComoLeidaHandler->handle($command);
+
+    $response = new Response();
+    $response->json(['success' => true, 'message' => 'Notificación marcada como leída']);
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/notificaciones/no-leidas/{uuid}",
@@ -252,15 +264,17 @@ class NotificacionController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerNoLeidas(Request $request, string $idUsuario): Response
-    {
-        if (!ValidationHelper::isValidUUID($idUsuario)) {
-            throw new DomainException('ID de usuario inválido', 400);
-        }
-
-        $query  = new ObtenerCantidadNoLeidasQuery($idUsuario);
-        $result = $this->obtenerCantidadNoLeidasHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'cantidad' => $result['cantidad']]);
+public function obtenerNoLeidas(Request $request, string $idUsuario): Response
+{
+    if (!ValidationHelper::isValidUUID($idUsuario)) {
+        throw new DomainException('ID de usuario inválido', 400);
     }
+
+    $query  = new ObtenerCantidadNoLeidasQuery($idUsuario);
+    $result = $this->obtenerCantidadNoLeidasHandler->handle($query);
+
+    $response = new Response();
+    $response->json(['success' => true, 'cantidad' => $result['cantidad']]);
+    return $response;
+}
 }

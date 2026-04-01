@@ -14,11 +14,7 @@ use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
-/**
- * Class MySQLNotificacionRepository
- */
 class MySQLNotificacionRepository implements NotificacionRepository
 {
     private Database $db;
@@ -36,22 +32,22 @@ class MySQLNotificacionRepository implements NotificacionRepository
         $sql = "INSERT INTO NotificacionMaquinaRecreativa (
                     ID_Notificacion, ID_Remitente, ID_Destinatario, ID_Maquina,
                     Tipo, Mensaje, Fecha, Estado
-                ) VALUES (
-                    :id, :idRemitente, :idDestinatario, :idMaquina,
-                    :tipo, :mensaje, :fecha, :estado
-                )";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Notificacion'],
-            ':idRemitente' => $data['ID_Remitente'],
-            ':idDestinatario' => $data['ID_Destinatario'],
-            ':idMaquina' => $data['ID_Maquina'],
-            ':tipo' => $data['Tipo'],
-            ':mensaje' => $data['Mensaje'],
-            ':fecha' => $data['Fecha'],
-            ':estado' => $data['Estado']
-        ]);
+        $stmt->bind_param(
+            'ssssssss',
+            $data['ID_Notificacion'],
+            $data['ID_Remitente'],
+            $data['ID_Destinatario'],
+            $data['ID_Maquina'],
+            $data['Tipo'],
+            $data['Mensaje'],
+            $data['Fecha'],
+            $data['Estado']
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function saveReporte(NotificacionReporte $notificacion): void
@@ -61,28 +57,33 @@ class MySQLNotificacionRepository implements NotificacionRepository
 
         $sql = "INSERT INTO notificaciones (
                     ID_Notificaciones, ID_Reporte, ID_Usuario, mensaje, fecha_hora, leida
-                ) VALUES (
-                    :id, :idReporte, :idUsuario, :mensaje, :fechaHora, :leida
-                )";
+                ) VALUES (?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Notificaciones'],
-            ':idReporte' => $data['ID_Reporte'],
-            ':idUsuario' => $data['ID_Usuario'],
-            ':mensaje' => $data['mensaje'],
-            ':fechaHora' => $data['fecha_hora'],
-            ':leida' => $data['leida']
-        ]);
+        $stmt->bind_param(
+            'sssssi',
+            $data['ID_Notificaciones'],
+            $data['ID_Reporte'],
+            $data['ID_Usuario'],
+            $data['mensaje'],
+            $data['fecha_hora'],
+            $data['leida']
+        );
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function findMaquinaById(Uuid $id): ?NotificacionMaquina
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM NotificacionMaquinaRecreativa WHERE ID_Notificacion = :id";
+        $sql = "SELECT * FROM NotificacionMaquinaRecreativa WHERE ID_Notificacion = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':id' => $id->value()]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $id->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
 
         return $data ? NotificacionMaquina::fromArray($data) : null;
     }
@@ -90,10 +91,14 @@ class MySQLNotificacionRepository implements NotificacionRepository
     public function findReporteById(Uuid $id): ?NotificacionReporte
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM notificaciones WHERE ID_Notificaciones = :id";
+        $sql = "SELECT * FROM notificaciones WHERE ID_Notificaciones = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':id' => $id->value()]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $id->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
 
         return $data ? NotificacionReporte::fromArray($data) : null;
     }
@@ -111,16 +116,21 @@ class MySQLNotificacionRepository implements NotificacionRepository
                 LEFT JOIN usuario u ON n.ID_Remitente = u.ID_Usuario
                 LEFT JOIN MaquinaRecreativa m ON n.ID_Maquina = m.ID_Maquina
                 LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                WHERE n.ID_Destinatario = :idDestinatario
+                WHERE n.ID_Destinatario = ?
                 ORDER BY n.Fecha DESC";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idDestinatario' => $idDestinatario->value()]);
+        $idValue = $idDestinatario->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         $notificaciones = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $notificaciones[] = $row;
         }
+        $stmt->close();
+
         return $notificaciones;
     }
 
@@ -130,16 +140,21 @@ class MySQLNotificacionRepository implements NotificacionRepository
         $sql = "SELECT n.*, r.descripcion as reporte_descripcion
                 FROM notificaciones n
                 LEFT JOIN reporte r ON n.ID_Reporte = r.ID_Reporte
-                WHERE n.ID_Usuario = :idUsuario
+                WHERE n.ID_Usuario = ?
                 ORDER BY n.fecha_hora DESC";
 
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idUsuario' => $idUsuario->value()]);
+        $idValue = $idUsuario->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         $notificaciones = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $notificaciones[] = $row;
         }
+        $stmt->close();
+
         return $notificaciones;
     }
 
@@ -147,10 +162,14 @@ class MySQLNotificacionRepository implements NotificacionRepository
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT COUNT(*) as total FROM NotificacionMaquinaRecreativa 
-                WHERE ID_Destinatario = :idDestinatario AND Estado = 'No leido'";
+                WHERE ID_Destinatario = ? AND Estado = 'No leido'";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idDestinatario' => $idDestinatario->value()]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $idDestinatario->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
 
         return (int)$row['total'];
     }
@@ -159,10 +178,14 @@ class MySQLNotificacionRepository implements NotificacionRepository
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT COUNT(*) as cantidad FROM notificaciones 
-                WHERE ID_Usuario = :idUsuario AND leida = 0";
+                WHERE ID_Usuario = ? AND leida = 0";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':idUsuario' => $idUsuario->value()]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $idUsuario->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
 
         return (int)$row['cantidad'];
     }
@@ -170,47 +193,61 @@ class MySQLNotificacionRepository implements NotificacionRepository
     public function marcarLeidaMaquina(Uuid $id): bool
     {
         $conn = $this->db->getConnection();
-        $sql = "UPDATE NotificacionMaquinaRecreativa SET Estado = 'Leido' WHERE ID_Notificacion = :id";
+        $sql = "UPDATE NotificacionMaquinaRecreativa SET Estado = 'Leido' WHERE ID_Notificacion = ?";
         $stmt = $conn->prepare($sql);
-        return $stmt->execute([':id' => $id->value()]);
+        $idValue = $id->value();
+        $stmt->bind_param('s', $idValue);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
     }
 
     public function marcarLeidaReporte(Uuid $id, Uuid $idUsuario): bool
     {
         $conn = $this->db->getConnection();
 
-        // Verificar que la notificación pertenece al usuario
         $checkSql = "SELECT ID_Notificaciones, leida FROM notificaciones 
-                     WHERE ID_Notificaciones = :id AND ID_Usuario = :idUsuario";
+                     WHERE ID_Notificaciones = ? AND ID_Usuario = ?";
         $checkStmt = $conn->prepare($checkSql);
-        $checkStmt->execute([
-            ':id' => $id->value(),
-            ':idUsuario' => $idUsuario->value()
-        ]);
-
-        if ($checkStmt->rowCount() === 0) {
+        $idValue = $id->value();
+        $idUsuarioValue = $idUsuario->value();
+        $checkStmt->bind_param('ss', $idValue, $idUsuarioValue);
+        $checkStmt->execute();
+        $result = $checkStmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            $checkStmt->close();
             return false;
         }
 
-        $row = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $row = $result->fetch_assoc();
+        $checkStmt->close();
+
         if ($row['leida'] == 1) {
-            return true; // Ya estaba leída
+            return true;
         }
 
         $sql = "UPDATE notificaciones SET leida = 1 
-                WHERE ID_Notificaciones = :id AND ID_Usuario = :idUsuario";
+                WHERE ID_Notificaciones = ? AND ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            ':id' => $id->value(),
-            ':idUsuario' => $idUsuario->value()
-        ]);
+        $stmt->bind_param('ss', $idValue, $idUsuarioValue);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
     }
 
     public function marcarTodasLeidasReporte(Uuid $idUsuario): bool
     {
         $conn = $this->db->getConnection();
-        $sql = "UPDATE notificaciones SET leida = 1 WHERE ID_Usuario = :idUsuario";
+        $sql = "UPDATE notificaciones SET leida = 1 WHERE ID_Usuario = ?";
         $stmt = $conn->prepare($sql);
-        return $stmt->execute([':idUsuario' => $idUsuario->value()]);
+        $idValue = $idUsuario->value();
+        $stmt->bind_param('s', $idValue);
+        $result = $stmt->execute();
+        $stmt->close();
+
+        return $result;
     }
 }

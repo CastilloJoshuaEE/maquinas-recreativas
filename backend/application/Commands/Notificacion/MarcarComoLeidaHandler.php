@@ -6,17 +6,15 @@
  *
  * @package maquinas_recreativas\Application\Commands\Notificacion
  */
-
 namespace maquinas_recreativas\Application\Commands\Notificacion;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class MarcarComoLeidaHandler
- */
-final class MarcarComoLeidaHandler
+final class MarcarComoLeidaHandler implements CommandHandler
 {
     private NotificacionRepository $notificacionRepository;
 
@@ -25,19 +23,21 @@ final class MarcarComoLeidaHandler
         $this->notificacionRepository = $notificacionRepository;
     }
 
-    public function handle(MarcarComoLeida $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof MarcarComoLeidaCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idNotificacion = new Uuid($command->idNotificacion());
         $idUsuario = new Uuid($command->idUsuario());
 
-        // Primero intentamos en notificaciones de reportes
         $notificacionReporte = $this->notificacionRepository->findReporteById($idNotificacion);
         if ($notificacionReporte) {
             $this->notificacionRepository->marcarLeidaReporte($idNotificacion, $idUsuario);
             return;
         }
 
-        // Si no es de reporte, es de máquina
         $notificacionMaquina = $this->notificacionRepository->findMaquinaById($idNotificacion);
         if ($notificacionMaquina) {
             $this->notificacionRepository->marcarLeidaMaquina($idNotificacion);
