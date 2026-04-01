@@ -2,13 +2,15 @@
 /**
  * application/commands/componente/UsarComponenteHandler.php
  *
- * Manejador del comando UsarComponente.
+ * Manejador del comando UsarComponenteCommand.
  *
  * @package maquinas_recreativas\Application\Commands\Componente
  */
 
 namespace maquinas_recreativas\Application\Commands\Componente;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -20,7 +22,7 @@ use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 /**
  * Class UsarComponenteHandler
  */
-final class UsarComponenteHandler
+final class UsarComponenteHandler implements CommandHandler
 {
     private ComponenteRepository $componenteRepository;
     private MaquinaRepository $maquinaRepository;
@@ -39,8 +41,12 @@ final class UsarComponenteHandler
         $this->montajeRepository = $montajeRepository;
     }
 
-    public function handle(UsarComponente $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof UsarComponenteCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idComponente = new Uuid($command->idComponente());
         $idUsuario = new Uuid($command->idUsuario());
 
@@ -64,16 +70,5 @@ final class UsarComponenteHandler
 
         $componente->asignarAUso($idUsuario, $idMaquina);
         $this->componenteRepository->save($componente);
-
-        // Registrar montaje si hay máquina
-        if ($idMaquina) {
-            $montaje = Montaje::registrar(
-                $idMaquina,
-                $idComponente,
-                $idUsuario,
-                "Componente {$componente->nombre()} asignado"
-            );
-            $this->montajeRepository->save($montaje);
-        }
     }
 }

@@ -2,7 +2,7 @@
 /**
  * application/commands/componente/LiberarComponentesCancelacionHandler.php
  *
- * Manejador del comando LiberarComponentesCancelacion.
+ * Manejador del comando LiberarComponentesCancelacionCommand.
  *
  * @package maquinas_recreativas\Application\Commands\Componente
  */
@@ -10,6 +10,7 @@
 namespace maquinas_recreativas\Application\Commands\Componente;
 
 use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
@@ -17,7 +18,7 @@ use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 /**
  * Class LiberarComponentesCancelacionHandler
  */
-final class LiberarComponentesCancelacionHandler
+final class LiberarComponentesCancelacionHandler implements CommandHandler
 {
     private ComponenteRepository $componenteRepository;
 
@@ -28,6 +29,10 @@ final class LiberarComponentesCancelacionHandler
 
     public function handle(Command $command): array
     {
+        if (!$command instanceof LiberarComponentesCancelacionCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idUsuario = new Uuid($command->idUsuario());
         $componentesLiberados = 0;
         $mensajes = [];

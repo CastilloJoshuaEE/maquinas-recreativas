@@ -1,25 +1,19 @@
 <?php
 /**
  * application/commands/componente/LiberarComponenteCommand.php
- *
- * Comando para liberar un componente.
- *
- * @package maquinas_recreativas\Application\Commands\Componente
  */
 
 namespace maquinas_recreativas\Application\Commands\Componente;
 
-/**
- * Class LiberarComponente
- */
-final class LiberarComponenteCommand
+use maquinas_recreativas\Application\Commands\Command;
+
+final class LiberarComponenteCommand implements Command
 {
     private string $idComponente;
     private string $idUsuario;
-    public function __construct(
-        string $idComponente,
-        string $idUsuario
-    ){
+    
+    public function __construct(string $idComponente, string $idUsuario)
+    {
         $this->idComponente = $idComponente;
         $this->idUsuario = $idUsuario;
     }

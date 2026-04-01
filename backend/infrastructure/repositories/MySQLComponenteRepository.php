@@ -1,10 +1,6 @@
 <?php
 /**
  * infrastructure/repositories/MySQLComponenteRepository.php
- *
- * Implementación MySQL del repositorio de componentes.
- *
- * @package maquinas_recreativas\Infrastructure\Repositories
  */
 
 namespace maquinas_recreativas\Infrastructure\Repositories;
@@ -14,11 +10,7 @@ use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Componente\TipoComponente;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
-/**
- * Class MySQLComponenteRepository
- */
 class MySQLComponenteRepository implements ComponenteRepository
 {
     private Database $db;
@@ -33,57 +25,75 @@ class MySQLComponenteRepository implements ComponenteRepository
         $conn = $this->db->getConnection();
         $data = $componente->toArray();
 
-        $sql = "INSERT INTO componente (ID_Componente, tipo, nombre, precio) 
-                VALUES (:id, :tipo, :nombre, :precio)
-                ON DUPLICATE KEY UPDATE
-                    tipo = VALUES(tipo),
-                    nombre = VALUES(nombre),
-                    precio = VALUES(precio)";
+        // Verificar si existe
+        $checkSql = "SELECT COUNT(*) as total FROM componente WHERE ID_Componente = ?";
+        $checkStmt = $conn->prepare($checkSql);
+        $idValue = $data['ID_Componente'];
+        $checkStmt->bind_param('s', $idValue);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        $exists = $checkResult->fetch_assoc()['total'] > 0;
+        $checkStmt->close();
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            ':id' => $data['ID_Componente'],
-            ':tipo' => $data['tipo'],
-            ':nombre' => $data['nombre'],
-            ':precio' => $data['precio']
-        ]);
+        if ($exists) {
+            $sql = "UPDATE componente SET tipo = ?, nombre = ?, precio = ? WHERE ID_Componente = ?";
+            $stmt = $conn->prepare($sql);
+            $tipo = $data['tipo'];
+            $nombre = $data['nombre'];
+            $precio = $data['precio'];
+            $stmt->bind_param('ssds', $tipo, $nombre, $precio, $idValue);
+        } else {
+            $sql = "INSERT INTO componente (ID_Componente, tipo, nombre, precio) VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $tipo = $data['tipo'];
+            $nombre = $data['nombre'];
+            $precio = $data['precio'];
+            $stmt->bind_param('sssd', $idValue, $tipo, $nombre, $precio);
+        }
+        $stmt->execute();
+        $stmt->close();
 
-        // Manejar asignación/liberación en componente_usuario
+        // Manejar asignación en componente_usuario
         $this->saveAsignacion($componente);
     }
 
     private function saveAsignacion(Componente $componente): void
     {
         $conn = $this->db->getConnection();
+        $idComponente = $componente->id()->value();
 
         if ($componente->estaAsignado() && $componente->fechaAsignacion() !== null) {
             // Verificar si ya existe asignación activa
             $checkSql = "SELECT ID_Registro FROM componente_usuario 
-                         WHERE ID_Componente = :id AND fecha_liberacion IS NULL";
+                         WHERE ID_Componente = ? AND fecha_liberacion IS NULL";
             $checkStmt = $conn->prepare($checkSql);
-            $checkStmt->execute([':id' => $componente->id()->value()]);
+            $checkStmt->bind_param('s', $idComponente);
+            $checkStmt->execute();
+            $checkResult = $checkStmt->get_result();
+            $existsActive = $checkResult->num_rows > 0;
+            $checkStmt->close();
 
-            if ($checkStmt->rowCount() === 0) {
+            if (!$existsActive) {
                 $sql = "INSERT INTO componente_usuario (ID_Registro, ID_Componente, ID_Usuario, ID_Maquina, fecha_asignacion) 
-                        VALUES (UUID(), :idComponente, :idUsuario, :idMaquina, :fechaAsignacion)";
+                        VALUES (UUID(), ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                $stmt->execute([
-                    ':idComponente' => $componente->id()->value(),
-                    ':idUsuario' => $componente->usuarioAsignado()?->value(),
-                    ':idMaquina' => $componente->maquinaAsignada()?->value(),
-                    ':fechaAsignacion' => $componente->fechaAsignacion()->format('Y-m-d H:i:s')
-                ]);
+                $idUsuario = $componente->usuarioAsignado()?->value();
+                $idMaquina = $componente->maquinaAsignada()?->value();
+                $fechaAsignacion = $componente->fechaAsignacion()->format('Y-m-d H:i:s');
+                $stmt->bind_param('ssss', $idComponente, $idUsuario, $idMaquina, $fechaAsignacion);
+                $stmt->execute();
+                $stmt->close();
             }
         } elseif ($componente->fechaLiberacion() !== null) {
             // Marcar como liberado
             $sql = "UPDATE componente_usuario 
-                    SET fecha_liberacion = :fechaLiberacion 
-                    WHERE ID_Componente = :idComponente AND fecha_liberacion IS NULL";
+                    SET fecha_liberacion = ? 
+                    WHERE ID_Componente = ? AND fecha_liberacion IS NULL";
             $stmt = $conn->prepare($sql);
-            $stmt->execute([
-                ':idComponente' => $componente->id()->value(),
-                ':fechaLiberacion' => $componente->fechaLiberacion()->format('Y-m-d H:i:s')
-            ]);
+            $fechaLiberacion = $componente->fechaLiberacion()->format('Y-m-d H:i:s');
+            $stmt->bind_param('ss', $fechaLiberacion, $idComponente);
+            $stmt->execute();
+            $stmt->close();
         }
     }
 
@@ -97,10 +107,15 @@ class MySQLComponenteRepository implements ComponenteRepository
                        cu.fecha_liberacion
                 FROM componente c
                 LEFT JOIN componente_usuario cu ON c.ID_Componente = cu.ID_Componente AND cu.fecha_liberacion IS NULL
-                WHERE c.ID_Componente = :id";
+                WHERE c.ID_Componente = ?";
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':id' => $id->value()]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $idValue = $id->value();
+        $stmt->bind_param('s', $idValue);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
 
         return $data ? Componente::fromArray($data) : null;
     }
@@ -116,24 +131,32 @@ class MySQLComponenteRepository implements ComponenteRepository
                 FROM componente c
                 LEFT JOIN componente_usuario cu ON c.ID_Componente = cu.ID_Componente AND cu.fecha_liberacion IS NULL
                 WHERE 1=1";
+        
         $params = [];
-
+        $types = "";
+        
         if ($tipo !== null) {
-            $sql .= " AND c.tipo = :tipo";
-            $params[':tipo'] = $tipo->value();
+            $sql .= " AND c.tipo = ?";
+            $params[] = $tipo->value();
+            $types .= "s";
         }
-
-        $sql .= " GROUP BY c.ID_Componente LIMIT :limit OFFSET :offset";
-        $params[':limit'] = $limit;
-        $params[':offset'] = $offset;
-
+        
+        $sql .= " GROUP BY c.ID_Componente LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $componentes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $componentes[] = Componente::fromArray($row);
         }
+        $stmt->close();
+        
         return $componentes;
     }
 
@@ -143,22 +166,31 @@ class MySQLComponenteRepository implements ComponenteRepository
         $sql = "SELECT c.* FROM componente c
                 LEFT JOIN componente_usuario cu ON c.ID_Componente = cu.ID_Componente AND cu.fecha_liberacion IS NULL
                 WHERE cu.ID_Componente IS NULL";
+        
         $params = [];
-
+        $types = "";
+        
         if ($tipo !== null) {
-            $sql .= " AND c.tipo = :tipo";
-            $params[':tipo'] = $tipo->value();
+            $sql .= " AND c.tipo = ?";
+            $params[] = $tipo->value();
+            $types .= "s";
         }
-
+        
         $sql .= " ORDER BY c.nombre ASC";
-
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $componentes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $componentes[] = Componente::fromArray($row);
         }
+        $stmt->close();
+        
         return $componentes;
     }
 
@@ -172,21 +204,28 @@ class MySQLComponenteRepository implements ComponenteRepository
                 FROM componente_usuario cu
                 INNER JOIN componente c ON cu.ID_Componente = c.ID_Componente
                 LEFT JOIN MaquinaRecreativa m ON cu.ID_Maquina = m.ID_Maquina
-                WHERE cu.ID_Usuario = :idUsuario AND cu.fecha_liberacion IS NULL";
-        $params = [':idUsuario' => $idUsuario->value()];
-
+                WHERE cu.ID_Usuario = ? AND cu.fecha_liberacion IS NULL";
+        
+        $params = [$idUsuario->value()];
+        $types = "s";
+        
         if ($idMaquina !== null) {
-            $sql .= " AND cu.ID_Maquina = :idMaquina";
-            $params[':idMaquina'] = $idMaquina->value();
+            $sql .= " AND cu.ID_Maquina = ?";
+            $params[] = $idMaquina->value();
+            $types .= "s";
         }
-
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
         $componentes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetch_assoc()) {
             $componentes[] = Componente::fromArray($row);
         }
+        $stmt->close();
+        
         return $componentes;
     }
 
@@ -194,18 +233,22 @@ class MySQLComponenteRepository implements ComponenteRepository
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT COUNT(*) as total FROM componente";
-        $params = [];
-
+        
         if ($tipo !== null) {
-            $sql .= " WHERE tipo = :tipo";
-            $params[':tipo'] = $tipo->value();
+            $sql .= " WHERE tipo = ?";
+            $stmt = $conn->prepare($sql);
+            $tipoValue = $tipo->value();
+            $stmt->bind_param('s', $tipoValue);
+        } else {
+            $stmt = $conn->prepare($sql);
         }
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return (int)$result['total'];
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        
+        return (int)$row['total'];
     }
 
     public function generarNumeroPlaca(): string
@@ -213,14 +256,19 @@ class MySQLComponenteRepository implements ComponenteRepository
         $conn = $this->db->getConnection();
         $anio = date('y');
         $prefijo = "PL{$anio}";
-
+        $like = $prefijo . '%';
+        
         $sql = "SELECT MAX(CAST(SUBSTRING(nombre, 5) AS UNSIGNED)) as max_seq
                 FROM componente
-                WHERE nombre LIKE :like AND tipo = 'Logistico'";
+                WHERE nombre LIKE ? AND tipo = 'Logistico'";
+        
         $stmt = $conn->prepare($sql);
-        $stmt->execute([':like' => $prefijo . '%']);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        $stmt->bind_param('s', $like);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        
         $secuencia = ($row['max_seq'] ?? 0) + 1;
         return $prefijo . str_pad($secuencia, 3, '0', STR_PAD_LEFT);
     }

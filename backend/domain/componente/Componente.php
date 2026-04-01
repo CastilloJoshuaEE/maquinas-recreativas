@@ -125,7 +125,7 @@ class Componente
     }
 
     // --- Getters ---
-    public function id(): Uuid { return $this->id; }
+ public function id(): Uuid { return $this->id; }
     public function tipo(): TipoComponente { return $this->tipo; }
     public function nombre(): string { return $this->nombre; }
     public function precio(): float { return $this->precio; }
@@ -133,7 +133,8 @@ class Componente
     public function estaAsignado(): bool { return $this->usuarioAsignado !== null && $this->fechaLiberacion === null; }
     public function usuarioAsignado(): ?Uuid { return $this->usuarioAsignado; }
     public function maquinaAsignada(): ?Uuid { return $this->maquinaAsignada; }
-
+    public function fechaAsignacion(): ?DateTimeImmutable { return $this->fechaAsignacion; }
+    public function fechaLiberacion(): ?DateTimeImmutable { return $this->fechaLiberacion; }
     // --- Comportamiento ---
 
     /**
@@ -155,12 +156,13 @@ class Componente
         $this->fechaLiberacion = null;
     }
 
+
     /**
      * Libera el componente (lo deja disponible nuevamente).
      *
      * @throws \RuntimeException Si el componente no está asignado.
      */
-    public function liberar(): void
+     public function liberar(): void
     {
         if ($this->estaDisponible()) {
             throw new \RuntimeException('El componente ya está disponible');

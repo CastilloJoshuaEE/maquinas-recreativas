@@ -1,22 +1,19 @@
 <?php
 /**
  * application/commands/componente/AsignarCarcasaCommand.php
- *
- * Comando para asignar una carcasa a un técnico.
- *
- * @package maquinas_recreativas\Application\Commands\Componente
  */
 
 namespace maquinas_recreativas\Application\Commands\Componente;
 
-/**
- * Class AsignarCarcasa
- */
-final class AsignarCarcasaCommand
+use maquinas_recreativas\Application\Commands\Command;
+
+final class AsignarCarcasaCommand implements Command
 {
     private string $idComponente;
     private string $idUsuario;
-    private function __construct(string $idComponente, string $idUsuario){
+    
+    public function __construct(string $idComponente, string $idUsuario)
+    {
         $this->idComponente = $idComponente;
         $this->idUsuario = $idUsuario;
     }

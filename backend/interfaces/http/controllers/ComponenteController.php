@@ -17,8 +17,10 @@ use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesDispon
 use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesEnUsoQuery;
 use maquinas_recreativas\Application\Queries\Componente\ObtenerComponentesEnUsoHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
+use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
+
 
 class ComponenteController
 {
@@ -61,7 +63,7 @@ class ComponenteController
             new OA\Response(response: 200, description: "Lista de componentes con total")
         ]
     )]
-    public function obtenerComponentes(Request $request): Response
+     public function obtenerComponentes(Request $request): Response
     {
         $tipo   = $request->query('tipo');
         $limit  = (int) ($request->query('limit') ?? 10);
@@ -70,8 +72,11 @@ class ComponenteController
         $query  = new ObtenerComponentesQuery($tipo, $limit, $offset);
         $result = $this->obtenerComponentesHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'componentes' => $result['componentes'], 'total' => $result['total']]);
+        $response = new Response();
+        $response->json(['success' => true, 'componentes' => $result['componentes'], 'total' => $result['total']]);
+        return $response;
     }
+
 
     #[OA\Get(
         path: "/v1/componentes/disponibles",
@@ -90,7 +95,9 @@ class ComponenteController
         $query       = new ObtenerComponentesDisponiblesQuery($tipo);
         $componentes = $this->obtenerComponentesDisponiblesHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'componentes' => $componentes]);
+        $response = new Response();
+        $response->json(['success' => true, 'componentes' => $componentes]);
+        return $response;
     }
 
     #[OA\Post(
@@ -120,6 +127,10 @@ class ComponenteController
             throw new DomainException('ID de componente requerido', 400);
         }
 
+        if (!ValidationHelper::isValidUUID($data['idComponente'])) {
+            throw new DomainException('ID de componente inválido', 400);
+        }
+
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
@@ -128,7 +139,9 @@ class ComponenteController
         $command = new UsarComponenteCommand($data['idComponente'], $userId, $data['idMaquina'] ?? null);
         $this->usarComponenteHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Componente asignado correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Componente asignado correctamente']);
+        return $response;
     }
 
     #[OA\Post(
@@ -157,6 +170,10 @@ class ComponenteController
             throw new DomainException('ID de componente requerido', 400);
         }
 
+        if (!ValidationHelper::isValidUUID($data['idComponente'])) {
+            throw new DomainException('ID de componente inválido', 400);
+        }
+
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
@@ -165,7 +182,9 @@ class ComponenteController
         $command = new LiberarComponenteCommand($data['idComponente'], $userId);
         $this->liberarComponenteHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Componente liberado correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Componente liberado correctamente']);
+        return $response;
     }
 
     #[OA\Post(
@@ -193,6 +212,10 @@ class ComponenteController
             throw new DomainException('ID de componente requerido', 400);
         }
 
+        if (!ValidationHelper::isValidUUID($data['idComponente'])) {
+            throw new DomainException('ID de componente inválido', 400);
+        }
+
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
@@ -201,7 +224,9 @@ class ComponenteController
         $command = new AsignarCarcasaCommand($data['idComponente'], $userId);
         $this->asignarCarcasaHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Carcasa asignada correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Carcasa asignada correctamente']);
+        return $response;
     }
 
     #[OA\Post(
@@ -222,7 +247,7 @@ class ComponenteController
             new OA\Response(response: 401, description: "Usuario no autenticado")
         ]
     )]
-    public function liberarComponentesCancelacion(Request $request): Response
+     public function liberarComponentesCancelacion(Request $request): Response
     {
         $data   = $request->json();
         $userId = $_SESSION['ID_Usuario'] ?? null;
@@ -233,8 +258,11 @@ class ComponenteController
         $command = new LiberarComponentesCancelacionCommand($data['idPlaca'] ?? null, $data['idCarcasa'] ?? null, $userId);
         $result  = $this->liberarComponentesCancelacionHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => $result['message']]);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => $result['message']]);
+        return $response;
     }
+
 
     #[OA\Get(
         path: "/v1/componentes/en-uso/{uuid}",
@@ -248,12 +276,22 @@ class ComponenteController
             new OA\Response(response: 200, description: "Componentes en uso")
         ]
     )]
-    public function obtenerComponentesEnUso(Request $request, string $idUsuario): Response
+     public function obtenerComponentesEnUso(Request $request, string $idUsuario): Response
     {
+        if (!ValidationHelper::isValidUUID($idUsuario)) {
+            throw new DomainException('ID de usuario inválido', 400);
+        }
+
         $idMaquina   = $request->query('idMaquina');
+        if ($idMaquina && !ValidationHelper::isValidUUID($idMaquina)) {
+            throw new DomainException('ID de máquina inválido', 400);
+        }
+
         $query       = new ObtenerComponentesEnUsoQuery($idUsuario, $idMaquina);
         $componentes = $this->obtenerComponentesEnUsoHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'componentes' => $componentes]);
+        $response = new Response();
+        $response->json(['success' => true, 'componentes' => $componentes]);
+        return $response;
     }
 }

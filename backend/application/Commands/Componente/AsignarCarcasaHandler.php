@@ -2,13 +2,15 @@
 /**
  * application/commands/componente/AsignarCarcasaHandler.php
  *
- * Manejador del comando AsignarCarcasa.
+ * Manejador del comando AsignarCarcasaCommand.
  *
  * @package maquinas_recreativas\Application\Commands\Componente
  */
 
 namespace maquinas_recreativas\Application\Commands\Componente;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Componente\TipoComponente;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -17,7 +19,7 @@ use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 /**
  * Class AsignarCarcasaHandler
  */
-final class AsignarCarcasaHandler
+final class AsignarCarcasaHandler implements CommandHandler
 {
     private ComponenteRepository $componenteRepository;
 
@@ -26,8 +28,12 @@ final class AsignarCarcasaHandler
         $this->componenteRepository = $componenteRepository;
     }
 
-    public function handle(AsignarCarcasa $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof AsignarCarcasaCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idComponente = new Uuid($command->idComponente());
         $idUsuario = new Uuid($command->idUsuario());
 
