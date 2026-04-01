@@ -6,10 +6,19 @@
 namespace maquinas_recreativas\Infrastructure\Database;
 
 class Database {
-    private $connection;
+    protected $connection;
+    protected $host;
+    protected $username;
+    protected $password;
+    protected $dbname;
 
     public function __construct() {
-        $this->connection = new \mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $this->host = DB_HOST;
+        $this->username = DB_USER;
+        $this->password = DB_PASS;
+        $this->dbname = DB_NAME;
+        
+        $this->connection = new \mysqli($this->host, $this->username, $this->password, $this->dbname);
         
         if ($this->connection->connect_error) {
             die("Connection failed: " . $this->connection->connect_error);
@@ -20,6 +29,22 @@ class Database {
 
     public function getConnection() {
         return $this->connection;
+    }
+
+    public function getHost(): string {
+        return $this->host;
+    }
+
+    public function getUsername(): string {
+        return $this->username;
+    }
+
+    public function getPassword(): string {
+        return $this->password;
+    }
+
+    public function getDbName(): string {
+        return $this->dbname;
     }
 
     public function closeConnection() {

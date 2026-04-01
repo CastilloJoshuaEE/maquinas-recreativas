@@ -1,46 +1,50 @@
 <?php
-// tests/bootstrap.php
-// Configurar el ambiente para las pruebas:
+/**
+ * Bootstrap para pruebas unitarias
+ * 
+ * @package maquinas_recreativas\Tests
+ * @version 1.0
+ */
 
-error_reporting(E_ALL & ~E_DEPRECATED);
+// Configurar entorno de pruebas
+if (!defined('TEST_ENVIRONMENT')) {
+    define('TEST_ENVIRONMENT', true);
+}
+if (!defined('APP_ENV')) {
+    define('APP_ENV', 'testing');
+}
+if (!defined('APP_DEBUG')) {
+    define('APP_DEBUG', true);
+}
+
+// Cargar autoloader de Composer
+$autoloadPath = __DIR__ . '/../vendor/autoload.php';
+if (!file_exists($autoloadPath)) {
+    die("Error: Ejecuta 'composer install' primero.\n");
+}
+require_once $autoloadPath;
+
+// Cargar constantes de configuración
+require_once __DIR__ . '/../config/constants.php';
+
+// Configurar zona horaria
+date_default_timezone_set('America/Guayaquil');
+
+// Configurar manejo de errores para pruebas
+error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
-// Cargar clases necesarias
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../helper/CifradoHelper.php';
-require_once __DIR__ . '/../helper/RateLimiter.php';
+// Variables de entorno para pruebas
+putenv('APP_ENV=testing');
+putenv('DB_NAME_TEST=test_bd_recrea_sys');
 
-// Cargar modelos
-require_once __DIR__ . '/../models/UsuarioModel.php';
-require_once __DIR__ . '/../models/AdministradorModel.php'; 
-require_once __DIR__ . '/../models/MaquinaModel.php';
-require_once __DIR__ . '/../models/ComercioModel.php';
-require_once __DIR__ . '/../models/ComentarioModel.php';
-require_once __DIR__ . '/../models/NotificacionModel.php';
-require_once __DIR__ . '/../models/ReporteModel.php';
-require_once __DIR__ . '/../models/ComponenteModel.php';
-require_once __DIR__ . '/../models/InformeModel.php';
-require_once __DIR__ . '/../models/DistribucionModel.php';
-
-// Cargar servicios
-require_once __DIR__ . '/../services/UsuarioService.php';
-require_once __DIR__ . '/../services/AdministradorService.php';
-require_once __DIR__ . '/../services/MaquinaService.php';
-require_once __DIR__ . '/../services/ComercioService.php';
-require_once __DIR__ . '/../services/ComentarioService.php';
-require_once __DIR__ . '/../services/NotificacionService.php';
-require_once __DIR__ . '/../services/ReporteService.php';
-require_once __DIR__ . '/../services/ComponenteService.php';
-require_once __DIR__ . '/../services/InformeService.php';
-
-// Cargar excepciones
-require_once __DIR__ . '/exceptions/ValidacionDatosException.php';
-
-// Preparar la base de datos de prueba
+// Cargar TestDatabase (ya extiende Database)
 require_once __DIR__ . '/TestDatabase.php';
 
-// Inicializar la base de datos de prueba
-$testDb = new TestDatabase();
-$conn = $testDb->getConnection();
+// Helper para limpiar base de datos entre pruebas
 
-?>
+function cleanTestDatabase(): void
+{
+    $testDb = \maquinas_recreativas\Tests\TestDatabase::getInstance();
+    $testDb->cleanDatabase();
+}
