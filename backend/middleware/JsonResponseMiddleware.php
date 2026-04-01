@@ -16,26 +16,17 @@ use maquinas_recreativas\Core\Response;
 
 class JsonResponseMiddleware
 {
-    /**
-     * Maneja la petición
-     * 
-     * @param Request $request
-     * @param callable $next
-     * @return Response|null
-     */
     public function handle(Request $request, callable $next): ?Response
     {
         $response = $next($request);
         
-        // Si no hay respuesta, crear una por defecto
         if (!$response) {
             $response = new Response();
         }
         
-        // Asegurar Content-Type JSON si no está definido
-        // (evitar sobrescribir si ya se estableció otro tipo)
+        // Usar el nuevo método getHeaders()
         $hasContentType = false;
-        foreach ($response->headers as $name => $value) {
+        foreach ($response->getHeaders() as $name => $value) {
             if (strtolower($name) === 'content-type') {
                 $hasContentType = true;
                 break;

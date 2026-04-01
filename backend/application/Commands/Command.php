@@ -1,6 +1,6 @@
 <?php
 /**
- * Application/Commands/Commands.php
+ * Application/Commands/Command.php
  *
  * Interfaz base para todos los comandos del sistema.
  *

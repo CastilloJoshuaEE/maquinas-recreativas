@@ -14,9 +14,8 @@
 // =============================================
 // CARGAR CONFIGURACIÓN BASE
 // =============================================
-use maquinas_recreativas\Config\Database;
-use maquinas_recreativas\Infrastructure\Database\Database as InfrastructureDatabase;
 require_once __DIR__ . '/constants.php';
+
 // =============================================
 // APPLICATION - BASE INTERFACES
 // =============================================
@@ -24,6 +23,7 @@ require_once __DIR__ . '/../Application/Commands/Command.php';
 require_once __DIR__ . '/../Application/Commands/CommandHandler.php';
 require_once __DIR__ . '/../Application/Queries/Query.php';
 require_once __DIR__ . '/../Application/Queries/QueryHandler.php';
+
 // =============================================
 // HELPERS Y UTILIDADES
 // =============================================
@@ -32,6 +32,8 @@ require_once __DIR__ . '/../Infrastructure/Security/RateLimiter.php';
 require_once __DIR__ . '/../Infrastructure/Security/UsuarioHelper.php';
 require_once __DIR__ . '/../Infrastructure/Security/ValidationHelper.php';
 require_once __DIR__ . '/../Infrastructure/Security/HistorialHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/PasswordHasher.php';
+require_once __DIR__ . '/../Infrastructure/Security/BcryptPasswordHasher.php';
 
 // =============================================
 // Domain - VALUE OBJECTS
@@ -86,6 +88,8 @@ require_once __DIR__ . '/../Domain/Comentario/Comentario.php';
 // Domain - REPOSITORY INTERFACES
 // =============================================
 require_once __DIR__ . '/../Domain/Usuario/UsuarioRepository.php';
+require_once __DIR__ . '/../Domain/Usuario/AdministradorRepository.php';
+require_once __DIR__ . '/../Domain/Usuario/TecnicoRepository.php';
 require_once __DIR__ . '/../Domain/Comercio/ComercioRepository.php';
 require_once __DIR__ . '/../Domain/Maquina/MaquinaRepository.php';
 require_once __DIR__ . '/../Domain/Componente/ComponenteRepository.php';
@@ -98,11 +102,14 @@ require_once __DIR__ . '/../Domain/Reporte/ReporteRepository.php';
 require_once __DIR__ . '/../Domain/Comentario/ComentarioRepository.php';
 
 // =============================================
-// INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
+// INFRASTRUCTURE - DATABASE
 // =============================================
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
 require_once __DIR__ . '/../Infrastructure/Database/Inserter.php';
 
+// =============================================
+// INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
+// =============================================
 require_once __DIR__ . '/../Infrastructure/Repositories/MySQLUsuarioRepository.php';
 require_once __DIR__ . '/../Infrastructure/Repositories/MySQLAdministradorRepository.php';
 require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComercioRepository.php';
@@ -124,11 +131,12 @@ require_once __DIR__ . '/../Infrastructure/Security/RateLimiter.php';
 require_once __DIR__ . '/../Infrastructure/Security/UsuarioHelper.php';
 require_once __DIR__ . '/../Infrastructure/Security/ValidationHelper.php';
 require_once __DIR__ . '/../Infrastructure/Security/HistorialHelper.php';
+require_once __DIR__ . '/../Infrastructure/Security/PasswordHasher.php';
+require_once __DIR__ . '/../Infrastructure/Security/BcryptPasswordHasher.php';
 
 // =============================================
-// APPLICATION - COMMANDS
+// APPLICATION - COMMANDS (Usuario)
 // =============================================
-// Usuario Commands
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarUsuarioAdminCommand.php';
@@ -152,11 +160,15 @@ require_once __DIR__ . '/../Application/Commands/Usuario/LogoutHandler.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadCommand.php';
 require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadHandler.php';
 
-// Comercio Commands
+// =============================================
+// APPLICATION - COMMANDS (Comercio)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioCommand.php';
 require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioHandler.php';
 
-// Componente Commands
+// =============================================
+// APPLICATION - COMMANDS (Componente)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/AsignarCarcasaHandler.php';
 require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponenteCommand.php';
@@ -166,7 +178,9 @@ require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCa
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteHandler.php';
 
-// Maquina Commands
+// =============================================
+// APPLICATION - COMMANDS (Maquina)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoCommand.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/DarMantenimientoHandler.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/FinalizarMantenimientoCommand.php';
@@ -186,7 +200,9 @@ require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMaquinaHandler
 require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMontajeCommand.php';
 require_once __DIR__ . '/../Application/Commands/Maquina/RegistrarMontajeHandler.php';
 
-// Notificacion Commands
+// =============================================
+// APPLICATION - COMMANDS (Notificacion)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionMaquinaCommand.php';
 require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionMaquinaHandler.php';
 require_once __DIR__ . '/../Application/Commands/Notificacion/CrearNotificacionReporteCommand.php';
@@ -196,7 +212,9 @@ require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarComoLeidaHan
 require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarTodasComoLeidasCommand.php';
 require_once __DIR__ . '/../Application/Commands/Notificacion/MarcarTodasComoLeidasHandler.php';
 
-// Recaudacion Commands
+// =============================================
+// APPLICATION - COMMANDS (Recaudacion)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Recaudacion/ActualizarRecaudacionCommand.php';
 require_once __DIR__ . '/../Application/Commands/Recaudacion/ActualizarRecaudacionHandler.php';
 require_once __DIR__ . '/../Application/Commands/Recaudacion/EliminarRecaudacionCommand.php';
@@ -206,26 +224,29 @@ require_once __DIR__ . '/../Application/Commands/Recaudacion/GuardarInformeHandl
 require_once __DIR__ . '/../Application/Commands/Recaudacion/RegistrarRecaudacionCommand.php';
 require_once __DIR__ . '/../Application/Commands/Recaudacion/RegistrarRecaudacionHandler.php';
 
-// Reporte Commands
+// =============================================
+// APPLICATION - COMMANDS (Reporte)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Reporte/ActualizarEstadoReporteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Reporte/ActualizarEstadoReporteHandler.php';
 require_once __DIR__ . '/../Application/Commands/Reporte/CrearReporteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Reporte/CrearReporteHandler.php';
 
-// Comentario Commands
+// =============================================
+// APPLICATION - COMMANDS (Comentario)
+// =============================================
 require_once __DIR__ . '/../Application/Commands/Comentario/CrearComentarioCommand.php';
 require_once __DIR__ . '/../Application/Commands/Comentario/CrearComentarioHandler.php';
 
 // =============================================
-// APPLICATION - QUERIES
+// APPLICATION - QUERIES (Usuario)
 // =============================================
-// Usuario Queries
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuarioPorIdHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTodosUsuariosQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTodosUsuariosHandler.php';
-require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadQuery.php';
+require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerTecnicosPorEspecialidadHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerUsuariosPorTipoHandler.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/BuscarPorEmailQuery.php';
@@ -233,11 +254,15 @@ require_once __DIR__ . '/../Application/Queries/Usuario/BuscarPorEmailHandler.ph
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActividadesQuery.php';
 require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActividadesHandler.php';
 
-// Comercio Queries
+// =============================================
+// APPLICATION - QUERIES (Comercio)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosQuery.php';
 require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosHandler.php';
 
-// Componente Queries
+// =============================================
+// APPLICATION - QUERIES (Componente)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesQuery.php';
 require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesHandler.php';
 require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesDisponiblesQuery.php';
@@ -245,11 +270,15 @@ require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesDis
 require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesEnUsoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Componente/ObtenerComponentesEnUsoHandler.php';
 
-// Distribucion Queries
+// =============================================
+// APPLICATION - QUERIES (Distribucion)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Distribucion/ObtenerInformesDistribucionQuery.php';
 require_once __DIR__ . '/../Application/Queries/Distribucion/ObtenerInformesDistribucionHandler.php';
 
-// Historial Queries
+// =============================================
+// APPLICATION - QUERIES (Historial)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialGeneralQuery.php';
 require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialGeneralHandler.php';
 require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorMaquinaQuery.php';
@@ -259,7 +288,9 @@ require_once __DIR__ . '/../Application/Queries/Historial/ObtenerHistorialPorUsu
 require_once __DIR__ . '/../Application/Queries/Historial/ObtenerResumenRecienteQuery.php';
 require_once __DIR__ . '/../Application/Queries/Historial/ObtenerResumenRecienteHandler.php';
 
-// Maquina Queries
+// =============================================
+// APPLICATION - QUERIES (Maquina)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerComponentesMaquinaQuery.php';
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerComponentesMaquinaHandler.php';
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasParaDistribucionQuery.php';
@@ -275,7 +306,9 @@ require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnic
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoHandler.php';
 
-// Notificacion Queries
+// =============================================
+// APPLICATION - QUERIES (Notificacion)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerCantidadNoLeidasQuery.php';
 require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerCantidadNoLeidasHandler.php';
 require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNoLeidasQuery.php';
@@ -285,7 +318,9 @@ require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacion
 require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesReporteQuery.php';
 require_once __DIR__ . '/../Application/Queries/Notificacion/ObtenerNotificacionesReporteHandler.php';
 
-// Recaudacion Queries
+// =============================================
+// APPLICATION - QUERIES (Recaudacion)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerComercioRecaudacionQuery.php';
 require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerComercioRecaudacionHandler.php';
 require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerInformePorRecaudacionQuery.php';
@@ -301,7 +336,9 @@ require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerRecaudacionPo
 require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerResumenRecaudacionesQuery.php';
 require_once __DIR__ . '/../Application/Queries/Recaudacion/ObtenerResumenRecaudacionesHandler.php';
 
-// Reporte Queries
+// =============================================
+// APPLICATION - QUERIES (Reporte)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatCompletoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatCompletoHandler.php';
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerChatQuery.php';
@@ -313,13 +350,12 @@ require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerReportesPorUsuari
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatQuery.php';
 require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatHandler.php';
 
-// Comentario Queries
+// =============================================
+// APPLICATION - QUERIES (Comentario)
+// =============================================
 require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteQuery.php';
 require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteHandler.php';
 
-// =============================================
-// INTERFACES - CONTROLLERS
-// =============================================
 // =============================================
 // USE STATEMENTS PARA CLASES COMUNES
 // =============================================
@@ -334,6 +370,8 @@ use maquinas_recreativas\Infrastructure\Repositories\MySQLRecaudacionRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
+use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
+use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 
 use maquinas_recreativas\Application\Commands\Usuario\LoginHandler;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
@@ -436,14 +474,7 @@ use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoEnsambladorControlle
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoComprobadorController;
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoMantenimientoController;
 use maquinas_recreativas\Interfaces\Http\Controllers\LogisticoController;
-/**
- * Clase contenedor de dependencias (Service Container)
- * 
- * Implementa un contenedor simple para gestionar las dependencias
- * y facilitar la inyección en tests y producción.
- * 
- * @package Config
- */
+
 /**
  * Clase contenedor de dependencias (Service Container)
  */
@@ -474,57 +505,72 @@ class Dependencies {
 }
 
 // =============================================
+// CREAR INSTANCIA DE DATABASE
+// =============================================
+$database = new \maquinas_recreativas\Infrastructure\Database\Database();
+
+// =============================================
 // REGISTRO DE FÁBRICAS POR DEFECTO
 // =============================================
 
 // Database
-Dependencies::register(MySQLUsuarioRepository::class, function() {
-    return new MySQLUsuarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(\maquinas_recreativas\Infrastructure\Database\Database::class, function() use ($database) {
+    return $database;
+});
+
+// Password Hasher
+Dependencies::register(BcryptPasswordHasher::class, function() {
+    return new BcryptPasswordHasher();
+});
+
+// HistorialHelper
+Dependencies::register(HistorialHelper::class, function() {
+    return HistorialHelper::getInstance();
 });
 
 // Repositories
-Dependencies::register(MySQLUsuarioRepository::class, function() {
-    return new MySQLUsuarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLUsuarioRepository::class, function() use ($database) {
+    return new MySQLUsuarioRepository($database);
 });
 
-Dependencies::register(MySQLComercioRepository::class, function() {
-    return new MySQLComercioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLComercioRepository::class, function() use ($database) {
+    return new MySQLComercioRepository($database);
 });
 
-Dependencies::register(MySQLMaquinaRepository::class, function() {
-    return new MySQLMaquinaRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLMaquinaRepository::class, function() use ($database) {
+    return new MySQLMaquinaRepository($database);
 });
 
-Dependencies::register(MySQLComponenteRepository::class, function() {
-    return new MySQLComponenteRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLComponenteRepository::class, function() use ($database) {
+    return new MySQLComponenteRepository($database);
 });
 
-Dependencies::register(MySQLHistorialRepository::class, function() {
-    return new MySQLHistorialRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLHistorialRepository::class, function() use ($database) {
+    return new MySQLHistorialRepository($database);
 });
 
-Dependencies::register(MySQLMontajeRepository::class, function() {
-    return new MySQLMontajeRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLMontajeRepository::class, function() use ($database) {
+    return new MySQLMontajeRepository($database);
 });
 
-Dependencies::register(MySQLDistribucionRepository::class, function() {
-    return new MySQLDistribucionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLDistribucionRepository::class, function() use ($database) {
+    return new MySQLDistribucionRepository($database);
 });
 
-Dependencies::register(MySQLRecaudacionRepository::class, function() {
-    return new MySQLRecaudacionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLRecaudacionRepository::class, function() use ($database) {
+    return new MySQLRecaudacionRepository($database);
 });
 
-Dependencies::register(MySQLNotificacionRepository::class, function() {
-    return new MySQLNotificacionRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLNotificacionRepository::class, function() use ($database) {
+    return new MySQLNotificacionRepository($database);
 });
 
-Dependencies::register(MySQLReporteRepository::class, function() {
-    return new MySQLReporteRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLReporteRepository::class, function() use ($database) {
+    return new MySQLReporteRepository($database);
 });
 
-Dependencies::register(MySQLComentarioRepository::class, function() {
-    return new MySQLComentarioRepository(Dependencies::get(\maquinas_recreativas\Infrastructure\Database\Database::class));
+Dependencies::register(MySQLComentarioRepository::class, function() use ($database) {
+    return new MySQLComentarioRepository($database);
 });
 
 // =============================================
@@ -535,9 +581,8 @@ Dependencies::register(MySQLComentarioRepository::class, function() {
 Dependencies::register(LoginHandler::class, function() {
     return new LoginHandler(Dependencies::get(MySQLUsuarioRepository::class));
 });
-
 Dependencies::register(RegistrarUsuarioHandler::class, function() {
-    return new RegistrarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new RegistrarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(RegistrarUsuarioAdminHandler::class, function() {
@@ -545,7 +590,7 @@ Dependencies::register(RegistrarUsuarioAdminHandler::class, function() {
 });
 
 Dependencies::register(ActualizarUsuarioHandler::class, function() {
-    return new ActualizarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ActualizarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(CambiarEstadoUsuarioHandler::class, function() {
@@ -557,7 +602,7 @@ Dependencies::register(EliminarUsuarioHandler::class, function() {
 });
 
 Dependencies::register(ActualizarPerfilHandler::class, function() {
-    return new ActualizarPerfilHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ActualizarPerfilHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(RecuperarContrasenaHandler::class, function() {
@@ -600,9 +645,10 @@ Dependencies::register(BuscarPorEmailHandler::class, function() {
 Dependencies::register(ObtenerHistorialActividadesHandler::class, function() {
     return new ObtenerHistorialActividadesHandler(Dependencies::get(MySQLUsuarioRepository::class));
 });
+
 // Handlers de Comercio
 Dependencies::register(RegistrarComercioHandler::class, function() {
-    return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+    return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class), Dependencies::get(HistorialHelper::class));
 });
 
 Dependencies::register(ObtenerComerciosHandler::class, function() {
@@ -938,6 +984,7 @@ Dependencies::register(CrearComentarioHandler::class, function() {
 Dependencies::register(ObtenerComentariosPorReporteHandler::class, function() {
     return new ObtenerComentariosPorReporteHandler(
         Dependencies::get(MySQLComentarioRepository::class),
+        Dependencies::get(MySQLReporteRepository::class),
         Dependencies::get(MySQLUsuarioRepository::class)
     );
 });
@@ -986,7 +1033,8 @@ Dependencies::register(UsuarioController::class, function() {
         Dependencies::get(ObtenerUsuariosPorTipoHandler::class),
         Dependencies::get(BuscarPorEmailHandler::class),
         Dependencies::get(ObtenerHistorialActividadesHandler::class),
-        Dependencies::get(RegistrarActividadHandler::class)
+        Dependencies::get(RegistrarActividadHandler::class),
+        Dependencies::get(ActualizarUsuarioAsignadoHandler::class)
     );
 });
 
@@ -1049,7 +1097,6 @@ Dependencies::register(NotificacionController::class, function() {
         Dependencies::get(ObtenerCantidadNoLeidasHandler::class),
         Dependencies::get(ObtenerNoLeidasHandler::class),
         Dependencies::get(CrearNotificacionMaquinaHandler::class),
-        Dependencies::get(CrearNotificacionReporteHandler::class),
         Dependencies::get(MarcarComoLeidaHandler::class),
         Dependencies::get(MarcarTodasComoLeidasHandler::class)
     );

@@ -11,7 +11,7 @@
 namespace maquinas_recreativas\Core;
 class Response{
     private array $headers = [];
-    private mixed $content = null;
+    public mixed $content = null;
     private int $statusCode=200;
     /**
      * Establece un header

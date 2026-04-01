@@ -10,6 +10,7 @@
  */
 namespace maquinas_recreativas\Core;
 class Request{
+    public ?array $user = null;
     private array $server;
     private array $get;
     private array $post;
@@ -25,6 +26,16 @@ class Request{
         $this->files = $_FILES;
         $this->headers = $this->extractHeaders();
     }
+        /**
+     * Obtiene los headers actuales.
+     *
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+    
    /**
      * Extrae headers del servidor
      * 

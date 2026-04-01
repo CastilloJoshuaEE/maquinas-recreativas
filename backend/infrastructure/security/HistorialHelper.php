@@ -171,22 +171,36 @@ class HistorialHelper
      * Obtener tipo de usuario por ID
      */
     private function getTipoUsuario(?string $idUsuario): string
-    {
-        if (!$idUsuario) {
+{
+    if (!$idUsuario) {
+        return 'Desconocido';
+    }
+
+    try {
+        $conn = $this->db->getConnection(); // Asumiendo que es una conexión mysqli
+        $sql = "SELECT tipo FROM usuario WHERE ID_Usuario = ?";
+        $stmt = $conn->prepare($sql);
+        
+        if ($stmt === false) {
+            error_log("Error preparando consulta para getTipoUsuario: " . $conn->error);
             return 'Desconocido';
         }
         
-        try {
-            $conn = $this->db->getConnection();
-            $sql = "SELECT tipo FROM usuario WHERE ID_Usuario = :id";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([':id' => $idUsuario]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $result ? $result['tipo'] : 'Desconocido';
-        } catch (\Exception $e) {
-            error_log("Error obteniendo tipo usuario: " . $e->getMessage());
+        $stmt->bind_param('s', $idUsuario);
+        $stmt->execute();
+        $result = $stmt->get_result(); // Obtener el resultado como mysqli_result
+        
+        if ($result && $row = $result->fetch_assoc()) { // Usar fetch_assoc para mysqli
+            return $row['tipo'];
+        } else {
+            error_log("No se encontró tipo para usuario: " . $idUsuario);
             return 'Desconocido';
         }
+        
+        $stmt->close();
+    } catch (\Exception $e) {
+        error_log("Error obteniendo tipo usuario: " . $e->getMessage());
+        return 'Desconocido';
     }
+}
 }
