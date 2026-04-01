@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Reporte;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class CrearReporte
  */
-final class CrearReporteCommand
+final class CrearReporteCommand implements Command
 {
     private string $idUsuarioEmisor;
     private ?string $idUsuarioDestinatario;

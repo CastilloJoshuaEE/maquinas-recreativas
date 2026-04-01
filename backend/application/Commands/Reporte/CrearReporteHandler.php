@@ -9,6 +9,8 @@
 
 namespace maquinas_recreativas\Application\Commands\Reporte;
 
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Reporte\Reporte;
 use maquinas_recreativas\Domain\Reporte\ReporteRepository;
 use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
@@ -17,10 +19,7 @@ use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class CrearReporteHandler
- */
-final class CrearReporteHandler
+final class CrearReporteHandler implements CommandHandler
 {
     private ReporteRepository $reporteRepository;
     private NotificacionRepository $notificacionRepository;
@@ -36,8 +35,12 @@ final class CrearReporteHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    public function handle(CrearReporte $command): string
+    public function handle(Command $command): string
     {
+        if (!$command instanceof CrearReporteCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idUsuarioEmisor = new Uuid($command->idUsuarioEmisor());
         $emisor = $this->usuarioRepository->findById($idUsuarioEmisor);
 
@@ -62,7 +65,6 @@ final class CrearReporteHandler
 
         $this->reporteRepository->save($reporte);
 
-        // Crear notificación si hay destinatario
         if ($idUsuarioDestinatario) {
             $mensaje = "Tienes un nuevo reporte: " . substr($command->descripcion(), 0, 50) . "...";
             $notificacion = NotificacionReporte::crear($reporte->id(), $idUsuarioDestinatario, $mensaje);

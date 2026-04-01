@@ -6,10 +6,10 @@
  *
  * @package maquinas_recreativas\Application\Commands\Reporte
  */
-
 namespace maquinas_recreativas\Application\Commands\Reporte;
 
-use maquinas_recreativas\Domain\Reporte\Reporte;
+use maquinas_recreativas\Application\Commands\Command;
+use maquinas_recreativas\Application\Commands\CommandHandler;
 use maquinas_recreativas\Domain\Reporte\EstadoReporte;
 use maquinas_recreativas\Domain\Reporte\ReporteRepository;
 use maquinas_recreativas\Domain\Notificacion\NotificacionReporte;
@@ -17,10 +17,7 @@ use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class ActualizarEstadoReporteHandler
- */
-final class ActualizarEstadoReporteHandler
+final class ActualizarEstadoReporteHandler implements CommandHandler
 {
     private ReporteRepository $reporteRepository;
     private NotificacionRepository $notificacionRepository;
@@ -33,8 +30,12 @@ final class ActualizarEstadoReporteHandler
         $this->notificacionRepository = $notificacionRepository;
     }
 
-    public function handle(ActualizarEstadoReporte $command): void
+    public function handle(Command $command): void
     {
+        if (!$command instanceof ActualizarEstadoReporteCommand) {
+            throw new DomainException('Comando inválido');
+        }
+
         $idReporte = new Uuid($command->idReporte());
         $reporte = $this->reporteRepository->findById($idReporte);
 
@@ -47,7 +48,6 @@ final class ActualizarEstadoReporteHandler
 
         $this->reporteRepository->save($reporte);
 
-        // Notificar al emisor y destinatario
         $mensaje = "El estado del reporte ha cambiado a: {$command->estado()}";
 
         $notificacionEmisor = NotificacionReporte::crear($idReporte, $reporte->idUsuarioEmisor(), $mensaje);

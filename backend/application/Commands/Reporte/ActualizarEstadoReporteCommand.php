@@ -8,11 +8,12 @@
  */
 
 namespace maquinas_recreativas\Application\Commands\Reporte;
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class ActualizarEstadoReporte
  */
-final class ActualizarEstadoReporteCommand
+final class ActualizarEstadoReporteCommand implements Command
 {
     private string $idReporte;
     private string $estado;

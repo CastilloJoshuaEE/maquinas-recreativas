@@ -83,10 +83,12 @@ class ReporteController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $command   = new CrearReporteCommand($userId, $data['idUsuarioDestinatario'] ?? null, $data['descripcion']);
+        $command = new CrearReporteCommand($userId, $data['idUsuarioDestinatario'] ?? null, $data['descripcion']);
         $idReporte = $this->crearReporteHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Reporte creado exitosamente', 'id' => $idReporte], 201);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Reporte creado exitosamente', 'id' => $idReporte], 201);
+        return $response;
     }
 
     #[OA\Get(
@@ -109,10 +111,12 @@ class ReporteController
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $query    = new ObtenerReportesPorUsuarioQuery($idUsuario);
+        $query = new ObtenerReportesPorUsuarioQuery($idUsuario);
         $reportes = $this->obtenerReportesPorUsuarioHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'reportes' => $reportes]);
+        $response = new Response();
+        $response->json(['success' => true, 'reportes' => $reportes]);
+        return $response;
     }
 
     #[OA\Get(
@@ -136,10 +140,12 @@ class ReporteController
             throw new DomainException('IDs de usuario inválidos', 400);
         }
 
-        $query    = new ObtenerChatQuery($emisorId, $destinatarioId);
+        $query = new ObtenerChatQuery($emisorId, $destinatarioId);
         $reportes = $this->obtenerChatHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'reportes' => $reportes]);
+        $response = new Response();
+        $response->json(['success' => true, 'reportes' => $reportes]);
+        return $response;
     }
 
     #[OA\Put(
@@ -184,7 +190,9 @@ class ReporteController
         $command = new ActualizarEstadoReporteCommand($idReporte, $data['estado']);
         $this->actualizarEstadoReporteHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Estado actualizado correctamente']);
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Estado actualizado correctamente']);
+        return $response;
     }
 
     #[OA\Get(
@@ -204,10 +212,12 @@ class ReporteController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $query    = new ObtenerUsuariosChatQuery($userId);
+        $query = new ObtenerUsuariosChatQuery($userId);
         $usuarios = $this->obtenerUsuariosChatHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'usuarios' => $usuarios]);
+        $response = new Response();
+        $response->json(['success' => true, 'usuarios' => $usuarios]);
+        return $response;
     }
 
     #[OA\Get(
@@ -228,9 +238,9 @@ class ReporteController
     )]
     public function getCompleteChat(Request $request): Response
     {
-        $emisorId       = $request->query('emisorId');
+        $emisorId = $request->query('emisorId');
         $destinatarioId = $request->query('destinatarioId');
-        $reporteId      = $request->query('reporteId');
+        $reporteId = $request->query('reporteId');
 
         if (!$emisorId || !$destinatarioId) {
             throw new DomainException('IDs de emisor y destinatario requeridos', 400);
@@ -240,9 +250,11 @@ class ReporteController
             throw new DomainException('IDs de usuario inválidos', 400);
         }
 
-        $query  = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);
+        $query = new ObtenerChatCompletoQuery($emisorId, $destinatarioId, $reporteId);
         $result = $this->obtenerChatCompletoHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'reportes' => $result['reportes'], 'comentarios' => $result['comentarios']]);
+        $response = new Response();
+        $response->json(['success' => true, 'reportes' => $result['reportes'], 'comentarios' => $result['comentarios']]);
+        return $response;
     }
 }
