@@ -61,11 +61,13 @@ class ComentarioController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $command     = new CrearComentarioCommand($data['idReporte'], $userId, $data['comentario']);
+        $command = new CrearComentarioCommand($data['idReporte'], $userId, $data['comentario']);
         $idComentario = $this->crearComentarioHandler->handle($command);
 
+        // CORREGIDO: json() retorna void, no se puede usar return
         $response = new Response();
-        return $response->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
+        $response->json(['success' => true, 'message' => 'Comentario creado exitosamente', 'id' => $idComentario], 201);
+        return $response;
     }
 
     #[OA\Get(
@@ -91,10 +93,12 @@ class ComentarioController
             throw new DomainException('Usuario no autenticado', 401);
         }
 
-        $query       = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
+        $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
         $comentarios = $this->obtenerComentariosHandler->handle($query);
 
+        // CORREGIDO: json() retorna void, no se puede usar return
         $response = new Response();
-        return $response->json(['success' => true, 'comentarios' => $comentarios]);
+        $response->json(['success' => true, 'comentarios' => $comentarios]);
+        return $response;
     }
 }

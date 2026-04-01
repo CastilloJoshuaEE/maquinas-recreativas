@@ -9,10 +9,12 @@
 
 namespace maquinas_recreativas\Application\Commands\Comentario;
 
+use maquinas_recreativas\Application\Commands\Command;
+
 /**
- * Class CrearComentario
+ * Class CrearComentarioCommand
  */
-final class CrearComentarioCommand
+final class CrearComentarioCommand implements Command
 {
     private string $idReporte;
     private string $idUsuarioEmisor;
