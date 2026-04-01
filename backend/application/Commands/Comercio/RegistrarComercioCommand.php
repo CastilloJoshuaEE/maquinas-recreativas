@@ -6,19 +6,22 @@
  * Contiene los datos necesarios para ejecutar el caso de uso.
  */
 
-namespace maquinas_recreativas\Commands\Comercio;
+namespace maquinas_recreativas\Application\Commands\Comercio;
+
+use maquinas_recreativas\Application\Commands\Command;
 
 /**
  * Class RegistrarComercioCommand
  * 
  * Objeto inmutable que transporta los datos para registrar un comercio.
  */
-class RegistrarComercioCommand {
+class RegistrarComercioCommand implements Command
+{
     private string $nombre;
     private string $tipo;
     private string $direccion;
     private string $telefono;
-    private string $usuarioResponsableId; // Quién está realizando el registro (para historial)
+    private string $usuarioResponsableId;
 
     /**
      * @param string $nombre
@@ -41,37 +44,22 @@ class RegistrarComercioCommand {
         $this->usuarioResponsableId = $usuarioResponsableId;
     }
 
-    /**
-     * @return string
-     */
     public function getNombre(): string {
         return $this->nombre;
     }
 
-    /**
-     * @return string
-     */
     public function getTipo(): string {
         return $this->tipo;
     }
 
-    /**
-     * @return string
-     */
     public function getDireccion(): string {
         return $this->direccion;
     }
 
-    /**
-     * @return string
-     */
     public function getTelefono(): string {
         return $this->telefono;
     }
 
-    /**
-     * @return string
-     */
     public function getUsuarioResponsableId(): string {
         return $this->usuarioResponsableId;
     }

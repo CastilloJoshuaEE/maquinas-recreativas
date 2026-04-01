@@ -47,7 +47,7 @@ class ComercioController
     )]
     public function register(Request $request): Response
     {
-        $data     = $request->json();
+        $data = $request->json();
         $required = ['nombre', 'tipo', 'direccion', 'telefono'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -64,7 +64,7 @@ class ComercioController
             throw new DomainException('Formato de teléfono inválido', 400);
         }
 
-        $data    = ValidationHelper::sanitizeInput($data);
+        $data = ValidationHelper::sanitizeInput($data);
         $command = new RegistrarComercioCommand(
             $data['nombre'], $data['tipo'], $data['direccion'],
             $data['telefono'], $_SESSION['ID_Usuario'] ?? 'system'
@@ -72,7 +72,10 @@ class ComercioController
 
         $comercio = $this->registrarComercioHandler->handle($command);
 
-        return (new Response())->json(['success' => true, 'message' => 'Comercio registrado correctamente', 'idComercio' => $comercio->getId()], 201);
+        // : Crear la respuesta primero, luego retornarla
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Comercio registrado correctamente', 'idComercio' => $comercio->getId()], 201);
+        return $response;
     }
 
     #[OA\Get(
@@ -115,9 +118,12 @@ class ComercioController
             $porPagina = MAX_ITEMS_POR_PAGINA;
         }
 
-        $query  = new ObtenerComerciosQuery($filtros, $pagina, $porPagina, $request->query('ordenar_por') ?? 'nombre', $request->query('direccion') ?? 'ASC');
+        $query = new ObtenerComerciosQuery($filtros, $pagina, $porPagina, $request->query('ordenar_por') ?? 'nombre', $request->query('direccion') ?? 'ASC');
         $result = $this->obtenerComerciosHandler->handle($query);
 
-        return (new Response())->json($result);
+        // : Crear la respuesta primero, luego retornarla
+        $response = new Response();
+        $response->json($result);
+        return $response;
     }
 }

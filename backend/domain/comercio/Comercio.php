@@ -18,15 +18,60 @@ class Comercio
     private int $cantidadMaquinas;
     private string $fechaRegistro;
 
-    public function __construct(string $nombre, string $tipo, string $direccion, string $telefono)
-    {
-        $this->id = Uuid::random()->value();
+    /**
+     * Constructor privado - usar método estático crear()
+     */
+    private function __construct(
+        string $id,
+        string $nombre,
+        string $tipo,
+        string $direccion,
+        string $telefono,
+        int $cantidadMaquinas = 0,
+        ?string $fechaRegistro = null
+    ) {
+        $this->id = $id;
         $this->nombre = $nombre;
         $this->tipo = $tipo;
         $this->direccion = $direccion;
         $this->telefono = $telefono;
-        $this->cantidadMaquinas = 0;
-        $this->fechaRegistro = date('Y-m-d H:i:s');
+        $this->cantidadMaquinas = $cantidadMaquinas;
+        $this->fechaRegistro = $fechaRegistro ?? date('Y-m-d H:i:s');
+    }
+
+    /**
+     * Crea un nuevo comercio
+     */
+    public static function crear(
+        Uuid $id,
+        string $nombre,
+        string $tipo,
+        string $direccion,
+        string $telefono
+    ): self {
+        return new self(
+            $id->value(),
+            $nombre,
+            $tipo,
+            $direccion,
+            $telefono
+        );
+    }
+
+    /**
+     * Reconstruye un comercio desde datos persistidos
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            $data['ID_Comercio'],
+            $data['nombre'],
+            $data['tipo'],
+            $data['direccion'],
+            $data['telefono'],
+            (int)($data['cantidad_maquinas'] ?? 0),
+            $data['fecha_registro'] ?? null
+        );
     }
 
     public function getId(): string { return $this->id; }
@@ -37,8 +82,15 @@ class Comercio
     public function getCantidadMaquinas(): int { return $this->cantidadMaquinas; }
     public function getFechaRegistro(): string { return $this->fechaRegistro; }
 
-    public function incrementarMaquinas(): void { $this->cantidadMaquinas++; }
-    public function decrementarMaquinas(): void { if ($this->cantidadMaquinas > 0) $this->cantidadMaquinas--; }
+    public function incrementarMaquinas(): void { 
+        $this->cantidadMaquinas++; 
+    }
+    
+    public function decrementarMaquinas(): void { 
+        if ($this->cantidadMaquinas > 0) {
+            $this->cantidadMaquinas--;
+        }
+    }
     
     public function actualizar(string $nombre, string $tipo, string $direccion, string $telefono): void
     {

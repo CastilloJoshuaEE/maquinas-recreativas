@@ -24,10 +24,6 @@ class RegistrarComercioHandler implements CommandHandler
     private ComercioRepository $comercioRepository;
     private HistorialHelper $historialHelper;
 
-    /**
-     * @param ComercioRepository $comercioRepository
-     * @param HistorialHelper $historialHelper
-     */
     public function __construct(
         ComercioRepository $comercioRepository,
         HistorialHelper $historialHelper
@@ -36,13 +32,6 @@ class RegistrarComercioHandler implements CommandHandler
         $this->historialHelper = $historialHelper;
     }
 
-    /**
-     * Ejecuta el caso de uso de registro de comercio.
-     *
-     * @param Command $command
-     * @return Comercio La entidad de comercio recién creada.
-     * @throws DomainException Si hay un error de negocio.
-     */
     public function handle(Command $command): Comercio
     {
         if (!$command instanceof RegistrarComercioCommand) {
@@ -54,9 +43,10 @@ class RegistrarComercioHandler implements CommandHandler
             throw new DomainException('Ya existe un comercio con ese nombre');
         }
 
-        // 2. Crear la entidad
+        // 2. Crear la entidad usando Uuid::v4()
+        $id = Uuid::v4();
         $comercio = Comercio::crear(
-            Uuid::v4(),
+            $id,
             $command->getNombre(),
             $command->getTipo(),
             $command->getDireccion(),

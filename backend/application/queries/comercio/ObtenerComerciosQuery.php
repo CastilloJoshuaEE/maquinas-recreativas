@@ -9,37 +9,40 @@
 
 namespace maquinas_recreativas\Application\Queries\Comercio;
 
+use maquinas_recreativas\Application\Queries\Query;
+
 /**
  * @package Application\Queries\Comercio
  * 
  * Query que encapsula los filtros para obtener comercios
  */
-class ObtenerComerciosQuery {
+class ObtenerComerciosQuery implements Query
+{
     
     /**
      * @var array Filtros de búsqueda
      */
-    private $filtros;
+    private array $filtros;
     
     /**
      * @var int Página actual
      */
-    private $pagina;
+    private int $pagina;
     
     /**
      * @var int Items por página
      */
-    private $porPagina;
+    private int $porPagina;
     
     /**
      * @var string Campo de ordenamiento
      */
-    private $ordenarPor;
+    private string $ordenarPor;
     
     /**
      * @var string Dirección de ordenamiento (ASC/DESC)
      */
-    private $direccion;
+    private string $direccion;
     
     /**
      * Constructor del query

@@ -9,37 +9,24 @@
 
 namespace maquinas_recreativas\Application\Queries\Comercio;
 
+use maquinas_recreativas\Application\Queries\Query;
+use maquinas_recreativas\Application\Queries\QueryHandler;
 use maquinas_recreativas\Domain\Comercio\ComercioRepository;
 
-/**
- * @package Application\Queries\Comercio
- * 
- * Manejador responsable de obtener la lista de comercios
- * aplicando filtros y paginación.
- */
-class ObtenerComerciosHandler {
+class ObtenerComerciosHandler implements QueryHandler
+{
+    private ComercioRepository $comercioRepository;
     
-    /**
-     * @var ComercioRepository Repositorio de comercios
-     */
-    private $comercioRepository;
-    
-    /**
-     * Constructor del manejador
-     * 
-     * @param ComercioRepository $comercioRepository
-     */
-    public function __construct(ComercioRepository $comercioRepository) {
+    public function __construct(ComercioRepository $comercioRepository) 
+    {
         $this->comercioRepository = $comercioRepository;
     }
     
-    /**
-     * Maneja el query de obtener comercios
-     * 
-     * @param ObtenerComerciosQuery $query Query con filtros
-     * @return array Resultado con comercios y metadatos de paginación
-     */
-    public function handle(ObtenerComerciosQuery $query): array {
+    public function handle(Query $query): array
+    {
+        if (!$query instanceof ObtenerComerciosQuery) {
+            throw new \InvalidArgumentException('Query inválido para este handler');
+        }
         
         // Obtener comercios paginados
         $comercios = $this->comercioRepository->findAll(
