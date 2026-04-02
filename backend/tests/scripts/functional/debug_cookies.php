@@ -37,7 +37,7 @@ class DebugCookiesTest extends HttpTestCase {
         echo "Verificando sesión...\n";
         echo "Cookies actuales: " . json_encode($this->cookies) . "\n";
         
-        echo "\n✅ Debug completado\n";
+        echo "\n Debug completado\n";
     }
 }
 

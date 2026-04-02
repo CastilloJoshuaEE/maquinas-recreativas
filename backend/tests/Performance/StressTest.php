@@ -26,11 +26,11 @@ class StressTest extends HttpStressTestCase {
     
     // Configuración de fases de carga
     private $loadPhases = [
-        ['users' => 10,  'duration' => 20, 'description' => '✅ Carga muy ligera'],
-        ['users' => 25, 'duration' => 20, 'description' => '✅ Carga ligera'],
-        ['users' => 50,  'duration' => 20, 'description' => '⚠️ Carga media'],
-        ['users' => 75, 'duration' => 20, 'description' => '⚠️ Carga alta'],
-        ['users' => 100, 'duration' => 20, 'description' => '❌ Carga crítica'],
+        ['users' => 10,  'duration' => 20, 'description' => ' Carga muy ligera'],
+        ['users' => 25, 'duration' => 20, 'description' => ' Carga ligera'],
+        ['users' => 50,  'duration' => 20, 'description' => ' Carga media'],
+        ['users' => 75, 'duration' => 20, 'description' => ' Carga alta'],
+        ['users' => 100, 'duration' => 20, 'description' => ' Carga crítica'],
     ];
     
     // Almacenar resultados por fase
@@ -54,7 +54,7 @@ class StressTest extends HttpStressTestCase {
      * PRUEBA PRINCIPAL: Ejecutar todas las fases de estrés
      */
     public function testEjecutarEstres() {
-        echo "🚀 INICIANDO PRUEBAS DE ESTRÉS\n";
+        echo " INICIANDO PRUEBAS DE ESTRÉS\n";
         echo "================================\n\n";
         
         // PASO 1: Crear todos los usuarios necesarios
@@ -63,11 +63,11 @@ class StressTest extends HttpStressTestCase {
         // PASO 2: Setup inicial (crear datos base)
         $setupOk = $this->faseSetupInicial();
         if (!$setupOk) {
-            echo "❌ Error en setup inicial. Abortando pruebas.\n";
+            echo " Error en setup inicial. Abortando pruebas.\n";
             return;
         }
         
-        echo "\n✅ SETUP COMPLETADO. Iniciando fases de carga...\n";
+        echo "\n SETUP COMPLETADO. Iniciando fases de carga...\n";
         
         // Ejecutar cada fase de carga
         foreach ($this->loadPhases as $index => $phase) {
@@ -85,7 +85,7 @@ class StressTest extends HttpStressTestCase {
      * PASO 1: Crear todos los usuarios necesarios
      */
     private function pasoCrearUsuarios() {
-        echo "📝 PASO 1: Creando usuarios de prueba...\n";
+        echo " PASO 1: Creando usuarios de prueba...\n";
         echo str_repeat("-", 40) . "\n";
         
         // Limpiar cookies antes de empezar
@@ -107,7 +107,7 @@ class StressTest extends HttpStressTestCase {
         $respEns = $this->request('POST', '/usuario/register', $this->ensambladorUser);
         $this->assertResponseSuccess('Error al crear ensamblador');
         $this->ensambladorId = $respEns['userId'] ?? null;
-        echo "      ✅ Ensamblador ID: {$this->ensambladorId}\n";
+        echo "       Ensamblador ID: {$this->ensambladorId}\n";
         
         // 1.2 Crear Técnico Comprobador
         echo "   1.2 Creando técnico comprobador...\n";
@@ -125,7 +125,7 @@ class StressTest extends HttpStressTestCase {
         $respComp = $this->request('POST', '/usuario/register', $this->comprobadorUser);
         $this->assertResponseSuccess('Error al crear comprobador');
         $this->comprobadorId = $respComp['userId'] ?? null;
-        echo "      ✅ Comprobador ID: {$this->comprobadorId}\n";
+        echo "       Comprobador ID: {$this->comprobadorId}\n";
         
         // 1.3 Crear Técnico Mantenimiento
         echo "   1.3 Creando técnico mantenimiento...\n";
@@ -143,7 +143,7 @@ class StressTest extends HttpStressTestCase {
         $respMant = $this->request('POST', '/usuario/register', $this->mantenimientoUser);
         $this->assertResponseSuccess('Error al crear mantenimiento');
         $this->mantenimientoId = $respMant['userId'] ?? null;
-        echo "      ✅ Mantenimiento ID: {$this->mantenimientoId}\n";
+        echo "       Mantenimiento ID: {$this->mantenimientoId}\n";
         
         // 1.4 Crear Logística
         echo "   1.4 Creando usuario logística...\n";
@@ -160,7 +160,7 @@ class StressTest extends HttpStressTestCase {
         $respLog = $this->request('POST', '/usuario/register', $this->logisticaUser);
         $this->assertResponseSuccess('Error al crear logística');
         $this->logisticaId = $respLog['userId'] ?? null;
-        echo "      ✅ Logística ID: {$this->logisticaId}\n";
+        echo "       Logística ID: {$this->logisticaId}\n";
         
         // 1.5 Crear Contabilidad
         echo "   1.5 Creando usuario contabilidad...\n";
@@ -177,7 +177,7 @@ class StressTest extends HttpStressTestCase {
         $respCont = $this->request('POST', '/usuario/register', $this->contabilidadUser);
         $this->assertResponseSuccess('Error al crear contabilidad');
         $this->contabilidadId = $respCont['userId'] ?? null;
-        echo "      ✅ Contabilidad ID: {$this->contabilidadId}\n";
+        echo "       Contabilidad ID: {$this->contabilidadId}\n";
         
         // 1.6 Crear Administrador
         echo "   1.6 Creando usuario administrador...\n";
@@ -194,9 +194,9 @@ class StressTest extends HttpStressTestCase {
         $respAdmin = $this->request('POST', '/usuario/register', $this->adminUser);
         $this->assertResponseSuccess('Error al crear admin');
         $this->adminId = $respAdmin['userId'] ?? null;
-        echo "      ✅ Admin ID: {$this->adminId}\n";
+        echo "       Admin ID: {$this->adminId}\n";
         
-        echo "\n   ✅ Todos los usuarios creados exitosamente\n\n";
+        echo "\n    Todos los usuarios creados exitosamente\n\n";
     }
     
     /**
@@ -215,10 +215,10 @@ class StressTest extends HttpStressTestCase {
         ]);
         
         if (!$this->assertResponseSuccess('Error en login logística')) {
-            echo "   ❌ No se pudo iniciar sesión como logística\n";
+            echo "    No se pudo iniciar sesión como logística\n";
             return false;
         }
-        echo "      ✅ Login exitoso\n";
+        echo "       Login exitoso\n";
         
         // 2.2 Crear comercio
         echo "   2.2 Creando comercio...\n";
@@ -231,10 +231,10 @@ class StressTest extends HttpStressTestCase {
         
         $comercioResp = $this->request('POST', '/comercio/register', $comercioData);
         if (!$this->assertResponseSuccess('Error al crear comercio')) {
-            echo "   ❌ No se pudo crear comercio\n";
+            echo "    No se pudo crear comercio\n";
             return false;
         }
-        echo "      ✅ Comercio creado\n";
+        echo "       Comercio creado\n";
         
         // 2.3 Obtener ID del comercio
         echo "   2.3 Obteniendo ID del comercio...\n";
@@ -244,14 +244,14 @@ class StressTest extends HttpStressTestCase {
             foreach ($comercios['comercios'] as $c) {
                 if ($c['Nombre'] === $comercioData['nombre']) {
                     $this->comercioId = $c['ID_Comercio'];
-                    echo "      ✅ Comercio encontrado ID: {$this->comercioId}\n";
+                    echo "       Comercio encontrado ID: {$this->comercioId}\n";
                     break;
                 }
             }
         }
         
         if (!$this->comercioId) {
-            echo "   ❌ No se pudo obtener ID del comercio\n";
+            echo "    No se pudo obtener ID del comercio\n";
             return false;
         }
         
@@ -262,17 +262,17 @@ class StressTest extends HttpStressTestCase {
         ]);
         
         if (!$this->assertResponseSuccess('Error al generar placa')) {
-            echo "   ❌ No se pudo generar placa\n";
+            echo "    No se pudo generar placa\n";
             return false;
         }
         
         if (isset($placaResp['id_componente'])) {
             $this->placaId = $placaResp['id_componente'];
-            echo "      ✅ Placa generada ID: {$this->placaId}\n";
+            echo "       Placa generada ID: {$this->placaId}\n";
         }
         
         if (!$this->placaId) {
-            echo "   ❌ No se pudo obtener ID de placa\n";
+            echo "    No se pudo obtener ID de placa\n";
             return false;
         }
         
@@ -293,14 +293,14 @@ class StressTest extends HttpStressTestCase {
         if (isset($maquinaResp['success']) && $maquinaResp['success'] === true) {
             if (isset($maquinaResp['idMaquina'])) {
                 $this->maquinaId = $maquinaResp['idMaquina'];
-                echo "      ✅ Máquina creada ID: {$this->maquinaId}\n";
+                echo "       Máquina creada ID: {$this->maquinaId}\n";
             } else {
-                echo "      ⚠️ Respuesta exitosa pero sin ID: " . json_encode($maquinaResp) . "\n";
+                echo "       Respuesta exitosa pero sin ID: " . json_encode($maquinaResp) . "\n";
                 // Intentar con un ID fijo para pruebas
                 $this->maquinaId = '00000000-0000-0000-0000-000000000001';
             }
         } else {
-            echo "      ❌ Error al crear máquina: " . json_encode($maquinaResp) . "\n";
+            echo "       Error al crear máquina: " . json_encode($maquinaResp) . "\n";
             return false;
         }
         
@@ -309,7 +309,7 @@ class StressTest extends HttpStressTestCase {
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        echo "\n   ✅ Datos base listos\n";
+        echo "\n    Datos base listos\n";
         echo "      • Comercio ID: {$this->comercioId}\n";
         echo "      • Máquina ID: {$this->maquinaId}\n";
         echo "      • Placa ID: {$this->placaId}\n\n";
@@ -334,7 +334,7 @@ class StressTest extends HttpStressTestCase {
         $tokens = $this->loginTodosLosUsuarios();
         
         if (empty($tokens)) {
-            echo "   ❌ No se pudo obtener tokens de autenticación\n";
+            echo "    No se pudo obtener tokens de autenticación\n";
             return false;
         }
         
@@ -401,15 +401,15 @@ class StressTest extends HttpStressTestCase {
         
         // Determinar estado
         if ($errorRate > 10 || $p95 > 2000) {
-            echo "   ❌ SISTEMA COLAPSADO\n";
+            echo "    SISTEMA COLAPSADO\n";
             if ($faseNum < count($this->loadPhases)) {
-                echo "   ⚠️  Deteniendo pruebas - Punto de quiebre alcanzado\n";
+                echo "     Deteniendo pruebas - Punto de quiebre alcanzado\n";
                 return false;
             }
         } elseif ($errorRate > 5 || $p95 > 1000) {
-            echo "   ⚠️  SISTEMA DEGRADADO\n";
+            echo "     SISTEMA DEGRADADO\n";
         } else {
-            echo "   ✅ SISTEMA ESTABLE\n";
+            echo "    SISTEMA ESTABLE\n";
         }
         
         return true;
@@ -432,7 +432,7 @@ class StressTest extends HttpStressTestCase {
         
         foreach ($users as $type => $user) {
             if (!$user['id']) {
-                echo "      ⚠️  Usuario {$type} no tiene ID, saltando...\n";
+                echo "        Usuario {$type} no tiene ID, saltando...\n";
                 continue;
             }
             
@@ -448,9 +448,9 @@ class StressTest extends HttpStressTestCase {
                     'id' => $user['id'],
                     'cookies' => $this->cookies
                 ];
-                echo "      ✅ Login {$type} exitoso\n";
+                echo "       Login {$type} exitoso\n";
             } else {
-                echo "      ❌ Login {$type} falló (HTTP {$this->lastHttpCode})\n";
+                echo "       Login {$type} falló (HTTP {$this->lastHttpCode})\n";
             }
         }
         
@@ -567,8 +567,8 @@ class StressTest extends HttpStressTestCase {
         $breakpoint = null;
         
         foreach ($this->phaseResults as $result) {
-            $estado = $result['error_rate'] < 5 ? "✅ OK" : 
-                     ($result['error_rate'] < 10 ? "⚠️ Lento" : "❌ Falla");
+            $estado = $result['error_rate'] < 5 ? " OK" : 
+                     ($result['error_rate'] < 10 ? " Lento" : " Falla");
             
             echo str_pad($result['users'], 12) .
                  str_pad($result['requests'], 12) .
@@ -589,7 +589,7 @@ class StressTest extends HttpStressTestCase {
         echo "--------------------------------\n";
         
         if ($breakpoint) {
-            echo "❌ El sistema COMIENZA A FALLAR a partir de {$breakpoint} usuarios\n";
+            echo " El sistema COMIENZA A FALLAR a partir de {$breakpoint} usuarios\n";
             
             echo "\n💡 RECOMENDACIONES:\n";
             if ($breakpoint <= 25) {
@@ -606,7 +606,7 @@ class StressTest extends HttpStressTestCase {
                 echo "   • Escalar horizontalmente\n";
             }
         } else {
-            echo "✅ El sistema soportó TODAS las cargas de prueba\n";
+            echo " El sistema soportó TODAS las cargas de prueba\n";
             echo "   El punto de quiebre está por encima de " . end($this->phaseResults)['users'] . " usuarios\n";
         }
         

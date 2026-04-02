@@ -50,8 +50,8 @@ class BreakpointAnalyzer {
         echo str_repeat("-", 75) . "\n";
         
         foreach ($metrics['by_load'] as $load) {
-            $estado = $load['error_rate'] < 5 ? "✅ OK" : 
-                     ($load['error_rate'] < 10 ? "⚠️ Lento" : "❌ Falla");
+            $estado = $load['error_rate'] < 5 ? " OK" : 
+                     ($load['error_rate'] < 10 ? " Lento" : " Falla");
             
             echo str_pad($load['users'] . " usuarios", 15) .
                  str_pad($load['requests'], 15) .
@@ -75,7 +75,7 @@ class BreakpointAnalyzer {
             echo "\n💡 RECOMENDACIONES:\n";
             echo $this->getRecommendations($breakpoint);
         } else {
-            echo "✅ No se detectó punto de quiebre en el rango probado\n";
+            echo " No se detectó punto de quiebre en el rango probado\n";
             echo "El sistema soportó hasta " . max(array_column($metrics['by_load'], 'users')) . " usuarios\n";
         }
     }

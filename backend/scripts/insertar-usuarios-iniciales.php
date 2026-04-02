@@ -11,12 +11,12 @@
 $envPath = __DIR__ . '/../.env';
 
 if (!file_exists($envPath)) {
-    die("❌ Archivo .env no encontrado en: {$envPath}\n");
+    die(" Archivo .env no encontrado en: {$envPath}\n");
 }
 
 $env = parse_ini_file($envPath);
 if ($env === false) {
-    die("❌ Error al parsear el archivo .env\n");
+    die(" Error al parsear el archivo .env\n");
 }
 
 // =============================================
@@ -38,7 +38,7 @@ if ($isTest) {
 }
 
 if (!$dbName) {
-    die("❌ No se ha definido DB_NAME en el .env\n");
+    die(" No se ha definido DB_NAME en el .env\n");
 }
 
 // =============================================
@@ -79,10 +79,10 @@ $database = new Database();
 $connection = $database->getConnection();
 
 if (!$connection) {
-    die("❌ Error de conexión a la base de datos\n");
+    die(" Error de conexión a la base de datos\n");
 }
 
-echo "✅ Conexión establecida a: " . DB_NAME . "\n";
+echo " Conexión establecida a: " . DB_NAME . "\n";
 
 // =============================================
 // VERIFICAR Y CREAR LOCK FILE
@@ -91,22 +91,22 @@ $lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
 
 // Verificar si ya se ejecutó
 if (file_exists($lockFile)) {
-    echo "⚠️  Los usuarios iniciales ya fueron insertados anteriormente.\n";
-    echo "📄 Lock file: {$lockFile}\n";
+    echo "  Los usuarios iniciales ya fueron insertados anteriormente.\n";
+    echo " Lock file: {$lockFile}\n";
     echo "💡 Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
     
     $confirm = readline("¿Deseas forzar la inserción de todos modos? (s/N): ");
     if (strtolower($confirm) !== 's') {
-        echo "❌ Operación cancelada.\n";
+        echo " Operación cancelada.\n";
         exit(0);
     }
-    echo "🚀 Forzando inserción...\n";
+    echo " Forzando inserción...\n";
 }
 
 // =============================================
 // INSERTAR USUARIOS
 // =============================================
-echo "\n📝 Insertando usuarios iniciales...\n";
+echo "\n Insertando usuarios iniciales...\n";
 echo str_repeat("-", 50) . "\n";
 
 $inserter = new Inserter($connection);
@@ -117,8 +117,8 @@ try {
     // Crear lock file
     file_put_contents($lockFile, "Usuarios iniciales creados el " . date("Y-m-d H:i:s") . "\n");
     
-    echo "\n✅ Usuarios insertados correctamente!\n";
-    echo "📄 Lock file creado en: {$lockFile}\n";
+    echo "\n Usuarios insertados correctamente!\n";
+    echo " Lock file creado en: {$lockFile}\n";
     
     // Mostrar resumen
     echo "\n📊 RESUMEN DE USUARIOS INSERTADOS:\n";
@@ -133,7 +133,7 @@ try {
     }
     
 } catch (Exception $e) {
-    echo "\n❌ Error al insertar usuarios iniciales:\n";
+    echo "\n Error al insertar usuarios iniciales:\n";
     echo "   " . $e->getMessage() . "\n";
     exit(1);
 }
@@ -154,15 +154,15 @@ foreach ($testUsers as $username) {
             $ciDec = \maquinas_recreativas\Infrastructure\Security\CifradoHelper::desencriptar($row['ci']);
             
             if (!empty($emailDec) && !empty($ciDec)) {
-                echo "✅ {$username}: Email={$emailDec}, CI={$ciDec}\n";
+                echo " {$username}: Email={$emailDec}, CI={$ciDec}\n";
             } else {
-                echo "⚠️  {$username}: Desencriptación parcial - Email=" . ($emailDec ?: 'VACÍO') . ", CI=" . ($ciDec ?: 'VACÍO') . "\n";
+                echo "  {$username}: Desencriptación parcial - Email=" . ($emailDec ?: 'VACÍO') . ", CI=" . ($ciDec ?: 'VACÍO') . "\n";
             }
         } catch (Exception $e) {
-            echo "❌ {$username}: Error al desencriptar - " . $e->getMessage() . "\n";
+            echo " {$username}: Error al desencriptar - " . $e->getMessage() . "\n";
         }
         $result->close();
     }
 }
 
-echo "\n✨ Proceso completado!\n";
+echo "\n Proceso completado!\n";

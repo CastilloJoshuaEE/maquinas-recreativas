@@ -17,11 +17,11 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($httpCode !== 200) {
-    echo "❌ ERROR: Servidor backend no disponible en http://localhost:8000\n";
+    echo " ERROR: Servidor backend no disponible en http://localhost:8000\n";
     echo "   Ejecuta en otra terminal: php -S localhost:8000 -t public\n";
     exit(1);
 }
-echo "✅ Servidor backend OK\n\n";
+echo " Servidor backend OK\n\n";
 
 // Cargar la clase (NO ejecuta nada)
 require_once __DIR__ . '/StressTest.php';
@@ -32,4 +32,4 @@ $test = new StressTest();
 $test->init(); // Mostrar banner y crear usuarios
 $test->testEjecutarEstres(); // Ejecutar las fases de carga
 
-echo "\n✨ Pruebas de estrés completadas\n";
+echo "\n Pruebas de estrés completadas\n";

@@ -130,7 +130,7 @@ Las máquinas asignadas para mantenimiento (/maquina/mantenimiento/:id)
             emptyMessage="No hay máquinas para dar mantenimiento..."
             actionButtons={[
               {
-                label: "Dar de alta ✅",
+                label: "Dar de alta ",
                 onClick: () => {
                   setAccion("operativa");
                   setMostrarMensaje(true);
@@ -142,7 +142,7 @@ Las máquinas asignadas para mantenimiento (/maquina/mantenimiento/:id)
                   ),
               },
               {
-                label: "Dar de baja ❌",
+                label: "Dar de baja ",
                 onClick: () => {
                   setAccion("reensamblar");
                   setMostrarMensaje(true);

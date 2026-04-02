@@ -17,10 +17,10 @@ echo "📋 Verificando tablas:\n";
 foreach ($tables as $table) {
     $result = $conn->query("SHOW TABLES LIKE '$table'");
     if ($result->num_rows > 0) {
-        echo "   ✅ Tabla '$table' existe\n";
+        echo "    Tabla '$table' existe\n";
     } else {
-        echo "   ❌ Tabla '$table' NO existe\n";
+        echo "    Tabla '$table' NO existe\n";
     }
 }
 
-echo "\n✅ Verificación completada\n";
+echo "\n Verificación completada\n";

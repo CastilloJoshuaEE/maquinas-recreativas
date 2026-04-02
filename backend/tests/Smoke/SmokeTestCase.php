@@ -8,7 +8,7 @@ class SmokeTestCase extends TestCase
     protected ?array $testUser = null;
     protected ?string $testUserId = null;
     
-    // ✅ DECLARAR PROPIEDADES EXPLÍCITAMENTE (esto elimina los deprecations)
+    //  DECLARAR PROPIEDADES EXPLÍCITAMENTE (esto elimina los deprecations)
     protected ?string $lastResponseHeaders = null;
     protected int $lastHttpCode = 0;
 

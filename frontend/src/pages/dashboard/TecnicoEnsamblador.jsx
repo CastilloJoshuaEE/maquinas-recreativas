@@ -132,7 +132,7 @@ const handleMandarComprobacion = async () => {
             emptyMessage="No hay máquinas para ensamblar..."
             actionButtons={[
               {
-                label: "Mandar a comprobación ✅",
+                label: "Mandar a comprobación ",
                 onClick: () => setMostrarMensaje(true),
                 disabled:
                   !selectedMaquina ||
@@ -155,7 +155,7 @@ Se usa un modal (mostrarMensaje) para redactar un mensaje antes de enviar.*/}
             emptyMessage="No hay máquinas para reensamblar..."
             actionButtons={[
               {
-                label: "Mandar a comprobación ✅",
+                label: "Mandar a comprobación ",
                 onClick: () => setMostrarMensaje(true),
                 disabled:
                   !selectedMaquina ||

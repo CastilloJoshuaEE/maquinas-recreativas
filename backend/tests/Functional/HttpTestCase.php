@@ -13,26 +13,25 @@ abstract class HttpTestCase {
     protected $assertionFailures = [];
     protected $requestCount = 0;
     protected $maxRetries = 3;
+    protected $sessionCookieFile;
     
-    /**
-     * Realiza una petición HTTP con manejo de rate limiting y reintentos
-     */
+    public function __construct() {
+        $this->sessionCookieFile = sys_get_temp_dir() . '/phpunit_cookies_' . uniqid() . '.txt';
+    }
+    
+    public function __destruct() {
+        if (file_exists($this->sessionCookieFile)) {
+            @unlink($this->sessionCookieFile);
+        }
+    }
+    
     protected function request($method, $endpoint, $data = null, $headers = [], $retry = 0) {
         $this->requestCount++;
-        $requestId = $this->requestCount;
         
-        echo "      → Request #{$requestId}: $method $endpoint\n";
+        echo "      -> Request #{$this->requestCount}: $method $endpoint\n";
         
-        // Espera base según el tipo de endpoint
-        $baseWait = 200000; // 0.2 segundos
-        if (strpos($endpoint, '/usuario/login') !== false || 
-            strpos($endpoint, '/usuario/register') !== false) {
-            $baseWait = 500000; // 0.5 segundos para login/register
-        }
-        
-        // Espera progresiva según el número de requests
-        $progressiveWait = $baseWait * (1 + floor($this->requestCount / 15));
-        usleep($progressiveWait);
+        // Espera entre requests
+        usleep(100000);
         
         $url = $this->baseUrl . $endpoint;
         $ch = curl_init($url);
@@ -42,40 +41,30 @@ abstract class HttpTestCase {
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HEADER => true,
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_COOKIEFILE => $this->sessionCookieFile,
+            CURLOPT_COOKIEJAR => $this->sessionCookieFile,
         ];
         
-        // IMPORTANTE: Habilitar cookies de sesión
-        $cookieFile = sys_get_temp_dir() . '/curl_cookies_' . uniqid() . '.txt';
-        
-        // Usar archivo de cookies para mantener sesión entre requests
-        $options[CURLOPT_COOKIEFILE] = $cookieFile;
-        $options[CURLOPT_COOKIEJAR] = $cookieFile;
-        
-        // Cookies manuales como respaldo
-        if (!empty($this->cookies)) {
-            $cookieString = '';
-            foreach ($this->cookies as $name => $value) {
-                $cookieString .= "$name=$value; ";
-            }
-            $options[CURLOPT_COOKIE] = $cookieString;
-        }
-        
-        // Headers
         $httpHeaders = [
             'Content-Type: application/json',
-            'User-Agent: PHPUnit' 
+            'Accept: application/json',
+            'User-Agent: PHPUnit-Test'
         ];
-
+        
         if (!empty($headers)) {
             $httpHeaders = array_merge($httpHeaders, $headers);
         }
-
+        
         $options[CURLOPT_HTTPHEADER] = $httpHeaders;
         
-        // Datos
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && $data !== null) {
             $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo "      JSON encode error: " . json_last_error_msg() . "\n";
+                $this->lastResponse = ['success' => false, 'error' => 'JSON encode error'];
+                return $this->lastResponse;
+            }
         }
         
         curl_setopt_array($ch, $options);
@@ -86,32 +75,46 @@ abstract class HttpTestCase {
             $error = curl_error($ch);
             $this->lastResponse = ['success' => false, 'error' => $error];
             curl_close($ch);
-            @unlink($cookieFile);
-            echo "      ❌ cURL Error: $error\n";
+            echo "      cURL Error: $error\n";
             return $this->lastResponse;
         }
         
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
-        $headers = substr($response, 0, $headerSize);
-        $this->extractCookies($headers);
-        
+        $headerStr = substr($response, 0, $headerSize);
         $body = substr($response, $headerSize);
-        $this->lastResponse = json_decode($body, true);
         
-        // Si no se pudo decodificar JSON, crear un array con el error
-        if ($this->lastResponse === null && !empty($body)) {
-            $this->lastResponse = ['success' => false, 'raw_response' => $body];
-        }
+        $this->extractCookies($headerStr);
         
         curl_close($ch);
-        @unlink($cookieFile);
         
-        // Si hay rate limiting (429), esperar más y reintentar
+        // Depuración: mostrar código HTTP y respuesta
+        echo "      HTTP Status: {$this->lastHttpCode}\n";
+        
+        if ($this->lastHttpCode === 0) {
+            $this->lastResponse = ['success' => false, 'error' => 'No response from server'];
+            echo "      Error: No response from server\n";
+            return $this->lastResponse;
+        }
+        
+        $this->lastResponse = json_decode($body, true);
+        
+        if ($this->lastResponse === null && !empty($body)) {
+            // Intentar limpiar BOM o caracteres no visibles
+            $cleanBody = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $body);
+            $this->lastResponse = json_decode($cleanBody, true);
+            
+            if ($this->lastResponse === null) {
+                echo "      Raw response (first 200 chars): " . substr($body, 0, 200) . "\n";
+                $this->lastResponse = ['success' => false, 'raw_response' => $body];
+            }
+        }
+        
+        // Rate limiting
         if ($this->lastHttpCode === 429 && $retry < $this->maxRetries) {
-            $waitTime = pow(2, $retry) * 3; // 3, 6, 12 segundos
-            echo "      ⚠️  Rate limit detected! Esperando {$waitTime} segundos (intento " . ($retry+1) . "/{$this->maxRetries})...\n";
+            $waitTime = pow(2, $retry) * 2;
+            echo "      Rate limit detected. Waiting {$waitTime} seconds (attempt " . ($retry+1) . "/{$this->maxRetries})...\n";
             sleep($waitTime);
             return $this->request($method, $endpoint, $data, $headers, $retry + 1);
         }
@@ -119,9 +122,6 @@ abstract class HttpTestCase {
         return $this->lastResponse;
     }
     
-    /**
-     * Extrae cookies de la respuesta
-     */
     private function extractCookies($headerString) {
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $headerString, $matches);
         foreach ($matches[1] as $cookie) {
@@ -132,38 +132,34 @@ abstract class HttpTestCase {
         }
     }
     
-    /**
-     * Limpia las cookies (útil entre pruebas)
-     */
     public function clearCookies(): void {
         $this->cookies = [];
-    }
-    
-    /**
-     * Obtiene el ID de usuario autenticado desde la sesión (vía cookies)
-     */
-    protected function getAuthenticatedUserId(): ?string {
-        // Intentar obtener de la respuesta anterior si existe
-        if (isset($this->lastResponse['usuario']['id'])) {
-            return $this->lastResponse['usuario']['id'];
+        if (file_exists($this->sessionCookieFile)) {
+            @unlink($this->sessionCookieFile);
         }
-        return null;
+        $this->sessionCookieFile = sys_get_temp_dir() . '/phpunit_cookies_' . uniqid() . '.txt';
     }
     
-    /**
-     * ASSERT: Respuesta exitosa
-     */
     protected function assertResponseSuccess($message = '') {
         $this->assertionCount++;
+        
+        if ($this->lastResponse === null) {
+            $error = $message ? "$message: " : '';
+            $error .= 'Response is null';
+            $this->assertionFailures[] = $error;
+            echo "      FAIL: $error\n";
+            return false;
+        }
+        
         $success = isset($this->lastResponse['success']) && $this->lastResponse['success'] === true;
         
         if (!$success) {
             $error = $message ? "$message: " : '';
             $error .= json_encode($this->lastResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             $this->assertionFailures[] = $error;
-            echo "      ❌ $error\n";
+            echo "      FAIL: $error\n";
         } else {
-            echo "      ✅ OK\n";
+            echo "      OK\n";
         }
         
         return $success;
@@ -174,8 +170,8 @@ abstract class HttpTestCase {
         $success = $value !== null && $value !== '';
         
         if (!$success) {
-            $this->assertionFailures[] = $message ?: 'El valor no debe ser nulo o vacío';
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            $this->assertionFailures[] = $message ?: 'Value should not be null or empty';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
         }
         
         return $success;
@@ -186,8 +182,8 @@ abstract class HttpTestCase {
         $success = is_array($array) && array_key_exists($key, $array);
         
         if (!$success) {
-            $this->assertionFailures[] = $message ?: "El array no contiene la clave '$key'";
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            $this->assertionFailures[] = $message ?: "Array does not contain key '$key'";
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
         }
         
         return $success;
@@ -198,10 +194,10 @@ abstract class HttpTestCase {
         $success = $expected == $actual;
         
         if (!$success) {
-            $error = $message ?: "Valores no coinciden";
-            $error .= " - Esperado: $expected, Actual: " . (is_scalar($actual) ? $actual : json_encode($actual));
+            $error = $message ?: "Values do not match";
+            $error .= " - Expected: $expected, Actual: " . (is_scalar($actual) ? $actual : json_encode($actual));
             $this->assertionFailures[] = $error;
-            echo "      ❌ $error\n";
+            echo "      FAIL: $error\n";
         }
         
         return $success;
@@ -212,8 +208,8 @@ abstract class HttpTestCase {
         $success = $condition === true;
         
         if (!$success) {
-            $this->assertionFailures[] = $message ?: 'La condición debe ser verdadera';
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            $this->assertionFailures[] = $message ?: 'Condition must be true';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
         }
         
         return $success;
@@ -224,9 +220,9 @@ abstract class HttpTestCase {
         $condition = ($this->lastHttpCode == $expectedCode);
         
         if (!$condition) {
-            $errorMsg = "Código HTTP esperado $expectedCode, recibido {$this->lastHttpCode}";
+            $errorMsg = "Expected HTTP code $expectedCode, got {$this->lastHttpCode}";
             $this->assertionFailures[] = $errorMsg;
-            echo "      ❌ $errorMsg\n";
+            echo "      FAIL: $errorMsg\n";
         }
         
         return $condition;
@@ -237,8 +233,8 @@ abstract class HttpTestCase {
         $success = !empty($value);
         
         if (!$success) {
-            $this->assertionFailures[] = $message ?: 'El valor no debe estar vacío';
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            $this->assertionFailures[] = $message ?: 'Value should not be empty';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
         }
         
         return $success;
@@ -250,9 +246,5 @@ abstract class HttpTestCase {
             'failures' => count($this->assertionFailures),
             'failures_list' => $this->assertionFailures
         ];
-    }
-    
-    public function __construct() {
-        // Constructor vacío
     }
 }

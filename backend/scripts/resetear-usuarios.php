@@ -8,7 +8,7 @@
 // Cargar configuración igual que el script anterior
 $envPath = __DIR__ . '/../.env';
 if (!file_exists($envPath)) {
-    die("❌ Archivo .env no encontrado\n");
+    die(" Archivo .env no encontrado\n");
 }
 $env = parse_ini_file($envPath);
 
@@ -27,13 +27,13 @@ require_once __DIR__ . '/Inserter.php';
 
 use maquinas_recreativas\Infrastructure\Database\Database;
 
-echo "⚠️  ATENCIÓN: Este script ELIMINARÁ todos los usuarios existentes!\n";
+echo "  ATENCIÓN: Este script ELIMINARÁ todos los usuarios existentes!\n";
 echo "   (Excepto aquellos que tengan datos relacionados en otras tablas)\n\n";
 
 $confirm = readline("¿Estás seguro de continuar? (escribe 'ELIMINAR' para confirmar): ");
 
 if ($confirm !== 'ELIMINAR') {
-    echo "❌ Operación cancelada.\n";
+    echo " Operación cancelada.\n";
     exit(0);
 }
 
@@ -44,7 +44,7 @@ $connection = $database->getConnection();
 $lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
 if (file_exists($lockFile)) {
     unlink($lockFile);
-    echo "✅ Lock file eliminado\n";
+    echo " Lock file eliminado\n";
 }
 
 // Eliminar usuarios (en orden inverso por restricciones de clave foránea)
@@ -68,9 +68,9 @@ foreach ($tables as $table) {
     if ($connection->query($sql)) {
         echo "   ✓ {$table}: registros eliminados\n";
     } else {
-        echo "   ⚠️  {$table}: error - " . $connection->error . "\n";
+        echo "     {$table}: error - " . $connection->error . "\n";
     }
 }
 
-echo "\n✅ Usuarios eliminados. Ahora ejecuta el script de inserción:\n";
+echo "\n Usuarios eliminados. Ahora ejecuta el script de inserción:\n";
 echo "   php backend/scripts/insertar-usuarios-iniciales.php\n";

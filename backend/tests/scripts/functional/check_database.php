@@ -25,4 +25,4 @@ while ($row = $result->fetch_assoc()) {
     echo "   - {$row['usuario_asignado']} ({$row['tipo']}) [{$row['ID_Usuario']}]\n";
 }
 
-echo "\n✅ Verificación completada\n";
+echo "\n Verificación completada\n";

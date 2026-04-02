@@ -72,13 +72,13 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
         const iconos = {
             'Registro': '➕',
             'Montaje': '🔧',
-            'Comprobación': '✅',
+            'Comprobación': '',
             'Distribución': '📦',
             'Mantenimiento': '⚙️',
             'Reparación': '🔨',
-            'Retirada': '❌',
+            'Retirada': '',
             'Ensamblaje': '🛠️',
-            'Actualización': '📝',
+            'Actualización': '',
             'Cambio de estado': '🔄'
         };
         return iconos[accion] || '📋';
@@ -196,7 +196,7 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
                                             
                                             {item.descripcion && (
                                                 <div className="timeline-descripcion">
-                                                    <strong>📝 Descripción:</strong> {item.descripcion}
+                                                    <strong> Descripción:</strong> {item.descripcion}
                                                 </div>
                                             )}
                                             
@@ -230,7 +230,7 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
                                             )}
                                             
                                             <div className="timeline-ip">
-                                                <small>🌐 IP: {item.ip_address || 'Desconocida'}</small>
+                                                <small> IP: {item.ip_address || 'Desconocida'}</small>
                                             </div>
                                         </div>
                                     </div>

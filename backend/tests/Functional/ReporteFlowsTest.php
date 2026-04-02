@@ -38,7 +38,7 @@ class ReporteFlowsTest extends HttpTestCase {
     }
     
     public function testFlujoCompletoReportes() {
-        echo "\n📝 INICIANDO FLUJO COMPLETO DE REPORTES\n";
+        echo "\nINICIANDO FLUJO COMPLETO DE REPORTES\n";
         echo "=======================================\n\n";
         
         $this->pasoCrearUsuarios();
@@ -46,72 +46,74 @@ class ReporteFlowsTest extends HttpTestCase {
         $this->pasoCrearReporte();
         $this->pasoEnviarComentario();
         
-        echo "\n✅ FLUJO COMPLETO DE REPORTES EXITOSO\n";
+        echo "\nFLUJO COMPLETO DE REPORTES EXITOSO\n";
     }
     
     private function pasoCrearUsuarios() {
-        echo "👥 Creando usuarios...\n";
+        echo "Creando usuarios...\n";
         
-        // Usuario 1
         $resp1 = $this->request('POST', '/usuario/register', $this->usuario1);
-        $this->assertResponseSuccess('Error al crear usuario 1');
-        $this->usuario1Id = $resp1['userId'] ?? null;
-        $this->assertNotNull($this->usuario1Id, 'No se recibió ID usuario 1');
-        echo "   ✅ Usuario 1 creado: {$this->usuario1['usuario_asignado']} (ID: {$this->usuario1Id})\n";
+        if ($this->assertResponseSuccess('Error al crear usuario 1')) {
+            $this->usuario1Id = $resp1['userId'] ?? null;
+            $this->assertNotNull($this->usuario1Id, 'No se recibio ID usuario 1');
+            echo "   Usuario 1 creado: {$this->usuario1['usuario_asignado']} (ID: {$this->usuario1Id})\n";
+        }
         
         sleep(2);
         
-        // Usuario 2
         $resp2 = $this->request('POST', '/usuario/register', $this->usuario2);
-        $this->assertResponseSuccess('Error al crear usuario 2');
-        $this->usuario2Id = $resp2['userId'] ?? null;
-        $this->assertNotNull($this->usuario2Id, 'No se recibió ID usuario 2');
-        echo "   ✅ Usuario 2 creado: {$this->usuario2['usuario_asignado']} (ID: {$this->usuario2Id})\n";
+        if ($this->assertResponseSuccess('Error al crear usuario 2')) {
+            $this->usuario2Id = $resp2['userId'] ?? null;
+            $this->assertNotNull($this->usuario2Id, 'No se recibio ID usuario 2');
+            echo "   Usuario 2 creado: {$this->usuario2['usuario_asignado']} (ID: {$this->usuario2Id})\n";
+        }
     }
     
     private function pasoLoginEmisor() {
-        echo "🔐 Iniciando sesión como emisor...\n";
+        echo "Iniciando sesion como emisor...\n";
         
         $response = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->usuario1['usuario_asignado'],
             'contrasena' => $this->usuario1['contrasena']
         ]);
         
-        $this->assertResponseSuccess('Error al iniciar sesión');
-        echo "   ✅ Login exitoso\n";
+        if ($this->assertResponseSuccess('Error al iniciar sesion')) {
+            echo "   Login exitoso\n";
+        }
     }
     
     private function pasoCrearReporte() {
-        echo "📋 Creando reporte...\n";
+        echo "Creando reporte...\n";
         
         $response = $this->request('POST', '/reportes/crear', [
             'descripcion' => 'Reporte de prueba - ' . time()
         ]);
         
-        $this->assertResponseSuccess('Error al crear reporte');
-        $this->reporteId = $response['id'] ?? null;
-        $this->assertNotNull($this->reporteId, 'No se recibió ID de reporte');
-        
-        echo "   ✅ Reporte creado ID: {$this->reporteId}\n";
+        if ($this->assertResponseSuccess('Error al crear reporte')) {
+            $this->reporteId = $response['id'] ?? null;
+            $this->assertNotNull($this->reporteId, 'No se recibio ID de reporte');
+            echo "   Reporte creado ID: {$this->reporteId}\n";
+        }
     }
     
     private function pasoEnviarComentario() {
-        echo "💬 Enviando comentario...\n";
+        echo "Enviando comentario...\n";
         
         $response = $this->request('POST', '/comentarios', [
             'idReporte' => $this->reporteId,
             'comentario' => 'Comentario de prueba'
         ]);
         
-        $this->assertResponseSuccess('Error al enviar comentario');
-        echo "   ✅ Comentario enviado\n";
+        if ($this->assertResponseSuccess('Error al enviar comentario')) {
+            echo "   Comentario enviado\n";
+        }
         
-        // Verificar que se puede obtener el comentario
         sleep(1);
-        $comentarios = $this->request('GET', "/comentarios/reporte/{$this->reporteId}");
-        $this->assertResponseSuccess('Error al obtener comentarios');
-        $this->assertNotEmpty($comentarios['comentarios'] ?? [], 'No se encontraron comentarios');
         
-        echo "   ✅ Comentario verificado\n";
+        $comentarios = $this->request('GET', "/comentarios/reporte/{$this->reporteId}");
+        if ($this->assertResponseSuccess('Error al obtener comentarios')) {
+            $this->assertNotEmpty($comentarios['comentarios'] ?? [], 'No se encontraron comentarios');
+            echo "   Comentario verificado\n";
+        }
     }
 }

@@ -205,7 +205,7 @@ export default function TecnicoComprobador() {
                   }}
                   disabled={!allChecksPassed()}
                 >
-                  Mandar a distribución ✅
+                  Mandar a distribución 
                 </button>
                 <button
                   className="danger-btn"
@@ -214,7 +214,7 @@ export default function TecnicoComprobador() {
                     setMostrarMensaje(true);
                   }}
                 >
-                  Mandar a reensamblar ❌
+                  Mandar a reensamblar 
                 </button>
               </div>
             </div>

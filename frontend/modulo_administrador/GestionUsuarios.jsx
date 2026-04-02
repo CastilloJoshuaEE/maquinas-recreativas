@@ -34,7 +34,7 @@ export default function GestionUsuarios() {
 
                 <div className="card-buttons-container">
                     <div className="card-button" onClick={() => navigate('/admin/gestion-usuarios/registrar-usuario')}>
-                        <span className="icono-card" role="img" aria-label="Registrar">👤➕</span>
+                        <span className="icono-card" role="img" aria-label="Registrar">👤</span>
                         <h3>Registrar Usuario</h3>
                         <p>Crear un nuevo usuario en el sistema.</p>
                     </div>

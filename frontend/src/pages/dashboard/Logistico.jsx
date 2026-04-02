@@ -149,7 +149,7 @@ export default function Logistico() {
             emptyMessage="No hay máquinas para distribuir..."
             actionButtons={[
               {
-                label: "Poner operativa ✅",
+                label: "Poner operativa ",
                 onClick: handlePonerOperativa,
                 disabled:
                   !selectedMaquina ||

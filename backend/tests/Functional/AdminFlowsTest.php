@@ -26,60 +26,53 @@ class AdminFlowsTest extends HttpTestCase {
     }
     
     public function testFlujoCompletoAdministrador() {
-        echo "\n👑 INICIANDO FLUJO COMPLETO DE ADMINISTRADOR\n";
+        echo "\nINICIANDO FLUJO COMPLETO DE ADMINISTRADOR\n";
         echo "============================================\n\n";
         
-        // Registrar admin
         $this->pasoRegistrarAdmin();
-        
-        // Login
         $this->pasoLoginAdmin();
-        
-        // Obtener todos los usuarios
         $this->pasoObtenerTodosUsuarios();
-        
-        // Crear usuario
         $this->pasoCrearUsuario();
         
-        echo "\n✅ FLUJO COMPLETO DE ADMINISTRADOR EXITOSO\n";
+        echo "\nFLUJO COMPLETO DE ADMINISTRADOR EXITOSO\n";
     }
     
     private function pasoRegistrarAdmin() {
-        echo "📝 Registrando administrador...\n";
+        echo "Registrando administrador...\n";
         
         $response = $this->request('POST', '/usuario/register', $this->adminUser);
-        $this->assertResponseSuccess('Error al registrar administrador');
-        
-        $this->adminId = $response['userId'] ?? null;
-        $this->assertNotNull($this->adminId, 'No se recibió ID');
-        
-        echo "   ✅ Admin registrado: {$this->adminUser['usuario_asignado']} (ID: {$this->adminId})\n";
+        if ($this->assertResponseSuccess('Error al registrar administrador')) {
+            $this->adminId = $response['userId'] ?? null;
+            $this->assertNotNull($this->adminId, 'No se recibio ID');
+            echo "   Admin registrado: {$this->adminUser['usuario_asignado']} (ID: {$this->adminId})\n";
+        }
     }
     
     private function pasoLoginAdmin() {
-        echo "🔐 Login como administrador...\n";
+        echo "Login como administrador...\n";
         
         $response = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->adminUser['usuario_asignado'],
             'contrasena' => $this->adminUser['contrasena']
         ]);
         
-        $this->assertResponseSuccess('Error al iniciar sesión');
-        echo "   ✅ Login exitoso\n";
+        if ($this->assertResponseSuccess('Error al iniciar sesion')) {
+            echo "   Login exitoso\n";
+        }
     }
     
     private function pasoObtenerTodosUsuarios() {
-        echo "📋 Obteniendo todos los usuarios...\n";
+        echo "Obteniendo todos los usuarios...\n";
         
         $response = $this->request('GET', '/administrador/usuarios');
-        $this->assertResponseSuccess('Error al obtener usuarios');
-        
-        $total = count($response['usuarios'] ?? []);
-        echo "   ✅ Se obtuvieron {$total} usuarios\n";
+        if ($this->assertResponseSuccess('Error al obtener usuarios')) {
+            $total = count($response['usuarios'] ?? []);
+            echo "   Se obtuvieron {$total} usuarios\n";
+        }
     }
     
     private function pasoCrearUsuario() {
-        echo "➕ Creando nuevo usuario...\n";
+        echo "Creando nuevo usuario...\n";
         
         $nuevoUsuario = [
             'nombre' => 'Usuario',
@@ -94,11 +87,10 @@ class AdminFlowsTest extends HttpTestCase {
         ];
         
         $response = $this->request('POST', '/administrador/usuarios', $nuevoUsuario);
-        $this->assertResponseSuccess('Error al crear usuario');
-        
-        $this->usuarioCreadoId = $response['id'] ?? null;
-        $this->assertNotNull($this->usuarioCreadoId, 'No se recibió ID');
-        
-        echo "   ✅ Usuario creado con ID: {$this->usuarioCreadoId}\n";
+        if ($this->assertResponseSuccess('Error al crear usuario')) {
+            $this->usuarioCreadoId = $response['id'] ?? null;
+            $this->assertNotNull($this->usuarioCreadoId, 'No se recibio ID');
+            echo "   Usuario creado con ID: {$this->usuarioCreadoId}\n";
+        }
     }
 }

@@ -155,7 +155,7 @@ export default function Administrador() {
               setShowChat(false);
               setShowNotificaciones(false);
             }}>
-              <span className="emoji-icon">📄</span>
+              <span className="emoji-icon"></span>
               <h3>Gestionar Reportes</h3>
             </div>
 

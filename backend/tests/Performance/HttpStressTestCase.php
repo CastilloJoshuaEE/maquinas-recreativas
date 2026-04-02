@@ -72,7 +72,7 @@ class HttpStressTestCase {
         // Reintentar en caso de rate limiting
         if ($this->lastHttpCode === 429 && $retry < $this->maxRetries) {
             $waitTime = pow(2, $retry);
-            echo "      ⚠️  Rate limit (429) - Reintentando en {$waitTime}s (intento " . ($retry + 1) . "/{$this->maxRetries})\n";
+            echo "        Rate limit (429) - Reintentando en {$waitTime}s (intento " . ($retry + 1) . "/{$this->maxRetries})\n";
             sleep($waitTime);
             // Pasar array vacío en headers en lugar del string anterior
             return $this->request($method, $endpoint, $data, [], $retry + 1);
@@ -108,7 +108,7 @@ class HttpStressTestCase {
         $success = isset($this->lastResponse['success']) && $this->lastResponse['success'] === true;
         
         if (!$success && !empty($message)) {
-            echo "      ⚠️  {$message}\n";
+            echo "        {$message}\n";
             if ($this->lastResponse) {
                 echo "      Respuesta: " . json_encode($this->lastResponse) . "\n";
             }

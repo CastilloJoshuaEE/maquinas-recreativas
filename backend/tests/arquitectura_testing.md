@@ -1,5 +1,7 @@
 backend/tests/Security/security-test.php
 
+backend/tests/Functional/AdminFlowsTest.php, HttpTestCase.php, ReporteFlowsTest.php, run_tests.php, UserFlowsTest.php
+
 backend/tests/
 ├── bootstrap.php
 ├── TestDatabase.php
@@ -77,7 +79,7 @@ Debe salir algo como:
 
 ---
 
-# 🚀 DESPUÉS DE ESO
+#  DESPUÉS DE ESO
 
 Ya puedes usar coverage:
 
@@ -108,3 +110,12 @@ EJECUTAR TEST DE SEGURIDAD
 cd D:\xampp\htdocs\maquinas-recreativas\backend\tests\Security
 
 php security-test.php
+
+# Iniciar el servidor en una terminal
+
+php -S localhost:8000 -t backend/public
+
+# En otra terminal, ejecutar las pruebas de integración
+
+cd tests/Functional
+php run_tests.php
