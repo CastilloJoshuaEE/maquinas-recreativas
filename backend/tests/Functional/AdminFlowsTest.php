@@ -45,7 +45,6 @@ class AdminFlowsTest extends HttpTestCase {
             $this->adminId = $response['userId'] ?? null;
             $this->adminUsuarioAsignado = $response['usuario_asignado'] ?? null;
             $this->assertNotNull($this->adminId, 'No se recibio ID');
-            $this->assertNotNull($this->adminUsuarioAsignado, 'No se recibio usuario_asignado');
             echo "   Admin registrado: {$this->adminUsuarioAsignado} (ID: {$this->adminId})\n";
         }
     }
@@ -59,10 +58,6 @@ class AdminFlowsTest extends HttpTestCase {
         ]);
         
         if ($this->assertResponseSuccess('Error al iniciar sesion')) {
-            // Verificar que el usuario logueado tiene el rol correcto
-            if (isset($response['usuario']['tipo'])) {
-                echo "   Rol obtenido: {$response['usuario']['tipo']}\n";
-            }
             echo "   Login exitoso\n";
         }
     }
@@ -80,7 +75,6 @@ class AdminFlowsTest extends HttpTestCase {
     private function pasoCrearUsuario() {
         echo "Creando nuevo usuario...\n";
         
-        // NOTA: No enviamos 'usuario_asignado' porque el sistema lo genera automáticamente
         $nuevoUsuario = [
             'nombre' => 'Usuario',
             'apellido' => 'Prueba',

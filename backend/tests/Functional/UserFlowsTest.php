@@ -251,30 +251,56 @@ class UserFlowsTest extends HttpTestCase {
             echo "   Maquina registrada: {$this->maquinaData['nombre']} (ID: {$this->maquinaId})\n";
         }
     }
+ private function pasoVerMaquinasEnsamblador() {
+    echo "Verificando maquinas asignadas al ensamblador...\n";
     
-    private function pasoVerMaquinasEnsamblador() {
-        echo "Verificando maquinas asignadas al ensamblador...\n";
+    $response = $this->request('GET', "/maquina/ensamblador/{$this->ensambladorId}");
+    
+    if ($this->assertResponseSuccess('Error al obtener maquinas del ensamblador')) {
+        // Ahora la respuesta tiene estructura {success: true, maquinas: [...]}
+        $maquinas = $response['maquinas'] ?? [];
+        $this->assertArrayHasKey('maquinas', $response, 'Respuesta no contiene maquinas');
         
-        $response = $this->request('GET', "/maquina/ensamblador/{$this->ensambladorId}");
-        
-        if ($this->assertResponseSuccess('Error al obtener maquinas del ensamblador')) {
-            $this->assertArrayHasKey('maquinas', $response, 'Respuesta no contiene maquinas');
-            
-            $maquinaEncontrada = false;
-            if (isset($response['maquinas']) && is_array($response['maquinas'])) {
-                foreach ($response['maquinas'] as $maquina) {
-                    if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
-                        $maquinaEncontrada = true;
-                        break;
-                    }
-                }
+        $maquinaEncontrada = false;
+        foreach ($maquinas as $maquina) {
+            if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
+                $maquinaEncontrada = true;
+                break;
             }
-            
-            $this->assertTrue($maquinaEncontrada, 'No se encontro la maquina asignada al ensamblador');
-            echo "   Maquina verificada\n";
         }
+        
+        $this->assertTrue($maquinaEncontrada, 'No se encontro la maquina asignada al ensamblador');
+        echo "   Maquina verificada\n";
     }
+}
+private function pasoEnviarAComprobacion() {
+    echo "Enviando maquina a comprobacion...\n";
     
+    $response = $this->request('POST', '/maquina/mandar-comprobacion', [
+        'idMaquina' => $this->maquinaId,
+        'mensaje' => 'Maquina lista para comprobacion'
+    ]);
+    
+    $this->assertResponseSuccess('Error al enviar a comprobacion');
+    echo "   Maquina enviada a comprobacion\n";
+    
+    sleep(1);
+    
+    $response = $this->request('GET', "/maquina/estado/Comprobandose");
+    if ($this->assertResponseSuccess('Error al obtener maquinas por estado')) {
+        $maquinas = $response['maquinas'] ?? [];
+        $encontrada = false;
+        foreach ($maquinas as $maquina) {
+            if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
+                $encontrada = true;
+                break;
+            }
+        }
+        $this->assertTrue($encontrada, 'La maquina no cambio a estado Comprobandose');
+        echo "   Estado actualizado: Comprobandose\n";
+    }
+}
+
     private function pasoRegistrarMontaje() {
         echo "Registrando montaje de componentes...\n";
         
@@ -300,92 +326,60 @@ class UserFlowsTest extends HttpTestCase {
         $this->assertResponseSuccess('Error al registrar montaje de carcasa');
         echo "   Carcasa montada\n";
     }
-    
-    private function pasoEnviarAComprobacion() {
-        echo "Enviando maquina a comprobacion...\n";
-        
-        $response = $this->request('POST', '/maquina/mandar-comprobacion', [
-            'idMaquina' => $this->maquinaId,
-            'mensaje' => 'Maquina lista para comprobacion'
-        ]);
-        
-        $this->assertResponseSuccess('Error al enviar a comprobacion');
-        echo "   Maquina enviada a comprobacion\n";
-        
-        sleep(1);
-        
-        $response = $this->request('GET', "/maquina/estado/Comprobandose");
-        if ($this->assertResponseSuccess('Error al obtener maquinas por estado')) {
-            $encontrada = false;
-            if (isset($response['maquinas']) && is_array($response['maquinas'])) {
-                foreach ($response['maquinas'] as $maquina) {
-                    if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
-                        $encontrada = true;
-                        break;
-                    }
-                }
-            }
-            $this->assertTrue($encontrada, 'La maquina no cambio a estado Comprobandose');
-            echo "   Estado actualizado: Comprobandose\n";
-        }
-    }
-    
     private function pasoVerMaquinasComprobador() {
-        echo "Verificando maquinas para comprobar...\n";
-        
-        $response = $this->request('GET', "/maquina/comprobador/{$this->comprobadorId}");
-        
-        if ($this->assertResponseSuccess('Error al obtener maquinas del comprobador')) {
-            $this->assertArrayHasKey('maquinas', $response, 'Respuesta no contiene maquinas');
-            
-            $maquinaEncontrada = false;
-            if (isset($response['maquinas']) && is_array($response['maquinas'])) {
-                foreach ($response['maquinas'] as $maquina) {
-                    if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
-                        $maquinaEncontrada = true;
-                        break;
-                    }
-                }
-            }
-            
-            $this->assertTrue($maquinaEncontrada, 'No se encontro la maquina para comprobar');
-            echo "   Maquina verificada\n";
-        }
-    }
+    echo "Verificando maquinas para comprobar...\n";
     
-    private function pasoAprobarMaquina() {
-        echo "Aprobando maquina y enviando a distribucion...\n";
+    $response = $this->request('GET', "/maquina/comprobador/{$this->comprobadorId}");
+    
+    if ($this->assertResponseSuccess('Error al obtener maquinas del comprobador')) {
+        $maquinas = $response['maquinas'] ?? [];
+        $this->assertArrayHasKey('maquinas', $response, 'Respuesta no contiene maquinas');
         
-        $response = $this->request('POST', '/maquina/mandar-distribucion', [
-            'idMaquina' => $this->maquinaId,
-            'mensaje' => 'Maquina aprobada, enviar a distribucion'
-        ]);
-        
-        $this->assertResponseSuccess('Error al aprobar maquina');
-        
-        sleep(1);
-        
-        $response = $this->request('POST', '/maquina/poner-operativa', [
-            'idMaquina' => $this->maquinaId
-        ]);
-        
-        $this->assertResponseSuccess('Error al poner maquina operativa');
-        
-        sleep(1);
-        
-        $response = $this->request('GET', "/maquina/estado/Operativa");
-        if ($this->assertResponseSuccess('Error al obtener maquinas operativas')) {
-            $encontrada = false;
-            if (isset($response['maquinas']) && is_array($response['maquinas'])) {
-                foreach ($response['maquinas'] as $maquina) {
-                    if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
-                        $encontrada = true;
-                        break;
-                    }
-                }
+        $maquinaEncontrada = false;
+        foreach ($maquinas as $maquina) {
+            if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
+                $maquinaEncontrada = true;
+                break;
             }
-            $this->assertTrue($encontrada, 'La maquina no esta en estado Operativa');
-            echo "   Maquina aprobada y operativa\n";
         }
+        
+        $this->assertTrue($maquinaEncontrada, 'No se encontro la maquina para comprobar');
+        echo "   Maquina verificada\n";
     }
+}
+
+private function pasoAprobarMaquina() {
+    echo "Aprobando maquina y enviando a distribucion...\n";
+    
+    $response = $this->request('POST', '/maquina/mandar-distribucion', [
+        'idMaquina' => $this->maquinaId,
+        'mensaje' => 'Maquina aprobada, enviar a distribucion'
+    ]);
+    
+    $this->assertResponseSuccess('Error al aprobar maquina');
+    
+    sleep(1);
+    
+    $response = $this->request('POST', '/maquina/poner-operativa', [
+        'idMaquina' => $this->maquinaId
+    ]);
+    
+    $this->assertResponseSuccess('Error al poner maquina operativa');
+    
+    sleep(1);
+    
+    $response = $this->request('GET', "/maquina/estado/Operativa");
+    if ($this->assertResponseSuccess('Error al obtener maquinas operativas')) {
+        $maquinas = $response['maquinas'] ?? [];
+        $encontrada = false;
+        foreach ($maquinas as $maquina) {
+            if (isset($maquina['id']) && $maquina['id'] === $this->maquinaId) {
+                $encontrada = true;
+                break;
+            }
+        }
+        $this->assertTrue($encontrada, 'La maquina no esta en estado Operativa');
+        echo "   Maquina aprobada y operativa\n";
+    }
+}
 }

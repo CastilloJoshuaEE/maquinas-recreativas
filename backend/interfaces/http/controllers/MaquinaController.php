@@ -492,19 +492,19 @@ class MaquinaController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerPorTecnicoEnsamblador(Request $request, string $idTecnico): Response
-    {
-        if (!ValidationHelper::isValidUUID($idTecnico)) {
-            throw new DomainException('ID de técnico inválido', 400);
-        }
-
-        $query   = new ObtenerMaquinasPorTecnicoEnsambladorQuery($idTecnico);
-        $maquinas = $this->obtenerPorTecnicoEnsambladorHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+  public function obtenerPorTecnicoEnsamblador(Request $request, string $idTecnico): Response
+{
+    $query = new ObtenerMaquinasPorTecnicoEnsambladorQuery($idTecnico);
+    $resultado = $this->obtenerPorTecnicoEnsambladorHandler->handle($query);
+    
+    $response = new Response();
+    if (isset($resultado['success']) && $resultado['success'] === false) {
+        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
+    } else {
+        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
     }
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/maquina/comprobador/{uuid}",
@@ -519,21 +519,19 @@ class MaquinaController
             new OA\Response(response: 400, description: "UUID inválido"),
             new OA\Response(response: 401, description: "No autorizado")
         ]
-    )]
-    public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico): Response
-    {
-        if (!ValidationHelper::isValidUUID($idTecnico)) {
-            throw new DomainException('ID de técnico inválido', 400);
-        }
-
-        $query   = new ObtenerMaquinasPorTecnicoComprobadorQuery($idTecnico);
-        $maquinas = $this->obtenerPorTecnicoComprobadorHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+    )]public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico): Response
+{
+    $query = new ObtenerMaquinasPorTecnicoComprobadorQuery($idTecnico);
+    $resultado = $this->obtenerPorTecnicoComprobadorHandler->handle($query);
+    
+    $response = new Response();
+    if (isset($resultado['success']) && $resultado['success'] === false) {
+        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
+    } else {
+        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
     }
-
+    return $response;
+}
     #[OA\Get(
         path: "/v1/maquina/mantenimiento/{uuid}",
         summary: "Obtener máquinas asignadas a un técnico de mantenimiento",
@@ -575,15 +573,20 @@ class MaquinaController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerPorEstado(Request $request, string $estado): Response
-    {
-        $query   = new ObtenerMaquinasPorEstadoQuery($estado);
-        $maquinas = $this->obtenerPorEstadoHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+public function obtenerPorEstado(Request $request, string $estado): Response
+{
+    $query = new ObtenerMaquinasPorEstadoQuery($estado);
+    $resultado = $this->obtenerPorEstadoHandler->handle($query);
+    
+    $response = new Response();
+    if (isset($resultado['success']) && $resultado['success'] === false) {
+        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
+    } else {
+        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
     }
+    return $response;
+}
+
 
     #[OA\Get(
         path: "/v1/maquina/etapa/{etapa}",
@@ -598,15 +601,19 @@ class MaquinaController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerPorEtapa(Request $request, string $etapa): Response
-    {
-        $query   = new ObtenerMaquinasPorEtapaQuery($etapa);
-        $maquinas = $this->obtenerPorEtapaHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+ public function obtenerPorEtapa(Request $request, string $etapa): Response
+{
+    $query = new ObtenerMaquinasPorEtapaQuery($etapa);
+    $resultado = $this->obtenerPorEtapaHandler->handle($query);
+    
+    $response = new Response();
+    if (isset($resultado['success']) && $resultado['success'] === false) {
+        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
+    } else {
+        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
     }
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/maquina/distribucion",

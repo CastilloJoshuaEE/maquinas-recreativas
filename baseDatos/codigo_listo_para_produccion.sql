@@ -265,6 +265,9 @@ CREATE TABLE historial_maquinas (
 ALTER TABLE usuario MODIFY usuario_asignado VARCHAR(25) NOT NULL UNIQUE DEFAULT 'Aun no tiene';
 ALTER TABLE usuario
 ADD COLUMN fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE historial_maquinas MODIFY ID_Maquina CHAR(36) NULL;
+
+
 INSERT INTO componente (tipo, nombre, precio) VALUES
 ('Ensamblador', 'Monitor LED 32" Pantalla Táctil', 250.00),
 ('Ensamblador', 'Placa Base Arcade Pro V2', 220.00),

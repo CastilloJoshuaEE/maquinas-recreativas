@@ -329,7 +329,7 @@ class TestDatabase extends Database
     FOREIGN KEY (ID_Maquina) REFERENCES MaquinaRecreativa(ID_Maquina) ON DELETE CASCADE,
     FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
 ) ENGINE=InnoDB");
-        
+   # ALTER TABLE historial_maquinas MODIFY ID_Maquina CHAR(36) NULL;     
         $this->connection->query("SET FOREIGN_KEY_CHECKS = 1");
     }
     

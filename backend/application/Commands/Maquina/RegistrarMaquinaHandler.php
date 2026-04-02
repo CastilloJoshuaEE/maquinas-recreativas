@@ -1,4 +1,8 @@
 <?php
+/**
+ * application/commands/maquina/RegistrarMaquinaHandler.php
+ */
+
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
 use maquinas_recreativas\Application\Commands\Command;
@@ -42,18 +46,23 @@ final class RegistrarMaquinaHandler implements CommandHandler
             throw new DomainException('Comercio no encontrado');
         }
 
-       $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
-$comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
+        // Obtener técnicos por especialidad
+        $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
+        $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
 
-if (empty($ensambladores) || empty($comprobadores)) {
-    throw new DomainException('No hay técnicos disponibles para asignar');
-}
+        if (empty($ensambladores)) {
+            throw new DomainException('No hay técnicos ensambladores disponibles');
+        }
+        if (empty($comprobadores)) {
+            throw new DomainException('No hay técnicos comprobadores disponibles');
+        }
 
-$idEnsamblador = $ensambladores[0]->getId();
-$idComprobador = $comprobadores[0]->getId();
+        // Tomar el primer técnico de cada lista
+        $idEnsamblador = $ensambladores[0]->getId();
+        $idComprobador = $comprobadores[0]->getId();
 
-// Log para depuración
-error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");
+        error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");
+
         $maquina = MaquinaRecreativa::crear(
             $command->nombre(),
             $command->tipo(),
