@@ -220,9 +220,7 @@ class UserFlowsTest extends HttpTestCase {
     private function pasoGenerarCarcasa() {
         echo "Generando carcasa...\n";
         
-        // La carcasa es un componente estructural
-        // Nota: Esto depende de la API disponible. Podría necesitar un endpoint específico
-        // Por ahora usamos generar-placa como placeholder hasta que exista endpoint para carcasa
+      
         $response = $this->request('POST', '/maquina/generar-placa', []);
         
         if ($this->assertResponseSuccess('Error al generar carcasa')) {
@@ -234,14 +232,16 @@ class UserFlowsTest extends HttpTestCase {
     
     private function pasoRegistrarMaquina() {
         echo "Registrando maquina con placa y carcasa...\n";
-        
-        $maquinaData = [
-            'nombre' => $this->maquinaData['nombre'],
-            'tipo' => $this->maquinaData['tipo'],
-            'idComercio' => $this->comercioId,
-            'idPlaca' => $this->placaId,
-            'idCarcasa' => $this->carcasaId
-        ];
+    $maquinaData = [
+        'nombre' => $this->maquinaData['nombre'],
+        'tipo' => $this->maquinaData['tipo'],
+        'idComercio' => $this->comercioId,
+        'idPlaca' => $this->placaId,
+        'idCarcasa' => $this->carcasaId,
+        'idEnsamblador' => $this->ensambladorId,   // ← agregar
+        'idComprobador' => $this->comprobadorId    // ← agregar
+    ];
+    
         
         $response = $this->request('POST', '/maquina/register', $maquinaData);
         

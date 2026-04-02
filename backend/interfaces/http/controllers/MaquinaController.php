@@ -133,8 +133,13 @@ class MaquinaController
         if (!$userId) {
             throw new DomainException('Usuario no autenticado', 401);
         }
-
-        $command  = new RegistrarMaquinaCommand($data['nombre'], $data['tipo'], $data['idComercio'], $userId, $data['idPlaca'], $data['idCarcasa']);
+$idEnsamblador  = $data['idEnsamblador'] ?? null;
+$idComprobador  = $data['idComprobador'] ?? null;
+$command = new RegistrarMaquinaCommand(
+    $data['nombre'], $data['tipo'], $data['idComercio'], $userId,
+    $data['idPlaca'], $data['idCarcasa'],
+    $idEnsamblador, $idComprobador   // nuevos parámetros
+);
         $idMaquina = $this->registrarMaquinaHandler->handle($command);
 
         $response = new Response();

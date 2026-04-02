@@ -1,7 +1,5 @@
 <?php
-/**
- * application/commands/maquina/RegistrarMaquinaHandler.php
- */
+// application/commands/maquina/RegistrarMaquinaHandler.php
 
 namespace maquinas_recreativas\Application\Commands\Maquina;
 
@@ -40,26 +38,45 @@ final class RegistrarMaquinaHandler implements CommandHandler
             throw new DomainException('Comando inválido');
         }
 
+        // Validar comercio
         $idComercio = new Uuid($command->idComercio());
         $comercio = $this->comercioRepository->buscarPorId($idComercio->value());
         if (!$comercio) {
             throw new DomainException('Comercio no encontrado');
         }
 
-        // Obtener técnicos por especialidad
-        $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
-        $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
-
-        if (empty($ensambladores)) {
-            throw new DomainException('No hay técnicos ensambladores disponibles');
+        // Determinar ensamblador
+        $idEnsamblador = null;
+        if ($command->idEnsamblador() !== null) {
+            // Validar que el ID proporcionado sea un técnico ensamblador válido
+            $ensamblador = $this->usuarioRepository->findById(new Uuid($command->idEnsamblador()));
+            if (!$ensamblador || !$ensamblador->esTecnico() || $ensamblador->getEspecialidad() !== 'Ensamblador') {
+                throw new DomainException('El ID de ensamblador proporcionado no es válido');
+            }
+            $idEnsamblador = new Uuid($command->idEnsamblador());
+        } else {
+            $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
+            if (empty($ensambladores)) {
+                throw new DomainException('No hay técnicos ensambladores disponibles');
+            }
+            $idEnsamblador = $ensambladores[0]->getId();
         }
-        if (empty($comprobadores)) {
-            throw new DomainException('No hay técnicos comprobadores disponibles');
-        }
 
-        // Tomar el primer técnico de cada lista
-        $idEnsamblador = $ensambladores[0]->getId();
-        $idComprobador = $comprobadores[0]->getId();
+        // Determinar comprobador
+        $idComprobador = null;
+        if ($command->idComprobador() !== null) {
+            $comprobador = $this->usuarioRepository->findById(new Uuid($command->idComprobador()));
+            if (!$comprobador || !$comprobador->esTecnico() || $comprobador->getEspecialidad() !== 'Comprobador') {
+                throw new DomainException('El ID de comprobador proporcionado no es válido');
+            }
+            $idComprobador = new Uuid($command->idComprobador());
+        } else {
+            $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
+            if (empty($comprobadores)) {
+                throw new DomainException('No hay técnicos comprobadores disponibles');
+            }
+            $idComprobador = $comprobadores[0]->getId();
+        }
 
         error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");
 
