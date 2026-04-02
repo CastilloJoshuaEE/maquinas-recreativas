@@ -57,25 +57,26 @@ class MySQLMaquinaRepository implements MaquinaRepository
     }
 
     public function findByTecnicoComprobador(Uuid $idTecnico): array
-    {
-        $conn = $this->db->getConnection();
-        $sql = "SELECT * FROM MaquinaRecreativa 
-                WHERE ID_Tecnico_Comprobador = ? AND Estado = 'Comprobandose'
-                ORDER BY Fecha_Registro DESC";
-        $stmt = $conn->prepare($sql);
-        $idValue = $idTecnico->value();
-        $stmt->bind_param('s', $idValue);
-        $stmt->execute();
-        $result = $stmt->get_result();
+{
+    $conn = $this->db->getConnection();
+    $sql = "SELECT * FROM MaquinaRecreativa 
+            WHERE ID_Tecnico_Comprobador = ? AND Estado = 'Comprobandose'
+            ORDER BY Fecha_Registro DESC";
+    $stmt = $conn->prepare($sql);
+    $idValue = $idTecnico->value();
+    $stmt->bind_param('s', $idValue);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        $maquinas = [];
-        while ($row = $result->fetch_assoc()) {
-            $maquinas[] = MaquinaRecreativa::fromArray($row);
-        }
-        $stmt->close();
+    error_log("findByTecnicoComprobador: buscando técnico $idValue, encontró " . $result->num_rows . " filas");
 
-        return $maquinas;
+    $maquinas = [];
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = MaquinaRecreativa::fromArray($row);
     }
+    $stmt->close();
+    return $maquinas;
+}
 
     public function findByTecnicoMantenimiento(Uuid $idTecnico): array
     {

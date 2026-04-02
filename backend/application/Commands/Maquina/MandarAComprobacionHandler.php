@@ -52,7 +52,9 @@ final class MandarAComprobacionHandler implements CommandHandler
         }
 
         $maquina->enviarAComprobacion();
-        $this->maquinaRepository->save($maquina);
+        error_log("Estado después de enviarAComprobacion: " . $maquina->estado()->value());
+$this->maquinaRepository->save($maquina);
+error_log("Máquina guardada con ID: " . $maquina->id()->value());
 
         $historial = HistorialMaquina::registrar(
             $idMaquina,
@@ -68,7 +70,8 @@ final class MandarAComprobacionHandler implements CommandHandler
             ['mensaje' => $command->mensaje()]
         );
         $this->historialRepository->save($historial);
-
+$verificar = $this->maquinaRepository->findById($idMaquina);
+error_log("Estado en BD después de guardar: " . ($verificar ? $verificar->estado()->value() : 'NULL'));
         $notificacion = NotificacionMaquina::crear(
             $idRemitente,
             $maquina->idTecnicoComprobador(),

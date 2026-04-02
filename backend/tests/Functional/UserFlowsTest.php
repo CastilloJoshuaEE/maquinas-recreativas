@@ -284,6 +284,25 @@ private function pasoEnviarAComprobacion() {
     $this->assertResponseSuccess('Error al enviar a comprobacion');
     echo "   Maquina enviada a comprobacion\n";
     
+    // Consulta directa a la base de datos de pruebas usando valores fijos
+    $host = 'localhost';
+    $user = 'root';
+    $pass = '';
+    $dbname = 'test_bd_recrea_sys';
+    
+    $conn = new \mysqli($host, $user, $pass, $dbname);
+    if ($conn->connect_error) {
+        echo "   Error de conexión a BD: " . $conn->connect_error . "\n";
+    } else {
+        $result = $conn->query("SELECT Estado FROM MaquinaRecreativa WHERE ID_Maquina = '$this->maquinaId'");
+        if ($result && $row = $result->fetch_assoc()) {
+            echo "   Estado en BD después de enviar a comprobación: " . $row['Estado'] . "\n";
+        } else {
+            echo "   ERROR: Máquina no encontrada en BD o error en consulta\n";
+        }
+        $conn->close();
+    }
+    
     sleep(1);
     
     $response = $this->request('GET', "/maquina/estado/Comprobandose");
@@ -300,7 +319,6 @@ private function pasoEnviarAComprobacion() {
         echo "   Estado actualizado: Comprobandose\n";
     }
 }
-
     private function pasoRegistrarMontaje() {
         echo "Registrando montaje de componentes...\n";
         

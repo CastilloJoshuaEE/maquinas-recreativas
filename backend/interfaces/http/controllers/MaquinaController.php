@@ -524,16 +524,20 @@ $command = new RegistrarMaquinaCommand(
             new OA\Response(response: 400, description: "UUID inválido"),
             new OA\Response(response: 401, description: "No autorizado")
         ]
-    )]public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico): Response
+    )]
+public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico): Response
 {
     $query = new ObtenerMaquinasPorTecnicoComprobadorQuery($idTecnico);
     $resultado = $this->obtenerPorTecnicoComprobadorHandler->handle($query);
     
     $response = new Response();
-    if (isset($resultado['success']) && $resultado['success'] === false) {
-        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
+    // Si el handler devuelve un array simple, lo envolvemos
+    if (isset($resultado['success'])) {
+        // Ya tiene la estructura correcta
+        $response->json($resultado);
     } else {
-        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
+        // Es un array simple de máquinas
+        $response->json(['success' => true, 'maquinas' => $resultado]);
     }
     return $response;
 }
@@ -578,24 +582,26 @@ $command = new RegistrarMaquinaCommand(
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-   public function obtenerPorEstado(Request $request, string $estado): Response
+public function obtenerPorEstado(Request $request, string $estado): Response
 {
+    error_log("=== obtenerPorEstado: estado=$estado ===");
+    $response = new Response();
     try {
         $query = new ObtenerMaquinasPorEstadoQuery($estado);
         $resultado = $this->obtenerPorEstadoHandler->handle($query);
-        
-        $response = new Response();
+        error_log("Resultado del handler: " . json_encode($resultado));
+
         if (isset($resultado['success']) && $resultado['success'] === false) {
-            return $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error']], 500);
+            $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error']], 500);
+        } else {
+            $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
         }
-        return $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
-        
     } catch (\Throwable $e) {
         error_log("Excepción en obtenerPorEstado: " . $e->getMessage());
-        return (new Response())->json(['success' => false, 'error' => 'Error interno del servidor'], 500);
+        $response->json(['success' => false, 'error' => 'Error interno: ' . $e->getMessage()], 500);
     }
+    return $response;
 }
-
     #[OA\Get(
         path: "/v1/maquina/etapa/{etapa}",
         summary: "Obtener máquinas filtradas por etapa",

@@ -21,7 +21,7 @@ require_once __DIR__ . '/HttpTestCase.php';
 require_once __DIR__ . '/UserFlowsTest.php';
 require_once __DIR__ . '/AdminFlowsTest.php';
 require_once __DIR__ . '/ReporteFlowsTest.php';
-
+require_once __DIR__ . '/../bootstrap.php'; 
 echo "Verificando servidor backend...\n";
 $ch = curl_init('http://localhost:8000/health');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -70,6 +70,7 @@ foreach ($tests as $name => $test) {
     echo str_repeat("-", strlen($name) + 14) . "\n";
 
     resetRateLimits();
+    cleanTestDatabase();
     $test->clearCookies();
 
     try {

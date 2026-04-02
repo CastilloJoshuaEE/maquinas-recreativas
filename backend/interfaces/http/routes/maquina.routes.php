@@ -107,12 +107,12 @@ return [
     ],
     
     // Obtener máquinas por estado
-    [
-        'method' => 'GET',
-        'path' => '/maquina/estado/:slug',
-        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorEstado'],
-        'middleware' => []
-    ],
+[
+    'method' => 'GET',
+    'path' => '/maquina/estado/:estado',   
+    'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorEstado'],
+    'middleware' => []
+],
     
     // Obtener máquinas por etapa
     [

@@ -37,18 +37,19 @@ final class ObtenerMaquinasPorTecnicoComprobadorHandler
      * @return array
      * @throws DomainException
      */
-    public function handle(ObtenerMaquinasPorTecnicoComprobadorQuery $query): array
-    {
-        $idTecnico = new Uuid($query->getIdTecnico());
+  
+public function handle(ObtenerMaquinasPorTecnicoComprobadorQuery $query): array
+{
+    $idTecnico = new Uuid($query->getIdTecnico());
 
-        $tecnico = $this->usuarioRepository->findById($idTecnico);
-        if (!$tecnico || !$tecnico->esTecnico()) {
-            throw new DomainException('Técnico no encontrado o no válido.');
-        }
+    $tecnico = $this->usuarioRepository->findById($idTecnico);
+    if (!$tecnico || !$tecnico->esTecnico()) {
+        throw new DomainException('Técnico no encontrado o no válido.');
+    }
 
-        $maquinas = $this->maquinaRepository->findByTecnicoComprobador($idTecnico);
+    $maquinas = $this->maquinaRepository->findByTecnicoComprobador($idTecnico);
 
-    return array_map(function ($maquina) {
+    $resultado = array_map(function ($maquina) {
         $data = $maquina->toArray();
         return [
             'id' => $data['ID_Maquina'],
@@ -60,5 +61,8 @@ final class ObtenerMaquinasPorTecnicoComprobadorHandler
             'id_comercio' => $data['ID_Comercio']
         ];
     }, $maquinas);
-    }
+    
+    // Devolver la estructura que el test espera
+    return ['success' => true, 'maquinas' => $resultado];
+}
 }
