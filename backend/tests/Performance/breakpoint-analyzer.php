@@ -29,7 +29,7 @@ class BreakpointAnalyzer {
     }
     
     public function analyze() {
-        echo "🔍 Analizando punto de quiebre del sistema...\n";
+        echo " Analizando punto de quiebre del sistema...\n";
         echo "============================================\n\n";
         
         $metrics = $this->calculateMetrics();
@@ -63,7 +63,7 @@ class BreakpointAnalyzer {
         // Determinar punto de quiebre
         $breakpoint = $this->findBreakpoint($metrics);
         
-        echo "\n\n📊 PUNTO DE QUIEBRE IDENTIFICADO:\n";
+        echo "\n\n PUNTO DE QUIEBRE IDENTIFICADO:\n";
         echo "================================\n";
         
         if ($breakpoint) {
@@ -72,7 +72,7 @@ class BreakpointAnalyzer {
             echo "• Tiempo de respuesta (p95): " . round($breakpoint['p95']) . "ms\n";
             echo "• Causa probable: {$breakpoint['cause']}\n";
             
-            echo "\n💡 RECOMENDACIONES:\n";
+            echo "\n RECOMENDACIONES:\n";
             echo $this->getRecommendations($breakpoint);
         } else {
             echo " No se detectó punto de quiebre en el rango probado\n";

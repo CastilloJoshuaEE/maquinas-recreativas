@@ -209,14 +209,14 @@ export default function RegistrarUsuario() {
                 </ul>
                 </div>
                 <div className="requisito-card">
-                <h3>📦 Logística</h3>
+                <h3> Logística</h3>
                 <ul>
                     <li>Buena comunicación con técnicos y contabilidad.</li>
                     <li>Capacidad para trabajar bajo presión y tiempos ajustados.</li>
                 </ul>
                 </div>
                 <div className="requisito-card">
-                <h3>📊 Contabilidad</h3>
+                <h3> Contabilidad</h3>
                 <ul>
                     <li>Conocimiento en manejo de recaudaciones por máquina.</li>
                     <li>Capacidad para elaborar reportes claros y transparentes.</li>

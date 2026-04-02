@@ -7,7 +7,7 @@ echo "║     PRUEBAS DE ESTRÉS - SISTEMA maquinas_recreativas                 
 echo "╚════════════════════════════════════════════════════════════╝\n\n";
 
 // Verificar que el backend está corriendo
-echo "📡 Verificando servidor backend...\n";
+echo " Verificando servidor backend...\n";
 
 $ch = curl_init('http://localhost:8000/health');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -27,7 +27,7 @@ echo " Servidor backend OK\n\n";
 require_once __DIR__ . '/StressTest.php';
 
 // Crear instancia y ejecutar pruebas
-echo "🔧 Inicializando pruebas de estrés...\n";
+echo " Inicializando pruebas de estrés...\n";
 $test = new StressTest();
 $test->init(); // Mostrar banner y crear usuarios
 $test->testEjecutarEstres(); // Ejecutar las fases de carga

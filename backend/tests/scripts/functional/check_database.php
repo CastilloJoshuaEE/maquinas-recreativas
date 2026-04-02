@@ -3,7 +3,7 @@
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-echo "🔍 VERIFICANDO BASE DE DATOS\n";
+echo " VERIFICANDO BASE DE DATOS\n";
 echo "============================\n\n";
 
 $conn = $testDb->getConnection();
@@ -11,7 +11,7 @@ $conn = $testDb->getConnection();
 // Verificar qué base de datos estamos usando
 $result = $conn->query("SELECT DATABASE() as db");
 $row = $result->fetch_assoc();
-echo "📊 Base de datos actual: " . $row['db'] . "\n\n";
+echo " Base de datos actual: " . $row['db'] . "\n\n";
 
 // Contar usuarios
 $result = $conn->query("SELECT COUNT(*) as total FROM usuario");

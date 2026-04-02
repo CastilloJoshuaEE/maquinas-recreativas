@@ -79,7 +79,7 @@ Debe salir algo como:
 
 ---
 
-#  DESPUÉS DE ESO
+# DESPUÉS DE ESO
 
 Ya puedes usar coverage:
 
@@ -119,3 +119,8 @@ php -S localhost:8000 -t backend/public
 
 cd tests/Functional
 php run_tests.php
+
+o 
+
+cd D:\xampp\htdocs\maquinas-recreativas\backend
+vendor\bin\phpunit -c tests/phpunit.xml

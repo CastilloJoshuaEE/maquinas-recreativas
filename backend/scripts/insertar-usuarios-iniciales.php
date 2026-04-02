@@ -34,7 +34,7 @@ $dbName = $env['DB_NAME'] ?? null;
 
 if ($isTest) {
     $dbName = $env['DB_NAME_TEST'] ?? $dbName;
-    echo "🔧 Modo TEST: usando base de datos {$dbName}\n";
+    echo " Modo TEST: usando base de datos {$dbName}\n";
 }
 
 if (!$dbName) {
@@ -73,7 +73,7 @@ use maquinas_recreativas\Infrastructure\Database\Inserter;
 // =============================================
 // CONEXIÓN A LA BASE DE DATOS
 // =============================================
-echo "📡 Conectando a la base de datos...\n";
+echo " Conectando a la base de datos...\n";
 
 $database = new Database();
 $connection = $database->getConnection();
@@ -93,7 +93,7 @@ $lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
 if (file_exists($lockFile)) {
     echo "  Los usuarios iniciales ya fueron insertados anteriormente.\n";
     echo " Lock file: {$lockFile}\n";
-    echo "💡 Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
+    echo " Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
     
     $confirm = readline("¿Deseas forzar la inserción de todos modos? (s/N): ");
     if (strtolower($confirm) !== 's') {
@@ -121,7 +121,7 @@ try {
     echo " Lock file creado en: {$lockFile}\n";
     
     // Mostrar resumen
-    echo "\n📊 RESUMEN DE USUARIOS INSERTADOS:\n";
+    echo "\n RESUMEN DE USUARIOS INSERTADOS:\n";
     echo str_repeat("-", 50) . "\n";
     
     $result = $connection->query("SELECT usuario_asignado, nombre, apellido, tipo, estado FROM usuario ORDER BY tipo, nombre");
@@ -141,7 +141,7 @@ try {
 // =============================================
 // VERIFICACIÓN FINAL
 // =============================================
-echo "\n🔍 Verificando que los datos se pueden desencriptar correctamente...\n";
+echo "\n Verificando que los datos se pueden desencriptar correctamente...\n";
 echo str_repeat("-", 50) . "\n";
 
 $testUsers = ['admin1', 'euro', 'joshua', 'joel'];

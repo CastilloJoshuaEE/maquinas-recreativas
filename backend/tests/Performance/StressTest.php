@@ -203,7 +203,7 @@ class StressTest extends HttpStressTestCase {
      * Fase 0: Crear datos base para las pruebas
      */
     private function faseSetupInicial() {
-        echo "\n📦 PASO 2: Preparación de datos base\n";
+        echo "\n PASO 2: Preparación de datos base\n";
         echo str_repeat("-", 40) . "\n";
         
         // 2.1 Login como logística
@@ -321,7 +321,7 @@ class StressTest extends HttpStressTestCase {
      * Ejecutar una fase específica de carga
      */
     private function ejecutarFaseCarga($faseNum, $phase) {
-        echo "\n📊 FASE {$faseNum}: {$phase['users']} usuarios - {$phase['description']}\n";
+        echo "\n FASE {$faseNum}: {$phase['users']} usuarios - {$phase['description']}\n";
         echo str_repeat("=", 50) . "\n";
         
         $startTime = microtime(true);
@@ -392,7 +392,7 @@ class StressTest extends HttpStressTestCase {
         ];
         
         // Mostrar resultados de la fase
-        echo "\n   📈 RESULTADOS FASE {$faseNum}:\n";
+        echo "\n    RESULTADOS FASE {$faseNum}:\n";
         echo "      • Requests: {$requests}\n";
         echo "      • Errores: {$errors} (" . round($errorRate, 2) . "%)\n";
         echo "      • RPS: " . round($rps, 2) . " req/s\n";
@@ -552,7 +552,7 @@ class StressTest extends HttpStressTestCase {
      */
     private function mostrarResumen() {
         echo "\n\n";
-        echo "📊 RESUMEN FINAL DE PRUEBAS DE ESTRÉS\n";
+        echo " RESUMEN FINAL DE PRUEBAS DE ESTRÉS\n";
         echo "======================================\n\n";
         
         echo str_pad("Usuarios", 12) . 
@@ -585,13 +585,13 @@ class StressTest extends HttpStressTestCase {
         }
         
         echo "\n\n";
-        echo "🔍 ANÁLISIS DEL PUNTO DE QUIEBRE\n";
+        echo " ANÁLISIS DEL PUNTO DE QUIEBRE\n";
         echo "--------------------------------\n";
         
         if ($breakpoint) {
             echo " El sistema COMIENZA A FALLAR a partir de {$breakpoint} usuarios\n";
             
-            echo "\n💡 RECOMENDACIONES:\n";
+            echo "\n RECOMENDACIONES:\n";
             if ($breakpoint <= 25) {
                 echo "   • Revisar configuración del servidor web\n";
                 echo "   • Aumentar límites de conexiones simultáneas\n";
@@ -627,7 +627,7 @@ class StressTest extends HttpStressTestCase {
         ];
         
         file_put_contents($filename, json_encode($data, JSON_PRETTY_PRINT));
-        echo "\n📁 Resultados guardados en: {$filename}\n";
+        echo "\n Resultados guardados en: {$filename}\n";
     }
     
     /**

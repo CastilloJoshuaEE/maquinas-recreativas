@@ -18,6 +18,9 @@
         <testsuite name="Integration">
             <directory>Integration</directory>
         </testsuite>
+        <testsuite name="Functional">
+            <directory>Functional</directory>
+        </testsuite>
     </testsuites>
     
     <php>
@@ -27,18 +30,19 @@
         <env name="DB_USER" value="root"/>
         <env name="DB_PASS" value=""/>
     </php>
+    
     <source>
-    <include>
-        <directory suffix=".php">Domain</directory>
-        <directory suffix=".php">Application</directory>
-        <directory suffix=".php">Infrastructure</directory>
-    </include>
-</source>
+        <include>
+            <directory suffix=".php">Domain</directory>
+            <directory suffix=".php">Application</directory>
+            <directory suffix=".php">Infrastructure</directory>
+        </include>
+    </source>
 
-<coverage>
-    <report>
-        <html outputDirectory="coverage"/>
-        <text outputFile="coverage.txt"/>
-    </report>
-</coverage>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage"/>
+            <text outputFile="coverage.txt"/>
+        </report>
+    </coverage>
 </phpunit>

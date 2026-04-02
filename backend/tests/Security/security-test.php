@@ -555,7 +555,7 @@ if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
 }
 
 // Verificar que el servidor está corriendo antes de ejecutar
-echo "\n🔍 Verificando servidor...\n";
+echo "\n Verificando servidor...\n";
 
 $ch = curl_init('http://localhost:8000/health');
 curl_setopt($ch, CURLOPT_TIMEOUT, 3);

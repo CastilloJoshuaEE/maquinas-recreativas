@@ -71,9 +71,9 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
     const getIconoAccion = (accion) => {
         const iconos = {
             'Registro': '➕',
-            'Montaje': '🔧',
+            'Montaje': '',
             'Comprobación': '',
-            'Distribución': '📦',
+            'Distribución': '',
             'Mantenimiento': '⚙️',
             'Reparación': '🔨',
             'Retirada': '',
@@ -215,7 +215,7 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
                                             
                                             {item.etapa_anterior && item.etapa_nueva && (
                                                 <div className="timeline-cambio-etapa">
-                                                    <strong>📊 Cambio de etapa:</strong>
+                                                    <strong> Cambio de etapa:</strong>
                                                     <span className="etapa-anterior">{item.etapa_anterior}</span>
                                                     {' → '}
                                                     <span className="etapa-nueva">{item.etapa_nueva}</span>
@@ -224,7 +224,7 @@ const HistorialMaquina = ({ idMaquina, nombreMaquina, onClose }) => {
                                             
                                             {item.detalles_adicionales && (
                                                 <div className="timeline-detalles">
-                                                    <strong>🔍 Detalles adicionales:</strong>
+                                                    <strong> Detalles adicionales:</strong>
                                                     <pre>{JSON.stringify(item.detalles_adicionales, null, 2)}</pre>
                                                 </div>
                                             )}
