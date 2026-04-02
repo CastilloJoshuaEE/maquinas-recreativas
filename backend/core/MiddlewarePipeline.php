@@ -70,15 +70,14 @@ class MiddlewarePipeline
      * @return object
      * @throws \RuntimeException
      */
- private function resolveMiddleware(string $class): object
+private function resolveMiddleware(string $class): object
 {
-    // ── Manejar shorthand "role:X" ──────────────────────────────────
-    if (str_starts_with($class, 'role:')) {
-        $roles = explode(',', substr($class, 5)); // soporta "role:Admin,Logistica"
+    // Manejar shorthand "role:X"
+    if (strpos($class, 'role:') === 0) {
+        $roles = explode(',', substr($class, 5));
         return new \maquinas_recreativas\Middleware\RoleMiddleware($roles);
     }
 
-    // ── Resto del comportamiento original ───────────────────────────
     global $container;
 
     if (isset($container[$class])) {

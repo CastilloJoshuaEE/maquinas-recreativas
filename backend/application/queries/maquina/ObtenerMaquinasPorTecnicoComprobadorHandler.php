@@ -48,17 +48,17 @@ final class ObtenerMaquinasPorTecnicoComprobadorHandler
 
         $maquinas = $this->maquinaRepository->findByTecnicoComprobador($idTecnico);
 
-        return array_map(function ($maquina) {
-            $data = $maquina->toArray();
-            return [
-                'id' => $maquina->id()->value(),
-                'nombre' => $maquina->nombre(),
-                'tipo' => $maquina->tipo(),
-                'estado' => $maquina->estado()->value(),
-                'etapa' => $maquina->etapa()->value(),
-                'fecha_registro' => $data['Fecha_Registro'] ?? null, 
-                'id_comercio' => $maquina->idComercio()->value()
-            ];
-        }, $maquinas);
+    return array_map(function ($maquina) {
+        $data = $maquina->toArray();
+        return [
+            'id' => $data['ID_Maquina'],
+            'nombre' => $data['Nombre_Maquina'],
+            'tipo' => $data['Tipo'],
+            'estado' => $data['Estado'],
+            'etapa' => $data['Etapa'],
+            'fecha_registro' => $data['Fecha_Registro'],
+            'id_comercio' => $data['ID_Comercio']
+        ];
+    }, $maquinas);
     }
 }

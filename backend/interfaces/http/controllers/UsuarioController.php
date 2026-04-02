@@ -161,14 +161,16 @@ public function login(Request $request): Response
     $userAgent = $request->header('USER_AGENT');
 
     $command = new LoginCommand($data['usuario_asignado'], $data['contrasena'], $ip, $userAgent);
-    $usuario = $this->loginHandler->handle($command);  // Esto ya devuelve un array con email como string
+    $usuario = $this->loginHandler->handle($command);
 
     session_regenerate_id(true);
     $_SESSION['ID_Usuario']       = $usuario['id'];
     $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
     $_SESSION['rol']              = $usuario['tipo'];
+    
+    // Log para depuración
+    error_log("Login exitoso - Usuario: {$usuario['usuario_asignado']}, Rol: {$usuario['tipo']}");
 
-    // $usuario['email'] ya es un string, no un objeto Email
     return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
 }
     #[OA\Post(
@@ -179,18 +181,17 @@ public function login(Request $request): Response
             new OA\Response(response: 200, description: "Sesión cerrada correctamente")
         ]
     )]
-    public function logout(Request $request): Response
-    {
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if ($userId) {
-            // Convertir string a Uuid
-            $command = new LogoutCommand(new Uuid($userId));
-            $this->logoutHandler->handle($command);
-            session_destroy();
-        }
-
-        return (new Response())->json(['success' => true, 'message' => 'Sesión cerrada']);
+public function logout(Request $request): Response
+{
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if ($userId) {
+        $command = new LogoutCommand(new Uuid($userId));
+        $this->logoutHandler->handle($command);
+        session_destroy();
     }
+
+    return (new Response())->json(['success' => true, 'message' => 'Sesión cerrada']);
+}
 
     #[OA\Get(
         path: "/v1/usuario/perfil/{id}",

@@ -28,50 +28,91 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
     }
 
     public function handle(Command $command): Usuario
-    {
-        if (!$command instanceof RegistrarUsuarioAdminCommand) {
-            throw new InvalidArgumentException('Comando inválido para este handler');
-        }
-
-        // Validar si el email ya existe
-        $emailEncriptado = CifradoHelper::encriptar($command->email);
-        if ($this->usuarioRepository->existsByEmail($emailEncriptado)) {
-            throw new DomainException("El email '{$command->email}' ya está registrado.");
-        }
-
-        // Validar si el nombre de usuario ya existe
-        if ($this->usuarioRepository->existsByUsuarioAsignado($command->usuarioAsignado)) {
-            throw new DomainException("El nombre de usuario '{$command->usuarioAsignado}' ya está en uso");
-        }
-
-        // Validar si la cédula ya existe
-        $ciEncriptada = CifradoHelper::encriptar($command->ci);
-        if ($this->usuarioRepository->existsByCi($ciEncriptada)) {
-            throw new DomainException("La cédula '{$command->ci}' ya está registrada");
-        }
-
-        // Usar Uuid::v4() en lugar de random()
-        $id = Uuid::v4();
-        $contrasenaHash = password_hash($command->contrasena, PASSWORD_BCRYPT);
-        $estado = new EstadoUsuario($command->estado);
-        $emailVO = new Email($command->email);
-
-        $usuario = $this->crearUsuarioPorTipo(
-            $id,
-            $command->nombre,
-            $command->apellido,
-            $ciEncriptada,
-            $emailVO,
-            $command->usuarioAsignado,
-            $contrasenaHash,
-            $estado,
-            $command->tipo,
-            $command->especialidad
-        );
-
-        $this->usuarioRepository->save($usuario);
-        return $usuario;
+{
+    if (!$command instanceof RegistrarUsuarioAdminCommand) {
+        throw new InvalidArgumentException('Comando inválido para este handler');
     }
+
+    // Validar si el email ya existe
+    $emailEncriptado = CifradoHelper::encriptar($command->email);
+    if ($this->usuarioRepository->existsByEmail($emailEncriptado)) {
+        throw new DomainException("El email '{$command->email}' ya está registrado.");
+    }
+
+    // Validar si la cédula ya existe
+    $ciEncriptada = CifradoHelper::encriptar($command->ci);
+    if ($this->usuarioRepository->existsByCi($ciEncriptada)) {
+        throw new DomainException("La cédula '{$command->ci}' ya está registrada");
+    }
+
+    // Generar usuario_asignado si no se proporcionó
+    $usuarioAsignado = $command->usuarioAsignado;
+    if (empty($usuarioAsignado)) {
+        $usuarioAsignado = $this->generarUsuarioAsignado($command->nombre, $command->apellido, $command->tipo);
+    } else {
+        // Validar si el nombre de usuario ya existe
+        if ($this->usuarioRepository->existsByUsuarioAsignado($usuarioAsignado)) {
+            throw new DomainException("El nombre de usuario '{$usuarioAsignado}' ya está en uso");
+        }
+    }
+
+    $id = Uuid::v4();
+    $contrasenaHash = password_hash($command->contrasena, PASSWORD_BCRYPT);
+    $estado = new EstadoUsuario($command->estado);
+    $emailVO = new Email($command->email);
+
+    $usuario = $this->crearUsuarioPorTipo(
+        $id,
+        $command->nombre,
+        $command->apellido,
+        $ciEncriptada,
+        $emailVO,
+        $usuarioAsignado,
+        $contrasenaHash,
+        $estado,
+        $command->tipo,
+        $command->especialidad
+    );
+
+    $this->usuarioRepository->save($usuario);
+    return $usuario;
+}
+
+private function generarUsuarioAsignado(string $nombre, string $apellido, string $tipo): string
+{
+    // Normalizar texto
+    $nombre = strtolower(trim($nombre));
+    $apellido = strtolower(trim($apellido));
+    
+    // Eliminar acentos
+    $buscar = ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'];
+    $reemplazar = ['a', 'e', 'i', 'o', 'u', 'u', 'n'];
+    $nombre = str_replace($buscar, $reemplazar, $nombre);
+    $apellido = str_replace($buscar, $reemplazar, $apellido);
+    
+    // Prefijo según tipo
+    $prefijos = [
+        'Administrador' => 'adm',
+        'Tecnico' => 'tec',
+        'Logistica' => 'log',
+        'Contabilidad' => 'con',
+        'Usuario' => 'usr'
+    ];
+    $prefijo = $prefijos[$tipo] ?? 'usr';
+    
+    // Base del nombre
+    $base = $prefijo . substr($nombre, 0, 1) . substr($apellido, 0, 3);
+    
+    // Buscar un nombre único
+    $contador = 1;
+    $usuario = $base;
+    while ($this->usuarioRepository->existsByUsuarioAsignado($usuario)) {
+        $usuario = $base . $contador;
+        $contador++;
+    }
+    
+    return $usuario;
+}
 
     private function crearUsuarioPorTipo(
         Uuid $id,

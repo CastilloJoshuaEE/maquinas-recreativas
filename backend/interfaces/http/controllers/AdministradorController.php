@@ -74,27 +74,36 @@ class AdministradorController
         ]
     )]
     public function getAllUsers(Request $request): Response
-    {
-        if (!isset($_SESSION['ID_Usuario'])) {
-            throw new DomainException('No autorizado', 401);
-        }
-        if (($_SESSION['rol'] ?? '') !== 'Administrador') {
-            throw new DomainException('No tiene permisos suficientes', 403);
-        }
-
-        $filters = [
-            'tipo' => $request->query('tipo'),
-            'estado' => $request->query('estado'),
-            'ci' => $request->query('ci'),
-            'limit' => $request->query('limit') ? (int) $request->query('limit') : 100,
-            'offset' => $request->query('offset') ? (int) $request->query('offset') : 0,
-        ];
-
-        $query = new ObtenerTodosUsuariosQuery($filters['tipo'], $filters['estado'], $filters['ci'], $filters['limit'], $filters['offset']);
-        $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'usuarios' => $usuarios, 'total' => count($usuarios), 'filtros' => $filters]);
+{
+    if (!isset($_SESSION['ID_Usuario'])) {
+        throw new DomainException('No autorizado', 401);
     }
+    
+    $userRole = $_SESSION['rol'] ?? '';
+    error_log("Verificando permisos - Rol en sesión: '{$userRole}'");
+    
+    // Convertir a string si es objeto
+    if (is_object($userRole) && method_exists($userRole, 'value')) {
+        $userRole = $userRole->value();
+    }
+    
+    if ($userRole !== 'Administrador') {
+        throw new DomainException('No tiene permisos suficientes', 403);
+    }
+
+    $filters = [
+        'tipo' => $request->query('tipo'),
+        'estado' => $request->query('estado'),
+        'ci' => $request->query('ci'),
+        'limit' => $request->query('limit') ? (int) $request->query('limit') : 100,
+        'offset' => $request->query('offset') ? (int) $request->query('offset') : 0,
+    ];
+
+    $query = new ObtenerTodosUsuariosQuery($filters['tipo'], $filters['estado'], $filters['ci'], $filters['limit'], $filters['offset']);
+    $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
+
+    return (new Response())->json(['success' => true, 'usuarios' => $usuarios, 'total' => count($usuarios), 'filtros' => $filters]);
+}
 
     #[OA\Get(
         path: "/v1/administrador/usuarios/{uuid}",
@@ -177,54 +186,57 @@ $historial = $this->historialHandler->handle($query);
         ]
     )]
     public function registerAdmin(Request $request): Response
-    {
-        $data = $request->json();
-        $required = ['nombre', 'apellido', 'ci', 'email', 'usuario_asignado', 'contrasena', 'tipo'];
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
-                throw new DomainException("El campo {$field} es requerido", 400);
-            }
+{
+    $data = $request->json();
+    $required = ['nombre', 'apellido', 'ci', 'email', 'contrasena', 'tipo'];
+    foreach ($required as $field) {
+        if (!isset($data[$field]) || empty($data[$field])) {
+            throw new DomainException("El campo {$field} es requerido", 400);
         }
-
-        if (!ValidationHelper::validateEmail($data['email'])) {
-            throw new DomainException('Formato de email inválido', 400);
-        }
-        if (!ValidationHelper::validatePassword($data['contrasena'])) {
-            throw new DomainException('La contraseña debe tener al menos 8 caracteres', 400);
-        }
-
-        $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
-        if (!in_array($data['tipo'], $tiposPermitidos, true)) {
-            throw new DomainException('Tipo de usuario no válido', 400);
-        }
-        if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
-            throw new DomainException('La especialidad es requerida para técnicos', 400);
-        }
-
-        $command = new RegistrarUsuarioAdminCommand(
-            $data['nombre'], $data['apellido'], $data['ci'], $data['email'],
-            $data['usuario_asignado'], $data['contrasena'], $data['tipo'],
-            $data['estado'] ?? 'Activo', $data['especialidad'] ?? null
-        );
-
-        $usuario = $this->registrarUsuarioAdminHandler->handle($command);
-
-        return (new Response())->json([
-            'success' => true,
-            'message' => 'Usuario registrado correctamente',
-            'id' => $usuario->getId()->value(),
-            'usuario' => [
-                'id' => $usuario->getId()->value(),
-                'nombre' => $usuario->getNombre(),
-                'apellido' => $usuario->getApellido(),
-                'email' => $usuario->getEmail(),
-                'usuario_asignado' => $usuario->getUsuarioAsignado(),
-                'tipo' => $usuario->getTipo()->value(),
-                'estado' => $usuario->getEstado()->value(),
-                'especialidad' => $usuario->getEspecialidad(),
-            ],
-        ], 201);
     }
+
+    if (!ValidationHelper::validateEmail($data['email'])) {
+        throw new DomainException('Formato de email inválido', 400);
+    }
+    if (!ValidationHelper::validatePassword($data['contrasena'])) {
+        throw new DomainException('La contraseña debe tener al menos 8 caracteres', 400);
+    }
+
+    $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
+    if (!in_array($data['tipo'], $tiposPermitidos, true)) {
+        throw new DomainException('Tipo de usuario no válido', 400);
+    }
+    if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
+        throw new DomainException('La especialidad es requerida para técnicos', 400);
+    }
+
+    // Generar usuario_asignado automáticamente si no se proporciona
+    $usuarioAsignado = $data['usuario_asignado'] ?? null;
+    
+    $command = new RegistrarUsuarioAdminCommand(
+        $data['nombre'], $data['apellido'], $data['ci'], $data['email'],
+        $usuarioAsignado, $data['contrasena'], $data['tipo'],
+        $data['estado'] ?? 'Activo', $data['especialidad'] ?? null
+    );
+
+    $usuario = $this->registrarUsuarioAdminHandler->handle($command);
+
+    return (new Response())->json([
+        'success' => true,
+        'message' => 'Usuario registrado correctamente',
+        'id' => $usuario->getId()->value(),
+        'usuario' => [
+            'id' => $usuario->getId()->value(),
+            'nombre' => $usuario->getNombre(),
+            'apellido' => $usuario->getApellido(),
+            'email' => $usuario->getEmail()->value(),
+            'usuario_asignado' => $usuario->getUsuarioAsignado(),
+            'tipo' => $usuario->getTipo()->value(),
+            'estado' => $usuario->getEstado()->value(),
+            'especialidad' => $usuario->getEspecialidad(),
+        ],
+    ], 201);
+}
 
     #[OA\Put(
         path: "/v1/administrador/usuarios/{uuid}",

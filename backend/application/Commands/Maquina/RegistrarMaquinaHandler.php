@@ -42,16 +42,18 @@ final class RegistrarMaquinaHandler implements CommandHandler
             throw new DomainException('Comercio no encontrado');
         }
 
-        $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
-        $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
+       $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
+$comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
 
-        if (empty($ensambladores) || empty($comprobadores)) {
-            throw new DomainException('No hay técnicos disponibles para asignar');
-        }
+if (empty($ensambladores) || empty($comprobadores)) {
+    throw new DomainException('No hay técnicos disponibles para asignar');
+}
 
-        $idEnsamblador = $ensambladores[0]->getId();
-        $idComprobador = $comprobadores[0]->getId();
+$idEnsamblador = $ensambladores[0]->getId();
+$idComprobador = $comprobadores[0]->getId();
 
+// Log para depuración
+error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");
         $maquina = MaquinaRecreativa::crear(
             $command->nombre(),
             $command->tipo(),

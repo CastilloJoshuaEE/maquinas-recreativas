@@ -119,22 +119,21 @@ public function run(): void
                 }
                 
                 $routePipeline->handle($request, function ($request) use ($route) {
-                    [$controllerClass, $method] = $route['handler'];
-                    $controller = $this->resolveController($controllerClass);
-                    if (!$controller || !method_exists($controller, $method)) {
-                        throw new \RuntimeException("Handler inválido para la ruta");
-                    }
-                    
-                    // Pasar los parámetros de la ruta al controlador
-                    $params = $route['params'] ?? [];
-                    $result = $controller->$method($request, ...$params);
-                    
-                    if ($result instanceof Response) {
-                        $result->send();
-                    } else {
-                        $this->response->json($result);
-                    }
-                });
+    [$controllerClass, $method] = $route['handler'];
+    $controller = $this->resolveController($controllerClass);
+    if (!$controller || !method_exists($controller, $method)) {
+        throw new \RuntimeException("Handler inválido para la ruta");
+    }
+
+    $params = $route['params'] ?? [];
+    $result = $controller->$method($request, ...$params);  // ← aquí se pasan los parámetros
+
+    if ($result instanceof Response) {
+        $result->send();
+    } else {
+        $this->response->json($result);
+    }
+});
             });
         } catch (\Throwable $e) {
             $this->handleException($e);

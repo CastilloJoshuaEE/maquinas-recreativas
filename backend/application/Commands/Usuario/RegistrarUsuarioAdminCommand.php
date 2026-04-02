@@ -6,16 +6,13 @@ namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Application\Commands\Command;
 
-/**
- * Comando para registrar un usuario por un administrador.
- */
 final class RegistrarUsuarioAdminCommand implements Command
 {
     public string $nombre;
     public string $apellido;
     public string $ci;
     public string $email;
-    public string $usuarioAsignado;
+    public ?string $usuarioAsignado;   // Permitir null
     public string $contrasena;
     public string $tipo;
     public string $estado;
@@ -26,7 +23,7 @@ final class RegistrarUsuarioAdminCommand implements Command
         string $apellido,
         string $ci,
         string $email,
-        string $usuarioAsignado,
+        ?string $usuarioAsignado,       // Ahora puede ser null
         string $contrasena,
         string $tipo,
         string $estado = 'Activo',

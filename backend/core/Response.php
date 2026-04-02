@@ -87,12 +87,18 @@ class Response{
      * @param int $statusCode
      * @return self
      */
-    public function json($data, int $statusCode = 200): self{
-        $this->status($statusCode);
-        $this->header('Content-Type', 'application/json; charset=utf-8');
-        $this->content = json_encode($data, JSON_UNESCAPED_UNICODE);
-        return $this;
+public function json($data, int $statusCode = 200): self
+{
+    $this->status($statusCode);
+    $this->header('Content-Type', 'application/json; charset=utf-8');
+    $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+    if ($json === false) {
+        error_log("JSON encode error: " . json_last_error_msg());
+        $json = json_encode(['success' => false, 'message' => 'Error interno al generar respuesta']);
     }
+    $this->content = $json;
+    return $this;
+}
     
     /**
      * Envía la respuesta
