@@ -32,11 +32,20 @@ final class Email
      * @return void
      * @throws InvalidArgumentException
      */
-    private function validate(string $email):void{
-        if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-            throw new InvalidArgumentException("El email '{$email}' no tiene un formato válido.");
-        }
+private function validate(string $email): void
+{
+    // Validación estándar
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return;
     }
+
+    // Permitir dominios internos tipo @admin
+    if (preg_match('/^[a-zA-Z0-9._%+-]+@admin$/', $email)) {
+        return;
+    }
+
+    throw new InvalidArgumentException("El email '{$email}' no tiene un formato válido.");
+}
     /**
      * Obtiene el valor del email.
      *

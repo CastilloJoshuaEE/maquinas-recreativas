@@ -55,7 +55,7 @@ class LoginHandler implements CommandHandler
             'id' => $usuario->getId()->value(),
             'nombre' => $usuario->getNombre(),
             'apellido' => $usuario->getApellido(),
-            'email' => $usuario->getEmail(),
+            'email' => $usuario->getEmailValue(),
             'usuario_asignado' => $usuario->getUsuarioAsignado(),
             'tipo' => $usuario->getTipo(),
             'estado' => $usuario->getEstado(),

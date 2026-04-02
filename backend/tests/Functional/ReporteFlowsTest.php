@@ -9,16 +9,19 @@ class ReporteFlowsTest extends HttpTestCase {
     private $usuario1Id;
     private $usuario2Id;
     private $reporteId;
-public function __construct() {
+    
+    public function __construct() {
         parent::__construct();
+        
+        $timestamp = time();
         
         $this->usuario1 = [
             'nombre' => 'Emisor',
             'apellido' => 'Reportes',
             'ci' => '11111111' . rand(10, 99),
-            'email' => 'emisor_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'em_' . substr(uniqid(), -8), // Máx 11 caracteres
-            'contrasena' => 'password123',
+            'email' => 'emisor_' . $timestamp . '_' . uniqid() . '@test.com',
+            'usuario_asignado' => 'em_' . substr(uniqid(), -8),
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
         ];
@@ -27,9 +30,9 @@ public function __construct() {
             'nombre' => 'Destinatario',
             'apellido' => 'Reportes',
             'ci' => '22222222' . rand(10, 99),
-            'email' => 'destinatario_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'dest_' . substr(uniqid(), -8), // Máx 13 caracteres
-            'contrasena' => 'password123',
+            'email' => 'destinatario_' . $timestamp . '_' . uniqid() . '@test.com',
+            'usuario_asignado' => 'dest_' . substr(uniqid(), -8),
+            'contrasena' => 'Password123!',
             'tipo' => 'Logistica'
         ];
     }
@@ -45,38 +48,26 @@ public function __construct() {
         
         echo "\n✅ FLUJO COMPLETO DE REPORTES EXITOSO\n";
     }
-   
-private function pasoCrearUsuarios() {
-    echo "👥 Creando usuarios...\n";
     
-    // Usuario 1
-    $resp1 = $this->request('POST', '/usuario/register', $this->usuario1);
-    $this->assertResponseSuccess('Error al crear usuario 1');
-    
-    // Verificar estructura de respuesta
-    if (isset($resp1['success']) && $resp1['success']) {
+    private function pasoCrearUsuarios() {
+        echo "👥 Creando usuarios...\n";
+        
+        // Usuario 1
+        $resp1 = $this->request('POST', '/usuario/register', $this->usuario1);
+        $this->assertResponseSuccess('Error al crear usuario 1');
         $this->usuario1Id = $resp1['userId'] ?? null;
-    } else {
-        $this->usuario1Id = null;
-    }
-    $this->assertNotNull($this->usuario1Id, 'No se recibió ID usuario 1');
-    
-    // Esperar más tiempo entre registros (3 segundos)
-    sleep(3);
-    
-    // Usuario 2
-    $resp2 = $this->request('POST', '/usuario/register', $this->usuario2);
-    $this->assertResponseSuccess('Error al crear usuario 2');
-    
-    if (isset($resp2['success']) && $resp2['success']) {
+        $this->assertNotNull($this->usuario1Id, 'No se recibió ID usuario 1');
+        echo "   ✅ Usuario 1 creado: {$this->usuario1['usuario_asignado']} (ID: {$this->usuario1Id})\n";
+        
+        sleep(2);
+        
+        // Usuario 2
+        $resp2 = $this->request('POST', '/usuario/register', $this->usuario2);
+        $this->assertResponseSuccess('Error al crear usuario 2');
         $this->usuario2Id = $resp2['userId'] ?? null;
-    } else {
-        $this->usuario2Id = null;
+        $this->assertNotNull($this->usuario2Id, 'No se recibió ID usuario 2');
+        echo "   ✅ Usuario 2 creado: {$this->usuario2['usuario_asignado']} (ID: {$this->usuario2Id})\n";
     }
-    $this->assertNotNull($this->usuario2Id, 'No se recibió ID usuario 2');
-    
-    echo "   ✅ Usuarios creados\n";
-}
     
     private function pasoLoginEmisor() {
         echo "🔐 Iniciando sesión como emisor...\n";
@@ -94,42 +85,33 @@ private function pasoCrearUsuarios() {
         echo "📋 Creando reporte...\n";
         
         $response = $this->request('POST', '/reportes/crear', [
-            'ID_Usuario_Emisor' => $this->usuario1Id,
-            'ID_Usuario_Destinatario' => $this->usuario2Id,
-            'descripcion' => 'Reporte de prueba'
+            'descripcion' => 'Reporte de prueba - ' . time()
         ]);
         
         $this->assertResponseSuccess('Error al crear reporte');
-        $this->reporteId = $response['reporteId'] ?? null;
+        $this->reporteId = $response['id'] ?? null;
         $this->assertNotNull($this->reporteId, 'No se recibió ID de reporte');
         
         echo "   ✅ Reporte creado ID: {$this->reporteId}\n";
     }
-
-private function pasoEnviarComentario() {
-    echo "💬 Enviando comentario...\n";
     
-    // Verificar que tenemos sesión activa (las cookies no están vacías)
-    if (empty($this->cookies)) {
-        echo "      ⚠️  No hay cookies de sesión, reintentando login...\n";
-        $this->pasoLoginEmisor();
+    private function pasoEnviarComentario() {
+        echo "💬 Enviando comentario...\n";
+        
+        $response = $this->request('POST', '/comentarios', [
+            'idReporte' => $this->reporteId,
+            'comentario' => 'Comentario de prueba'
+        ]);
+        
+        $this->assertResponseSuccess('Error al enviar comentario');
+        echo "   ✅ Comentario enviado\n";
+        
+        // Verificar que se puede obtener el comentario
+        sleep(1);
+        $comentarios = $this->request('GET', "/comentarios/reporte/{$this->reporteId}");
+        $this->assertResponseSuccess('Error al obtener comentarios');
+        $this->assertNotEmpty($comentarios['comentarios'] ?? [], 'No se encontraron comentarios');
+        
+        echo "   ✅ Comentario verificado\n";
     }
-    
-    $response = $this->request('POST', '/comentarios', [
-        'ID_Reporte' => $this->reporteId,
-        'comentario' => 'Comentario de prueba'
-    ]);
-    
-    // Verificar que la respuesta es exitosa
-    $this->assertResponseSuccess('Error al enviar comentario');
-    
-    // Si falla, mostrar información de depuración
-    if (!$this->lastResponse || !isset($this->lastResponse['success']) || !$this->lastResponse['success']) {
-        echo "      ℹ️  Debug - Cookies: " . (!empty($this->cookies) ? 'presentes' : 'vacías') . "\n";
-        echo "      ℹ️  Debug - Reporte ID: {$this->reporteId}\n";
-        echo "      ℹ️  Debug - Usuario ID: {$this->usuario1Id}\n";
-    }
-    
-    echo "   ✅ Comentario enviado\n";
-}
 }

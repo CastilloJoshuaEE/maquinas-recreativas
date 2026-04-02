@@ -150,27 +150,27 @@ public function register(Request $request): Response
             new OA\Response(response: 401, description: "Credenciales incorrectas")
         ]
     )]
-    public function login(Request $request): Response
-    {
-        $data = $request->json();
-        if (!isset($data['usuario_asignado'], $data['contrasena'])) {
-            throw new DomainException('Usuario y contraseña son requeridos', 400);
-        }
-
-        $ip        = $request->getClientIp();
-        $userAgent = $request->header('USER_AGENT');
-
-        $command = new LoginCommand($data['usuario_asignado'], $data['contrasena'], $ip, $userAgent);
-        $usuario = $this->loginHandler->handle($command);
-
-        session_regenerate_id(true);
-        $_SESSION['ID_Usuario']       = $usuario['id'];
-        $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
-        $_SESSION['rol']              = $usuario['tipo'];
-
-        return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
+public function login(Request $request): Response
+{
+    $data = $request->json();
+    if (!isset($data['usuario_asignado'], $data['contrasena'])) {
+        throw new DomainException('Usuario y contraseña son requeridos', 400);
     }
 
+    $ip        = $request->getClientIp();
+    $userAgent = $request->header('USER_AGENT');
+
+    $command = new LoginCommand($data['usuario_asignado'], $data['contrasena'], $ip, $userAgent);
+    $usuario = $this->loginHandler->handle($command);  // Esto ya devuelve un array con email como string
+
+    session_regenerate_id(true);
+    $_SESSION['ID_Usuario']       = $usuario['id'];
+    $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
+    $_SESSION['rol']              = $usuario['tipo'];
+
+    // $usuario['email'] ya es un string, no un objeto Email
+    return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
+}
     #[OA\Post(
         path: "/v1/usuario/logout",
         summary: "Cerrar sesión",

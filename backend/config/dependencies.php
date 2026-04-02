@@ -15,6 +15,15 @@
 // CARGAR CONFIGURACIÓN BASE
 // =============================================
 require_once __DIR__ . '/constants.php';
+// =============================================
+// 2. CARGAR VARIABLES DE ENTORNO
+// =============================================
+require_once __DIR__ . '/../Bootstrap/env.php';
+
+// =============================================
+// 3. CARGAR CONFIGURACIÓN DE ENTORNO
+// =============================================
+require_once __DIR__ . '/env.php';
 
 // =============================================
 // APPLICATION - BASE INTERFACES
@@ -105,7 +114,6 @@ require_once __DIR__ . '/../Domain/Comentario/ComentarioRepository.php';
 // INFRASTRUCTURE - DATABASE
 // =============================================
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
-require_once __DIR__ . '/../Infrastructure/Database/Inserter.php';
 
 // =============================================
 // INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
@@ -488,16 +496,22 @@ class Dependencies {
     public static function register($class, callable $factory) {
         self::$factories[$class] = $factory;
     }
-    
-    public static function get($class) {
-        if (!isset(self::$instances[$class])) {
-            if (!isset(self::$factories[$class])) {
-                throw new Exception("No factory registered for class: {$class}");
-            }
-            self::$instances[$class] = self::$factories[$class]();
+public static function get($class) {
+    if (!isset(self::$instances[$class])) {
+        if (!isset(self::$factories[$class])) {
+            // En lugar de lanzar excepción, loguea y devuelve null
+            error_log("No factory registered for class: {$class}");
+            return null;
         }
-        return self::$instances[$class];
+        try {
+            self::$instances[$class] = self::$factories[$class]();
+        } catch (\Exception $e) {
+            error_log("Error creating instance of {$class}: " . $e->getMessage());
+            return null;
+        }
     }
+    return self::$instances[$class];
+}
     
     public static function reset() {
         self::$instances = [];

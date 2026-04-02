@@ -187,30 +187,32 @@ class MySQLUsuarioRepository implements UsuarioRepository
     {
         return $this->searchByEmail($email);
     }
-
-    public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
-    {
-        $conn = $this->db->getConnection();
-        
-        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                FROM usuario u 
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                WHERE u.usuario_asignado = ?";
-        
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('s', $usuarioAsignado);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        
-        if (!$row) {
-            return null;
-        }
-        
-        return $this->hydrate($row);
+public function searchByUsuarioAsignado(string $usuarioAsignado): ?Usuario
+{
+    $conn = $this->db->getConnection();
+    
+    $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+            FROM usuario u 
+            LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+            WHERE u.usuario_asignado = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('s', $usuarioAsignado);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    
+    if (!$row) {
+        error_log("Usuario no encontrado con usuario_asignado: {$usuarioAsignado}");
+        return null;
     }
-
+    
+    // Log para depuración - ver qué email se está recuperando
+    error_log("Usuario encontrado: ID={$row['ID_Usuario']}, email_cifrado=" . ($row['email'] ?? 'NULL'));
+    
+    return $this->hydrate($row);
+}
     public function delete(Uuid $id): void
     {
         $conn = $this->db->getConnection();
@@ -533,20 +535,31 @@ class MySQLUsuarioRepository implements UsuarioRepository
         return $actividades;
     }
 
- public function hydrate(array $row): Usuario
+public function hydrate(array $row): Usuario
 {
-    $id     = new Uuid($row['ID_Usuario']);
-    $email  = new Email(CifradoHelper::desencriptar($row['email']));
-    $tipo   = new TipoUsuario($row['tipo']);
+    $id = new Uuid($row['ID_Usuario']);
+    
+    // CORRECCIÓN: Manejar email vacío o nulo
+    $emailValue = isset($row['email']) && !empty($row['email']) 
+        ? CifradoHelper::desencriptar($row['email']) 
+        : '';
+    
+    // Si el email está vacío después de desencriptar, usar un valor por defecto
+    if (empty($emailValue)) {
+        error_log("AVISO: Usuario {$row['ID_Usuario']} tiene email vacío o nulo");
+        // Usar un email temporal basado en usuario_asignado para evitar errores
+        $emailValue = $row['usuario_asignado'] . '@temp.local';
+    }
+    
+    $email = new Email($emailValue);
+    $tipo = new TipoUsuario($row['tipo']);
     $estado = new EstadoUsuario($row['estado']);
-    $ci     = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+    $ci = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
 
     switch ($tipo->value()) {
         case TipoUsuario::TECNICO:
-            // Especialidad puede ser NULL si el JOIN no encontró fila en Tecnico
             $especialidad = $row['Especialidad'] ?? null;
             if (empty($especialidad)) {
-                // Registrar aviso y degradar a Usuario genérico para no romper la carga
                 error_log("AVISO: Técnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
                 return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);

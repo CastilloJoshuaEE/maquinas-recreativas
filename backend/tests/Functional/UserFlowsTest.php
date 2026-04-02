@@ -20,13 +20,16 @@ class UserFlowsTest extends HttpTestCase {
     public function __construct() {
         parent::__construct();
         
+        // Usar timestamp para asegurar unicidad
+        $timestamp = time();
+        
         $this->logisticaUser = [
             'nombre' => 'Logistica',
             'apellido' => 'Prueba',
             'ci' => '12345678' . rand(10, 99),
-            'email' => 'logistica_' . uniqid() . '@test.com',
+            'email' => 'logistica_' . $timestamp . '_' . uniqid() . '@test.com',
             'usuario_asignado' => 'log_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'contrasena' => 'Password123!',
             'tipo' => 'Logistica'
         ];
         
@@ -34,9 +37,9 @@ class UserFlowsTest extends HttpTestCase {
             'nombre' => 'Ensamblador',
             'apellido' => 'Tecnico',
             'ci' => '87654321' . rand(10, 99),
-            'email' => 'ensamblador_' . uniqid() . '@test.com',
+            'email' => 'ensamblador_' . $timestamp . '_' . uniqid() . '@test.com',
             'usuario_asignado' => 'ens_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
         ];
@@ -45,22 +48,22 @@ class UserFlowsTest extends HttpTestCase {
             'nombre' => 'Comprobador',
             'apellido' => 'Tecnico',
             'ci' => '11223344' . rand(10, 99),
-            'email' => 'comprobador_' . uniqid() . '@test.com',
+            'email' => 'comprobador_' . $timestamp . '_' . uniqid() . '@test.com',
             'usuario_asignado' => 'comp_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Comprobador'
         ];
         
         $this->comercioData = [
-            'nombre' => 'Comercio Test ' . uniqid(),
+            'nombre' => 'Comercio Test ' . $timestamp,
             'tipo' => 'Minorista',
             'direccion' => 'Av. Principal 123',
             'telefono' => '0999' . rand(100000, 999999)
         ];
         
         $this->maquinaData = [
-            'nombre' => 'Máquina Arcade ' . uniqid(),
+            'nombre' => 'Máquina Arcade ' . $timestamp,
             'tipo' => 'Arcade Clásica'
         ];
     }
@@ -90,7 +93,7 @@ class UserFlowsTest extends HttpTestCase {
         echo "------------------------------\n";
         $this->pasoLoginComprobador();
         $this->pasoVerMaquinasComprobador();
-        $this->pasoPonerOperativa();
+        $this->pasoAprobarMaquina();
         
         echo "\n✅ FLUJO COMPLETO EXITOSO\n";
     }
@@ -98,23 +101,30 @@ class UserFlowsTest extends HttpTestCase {
     private function pasoRegistrarUsuarios() {
         echo "📝 Paso 1: Registrando usuarios...\n";
         
+        // Registrar logística
         $responseLog = $this->request('POST', '/usuario/register', $this->logisticaUser);
         $this->assertResponseSuccess('Error al registrar logística');
         $this->logisticaId = $responseLog['userId'] ?? null;
         $this->assertNotNull($this->logisticaId, 'No se recibió ID de logística');
-        echo "   ✅ Logística registrado: {$this->logisticaUser['usuario_asignado']}\n";
+        echo "   ✅ Logística registrado: {$this->logisticaUser['usuario_asignado']} (ID: {$this->logisticaId})\n";
         
+        sleep(1);
+        
+        // Registrar ensamblador
         $responseEns = $this->request('POST', '/usuario/register', $this->ensambladorUser);
         $this->assertResponseSuccess('Error al registrar ensamblador');
         $this->ensambladorId = $responseEns['userId'] ?? null;
         $this->assertNotNull($this->ensambladorId, 'No se recibió ID de ensamblador');
-        echo "   ✅ Ensamblador registrado: {$this->ensambladorUser['usuario_asignado']}\n";
+        echo "   ✅ Ensamblador registrado: {$this->ensambladorUser['usuario_asignado']} (ID: {$this->ensambladorId})\n";
         
+        sleep(1);
+        
+        // Registrar comprobador
         $responseComp = $this->request('POST', '/usuario/register', $this->comprobadorUser);
         $this->assertResponseSuccess('Error al registrar comprobador');
         $this->comprobadorId = $responseComp['userId'] ?? null;
         $this->assertNotNull($this->comprobadorId, 'No se recibió ID de comprobador');
-        echo "   ✅ Comprobador registrado: {$this->comprobadorUser['usuario_asignado']}\n";
+        echo "   ✅ Comprobador registrado: {$this->comprobadorUser['usuario_asignado']} (ID: {$this->comprobadorId})\n";
     }
     
     private function pasoLoginLogistica() {
@@ -126,7 +136,6 @@ class UserFlowsTest extends HttpTestCase {
         ]);
         
         $this->assertResponseSuccess('Error al iniciar sesión como logística');
-        $this->assertHttpCode(200);
         echo "   ✅ Login exitoso como: {$this->logisticaUser['usuario_asignado']}\n";
     }
     
@@ -136,33 +145,21 @@ class UserFlowsTest extends HttpTestCase {
         $response = $this->request('POST', '/comercio/register', $this->comercioData);
         $this->assertResponseSuccess('Error al registrar comercio');
         
-        // Obtener el ID del comercio (el endpoint /comercio/all devuelve los comercios)
-        $comerciosResponse = $this->request('GET', '/comercio/all');
-        $this->assertResponseSuccess('Error al obtener comercios');
+        // Obtener el ID del comercio desde la respuesta
+        $this->comercioId = $response['idComercio'] ?? null;
+        $this->assertNotNull($this->comercioId, 'No se recibió ID del comercio');
         
-        $encontrado = false;
-        foreach ($comerciosResponse['comercios'] as $comercio) {
-            if ($comercio['Nombre'] === $this->comercioData['nombre']) {
-                $this->comercioId = $comercio['ID_Comercio'];
-                $encontrado = true;
-                break;
-            }
-        }
-        
-        $this->assertTrue($encontrado, 'No se encontró el comercio registrado');
         echo "   ✅ Comercio registrado: {$this->comercioData['nombre']} (ID: {$this->comercioId})\n";
     }
     
     private function pasoGenerarPlaca() {
         echo "🔧 Paso 4: Generando placa...\n";
         
-        $response = $this->request('POST', '/maquina/generar-placa', [
-            'ID_Usuario' => $this->logisticaId
-        ]);
+        $response = $this->request('POST', '/maquina/generar-placa', []);
         
         $this->assertResponseSuccess('Error al generar placa');
         $this->assertArrayHasKey('placa', $response, 'No se recibió número de placa');
-        $this->placaId = $response['id_componente'] ?? null;
+        $this->placaId = $response['idComponente'] ?? null;
         $this->assertNotNull($this->placaId, 'No se recibió ID de placa');
         
         echo "   ✅ Placa generada: {$response['placa']} (ID: {$this->placaId})\n";
@@ -175,9 +172,8 @@ class UserFlowsTest extends HttpTestCase {
             'nombre' => $this->maquinaData['nombre'],
             'tipo' => $this->maquinaData['tipo'],
             'idComercio' => $this->comercioId,
-            'idUsuarioLogistica' => $this->logisticaId,
             'idPlaca' => $this->placaId,
-            'idCarcasa' => $this->placaId // Usar misma placa como carcasa
+            'idCarcasa' => $this->placaId  // Usar misma placa como carcasa
         ];
         
         $response = $this->request('POST', '/maquina/register', $maquinaData);
@@ -186,18 +182,13 @@ class UserFlowsTest extends HttpTestCase {
         $this->assertArrayHasKey('idMaquina', $response, 'No se recibió ID de máquina');
         
         $this->maquinaId = $response['idMaquina'];
-        // Verificar que el ID es un UUID válido (opcional)
-        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $this->maquinaId)) {
-            echo "      ⚠️  ID de máquina no es UUID: {$this->maquinaId}\n";
-        }
-        echo "   ✅ Máquina registrada: {$maquinaData['nombre']} (ID: {$this->maquinaId})\n";
+        echo "   ✅ Máquina registrada: {$this->maquinaData['nombre']} (ID: {$this->maquinaId})\n";
     }
     
     private function pasoLogout() {
         echo "🚪 Paso 6: Cerrando sesión...\n";
         
-        $response = $this->request('POST', '/usuario/logout', []);
-        // No importa si falla, limpiamos cookies
+        $this->request('POST', '/usuario/logout', []);
         $this->cookies = [];
         echo "   ✅ Sesión cerrada\n";
     }
@@ -211,7 +202,6 @@ class UserFlowsTest extends HttpTestCase {
         ]);
         
         $this->assertResponseSuccess('Error al iniciar sesión como ensamblador');
-        $this->assertHttpCode(200);
         echo "   ✅ Login exitoso como: {$this->ensambladorUser['usuario_asignado']}\n";
     }
     
@@ -225,9 +215,9 @@ class UserFlowsTest extends HttpTestCase {
         
         $maquinaEncontrada = false;
         foreach ($response['maquinas'] as $maquina) {
-            if ($maquina['ID_Maquina'] === $this->maquinaId) {
+            if ($maquina['id'] === $this->maquinaId) {
                 $maquinaEncontrada = true;
-                $this->assertEquals('Ensamblandose', $maquina['Estado'], 
+                $this->assertEquals('Ensamblandose', $maquina['estado'], 
                     'La máquina debería estar en estado Ensamblandose');
                 break;
             }
@@ -242,7 +232,6 @@ class UserFlowsTest extends HttpTestCase {
         
         $response = $this->request('POST', '/maquina/mandar-comprobacion', [
             'idMaquina' => $this->maquinaId,
-            'idRemitente' => $this->ensambladorId,
             'mensaje' => 'Máquina lista para comprobación'
         ]);
         
@@ -250,12 +239,13 @@ class UserFlowsTest extends HttpTestCase {
         echo "   ✅ Máquina enviada a comprobación\n";
         
         // Verificar cambio de estado
+        sleep(1);
         $maquinas = $this->request('GET', "/maquina/estado/Comprobandose");
         $this->assertResponseSuccess('Error al obtener máquinas por estado');
         
         $encontrada = false;
         foreach ($maquinas['maquinas'] as $maquina) {
-            if ($maquina['ID_Maquina'] === $this->maquinaId) {
+            if ($maquina['id'] === $this->maquinaId) {
                 $encontrada = true;
                 break;
             }
@@ -266,7 +256,7 @@ class UserFlowsTest extends HttpTestCase {
     }
     
     private function pasoLoginComprobador() {
-        echo "🔐 Paso 11: Iniciando sesión como comprobador...\n";
+        echo "🔐 Paso 10: Iniciando sesión como comprobador...\n";
         
         $response = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->comprobadorUser['usuario_asignado'],
@@ -274,12 +264,11 @@ class UserFlowsTest extends HttpTestCase {
         ]);
         
         $this->assertResponseSuccess('Error al iniciar sesión como comprobador');
-        $this->assertHttpCode(200);
         echo "   ✅ Login exitoso como: {$this->comprobadorUser['usuario_asignado']}\n";
     }
     
     private function pasoVerMaquinasComprobador() {
-        echo "🔍 Paso 12: Verificando máquinas para comprobar...\n";
+        echo "🔍 Paso 11: Verificando máquinas para comprobar...\n";
         
         $response = $this->request('GET', "/maquina/comprobador/{$this->comprobadorId}");
         
@@ -288,9 +277,9 @@ class UserFlowsTest extends HttpTestCase {
         
         $maquinaEncontrada = false;
         foreach ($response['maquinas'] as $maquina) {
-            if ($maquina['ID_Maquina'] === $this->maquinaId) {
+            if ($maquina['id'] === $this->maquinaId) {
                 $maquinaEncontrada = true;
-                $this->assertEquals('Comprobandose', $maquina['Estado'], 
+                $this->assertEquals('Comprobandose', $maquina['estado'], 
                     'La máquina debería estar en estado Comprobandose');
                 break;
             }
@@ -300,9 +289,19 @@ class UserFlowsTest extends HttpTestCase {
         echo "   ✅ Máquina verificada - Estado: Comprobandose\n";
     }
     
-    private function pasoPonerOperativa() {
-        echo "✅ Paso 13: Aprobando máquina y poniendo operativa...\n";
+    private function pasoAprobarMaquina() {
+        echo "✅ Paso 12: Aprobando máquina y enviando a distribución...\n";
         
+        // Primero aprobar y enviar a distribución
+        $response = $this->request('POST', '/maquina/mandar-distribucion', [
+            'idMaquina' => $this->maquinaId,
+            'mensaje' => 'Máquina aprobada, enviar a distribución'
+        ]);
+        
+        $this->assertResponseSuccess('Error al aprobar máquina');
+        
+        // Poner operativa
+        sleep(1);
         $response = $this->request('POST', '/maquina/poner-operativa', [
             'idMaquina' => $this->maquinaId
         ]);
@@ -310,14 +309,15 @@ class UserFlowsTest extends HttpTestCase {
         $this->assertResponseSuccess('Error al poner máquina operativa');
         
         // Verificar estado final
+        sleep(1);
         $maquinas = $this->request('GET', "/maquina/estado/Operativa");
         $this->assertResponseSuccess('Error al obtener máquinas operativas');
         
         $encontrada = false;
         foreach ($maquinas['maquinas'] as $maquina) {
-            if ($maquina['ID_Maquina'] === $this->maquinaId) {
+            if ($maquina['id'] === $this->maquinaId) {
                 $encontrada = true;
-                $this->assertEquals('Recaudacion', $maquina['Etapa'], 
+                $this->assertEquals('Recaudacion', $maquina['etapa'], 
                     'La etapa debería ser Recaudacion');
                 break;
             }

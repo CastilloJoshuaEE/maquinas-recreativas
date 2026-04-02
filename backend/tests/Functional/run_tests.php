@@ -3,16 +3,20 @@
 
 echo "\n";
 echo "╔════════════════════════════════════════════════════════════╗\n";
-echo "║     PRUEBAS FUNCIONALES (END-TO-END) - SISTEMA maquinas_recreativas   ║\n";
+echo "║     PRUEBAS FUNCIONALES (END-TO-END) - SISTEMA RECREATIVA  ║\n";
 echo "╚════════════════════════════════════════════════════════════╝\n\n";
 
 set_time_limit(600);
 
 define('BASE_PATH', realpath(__DIR__ . '/../..'));
 
-require_once BASE_PATH . '/config/database.php';
-require_once BASE_PATH . '/helper/CifradoHelper.php';
-require_once __DIR__ . '/../TestDatabase.php';
+// Cargar configuración básica
+if (file_exists(BASE_PATH . '/Config/constants.php')) {
+    require_once BASE_PATH . '/Config/constants.php';
+}
+if (file_exists(BASE_PATH . '/Infrastructure/Security/CifradoHelper.php')) {
+    require_once BASE_PATH . '/Infrastructure/Security/CifradoHelper.php';
+}
 
 require_once __DIR__ . '/HttpTestCase.php';
 require_once __DIR__ . '/UserFlowsTest.php';
@@ -26,13 +30,13 @@ echo "📡 Verificando servidor backend...\n";
 $ch = curl_init('http://localhost:8000/health');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-curl_exec($ch);
+$body = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($httpCode !== 200) {
     echo "❌ ERROR: Servidor backend no disponible en http://localhost:8000\n";
-    echo "   Ejecuta: php backend/serve.php\n";
+    echo "   Ejecuta: php -S localhost:8000 -t backend/public\n";
     exit(1);
 }
 echo "✅ Servidor backend OK\n\n";
@@ -51,22 +55,15 @@ function resetRateLimits() {
     if ($code === 200) {
         echo "   🔄 Rate limits reseteados correctamente.\n";
     } else {
-        echo "   ⚠️  No se pudo resetear rate limits (HTTP $code): $body\n";
+        echo "   ⚠️  No se pudo resetear rate limits (HTTP $code)\n";
     }
 }
 
 // ─────────────────────────────────────────
-// Base de datos de pruebas
+// EJECUTAR PRUEBAS
 // ─────────────────────────────────────────
-echo "📋 EJECUTANDO PRUEBAS FUNCIONALES (UNA POR UNA)\n";
-echo "================================================\n\n";
-
-try {
-    $testDb = new TestDatabase();
-    echo "✅ Base de datos de pruebas lista\n\n";
-} catch (Exception $e) {
-    echo "⚠️  Usando base de datos existente: " . $e->getMessage() . "\n\n";
-}
+echo "📋 EJECUTANDO PRUEBAS FUNCIONALES\n";
+echo "================================\n\n";
 
 $tests = [
     'UserFlowsTest'   => new UserFlowsTest(),
@@ -82,7 +79,7 @@ foreach ($tests as $name => $test) {
     echo "\n🔬 EJECUTANDO: $name\n";
     echo str_repeat("─", strlen($name) + 14) . "\n";
 
-    // *** Resetear rate limits ANTES de cada suite ***
+    // Resetear rate limits antes de cada suite
     resetRateLimits();
 
     // Limpiar cookies de sesiones anteriores
@@ -97,7 +94,7 @@ foreach ($tests as $name => $test) {
             $test->testFlujoCompletoReportes();
         }
 
-        $summary         = $test->getAssertionSummary();
+        $summary = $test->getAssertionSummary();
         $totalAssertions += $summary['total'];
         $totalFailures   += $summary['failures'];
 
@@ -130,9 +127,9 @@ foreach ($tests as $name => $test) {
         $totalFailures++;
     }
 
-    // Pequeña pausa entre suites (no es estrictamente necesaria dado el reset, pero ayuda)
-    echo "\n⏱️  Pausa de 3 segundos antes de la siguiente prueba...\n";
-    sleep(3);
+    // Pausa entre suites
+    echo "\n⏱️  Pausa de 2 segundos antes de la siguiente prueba...\n";
+    sleep(2);
 }
 
 // ─────────────────────────────────────────

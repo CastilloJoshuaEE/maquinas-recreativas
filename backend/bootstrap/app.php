@@ -56,7 +56,7 @@ require_once __DIR__ . '/session.php';
 // 6. HEADERS DE SEGURIDAD
 // =============================================
 require_once __DIR__ . '/security.php';
-
+require_once __DIR__ . '/rate_limit.php';
 // =============================================
 // 7. DETECTAR ENTORNO DE PRUEBAS
 // =============================================

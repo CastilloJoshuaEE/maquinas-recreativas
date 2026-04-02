@@ -1,77 +1,59 @@
 <?php
-/**
- * backend/core/App.php
- * maquinas_recreativas - Core Application
- * 
- * Clase principal que orquesta toda la aplicación.
- * Implementa el patrón Singleton.
- * 
- * @package maquinas_recreativas\Core
- * @author Tu Equipo
- * @version 1.0
- */
 namespace maquinas_recreativas\Core;
-use RangeException;
+
 use maquinas_recreativas\Core\Router;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 use maquinas_recreativas\Core\MiddlewarePipeline;
-class App{
+
+class App
+{
     private static ?self $instance = null;
     private Router $router;
     private Request $request;
     private Response $response;
     private MiddlewarePipeline $pipeline;
     private array $config;
-    /**
-     * Constructor privado (Singleton)
-     */
-    private function __construct(){
-        $this->request= new Request();
-        $this->response= new Response();
+
+    private function __construct()
+    {
+        $this->request = new Request();
+        $this->response = new Response();
         $this->router = new Router();
-        $this->pipeline=new MiddlewarePipeline();
+        $this->pipeline = new MiddlewarePipeline();
         $this->loadConfig();
         $this->registerMiddleware();
         $this->registerRoutes();
     }
-    /**
-     * Obtiene la instancia única de la aplicación
-     * 
-     * @return self
-     */
-    public static function getInstance():self{
-        if(self::$instance === null){
-            self::$instance=new self();
+
+    public static function getInstance(): self
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
         }
         return self::$instance;
-    }     
-    /**
-     * Carga la configuración
-     */
-    private function loadConfig():void{
-        $this->config=[
-            'env'=>APP_ENV ??'production',
-            'debug'=>(APP_ENV ??'production')==='development',
-            'timezone'=>date_default_timezone_get()
+    }
+
+    private function loadConfig(): void
+    {
+        $this->config = [
+            'env' => APP_ENV ?? 'production',
+            'debug' => (APP_ENV ?? 'production') === 'development',
+            'timezone' => date_default_timezone_get()
         ];
     }
-    /**
-     * Registra los middlewares globales
-     */
-    private function registerMiddleware():void{
-      // Middlewares en orden de ejecución
+
+    private function registerMiddleware(): void
+    {
         $this->pipeline->add('cors', \maquinas_recreativas\Middleware\CorsMiddleware::class);
         $this->pipeline->add('rate-limit', \maquinas_recreativas\Middleware\RateLimitMiddleware::class);
         $this->pipeline->add('auth', \maquinas_recreativas\Middleware\AuthMiddleware::class);
-        $this->pipeline->add('json-response', \maquinas_recreativas\Middleware\JsonResponseMiddleware::class);        
-    }  
-    /**
-     * Registra las rutas de la aplicación
-     */
-    private function registerRoutes():void{
-        // Cargar archivos de rutas
-$routesPath = __DIR__ . '/../interfaces/http/routes/';
+        $this->pipeline->add('json-response', \maquinas_recreativas\Middleware\JsonResponseMiddleware::class);
+    }
+
+    private function registerRoutes(): void
+    {
+        $routesPath = __DIR__ . '/../interfaces/http/routes/';
         
         $routeFiles = [
             'index.php',
@@ -89,79 +71,75 @@ $routesPath = __DIR__ . '/../interfaces/http/routes/';
             'reporte.routes.php',
             'comentario.routes.php'
         ];
-        foreach($routeFiles as $file){
+        
+        foreach ($routeFiles as $file) {
             $filePath = $routesPath . $file;
-            if(file_exists($filePath)){
-                $routes= require $filePath;
-                if(is_array($routes)){
-                    foreach($routes as $route){
+            if (file_exists($filePath)) {
+                $routes = require $filePath;
+                if (is_array($routes)) {
+                    foreach ($routes as $route) {
                         $this->router->add(
                             $route['method'],
                             $route['path'],
                             $route['handler'],
-                            $route['middleware']??[]
+                            $route['middleware'] ?? []
                         );
                     }
                 }
             }
-        }        
+        }
     }
-    
-    /**
-     * Ejecuta la aplicación
-     */
-    public function run():void{
-        try{
-            // Manejar archivos especiales primero
-            if($this->handleSpecialFiles()){
+
+    public function run(): void
+    {
+        try {
+            if ($this->handleSpecialFiles()) {
                 return;
             }
+            
             // Manejar endpoint de reset rate limits
-            if($this->request->getPath()==='/reset-rate-limits'){
-                \applyRateLimitReset();
+            if ($this->request->getPath() === '/reset-rate-limits') {
+                if (function_exists('applyRateLimitReset')) {
+                    applyRateLimitReset();
+                } else {
+                    $this->response->json(['success' => false, 'message' => 'Rate limit reset not available'], 500);
+                }
                 return;
             }
-            // Ejecutar pipeline de middlewares
-            $this->pipeline->handle($this->request, function($request){
-                // Buscar ruta
+            
+            $this->pipeline->handle($this->request, function ($request) {
                 $route = $this->router->match($request->getMethod(), $request->getPath());
-                if(!$route){
-                    $this->response->json(['success'=>false,'message'=> 'Enpoint no encontrado'], 404);
+                if (!$route) {
+                    $this->response->json(['success' => false, 'message' => 'Endpoint no encontrado'], 404);
                     return;
                 }
-                // Ejecutar middleware específicos de la ruta
-                $routePipeline= new MiddlewarePipeline();
-                foreach($route['middleware']as $middleware){
+                
+                $routePipeline = new MiddlewarePipeline();
+                foreach ($route['middleware'] as $middleware) {
                     $routePipeline->add($middleware, $middleware);
                 }
-                $routePipeline->handle($request, function($request) use($route){
+                
+                $routePipeline->handle($request, function ($request) use ($route) {
                     [$controllerClass, $method] = $route['handler'];
                     $controller = $this->resolveController($controllerClass);
-                    if(!$controller || !method_exists($controller, $method)){
+                    if (!$controller || !method_exists($controller, $method)) {
                         throw new \RuntimeException("Handler inválido para la ruta");
                     }
-                    // Invocar controlador
+                    
                     $result = $controller->$method($request);
-                    //Enviar respuesta
-                    if($result instanceof Response){
+                    
+                    if ($result instanceof Response) {
                         $result->send();
-                    }else{
+                    } else {
                         $this->response->json($result);
                     }
-
-
-
                 });
             });
-        }catch(\Throwable $e){
+        } catch (\Throwable $e) {
             $this->handleException($e);
         }
     }
-    /**
-     * Maneja archivos especiales (robots.txt, sitemap.xml, favicon.ico)
-     * 
-     * @return bool True si se manejó, false si no
-     */ 
+
     private function handleSpecialFiles(): bool
     {
         $path = $this->request->getPath();
@@ -183,7 +161,6 @@ $routesPath = __DIR__ . '/../interfaces/http/routes/';
                 return true;
         }
         
-        // Bloquear rutas de scanners
         $blockedRoutes = [
             '/latest/meta-data', '/computeMetadata', '/metadata',
             '/opc', '/openstack', '/actuator'
@@ -198,76 +175,83 @@ $routesPath = __DIR__ . '/../interfaces/http/routes/';
         
         return false;
     }
-    
-/**
- * Resuelve un controlador desde el contenedor
- * 
- * @param string $class
- * @return object|null
- */
-private function resolveController(string $class): ?object
-{
-    // Intentar obtener del contenedor Dependencies
-    try {
-        if (class_exists('/../Config/Dependencies')) {
-            return Dependencies::get($class);
-        }
-    } catch (\Exception $e) {
-        // Si falla, intentar crear instancia directa
-        if (class_exists($class)) {
-            error_log("Error obteniendo {$class} del contenedor: " . $e->getMessage());
-        }
-    }
-    
-    // Intentar crear instancia con parámetros por defecto (fallback)
-    if (class_exists($class)) {
+
+    /**
+     * Resuelve un controlador desde el contenedor
+     */
+    private function resolveController(string $class): ?object
+    {
+        // Intentar obtener del contenedor Dependencies
         try {
-            // Intentar obtener los parámetros del constructor
-            $reflection = new \ReflectionClass($class);
-            $constructor = $reflection->getConstructor();
-            
-            if (!$constructor) {
-                return new $class();
-            }
-            
-            $params = $constructor->getParameters();
-            $args = [];
-            
-            foreach ($params as $param) {
-                $paramType = $param->getType();
-                if ($paramType && !$paramType->isBuiltin()) {
-                    $paramClass = $paramType->getName();
-                    try {
-                        $args[] = $this->resolveController($paramClass);
-                    } catch (\Exception $e) {
-                        if ($param->isDefaultValueAvailable()) {
-                            $args[] = $param->getDefaultValue();
-                        } else {
-                            throw new \RuntimeException("No se puede resolver el parámetro {$param->getName()} para {$class}");
-                        }
-                    }
-                } elseif ($param->isDefaultValueAvailable()) {
-                    $args[] = $param->getDefaultValue();
-                } else {
-                    $args[] = null;
+            // CORREGIDO: Usar class_exists correctamente
+            if (class_exists('\\Dependencies')) {
+                $instance = \Dependencies::get($class);
+                if ($instance !== null) {
+                    return $instance;
                 }
             }
-            
-            return $reflection->newInstanceArgs($args);
-        } catch (\ArgumentCountError $e) {
-            error_log("No se puede instanciar {$class}: " . $e->getMessage());
-            return null;
+        } catch (\Exception $e) {
+            error_log("Error obteniendo {$class} del contenedor: " . $e->getMessage());
         }
+        
+        // Intentar crear instancia con parámetros por defecto (fallback)
+        if (class_exists($class)) {
+            try {
+                $reflection = new \ReflectionClass($class);
+                $constructor = $reflection->getConstructor();
+                
+                if (!$constructor) {
+                    return new $class();
+                }
+                
+                $params = $constructor->getParameters();
+                $args = [];
+                
+                foreach ($params as $param) {
+                    $paramType = $param->getType();
+                    // CORREGIDO: Verificar métodos correctamente
+                    if ($paramType) {
+    // Verificar si es un tipo de clase (no built-in)
+    $isBuiltin = false;
+    
+    // Para PHP 7.1+ podemos usar isBuiltin()
+    if (method_exists($paramType, 'isBuiltin')) {
+        $isBuiltin = $paramType->isBuiltin();
     }
     
-    return null;
-}
-    
-    /**
-     * Maneja excepciones no capturadas
-     * 
-     * @param \Throwable $e
-     */
+    if (!$isBuiltin) {
+        $paramClass = method_exists($paramType, 'getName') 
+            ? $paramType->getName() 
+            : (string)$paramType;
+        try {
+            $args[] = $this->resolveController($paramClass);
+        } catch (\Exception $e) {
+            if ($param->isDefaultValueAvailable()) {
+                $args[] = $param->getDefaultValue();
+            } else {
+                throw new \RuntimeException("No se puede resolver el parámetro {$param->getName()} para {$class}");
+            }
+        }
+        continue;
+    }
+
+                    } elseif ($param->isDefaultValueAvailable()) {
+                        $args[] = $param->getDefaultValue();
+                    } else {
+                        $args[] = null;
+                    }
+                }
+                
+                return $reflection->newInstanceArgs($args);
+            } catch (\ArgumentCountError $e) {
+                error_log("No se puede instanciar {$class}: " . $e->getMessage());
+                return null;
+            }
+        }
+        
+        return null;
+    }
+
     private function handleException(\Throwable $e): void
     {
         error_log("App Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
@@ -283,5 +267,4 @@ private function resolveController(string $class): ?object
         
         $this->response->json($response, 500);
     }
-             
 }

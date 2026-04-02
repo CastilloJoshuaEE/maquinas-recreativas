@@ -11,12 +11,14 @@ class AdminFlowsTest extends HttpTestCase {
     public function __construct() {
         parent::__construct();
         
+        $timestamp = time();
+        
         $this->adminUser = [
             'nombre' => 'Admin',
             'apellido' => 'Sistema',
             'ci' => '00000000' . rand(10, 99),
-            'email' => 'admin_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'adm_' . substr(uniqid(), -8), // Máx 12 caracteres
+            'email' => 'admin_' . $timestamp . '_' . uniqid() . '@test.com',
+            'usuario_asignado' => 'adm_' . substr(uniqid(), -8),
             'contrasena' => 'Admin123!',
             'tipo' => 'Administrador',
             'estado' => 'Activo'
@@ -28,7 +30,7 @@ class AdminFlowsTest extends HttpTestCase {
         echo "============================================\n\n";
         
         // Registrar admin
-        $this->request('POST', '/usuario/register', $this->adminUser);
+        $this->pasoRegistrarAdmin();
         
         // Login
         $this->pasoLoginAdmin();
@@ -42,6 +44,18 @@ class AdminFlowsTest extends HttpTestCase {
         echo "\n✅ FLUJO COMPLETO DE ADMINISTRADOR EXITOSO\n";
     }
     
+    private function pasoRegistrarAdmin() {
+        echo "📝 Registrando administrador...\n";
+        
+        $response = $this->request('POST', '/usuario/register', $this->adminUser);
+        $this->assertResponseSuccess('Error al registrar administrador');
+        
+        $this->adminId = $response['userId'] ?? null;
+        $this->assertNotNull($this->adminId, 'No se recibió ID');
+        
+        echo "   ✅ Admin registrado: {$this->adminUser['usuario_asignado']} (ID: {$this->adminId})\n";
+    }
+    
     private function pasoLoginAdmin() {
         echo "🔐 Login como administrador...\n";
         
@@ -51,9 +65,6 @@ class AdminFlowsTest extends HttpTestCase {
         ]);
         
         $this->assertResponseSuccess('Error al iniciar sesión');
-        $this->adminId = $response['usuario']['ID_Usuario'] ?? null;
-        $this->assertNotNull($this->adminId, 'No se recibió ID');
-        
         echo "   ✅ Login exitoso\n";
     }
     
@@ -75,7 +86,7 @@ class AdminFlowsTest extends HttpTestCase {
             'apellido' => 'Prueba',
             'ci' => '11122233' . rand(10, 99),
             'email' => 'usuario_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'usr_' . substr(uniqid(), -8), // Máx 12 caracteres
+            'usuario_asignado' => 'usr_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'estado' => 'Activo',
