@@ -578,20 +578,23 @@ $command = new RegistrarMaquinaCommand(
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-public function obtenerPorEstado(Request $request, string $estado): Response
+   public function obtenerPorEstado(Request $request, string $estado): Response
 {
-    $query = new ObtenerMaquinasPorEstadoQuery($estado);
-    $resultado = $this->obtenerPorEstadoHandler->handle($query);
-    
-    $response = new Response();
-    if (isset($resultado['success']) && $resultado['success'] === false) {
-        $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error'] ?? 'Error desconocido'], 500);
-    } else {
-        $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
+    try {
+        $query = new ObtenerMaquinasPorEstadoQuery($estado);
+        $resultado = $this->obtenerPorEstadoHandler->handle($query);
+        
+        $response = new Response();
+        if (isset($resultado['success']) && $resultado['success'] === false) {
+            return $response->json(['success' => false, 'maquinas' => [], 'error' => $resultado['error']], 500);
+        }
+        return $response->json(['success' => true, 'maquinas' => $resultado['maquinas'] ?? []]);
+        
+    } catch (\Throwable $e) {
+        error_log("Excepción en obtenerPorEstado: " . $e->getMessage());
+        return (new Response())->json(['success' => false, 'error' => 'Error interno del servidor'], 500);
     }
-    return $response;
 }
-
 
     #[OA\Get(
         path: "/v1/maquina/etapa/{etapa}",
