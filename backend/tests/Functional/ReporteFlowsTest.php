@@ -8,6 +8,8 @@ class ReporteFlowsTest extends HttpTestCase {
     private $usuario2;
     private $usuario1Id;
     private $usuario2Id;
+    private $usuario1UsuarioAsignado;
+    private $usuario2UsuarioAsignado;
     private $reporteId;
     
     public function __construct() {
@@ -20,7 +22,6 @@ class ReporteFlowsTest extends HttpTestCase {
             'apellido' => 'Reportes',
             'ci' => '11111111' . rand(10, 99),
             'email' => 'emisor_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'em_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
@@ -31,7 +32,6 @@ class ReporteFlowsTest extends HttpTestCase {
             'apellido' => 'Reportes',
             'ci' => '22222222' . rand(10, 99),
             'email' => 'destinatario_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'dest_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Logistica'
         ];
@@ -55,8 +55,10 @@ class ReporteFlowsTest extends HttpTestCase {
         $resp1 = $this->request('POST', '/usuario/register', $this->usuario1);
         if ($this->assertResponseSuccess('Error al crear usuario 1')) {
             $this->usuario1Id = $resp1['userId'] ?? null;
+            $this->usuario1UsuarioAsignado = $resp1['usuario_asignado'] ?? null;
             $this->assertNotNull($this->usuario1Id, 'No se recibio ID usuario 1');
-            echo "   Usuario 1 creado: {$this->usuario1['usuario_asignado']} (ID: {$this->usuario1Id})\n";
+            $this->assertNotNull($this->usuario1UsuarioAsignado, 'No se recibio usuario_asignado');
+            echo "   Usuario 1 creado: {$this->usuario1UsuarioAsignado} (ID: {$this->usuario1Id})\n";
         }
         
         sleep(2);
@@ -64,8 +66,10 @@ class ReporteFlowsTest extends HttpTestCase {
         $resp2 = $this->request('POST', '/usuario/register', $this->usuario2);
         if ($this->assertResponseSuccess('Error al crear usuario 2')) {
             $this->usuario2Id = $resp2['userId'] ?? null;
+            $this->usuario2UsuarioAsignado = $resp2['usuario_asignado'] ?? null;
             $this->assertNotNull($this->usuario2Id, 'No se recibio ID usuario 2');
-            echo "   Usuario 2 creado: {$this->usuario2['usuario_asignado']} (ID: {$this->usuario2Id})\n";
+            $this->assertNotNull($this->usuario2UsuarioAsignado, 'No se recibio usuario_asignado');
+            echo "   Usuario 2 creado: {$this->usuario2UsuarioAsignado} (ID: {$this->usuario2Id})\n";
         }
     }
     
@@ -73,7 +77,7 @@ class ReporteFlowsTest extends HttpTestCase {
         echo "Iniciando sesion como emisor...\n";
         
         $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->usuario1['usuario_asignado'],
+            'usuario_asignado' => $this->usuario1UsuarioAsignado,
             'contrasena' => $this->usuario1['contrasena']
         ]);
         

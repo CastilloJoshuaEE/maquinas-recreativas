@@ -6,6 +6,7 @@ require_once __DIR__ . '/HttpTestCase.php';
 class AdminFlowsTest extends HttpTestCase {
     private $adminUser;
     private $adminId;
+    private $adminUsuarioAsignado;
     private $usuarioCreadoId;
     
     public function __construct() {
@@ -18,7 +19,6 @@ class AdminFlowsTest extends HttpTestCase {
             'apellido' => 'Sistema',
             'ci' => '00000000' . rand(10, 99),
             'email' => 'admin_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'adm_' . substr(uniqid(), -8),
             'contrasena' => 'Admin123!',
             'tipo' => 'Administrador',
             'estado' => 'Activo'
@@ -43,8 +43,9 @@ class AdminFlowsTest extends HttpTestCase {
         $response = $this->request('POST', '/usuario/register', $this->adminUser);
         if ($this->assertResponseSuccess('Error al registrar administrador')) {
             $this->adminId = $response['userId'] ?? null;
+            $this->adminUsuarioAsignado = $response['usuario_asignado'] ?? null;
             $this->assertNotNull($this->adminId, 'No se recibio ID');
-            echo "   Admin registrado: {$this->adminUser['usuario_asignado']} (ID: {$this->adminId})\n";
+            echo "   Admin registrado: {$this->adminUsuarioAsignado} (ID: {$this->adminId})\n";
         }
     }
     
@@ -52,7 +53,7 @@ class AdminFlowsTest extends HttpTestCase {
         echo "Login como administrador...\n";
         
         $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->adminUser['usuario_asignado'],
+            'usuario_asignado' => $this->adminUsuarioAsignado,
             'contrasena' => $this->adminUser['contrasena']
         ]);
         
@@ -79,7 +80,6 @@ class AdminFlowsTest extends HttpTestCase {
             'apellido' => 'Prueba',
             'ci' => '11122233' . rand(10, 99),
             'email' => 'usuario_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'usr_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'estado' => 'Activo',

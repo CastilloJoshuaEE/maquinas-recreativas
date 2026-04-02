@@ -804,7 +804,10 @@ Dependencies::register(ObtenerMaquinasPorTecnicoComprobadorHandler::class, funct
         Dependencies::get(MySQLUsuarioRepository::class)
     );
 });
-
+// Registrar RoleMiddleware
+Dependencies::register(\maquinas_recreativas\Middleware\RoleMiddleware::class, function() {
+    return new \maquinas_recreativas\Middleware\RoleMiddleware([]);
+});
 Dependencies::register(ObtenerMaquinasPorTecnicoMantenimientoHandler::class, function() {
     return new ObtenerMaquinasPorTecnicoMantenimientoHandler(
         Dependencies::get(MySQLMaquinaRepository::class),

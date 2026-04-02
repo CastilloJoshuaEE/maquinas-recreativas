@@ -30,7 +30,7 @@ abstract class HttpTestCase {
         
         echo "      -> Request #{$this->requestCount}: $method $endpoint\n";
         
-        // Espera entre requests
+        // Espera base entre requests para evitar rate limiting
         usleep(100000);
         
         $url = $this->baseUrl . $endpoint;
@@ -42,6 +42,7 @@ abstract class HttpTestCase {
             CURLOPT_HEADER => true,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_FOLLOWLOCATION => true,
+            // Usar el mismo archivo de cookies para todas las requests
             CURLOPT_COOKIEFILE => $this->sessionCookieFile,
             CURLOPT_COOKIEJAR => $this->sessionCookieFile,
         ];
@@ -82,14 +83,13 @@ abstract class HttpTestCase {
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
-        $headerStr = substr($response, 0, $headerSize);
+        $headers = substr($response, 0, $headerSize);
         $body = substr($response, $headerSize);
         
-        $this->extractCookies($headerStr);
+        $this->extractCookies($headers);
         
         curl_close($ch);
         
-        // Depuración: mostrar código HTTP y respuesta
         echo "      HTTP Status: {$this->lastHttpCode}\n";
         
         if ($this->lastHttpCode === 0) {
@@ -111,6 +111,12 @@ abstract class HttpTestCase {
             }
         }
         
+        // Si el cuerpo está vacío y el código es 200, puede ser un error interno
+        if ($this->lastHttpCode === 200 && empty($body)) {
+            echo "      WARNING: Empty response body with status 200\n";
+            $this->lastResponse = ['success' => false, 'error' => 'Empty response body'];
+        }
+        
         // Rate limiting
         if ($this->lastHttpCode === 429 && $retry < $this->maxRetries) {
             $waitTime = pow(2, $retry) * 2;
@@ -121,7 +127,6 @@ abstract class HttpTestCase {
         
         return $this->lastResponse;
     }
-    
     private function extractCookies($headerString) {
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $headerString, $matches);
         foreach ($matches[1] as $cookie) {

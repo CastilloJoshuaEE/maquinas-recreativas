@@ -33,7 +33,7 @@ use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
-
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;   
 class UsuarioController
 {
     private LoginHandler $loginHandler;
@@ -183,7 +183,8 @@ public function login(Request $request): Response
     {
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if ($userId) {
-            $command = new LogoutCommand($userId);
+            // Convertir string a Uuid
+            $command = new LogoutCommand(new Uuid($userId));
             $this->logoutHandler->handle($command);
             session_destroy();
         }

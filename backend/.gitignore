@@ -11,3 +11,8 @@ php-parse
 php-parse.bat
 yaml-lint
 yaml-lint.bat
+phpdoc-parser
+phpunit
+code-unit
+swagger.php
+/vendor/

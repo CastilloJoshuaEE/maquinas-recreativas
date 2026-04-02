@@ -90,14 +90,13 @@ class App
         }
     }
 
-    public function run(): void
+public function run(): void
     {
         try {
             if ($this->handleSpecialFiles()) {
                 return;
             }
             
-            // Manejar endpoint de reset rate limits
             if ($this->request->getPath() === '/reset-rate-limits') {
                 if (function_exists('applyRateLimitReset')) {
                     applyRateLimitReset();
@@ -126,7 +125,9 @@ class App
                         throw new \RuntimeException("Handler inválido para la ruta");
                     }
                     
-                    $result = $controller->$method($request);
+                    // Pasar los parámetros de la ruta al controlador
+                    $params = $route['params'] ?? [];
+                    $result = $controller->$method($request, ...$params);
                     
                     if ($result instanceof Response) {
                         $result->send();
@@ -139,7 +140,6 @@ class App
             $this->handleException($e);
         }
     }
-
     private function handleSpecialFiles(): bool
     {
         $path = $this->request->getPath();

@@ -15,7 +15,12 @@ class UserFlowsTest extends HttpTestCase {
     private $comprobadorId;
     private $comercioId;
     private $placaId;
+    private $carcasaId;
     private $maquinaId;
+    
+    private $logisticaUsuarioAsignado;
+    private $ensambladorUsuarioAsignado;
+    private $comprobadorUsuarioAsignado;
     
     public function __construct() {
         parent::__construct();
@@ -27,7 +32,6 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Prueba',
             'ci' => '12345678' . rand(10, 99),
             'email' => 'logistica_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'log_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Logistica'
         ];
@@ -37,7 +41,6 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Tecnico',
             'ci' => '87654321' . rand(10, 99),
             'email' => 'ensamblador_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'ens_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
@@ -48,7 +51,6 @@ class UserFlowsTest extends HttpTestCase {
             'apellido' => 'Tecnico',
             'ci' => '11223344' . rand(10, 99),
             'email' => 'comprobador_' . $timestamp . '_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'comp_' . substr(uniqid(), -8),
             'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Comprobador'
@@ -73,23 +75,35 @@ class UserFlowsTest extends HttpTestCase {
         
         $this->pasoRegistrarUsuarios();
         
-        echo "\nPARTE 1: LOGISTICA\n";
-        echo "--------------------\n";
+        echo "\nPARTE 1: LOGISTICA (crea comercio)\n";
+        echo "-----------------------------------\n";
         $this->pasoLoginLogistica();
         $this->pasoRegistrarComercio();
+        $this->pasoLogout();
+        
+        echo "\nPARTE 2: TECNICO ENSAMBLADOR (genera placa y carcasa)\n";
+        echo "-----------------------------------------------------\n";
+        $this->pasoLoginEnsamblador();
         $this->pasoGenerarPlaca();
+        $this->pasoGenerarCarcasa();
+        $this->pasoLogout();
+        
+        echo "\nPARTE 3: LOGISTICA (registra maquina)\n";
+        echo "------------------------------------\n";
+        $this->pasoLoginLogistica();
         $this->pasoRegistrarMaquina();
         $this->pasoLogout();
         
-        echo "\nPARTE 2: TECNICO ENSAMBLADOR\n";
-        echo "------------------------------\n";
+        echo "\nPARTE 4: TECNICO ENSAMBLADOR (monta componentes)\n";
+        echo "------------------------------------------------\n";
         $this->pasoLoginEnsamblador();
         $this->pasoVerMaquinasEnsamblador();
+        $this->pasoRegistrarMontaje();
         $this->pasoEnviarAComprobacion();
         $this->pasoLogout();
         
-        echo "\nPARTE 3: TECNICO COMPROBADOR\n";
-        echo "------------------------------\n";
+        echo "\nPARTE 5: TECNICO COMPROBADOR (verifica y aprueba)\n";
+        echo "--------------------------------------------------\n";
         $this->pasoLoginComprobador();
         $this->pasoVerMaquinasComprobador();
         $this->pasoAprobarMaquina();
@@ -100,47 +114,86 @@ class UserFlowsTest extends HttpTestCase {
     private function pasoRegistrarUsuarios() {
         echo "Paso 1: Registrando usuarios...\n";
         
+        // Registrar logistica
         $responseLog = $this->request('POST', '/usuario/register', $this->logisticaUser);
         if ($this->assertResponseSuccess('Error al registrar logistica')) {
             $this->logisticaId = $responseLog['userId'] ?? null;
+            $this->logisticaUsuarioAsignado = $responseLog['usuario_asignado'] ?? null;
             $this->assertNotNull($this->logisticaId, 'No se recibio ID de logistica');
-            echo "   Logistica registrado: {$this->logisticaUser['usuario_asignado']} (ID: {$this->logisticaId})\n";
+            echo "   Logistica registrado: {$this->logisticaUsuarioAsignado} (ID: {$this->logisticaId})\n";
         }
         
         sleep(1);
         
+        // Registrar ensamblador
         $responseEns = $this->request('POST', '/usuario/register', $this->ensambladorUser);
         if ($this->assertResponseSuccess('Error al registrar ensamblador')) {
             $this->ensambladorId = $responseEns['userId'] ?? null;
+            $this->ensambladorUsuarioAsignado = $responseEns['usuario_asignado'] ?? null;
             $this->assertNotNull($this->ensambladorId, 'No se recibio ID de ensamblador');
-            echo "   Ensamblador registrado: {$this->ensambladorUser['usuario_asignado']} (ID: {$this->ensambladorId})\n";
+            echo "   Ensamblador registrado: {$this->ensambladorUsuarioAsignado} (ID: {$this->ensambladorId})\n";
         }
         
         sleep(1);
         
+        // Registrar comprobador
         $responseComp = $this->request('POST', '/usuario/register', $this->comprobadorUser);
         if ($this->assertResponseSuccess('Error al registrar comprobador')) {
             $this->comprobadorId = $responseComp['userId'] ?? null;
+            $this->comprobadorUsuarioAsignado = $responseComp['usuario_asignado'] ?? null;
             $this->assertNotNull($this->comprobadorId, 'No se recibio ID de comprobador');
-            echo "   Comprobador registrado: {$this->comprobadorUser['usuario_asignado']} (ID: {$this->comprobadorId})\n";
+            echo "   Comprobador registrado: {$this->comprobadorUsuarioAsignado} (ID: {$this->comprobadorId})\n";
         }
     }
     
     private function pasoLoginLogistica() {
-        echo "Paso 2: Iniciando sesion como logistica...\n";
+        echo "Iniciando sesion como logistica...\n";
         
         $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->logisticaUser['usuario_asignado'],
+            'usuario_asignado' => $this->logisticaUsuarioAsignado,
             'contrasena' => $this->logisticaUser['contrasena']
         ]);
         
         if ($this->assertResponseSuccess('Error al iniciar sesion como logistica')) {
-            echo "   Login exitoso como: {$this->logisticaUser['usuario_asignado']}\n";
+            echo "   Login exitoso como: {$this->logisticaUsuarioAsignado}\n";
         }
     }
     
+    private function pasoLoginEnsamblador() {
+        echo "Iniciando sesion como ensamblador...\n";
+        
+        $response = $this->request('POST', '/usuario/login', [
+            'usuario_asignado' => $this->ensambladorUsuarioAsignado,
+            'contrasena' => $this->ensambladorUser['contrasena']
+        ]);
+        
+        if ($this->assertResponseSuccess('Error al iniciar sesion como ensamblador')) {
+            echo "   Login exitoso como: {$this->ensambladorUsuarioAsignado}\n";
+        }
+    }
+    
+    private function pasoLoginComprobador() {
+        echo "Iniciando sesion como comprobador...\n";
+        
+        $response = $this->request('POST', '/usuario/login', [
+            'usuario_asignado' => $this->comprobadorUsuarioAsignado,
+            'contrasena' => $this->comprobadorUser['contrasena']
+        ]);
+        
+        if ($this->assertResponseSuccess('Error al iniciar sesion como comprobador')) {
+            echo "   Login exitoso como: {$this->comprobadorUsuarioAsignado}\n";
+        }
+    }
+    
+    private function pasoLogout() {
+        echo "Cerrando sesion...\n";
+        $this->request('POST', '/usuario/logout', []);
+        $this->clearCookies();
+        echo "   Sesion cerrada\n";
+    }
+    
     private function pasoRegistrarComercio() {
-        echo "Paso 3: Registrando comercio...\n";
+        echo "Registrando comercio...\n";
         
         $response = $this->request('POST', '/comercio/register', $this->comercioData);
         
@@ -152,7 +205,7 @@ class UserFlowsTest extends HttpTestCase {
     }
     
     private function pasoGenerarPlaca() {
-        echo "Paso 4: Generando placa...\n";
+        echo "Generando placa...\n";
         
         $response = $this->request('POST', '/maquina/generar-placa', []);
         
@@ -164,15 +217,30 @@ class UserFlowsTest extends HttpTestCase {
         }
     }
     
+    private function pasoGenerarCarcasa() {
+        echo "Generando carcasa...\n";
+        
+        // La carcasa es un componente estructural
+        // Nota: Esto depende de la API disponible. Podría necesitar un endpoint específico
+        // Por ahora usamos generar-placa como placeholder hasta que exista endpoint para carcasa
+        $response = $this->request('POST', '/maquina/generar-placa', []);
+        
+        if ($this->assertResponseSuccess('Error al generar carcasa')) {
+            $this->carcasaId = $response['idComponente'] ?? null;
+            $this->assertNotNull($this->carcasaId, 'No se recibio ID de carcasa');
+            echo "   Carcasa generada (ID: {$this->carcasaId})\n";
+        }
+    }
+    
     private function pasoRegistrarMaquina() {
-        echo "Paso 5: Registrando maquina...\n";
+        echo "Registrando maquina con placa y carcasa...\n";
         
         $maquinaData = [
             'nombre' => $this->maquinaData['nombre'],
             'tipo' => $this->maquinaData['tipo'],
             'idComercio' => $this->comercioId,
             'idPlaca' => $this->placaId,
-            'idCarcasa' => $this->placaId
+            'idCarcasa' => $this->carcasaId
         ];
         
         $response = $this->request('POST', '/maquina/register', $maquinaData);
@@ -184,28 +252,8 @@ class UserFlowsTest extends HttpTestCase {
         }
     }
     
-    private function pasoLogout() {
-        echo "Paso 6: Cerrando sesion...\n";
-        $this->request('POST', '/usuario/logout', []);
-        $this->clearCookies();
-        echo "   Sesion cerrada\n";
-    }
-    
-    private function pasoLoginEnsamblador() {
-        echo "Paso 7: Iniciando sesion como ensamblador...\n";
-        
-        $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->ensambladorUser['usuario_asignado'],
-            'contrasena' => $this->ensambladorUser['contrasena']
-        ]);
-        
-        if ($this->assertResponseSuccess('Error al iniciar sesion como ensamblador')) {
-            echo "   Login exitoso como: {$this->ensambladorUser['usuario_asignado']}\n";
-        }
-    }
-    
     private function pasoVerMaquinasEnsamblador() {
-        echo "Paso 8: Verificando maquinas asignadas...\n";
+        echo "Verificando maquinas asignadas al ensamblador...\n";
         
         $response = $this->request('GET', "/maquina/ensamblador/{$this->ensambladorId}");
         
@@ -227,8 +275,34 @@ class UserFlowsTest extends HttpTestCase {
         }
     }
     
+    private function pasoRegistrarMontaje() {
+        echo "Registrando montaje de componentes...\n";
+        
+        // Primero registrar montaje de placa
+        $response = $this->request('POST', '/maquina/registrar-montaje', [
+            'idMaquina' => $this->maquinaId,
+            'idComponente' => $this->placaId,
+            'detalle' => 'Montaje de placa'
+        ]);
+        
+        $this->assertResponseSuccess('Error al registrar montaje de placa');
+        echo "   Placa montada\n";
+        
+        sleep(1);
+        
+        // Luego registrar montaje de carcasa
+        $response = $this->request('POST', '/maquina/registrar-montaje', [
+            'idMaquina' => $this->maquinaId,
+            'idComponente' => $this->carcasaId,
+            'detalle' => 'Montaje de carcasa'
+        ]);
+        
+        $this->assertResponseSuccess('Error al registrar montaje de carcasa');
+        echo "   Carcasa montada\n";
+    }
+    
     private function pasoEnviarAComprobacion() {
-        echo "Paso 9: Enviando maquina a comprobacion...\n";
+        echo "Enviando maquina a comprobacion...\n";
         
         $response = $this->request('POST', '/maquina/mandar-comprobacion', [
             'idMaquina' => $this->maquinaId,
@@ -256,21 +330,8 @@ class UserFlowsTest extends HttpTestCase {
         }
     }
     
-    private function pasoLoginComprobador() {
-        echo "Paso 10: Iniciando sesion como comprobador...\n";
-        
-        $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->comprobadorUser['usuario_asignado'],
-            'contrasena' => $this->comprobadorUser['contrasena']
-        ]);
-        
-        if ($this->assertResponseSuccess('Error al iniciar sesion como comprobador')) {
-            echo "   Login exitoso como: {$this->comprobadorUser['usuario_asignado']}\n";
-        }
-    }
-    
     private function pasoVerMaquinasComprobador() {
-        echo "Paso 11: Verificando maquinas para comprobar...\n";
+        echo "Verificando maquinas para comprobar...\n";
         
         $response = $this->request('GET', "/maquina/comprobador/{$this->comprobadorId}");
         
@@ -293,7 +354,7 @@ class UserFlowsTest extends HttpTestCase {
     }
     
     private function pasoAprobarMaquina() {
-        echo "Paso 12: Aprobando maquina y enviando a distribucion...\n";
+        echo "Aprobando maquina y enviando a distribucion...\n";
         
         $response = $this->request('POST', '/maquina/mandar-distribucion', [
             'idMaquina' => $this->maquinaId,
