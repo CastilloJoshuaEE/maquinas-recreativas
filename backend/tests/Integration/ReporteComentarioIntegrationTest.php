@@ -1,124 +1,133 @@
 <?php
+/**
+ * Tests de integración - Flujo Reporte y Comentarios
+ * 
+ * @package maquinas_recreativas\Tests\Integration
+ */
+
+namespace maquinas_recreativas\Tests\Integration;
+
 use PHPUnit\Framework\TestCase;
+use maquinas_recreativas\Tests\TestDatabase;
+use maquinas_recreativas\Tests\TestDatabaseInjectionTrait;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
+use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
+use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
+use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
+use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
+use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteQuery;
+use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
-class ReporteComentarioIntegrationTest extends TestCase {
-    private $reporteModel;
-    private $comentarioModel;
-    private $usuarioModel;
-    private $notificacionModel;
-    private static $testDb;
-    private $usuario1Id;
-    private $usuario2Id;
-   /**
-     * Método ejecutado UNA SOLA VEZ antes de todas las pruebas.
-     */
-    public static function setUpBeforeClass(): void {
-        self::$testDb = new TestDatabase();
-    }
-    /**
-     * Método ejecutado ANTES DE CADA prueba.
-     */
-    protected function setUp(): void {
-        $this->reporteModel = new ReporteModel();
-        $this->comentarioModel = new ComentarioModel();
-        $this->usuarioModel = new UsuarioModel();
-        $this->notificacionModel = new NotificacionModel();
-
-        $this->injectTestDb($this->reporteModel, 'db');
-        $this->injectTestDb($this->comentarioModel, 'db');
-        $this->injectTestDb($this->usuarioModel, 'db');
-        $this->injectTestDb($this->notificacionModel, 'db');
+class ReporteComentarioIntegrationTest extends TestCase
+{
+    use TestDatabaseInjectionTrait;
+    
+    private TestDatabase $testDb;
+    private MySQLUsuarioRepository $usuarioRepository;
+    private MySQLReporteRepository $reporteRepository;
+    private MySQLComentarioRepository $comentarioRepository;
+    private MySQLNotificacionRepository $notificacionRepository;
+    private BcryptPasswordHasher $passwordHasher;
+    
+    private Uuid $usuario1Id;
+    private Uuid $usuario2Id;
+    
+    protected function setUp(): void
+    {
+        $this->testDb = TestDatabase::getInstance();
+        $this->testDb->cleanDatabase();
         
-        $this->prepararDatosPrueba();
-    }
-    /**
-     * Helper para inyectar la conexión de prueba en los modelos
-     */
-    private function injectTestDb($object, $propertyName) {
-        $reflection = new ReflectionClass($object);
-        $property = $reflection->getProperty($propertyName);
-        $property->setAccessible(true);
-        $property->setValue($object, self::$testDb);
-    }
-    /**
-     * Prepara los datos de prueba y maneja el posible error de duplicado
-     */
-    private function prepararDatosPrueba() {
-        $conn = self::$testDb->getConnection();
+        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
+        $this->reporteRepository = new MySQLReporteRepository($this->testDb);
+        $this->comentarioRepository = new MySQLComentarioRepository($this->testDb);
+        $this->notificacionRepository = new MySQLNotificacionRepository($this->testDb);
+        $this->passwordHasher = new BcryptPasswordHasher();
         
-        $conn->query("SET FOREIGN_KEY_CHECKS = 0");
-        $conn->query("DELETE FROM comentario");
-        $conn->query("DELETE FROM notificaciones");
-        $conn->query("DELETE FROM reporte");
-        $conn->query("DELETE FROM usuario");
-        $conn->query("SET FOREIGN_KEY_CHECKS = 1");
+        $this->crearUsuariosPrueba();
+    }
+    
+    private function crearUsuariosPrueba(): void
+    {
+        $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
         
-        $resultado1 = $this->usuarioModel->registrarUsuario(
-            'Usuario1', 
-            'Prueba', 
-            '1111111111', 
-            'usuario1@test.com', 
-            'user1', 
-            '12345678', 
-            'Administrador'
+        // Usuario 1 (Administrador)
+        $command1 = new RegistrarUsuarioCommand(
+            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', 'password123', 'Administrador'
         );
+        $this->usuario1Id = $registrarUsuario->handle($command1);
         
-        $resultado2 = $this->usuarioModel->registrarUsuario(
-            'Usuario2', 
-            'Prueba', 
-            '2222222222', 
-            'usuario2@test.com', 
-            'user2', 
-            '12345678', 
-            'Tecnico',
-            'Ensamblador'
+        // Usuario 2 (Tecnico)
+        $command2 = new RegistrarUsuarioCommand(
+            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', 'password123', 'Tecnico', 'Ensamblador'
         );
-        
-        $this->assertTrue($resultado1['success']);
-        $this->assertTrue($resultado2['success']);
-        
-        $this->usuario1Id = $resultado1['userId'];
-        $this->usuario2Id = $resultado2['userId'];
+        $this->usuario2Id = $registrarUsuario->handle($command2);
         
         $this->assertNotNull($this->usuario1Id);
         $this->assertNotNull($this->usuario2Id);
     }
     
     /**
-     * CPI-002: Flujo Completo Reporte-Comentarios
+     * @test
+     * CPI-002: Flujo completo Reporte-Comentarios
      */
-    public function testFlujoReporteYComentarios() {
-        $conn = self::$testDb->getConnection();
-
-        $reporteId = $this->reporteModel->crearReporte(
-            $this->usuario1Id,
-            $this->usuario2Id,
-            'Problema crítico'
-        );
+    public function testFlujoReporteYComentarios(): void
+    {
+        // 1. Crear reporte
+        $crearReporte = new CrearReporteHandler($this->reporteRepository, $this->notificacionRepository, $this->usuarioRepository);
         
-        $this->assertIsString($reporteId);
+        $reporteCommand = new CrearReporteCommand(
+            $this->usuario1Id->value(),
+            $this->usuario2Id->value(),
+            'Problema crítico con la máquina'
+        );
+        $reporteId = $crearReporte->handle($reporteCommand);
+        
         $this->assertNotEmpty($reporteId);
-
-        $reporte = $conn->query("SELECT * FROM reporte WHERE ID_Reporte = '$reporteId'")->fetch_assoc();
-        $this->assertEquals('Problema crítico', $reporte['descripcion']);
-
-        $comentarioId = $this->comentarioModel->crearComentario(
-            $reporteId,
-            $this->usuario1Id,
-            'Estoy trabajando en esto'
+        
+        // Verificar que el reporte se guardó correctamente
+        $reporte = $this->reporteRepository->findById(new Uuid($reporteId));
+        $this->assertNotNull($reporte);
+        $this->assertEquals('Problema crítico con la máquina', $reporte->descripcion());
+        
+        // 2. Crear comentario
+        $crearComentario = new CrearComentarioHandler(
+            $this->comentarioRepository,
+            $this->reporteRepository,
+            $this->notificacionRepository,
+            $this->usuarioRepository
         );
         
-        $this->assertIsString($comentarioId);
+        $comentarioCommand = new CrearComentarioCommand(
+            $reporteId,
+            $this->usuario2Id->value(),
+            'Estoy trabajando en la solución, gracias por reportar'
+        );
+        $comentarioId = $crearComentario->handle($comentarioCommand);
+        
         $this->assertNotEmpty($comentarioId);
-
-        $comentario = $conn->query("SELECT * FROM comentario WHERE ID_Comentario = '$comentarioId'")->fetch_assoc();
-        $this->assertEquals('Estoy trabajando en esto', $comentario['comentario']);
         
         // 3. Obtener comentarios del reporte
-        $comentarios = $this->comentarioModel->obtenerComentariosPorReporte($reporteId, $this->usuario1Id);
+        $obtenerComentarios = new ObtenerComentariosPorReporteHandler(
+            $this->comentarioRepository,
+            $this->reporteRepository,
+            $this->usuarioRepository
+        );
         
+        $comentariosQuery = new ObtenerComentariosPorReporteQuery($reporteId, $this->usuario1Id->value());
+        $comentarios = $obtenerComentarios->handle($comentariosQuery);
+        
+        // Verificar resultados
+        $this->assertIsArray($comentarios);
         $this->assertCount(1, $comentarios);
-        $this->assertEquals('Estoy trabajando en esto', $comentarios[0]['comentario']);
+        $this->assertEquals('Estoy trabajando en la solución, gracias por reportar', $comentarios[0]['comentario']);
+        $this->assertEquals('Usuario', $comentarios[0]['nombre']);
+        $this->assertEquals('Dos', $comentarios[0]['apellido']);
     }
 }
-?>

@@ -23,80 +23,67 @@ class MySQLUsuarioRepository implements UsuarioRepository
         $this->db = $db;
     }
 
-    public function save(Usuario $usuario): void
-    {
-        $conn = $this->db->getConnection();
-        
-        try {
+ public function save(Usuario $usuario): void
+{
+    $conn = $this->db->getConnection();
+
+    // Detectar si ya existe una transacción activa (p.ej. la del test)
+    $txResult     = $conn->query("SELECT @@in_transaction AS in_tx");
+    $txRow        = $txResult->fetch_assoc();
+    $outerTx      = (bool)($txRow['in_tx'] ?? false);
+
+    try {
+        if (!$outerTx) {
             $conn->begin_transaction();
-
-            $existing = $this->searchById($usuario->getId());
-            
-            // Asignar variables primero
-            $nombre = $usuario->getNombre();
-            $apellido = $usuario->getApellido();
-            $ci = $usuario->getCi();
-            $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail()->value());
-            $usuarioAsignado = $usuario->getUsuarioAsignado();
-            $contrasenaHash = $usuario->getContrasenaHash();
-            $tipo = $usuario->getTipo()->value();
-            $estado = $usuario->getEstado()->value();
-            $id = $usuario->getId()->value();
-            
-            if ($existing) {
-                $sql = "UPDATE usuario SET 
-                        nombre = ?,
-                        apellido = ?,
-                        ci = ?,
-                        email = ?,
-                        usuario_asignado = ?,
-                        contrasena = ?,
-                        tipo = ?,
-                        estado = ?
-                        WHERE ID_Usuario = ?";
-                
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param(
-                    'sssssssss',
-                    $nombre,
-                    $apellido,
-                    $ci,
-                    $emailEncriptado,
-                    $usuarioAsignado,
-                    $contrasenaHash,
-                    $tipo,
-                    $estado,
-                    $id
-                );
-            } else {
-                $sql = "INSERT INTO usuario 
-                        (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param(
-                    'sssssssss',
-                    $id,
-                    $nombre,
-                    $apellido,
-                    $ci,
-                    $emailEncriptado,
-                    $usuarioAsignado,
-                    $contrasenaHash,
-                    $tipo,
-                    $estado
-                );
-            }
-            $stmt->execute();
-            $stmt->close();
-
-            $this->saveSpecificUserData($conn, $usuario);
-            $conn->commit();
-        } catch (\Exception $e) {
-            $conn->rollback();
-            throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
         }
+
+        $existing = $this->searchById($usuario->getId());
+
+        $nombre          = $usuario->getNombre();
+        $apellido        = $usuario->getApellido();
+        $ci              = $usuario->getCi();
+        $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail()->value());
+        $usuarioAsignado = $usuario->getUsuarioAsignado();
+        $contrasenaHash  = $usuario->getContrasenaHash();
+        $tipo            = $usuario->getTipo()->value();
+        $estado          = $usuario->getEstado()->value();
+        $id              = $usuario->getId()->value();
+
+        if ($existing) {
+            $sql  = "UPDATE usuario SET 
+                        nombre = ?, apellido = ?, ci = ?, email = ?,
+                        usuario_asignado = ?, contrasena = ?, tipo = ?, estado = ?
+                     WHERE ID_Usuario = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('sssssssss',
+                $nombre, $apellido, $ci, $emailEncriptado,
+                $usuarioAsignado, $contrasenaHash, $tipo, $estado, $id
+            );
+        } else {
+            $sql  = "INSERT INTO usuario 
+                        (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('sssssssss',
+                $id, $nombre, $apellido, $ci, $emailEncriptado,
+                $usuarioAsignado, $contrasenaHash, $tipo, $estado
+            );
+        }
+        $stmt->execute();
+        $stmt->close();
+
+        $this->saveSpecificUserData($conn, $usuario);
+
+        if (!$outerTx) {
+            $conn->commit();
+        }
+    } catch (\Exception $e) {
+        if (!$outerTx) {
+            $conn->rollback();
+        }
+        throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
     }
+}
 
     private function saveSpecificUserData(\mysqli $conn, Usuario $usuario): void
     {
@@ -546,51 +533,42 @@ class MySQLUsuarioRepository implements UsuarioRepository
         return $actividades;
     }
 
-    public function hydrate(array $row): Usuario
-    {
-        $id = new Uuid($row['ID_Usuario']);
-        $email = new Email(CifradoHelper::desencriptar($row['email']));
-        $tipo = new TipoUsuario($row['tipo']);
-        $estado = new EstadoUsuario($row['estado']);
-        $ci = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+ public function hydrate(array $row): Usuario
+{
+    $id     = new Uuid($row['ID_Usuario']);
+    $email  = new Email(CifradoHelper::desencriptar($row['email']));
+    $tipo   = new TipoUsuario($row['tipo']);
+    $estado = new EstadoUsuario($row['estado']);
+    $ci     = isset($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
 
-        switch ($tipo->value()) {
-            case TipoUsuario::TECNICO:
-                return new Tecnico(
-                    $id,
-                    $row['nombre'],
-                    $row['apellido'],
-                    $ci,
-                    $email,
-                    $row['usuario_asignado'],
-                    $row['contrasena'],
-                    $estado,
-                    $row['Especialidad'] ?? '',
-                    (int)($row['Cantidad_Actividades'] ?? 0)
-                );
-            case TipoUsuario::LOGISTICA:
-                return new Logistica(
-                    $id,
-                    $row['nombre'],
-                    $row['apellido'],
-                    $ci,
-                    $email,
-                    $row['usuario_asignado'],
-                    $row['contrasena'],
-                    $estado
-                );
-            default:
-                return new Usuario(
-                    $id,
-                    $row['nombre'],
-                    $row['apellido'],
-                    $ci,
-                    $email,
-                    $row['usuario_asignado'],
-                    $row['contrasena'],
-                    $tipo,
-                    $estado
-                );
-        }
+    switch ($tipo->value()) {
+        case TipoUsuario::TECNICO:
+            // Especialidad puede ser NULL si el JOIN no encontró fila en Tecnico
+            $especialidad = $row['Especialidad'] ?? null;
+            if (empty($especialidad)) {
+                // Registrar aviso y degradar a Usuario genérico para no romper la carga
+                error_log("AVISO: Técnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
+                return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
+                    $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
+            }
+            return new Tecnico(
+                $id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $estado,
+                $especialidad,
+                (int)($row['Cantidad_Actividades'] ?? 0)
+            );
+
+        case TipoUsuario::LOGISTICA:
+            return new Logistica(
+                $id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $estado
+            );
+
+        default:
+            return new Usuario(
+                $id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $tipo, $estado
+            );
     }
+}
 }

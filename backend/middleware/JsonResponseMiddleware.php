@@ -24,7 +24,7 @@ class JsonResponseMiddleware
             $response = new Response();
         }
         
-        // Usar el nuevo método getHeaders()
+        // Verificar si ya hay Content-Type usando getHeaders()
         $hasContentType = false;
         foreach ($response->getHeaders() as $name => $value) {
             if (strtolower($name) === 'content-type') {
@@ -33,7 +33,8 @@ class JsonResponseMiddleware
             }
         }
         
-        if (!$hasContentType && !($response instanceof Response && $response->content !== null)) {
+        // Si no hay Content-Type y hay contenido, establecer JSON
+if (!$hasContentType && $response->getContent() !== null) {            
             $response->header('Content-Type', 'application/json; charset=utf-8');
         }
         

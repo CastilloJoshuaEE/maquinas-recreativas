@@ -24,6 +24,14 @@ if (!file_exists($autoloadPath)) {
 }
 require_once $autoloadPath;
 
+// =============================================
+// DEFINIR CONSTANTES PARA PRUEBAS
+// =============================================
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: '');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME_TEST') ?: 'test_bd_recrea_sys');
+
 // Cargar constantes de configuración
 require_once __DIR__ . '/../config/constants.php';
 
@@ -38,11 +46,10 @@ ini_set('display_errors', '1');
 putenv('APP_ENV=testing');
 putenv('DB_NAME_TEST=test_bd_recrea_sys');
 
-// Cargar TestDatabase (ya extiende Database)
+// Cargar TestDatabase
 require_once __DIR__ . '/TestDatabase.php';
 
 // Helper para limpiar base de datos entre pruebas
-
 function cleanTestDatabase(): void
 {
     $testDb = \maquinas_recreativas\Tests\TestDatabase::getInstance();

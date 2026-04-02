@@ -1,3 +1,5 @@
+backend/tests/Security/security-test.php
+
 backend/tests/
 ├── bootstrap.php
 ├── TestDatabase.php
@@ -18,13 +20,12 @@ backend/tests/
 ├── Infrastructure/
 │   └── Repositories/
 │       └── RepositoryTest.php
-└── Integration/
+└── Integration/ChatUsuarioIntegrationTest.php, NotificacionIntegrationTest.php, ReporteComentario.php,
     └── FlujoCompletoTest.php
 
 HERRAMIENTAS
 
 D:\xampp\htdocs\maquinas-recreativas\backend>composer require --dev phpunit/phpunit:^11.5.55
-
 
 ## 1. Ve a la página oficial
 
@@ -40,7 +41,7 @@ Tú tienes:
 
 👉 Necesitas algo como:
 
-`<pre class="overflow-visible! px-0!" data-start="623" data-end="674"><div class="relative w-full mt-4 mb-1">``<div class=""><div class="relative">``<div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0">``<div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback">``<div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div>``<div class="w-full overflow-x-hidden overflow-y-auto pe-11 pt-3"><div class="relative z-0 flex max-w-full">``<div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller">``<div class="cm-content q9tKkq_readonly"><span>`php_xdebug-3.x.x-8.2-ts-vs16-x86_64.dll`</div></div>``</div></div>``</div></div>``</div></div>``</div><div class="">``<div class=""></div>``</div></div>``</div></div>``</pre>`
+`<pre class="overflow-visible! px-0!" data-start="623" data-end="674"><div class="relative w-full mt-4 mb-1">``<div class=""><div class="relative">``<div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0">``<div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback">``<div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div>``<div class="w-full overflow-x-hidden overflow-y-auto pe-11 pt-3"><div class="relative z-0 flex max-w-full">``<div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller">``<div class="cm-content q9tKkq_readonly"><span>`php_xdebug-3.x.x-8.2-ts-vs16-x86_64.dll `</div></div>``</div></div>``</div></div>``</div></div>``</div><div class="">``<div class=""></div>``</div></div>``</div></div>``</pre>`
 
 Renombralo a como: php_xdebug.dll
 
@@ -82,9 +83,6 @@ Ya puedes usar coverage:
 
 <pre class="overflow-visible! px-0!" data-start="1043" data-end="1102"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute inset-x-4 top-12 bottom-4"><div class="pointer-events-none sticky z-40 shrink-0 z-1!"><div class="sticky bg-token-border-light"></div></div></div><div class="w-full overflow-x-hidden overflow-y-auto"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>vendor\b</span><span class="ͼ8">in</span><span>\phpunit.bat </span><span class="ͼf">--coverage-html</span><span> coverage</span></div></div></div></div></div></div></div></div></div></div></div></div></pre>
 
-
-
-
 # Ejecutar todos los tests
 
 vendor\b**in**\phpunit.bat
@@ -95,12 +93,18 @@ vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Domain
 
 EJECUTAR TEST INTEGRATION
 
-vendor\bin\phpunit.bat --testsuite Integration
+vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Integration
 
-# Ejecutar tests con coverage
+Ejecutar tests con coverage
 
 vendor\bin\phpunit.bat -c tests/phpunit.xml --coverage-html coverage
 
 # Ejecutar un test específico
 
-vendor\bin\phpunit.bat --filter testCrearUsuarioAdministrador
+vendor\bin\phpunit.bat --filter tests/testCrearUsuarioAdministrador
+
+EJECUTAR TEST DE SEGURIDAD
+
+cd D:\xampp\htdocs\maquinas-recreativas\backend\tests\Security
+
+php security-test.php

@@ -4,7 +4,7 @@
          bootstrap="bootstrap.php"
          colors="true"
          stopOnFailure="false"
-         verbose="true">
+         displayDetailsOnTestsThatTriggerWarnings="true">
     <testsuites>
         <testsuite name="Domain">
             <directory>Domain</directory>

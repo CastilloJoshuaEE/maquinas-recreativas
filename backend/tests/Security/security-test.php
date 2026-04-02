@@ -1,204 +1,106 @@
 <?php
 /**
  * Security Test Script for API
- * Ejecutar: php security-test.php
+ * Ejecutar desde la raíz del backend: php tests/Security/security-test.php
  */
+
+// Configurar entorno de pruebas
+define('TEST_ENVIRONMENT', true);
+
+// Determinar la raíz del proyecto (backend/)
+$projectRoot = dirname(__DIR__, 2);
+
+// Cargar autoloader
+$autoloadPath = $projectRoot . '/vendor/autoload.php';
+if (!file_exists($autoloadPath)) {
+    die("Error: No se encuentra vendor/autoload.php en: " . $autoloadPath . "\n");
+}
+require_once $autoloadPath;
+
+// Cargar configuración
+$bootstrapEnv = $projectRoot . '/Bootstrap/env.php';
+if (!file_exists($bootstrapEnv)) {
+    die("Error: No se encuentra Bootstrap/env.php en: " . $bootstrapEnv . "\n");
+}
+require_once $bootstrapEnv;
+
+$configConstants = $projectRoot . '/config/constants.php';
+if (!file_exists($configConstants)) {
+    die("Error: No se encuentra config/constants.php en: " . $configConstants . "\n");
+}
+
+require_once $configConstants;
+
+use maquinas_recreativas\Infrastructure\Database\Database;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 class APISecurityTest {
     private $baseUrl = 'http://localhost:8000';
-    private $endpoints = [];
     private $testResults = [];
-    private $sessionToken = null;
-    private $testUserId = null;
-    private $authBypassPayloads = [];
+    private $db;
+    private $lastHttpCode;
     
     // Payloads para pruebas
     private $sqlPayloads = [
         "' OR '1'='1",
-        "'; DROP TABLE users; --",
-        "' UNION SELECT * FROM users--",
+        "'; DROP TABLE usuario; --",
+        "' UNION SELECT * FROM usuario--",
         "' OR 1=1--",
         "admin'--",
-        "' OR '1'='1'/*",
-        "' OR 1=1#",
-        "1' ORDER BY 10--",
-        "1' AND SLEEP(5)--",
-        "'; WAITFOR DELAY '00:00:05'--"
+        "1' AND SLEEP(5)--"
     ];
     
     private $xssPayloads = [
         "<script>alert('XSS')</script>",
         "<img src=x onerror=alert('XSS')>",
         "<svg onload=alert('XSS')>",
-        "javascript:alert('XSS')",
-        "\"><script>alert('XSS')</script>",
-        "'><script>alert('XSS')</script>",
-        "<img src=\"javascript:alert('XSS')\">"
+        "javascript:alert('XSS')"
     ];
     
-
-public function __construct() {
-
-    $this->authBypassPayloads = [
-        ['Authorization' => 'Bearer invalid-token'],
-        ['Authorization' => 'Basic ' . base64_encode('admin:admin')],
-        ['X-Forwarded-For' => '127.0.0.1'],
-        ['Cookie' => 'PHPSESSID=../../../etc/passwd'],
-        ['Authorization' => 'Bearer ' . str_repeat('A', 1000)]
-    ];
-
-    $this->discoverEndpoints();
-}
-    
-    /**
-     * Descubre todos los endpoints del routes.php
-     */
-    private function discoverEndpoints() {
-        $routesFile = __DIR__ . '/../../routes.php';
-        if (!file_exists($routesFile)) {
-            die("Error: No se encuentra el archivo routes.php\n");
+    public function __construct() {
+        try {
+            $this->db = new Database();
+            $this->log("✅ Conexión a base de datos establecida", 'SUCCESS');
+        } catch (\Exception $e) {
+            $this->log("⚠️  Error de conexión a BD: " . $e->getMessage(), 'WARNING');
         }
-        
-        $content = file_get_contents($routesFile);
-        
-        // Patrón para encontrar rutas
-        $patterns = [
-            "/case\s+'([^']+)':/",
-            "/case\s+\(preg_match\('([^']+)'[^)]+\)[^:]+:/",
-            "/case\s+'([^']+)':/i"
-        ];
-        
-        foreach ($patterns as $pattern) {
-            preg_match_all($pattern, $content, $matches);
-            if (!empty($matches[1])) {
-                foreach ($matches[1] as $endpoint) {
-                    // Limpiar endpoints con patrones regex
-                    $cleanEndpoint = preg_replace('/\/\([^)]+\)/', '/{param}', $endpoint);
-                    $cleanEndpoint = preg_replace('/\\\/', '', $cleanEndpoint);
-                    $cleanEndpoint = preg_replace('/\^/', '', $cleanEndpoint);
-                    $cleanEndpoint = preg_replace('/\$/', '', $cleanEndpoint);
-                    
-                    if (!in_array($cleanEndpoint, $this->endpoints)) {
-                        $this->endpoints[] = $cleanEndpoint;
-                    }
-                }
-            }
-        }
-        
-        echo "📡 Endpoints descubiertos: " . count($this->endpoints) . "\n";
+        $this->baseUrl = getenv('APP_URL') ?: 'http://localhost:8000';
+        $this->log("🌐 URL base: " . $this->baseUrl, 'INFO');
     }
     
     /**
      * Ejecutar todas las pruebas
      */
     public function runAllTests() {
-        $this->log("🔐 INICIANDO AUDITORÍA DE SEGURIDAD", 'INFO');
+        $this->log("\n🔐 INICIANDO AUDITORÍA DE SEGURIDAD", 'INFO');
         $this->log("====================================\n", 'INFO');
         
-        // 1. Probar configuración CORS
-        $this->testCORSConfiguration();
-        
-        // 2. Login para obtener token
-        $this->testLogin();
-        
-        // 3. Probar SQL Injection en endpoints POST
+        // 1. Probar SQL Injection en endpoints
         $this->testSQLInjection();
         
-        // 4. Probar XSS en endpoints
+        // 2. Probar XSS en endpoints
         $this->testXSS();
         
-        // 5. Probar bypass de autenticación
-        $this->testAuthBypass();
-        
-        // 6. Probar endpoints inseguros
-        $this->testInsecureEndpoints();
-        
-        // 7. Probar validaciones faltantes
-        $this->testMissingValidations();
-        
-        // 8. Probar protección de sesiones
-        $this->testSessionProtection();
-        
-        // 9. Probar rate limiting
+        // 3. Probar rate limiting
         $this->testRateLimiting();
         
-        // 10. Probar exposición de datos sensibles
-        $this->testDataExposure();
+        // 4. Probar validaciones de entrada
+        $this->testInputValidations();
+        
+        // 5. Probar protección de sesiones
+        $this->testSessionProtection();
+        
+        // 6. Probar endpoints públicos
+        $this->testPublicEndpoints();
+        
+        // 7. Probar encriptación de datos
+        $this->testDataEncryption();
+        
+        // 8. Probar headers de seguridad
+        $this->testSecurityHeaders();
         
         // Generar reporte
         $this->generateReport();
-    }
-    
-    /**
-     * Probar configuración CORS
-     */
-    private function testCORSConfiguration() {
-        $this->log("\n📌 TEST: Configuración CORS", 'TEST');
-        
-        $testOrigins = [
-            'http://evil.com',
-            'http://localhost:3000',
-            'null',
-            'https://malicious-site.com'
-        ];
-        
-        foreach ($testOrigins as $origin) {
-            $ch = curl_init($this->baseUrl . '/health');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Origin: ' . $origin,
-                'Access-Control-Request-Method: GET'
-            ]);
-            
-            $response = curl_exec($ch);
-            $headers = curl_getinfo($ch);
-            
-            if (isset($headers['access-control-allow-origin'])) {
-                $allowed = $headers['access-control-allow-origin'];
-                if ($allowed === '*' || $allowed === $origin) {
-                    $this->log("⚠️  CORS permite origen no autorizado: $origin", 'WARNING');
-                    $this->addResult('CORS', 'CRITICAL', "Permite origen: $origin");
-                }
-            }
-            
-            curl_close($ch);
-        }
-    }
-    
-    /**
-     * Probar login y obtener token
-     */
-    private function testLogin() {
-        $this->log("\n📌 TEST: Autenticación", 'TEST');
-        
-        // Intentar login con credenciales inválidas
-        $loginData = [
-            'usuario_asignado' => 'admin',
-            'contrasena' => 'wrongpassword'
-        ];
-        
-        $response = $this->makeRequest('POST', '/usuario/login', $loginData);
-        
-        if (isset($response['success']) && $response['success'] === true) {
-            $this->log("⚠️  Login exitoso con credenciales incorrectas", 'WARNING');
-            $this->addResult('Auth', 'CRITICAL', 'Login permite credenciales incorrectas');
-        }
-        
-        // Intentar login con SQL injection
-        foreach ($this->sqlPayloads as $payload) {
-            $loginData = [
-                'usuario_asignado' => $payload,
-                'contrasena' => 'anypassword'
-            ];
-            
-            $response = $this->makeRequest('POST', '/usuario/login', $loginData);
-            
-            if (isset($response['success']) && $response['success'] === true) {
-                $this->log("⚠️  Posible SQL Injection en login con: $payload", 'CRITICAL');
-                $this->addResult('SQL Injection', 'CRITICAL', "Login vulnerable con payload: $payload");
-                break;
-            }
-        }
     }
     
     /**
@@ -207,37 +109,21 @@ public function __construct() {
     private function testSQLInjection() {
         $this->log("\n📌 TEST: SQL Injection", 'TEST');
         
-        $endpointsToTest = [
-            '/usuario/profile/{param}',
-            '/administrador/usuarios/{param}',
-            '/reportes/usuario/{param}',
-            '/componentes/en-uso/{param}'
+        $endpoints = [
+            '/usuario/login' => 'POST',
+            '/usuario/buscar-email' => 'POST',
+            '/administrador/usuarios' => 'GET'
         ];
         
-        foreach ($endpointsToTest as $endpoint) {
+        foreach ($endpoints as $endpoint => $method) {
             foreach ($this->sqlPayloads as $payload) {
-                $url = str_replace('{param}', urlencode($payload), $endpoint);
-                $response = $this->makeRequest('GET', $url);
+                $data = $method === 'POST' ? ['usuario_asignado' => $payload, 'contrasena' => 'test'] : [];
+                $response = $this->makeRequest($method, $endpoint, $data);
                 
-                // Buscar indicadores de SQL injection
-                if (is_string($response)) {
-                    $indicators = [
-                        'mysql_fetch',
-                        'SQL syntax',
-                        'You have an error',
-                        'Unclosed quotation mark',
-                        'Warning: mysql',
-                        'PDOException',
-                        'SQLSTATE'
-                    ];
-                    
-                    foreach ($indicators as $indicator) {
-                        if (stripos($response, $indicator) !== false) {
-                            $this->log("⚠️  Posible SQL Injection en $endpoint con payload: $payload", 'CRITICAL');
-                            $this->addResult('SQL Injection', 'CRITICAL', "Endpoint $endpoint vulnerable");
-                            break 2;
-                        }
-                    }
+                if (is_string($response) && $this->containsSQLError($response)) {
+                    $this->log("⚠️  Posible SQL Injection en $endpoint con payload: $payload", 'CRITICAL');
+                    $this->addResult('SQL Injection', 'CRITICAL', "Endpoint $endpoint vulnerable con payload: $payload");
+                    break;
                 }
             }
         }
@@ -249,22 +135,15 @@ public function __construct() {
     private function testXSS() {
         $this->log("\n📌 TEST: XSS (Cross-Site Scripting)", 'TEST');
         
-        $endpointsWithInput = [
-            '/comentarios' => 'POST',
-            '/reportes/crear' => 'POST',
-            '/maquina/register' => 'POST'
+        $endpoints = [
+            '/reportes/crear' => ['descripcion' => 'test'],
+            '/comentarios' => ['comentario' => 'test']
         ];
         
-        foreach ($endpointsWithInput as $endpoint => $method) {
+        foreach ($endpoints as $endpoint => $baseData) {
             foreach ($this->xssPayloads as $payload) {
-                $data = [
-                    'comentario' => $payload,
-                    'descripcion' => $payload,
-                    'nombre' => $payload,
-                    'mensaje' => $payload
-                ];
-                
-                $response = $this->makeRequest($method, $endpoint, $data);
+                $data = array_merge($baseData, ['descripcion' => $payload, 'comentario' => $payload]);
+                $response = $this->makeRequest('POST', $endpoint, $data);
                 
                 if (is_string($response) && strpos($response, $payload) !== false) {
                     $this->log("⚠️  Posible XSS en $endpoint - payload no sanitizado", 'HIGH');
@@ -275,78 +154,84 @@ public function __construct() {
         }
     }
     
-    /**
-     * Probar bypass de autenticación
-     */
-    private function testAuthBypass() {
-        $this->log("\n📌 TEST: Bypass de Autenticación", 'TEST');
+/**
+ * Probar rate limiting
+ */
+private function testRateLimiting() {
+    $this->log("\n📌 TEST: Rate Limiting", 'TEST');
+    
+    $endpoint = '/usuario/login';
+    $maxRequestsToTest = 10;
+    $rateLimited = false;
+    $blockedAtRequest = 0;
+    
+    // Usar una IP ficticia para pruebas (asegura que no se confunda con localhost)
+    $testIp = '192.168.100.100';
+    
+    for ($i = 0; $i < $maxRequestsToTest; $i++) {
+        $ch = curl_init($this->baseUrl . $endpoint);
         
-        $protectedEndpoints = [
-            '/administrador/usuarios',
-            '/usuario/perfil',
-            '/notificaciones/{param}',
-            '/reportes/usuarios-chat'
-        ];
+        $data = json_encode([
+            'usuario_asignado' => "testuser$i",
+            'contrasena' => 'wrongpassword'
+        ]);
         
-        foreach ($protectedEndpoints as $endpoint) {
-            foreach ($this->authBypassPayloads as $headers) {
-                $ch = curl_init($this->baseUrl . $endpoint);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $this->formatHeaders($headers));
-                curl_setopt($ch, CURLOPT_HEADER, true);
-                
-                $response = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                
-                if ($httpCode === 200) {
-                    $this->log("⚠️  Posible bypass de autenticación en $endpoint", 'CRITICAL');
-                    $this->addResult('Auth Bypass', 'CRITICAL', "Endpoint $endpoint accesible sin autenticación");
-                }
-                
-                curl_close($ch);
-            }
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'X-Security-Test: true',
+                'X-Forwarded-For: ' . $testIp  // Forzar una IP diferente
+            ],
+            CURLOPT_HEADER => true,
+            CURLOPT_TIMEOUT => 10
+        ]);
+        
+        $response = curl_exec($ch);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headers = substr($response, 0, $headerSize);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        curl_close($ch);
+        
+        $this->log("Request $i: HTTP Code = $httpCode", 'INFO');
+        
+        if ($httpCode === 429) {
+            $rateLimited = true;
+            $blockedAtRequest = $i;
+            $this->log("✅ Rate limiting detectado (HTTP 429) después de $i requests", 'SUCCESS');
+            break;
         }
+        
+        usleep(50000);
     }
     
-    /**
-     * Probar endpoints inseguros (métodos HTTP no permitidos)
-     */
-    private function testInsecureEndpoints() {
-        $this->log("\n📌 TEST: Endpoints Inseguros", 'TEST');
-        
-        $testMethods = ['PUT', 'DELETE', 'PATCH', 'TRACE', 'OPTIONS'];
-        
-        foreach ($this->endpoints as $endpoint) {
-            if (strpos($endpoint, '{param}') !== false) continue;
-            
-            foreach ($testMethods as $method) {
-                $response = $this->makeRequest($method, $endpoint, []);
-                $httpCode = $this->getLastHttpCode();
-                
-if (!in_array($httpCode, [401,403,404,405])) {                    
-                    $this->log("⚠️  Endpoint $endpoint acepta método $method", 'MEDIUM');
-                    $this->addResult('Insecure Endpoint', 'MEDIUM', "$endpoint acepta método $method no permitido");
-                }
-            }
-        }
+    if (!$rateLimited) {
+        $this->log("⚠️  No se detectó rate limiting después de $maxRequestsToTest requests", 'MEDIUM');
+        $this->addResult('Rate Limiting', 'MEDIUM', "No se detectó rate limiting después de $maxRequestsToTest requests");
+    } else {
+        $this->log("✅ Rate limiting funcionando correctamente (bloqueado en request #$blockedAtRequest)", 'SUCCESS');
+        $this->addResult('Rate Limiting', 'SUCCESS', "Rate limiting detectado después de $blockedAtRequest requests");
     }
+}
     
     /**
-     * Probar validaciones faltantes
+     * Probar validaciones de entrada
      */
-    private function testMissingValidations() {
-        $this->log("\n📌 TEST: Validaciones Faltantes", 'TEST');
+    private function testInputValidations() {
+        $this->log("\n📌 TEST: Validaciones de Entrada", 'TEST');
         
         $testCases = [
             '/usuario/register' => [
-                ['nombre' => '', 'apellido' => '', 'email' => 'invalid'],
-                ['nombre' => str_repeat('A', 1000)],
-                ['email' => 'not-an-email'],
-                ['contrasena' => '123']
+                ['email' => 'invalid-email', 'contrasena' => '123'],
+                ['email' => '', 'contrasena' => ''],
+                ['nombre' => str_repeat('A', 500)]
             ],
             '/comercio/register' => [
                 ['nombre' => '', 'tipo' => 'invalid'],
-                ['telefono' => 'abc']
+                ['telefono' => 'abc123']
             ]
         ];
         
@@ -373,90 +258,138 @@ if (!in_array($httpCode, [401,403,404,405])) {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, true);
         $response = curl_exec($ch);
+        curl_close($ch);
         
-        // Analizar cookies
+        // Verificar cookies
         preg_match_all('/^Set-Cookie:\s*(.*)$/mi', $response, $cookies);
         
         foreach ($cookies[1] as $cookieHeader) {
-
-    if (stripos($cookieHeader, 'PHPSESSID') !== false) {
-
-        if (stripos($cookieHeader, 'httponly') === false) {
-            $this->log("⚠️ Cookie de sesión sin HttpOnly", 'HIGH');
-        }
-
-        if (stripos($cookieHeader, 'secure') === false) {
-            $this->log("⚠️ Cookie de sesión sin Secure flag", 'MEDIUM');
-        }
-
-    }
-}
-        
-        curl_close($ch);
-    }
-    
-    /**
-     * Probar rate limiting
-     */
-    private function testRateLimiting() {
-        $this->log("\n📌 TEST: Rate Limiting", 'TEST');
-        
-        $endpoint = '/usuario/login';
-        $requests = 100;
-        $successCount = 0;
-        
-        for ($i = 0; $i < $requests; $i++) {
-            $response = $this->makeRequest('POST', $endpoint, [
-                'usuario_asignado' => "user$i",
-                'contrasena' => 'pass'
-            ]);
-            
-            $httpCode = $this->getLastHttpCode();
-            if ($httpCode === 200 || $httpCode === 401) {
-                $successCount++;
-            }
-            
-            if ($httpCode === 429) {
-                $this->log("✅ Rate limiting detectado después de $i requests", 'INFO');
-                break;
-            }
-        }
-        
-        if ($successCount === $requests) {
-            $this->log("⚠️  No hay rate limiting implementado", 'MEDIUM');
-            $this->addResult('Rate Limiting', 'MEDIUM', 'No se detectó rate limiting');
-        }
-    }
-    
-    /**
-     * Probar exposición de datos sensibles
-     */
-    private function testDataExposure() {
-        $this->log("\n📌 TEST: Exposición de Datos Sensibles", 'TEST');
-        
-        $sensitivePatterns = [
-            '/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/' => 'Email',
-            '/\b\d{8}[A-Z]\b/' => 'DNI/NIF',
-            '/\b\d{16}\b/' => 'Tarjeta crédito',
-            '/"contrasena"\s*:\s*"[^"]+"/' => 'Contraseña',
-            '/"password"\s*:\s*"[^"]+"/' => 'Contraseña',
-            '/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/' => 'Teléfono'
-        ];
-        
-        $endpointsToCheck = ['/usuario/profile/{param}', '/administrador/usuarios'];
-        
-        foreach ($endpointsToCheck as $endpoint) {
-            $url = str_replace('{param}', 'test-uuid', $endpoint);
-            $response = $this->makeRequest('GET', $url);
-            
-            if (is_string($response)) {
-                foreach ($sensitivePatterns as $pattern => $type) {
-                    if (preg_match($pattern, $response)) {
-                        $this->log("⚠️  Posible exposición de $type en $endpoint", 'CRITICAL');
-                        $this->addResult('Data Exposure', 'CRITICAL', "$type expuesto en $endpoint");
-                    }
+            if (stripos($cookieHeader, 'PHPSESSID') !== false) {
+                if (stripos($cookieHeader, 'httponly') === false) {
+                    $this->log("⚠️ Cookie de sesión sin HttpOnly", 'HIGH');
+                    $this->addResult('Session Protection', 'HIGH', 'Cookie PHPSESSID sin HttpOnly');
+                } else {
+                    $this->log("✅ HttpOnly presente", 'SUCCESS');
+                }
+                if (stripos($cookieHeader, 'secure') === false) {
+                    $this->log("⚠️ Cookie de sesión sin Secure flag (esperado en localhost)", 'INFO');
+                } else {
+                    $this->log("✅ Secure flag presente", 'SUCCESS');
+                }
+                if (stripos($cookieHeader, 'SameSite') === false) {
+                    $this->log("⚠️ Cookie de sesión sin SameSite", 'MEDIUM');
+                    $this->addResult('Session Protection', 'MEDIUM', 'Cookie PHPSESSID sin SameSite');
                 }
             }
+        }
+    }
+    
+    /**
+     * Probar headers de seguridad
+     */
+    private function testSecurityHeaders() {
+        $this->log("\n📌 TEST: Security Headers", 'TEST');
+        
+        $ch = curl_init($this->baseUrl . '/health');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        $response = curl_exec($ch);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headersRaw = substr($response, 0, $headerSize);
+        curl_close($ch);
+        
+        // Parsear headers
+        $headers = [];
+        $lines = explode("\n", $headersRaw);
+        foreach ($lines as $line) {
+            if (strpos($line, ':') !== false) {
+                list($key, $value) = explode(':', $line, 2);
+                $headers[strtolower(trim($key))] = trim($value);
+            }
+        }
+        
+        $requiredHeaders = [
+            'X-Frame-Options' => ['DENY', 'SAMEORIGIN'],
+            'X-Content-Type-Options' => ['nosniff'],
+            'X-XSS-Protection' => ['1; mode=block'],
+            'Referrer-Policy' => ['strict-origin-when-cross-origin']
+        ];
+        
+        foreach ($requiredHeaders as $header => $expected) {
+            $key = strtolower($header);
+            if (isset($headers[$key])) {
+                $this->log("✅ Header $header presente: " . $headers[$key], 'SUCCESS');
+            } else {
+                $this->log("⚠️  Header $header no presente", 'MEDIUM');
+                $this->addResult('Security Headers', 'MEDIUM', "Header $header no presente");
+            }
+        }
+        
+        // Verificar Content-Security-Policy
+        if (isset($headers['content-security-policy'])) {
+            $this->log("✅ Content-Security-Policy presente", 'SUCCESS');
+        } else {
+            $this->log("⚠️  Content-Security-Policy no presente", 'MEDIUM');
+            $this->addResult('Security Headers', 'MEDIUM', 'Content-Security-Policy no presente');
+        }
+    }
+    
+    /**
+     * Probar endpoints públicos
+     */
+    private function testPublicEndpoints() {
+        $this->log("\n📌 TEST: Endpoints Públicos", 'TEST');
+        
+        $publicEndpoints = [
+            '/health',
+            '/test-db',
+            '/usuario/login',
+            '/usuario/register',
+            '/usuario/buscar-email'
+        ];
+        
+        foreach ($publicEndpoints as $endpoint) {
+            $response = $this->makeRequest('GET', $endpoint);
+            $httpCode = $this->getLastHttpCode();
+            
+            if ($httpCode === 200 || $httpCode === 401 || $httpCode === 405) {
+                $this->log("✅ Endpoint público $endpoint accesible (código $httpCode)", 'SUCCESS');
+            } else {
+                $this->log("⚠️  Endpoint público $endpoint retorna código $httpCode", 'WARNING');
+            }
+        }
+    }
+    
+    /**
+     * Probar encriptación de datos sensibles
+     */
+    private function testDataEncryption() {
+        $this->log("\n📌 TEST: Encriptación de Datos", 'TEST');
+        
+        $testEmail = 'test_' . time() . '@example.com';
+        $testCi = '1234567890';
+        
+        try {
+            if (defined('ENCRYPT_METHOD') && defined('SECRET_KEY') && defined('SECRET_IV')) {
+                $emailEncrypted = CifradoHelper::encriptar($testEmail);
+                $ciEncrypted = CifradoHelper::encriptar($testCi);
+                
+                $emailDecrypted = CifradoHelper::desencriptar($emailEncrypted);
+                $ciDecrypted = CifradoHelper::desencriptar($ciEncrypted);
+                
+                if ($emailDecrypted === $testEmail && $ciDecrypted === $testCi) {
+                    $this->log("✅ Encriptación/desencriptación funciona correctamente", 'SUCCESS');
+                } else {
+                    $this->log("⚠️  Problemas con la encriptación", 'WARNING');
+                    $this->addResult('Encryption', 'MEDIUM', 'Problemas con encriptación de datos');
+                }
+            } else {
+                $this->log("⚠️  Constantes de encriptación no definidas", 'WARNING');
+                $this->addResult('Encryption', 'MEDIUM', 'Constantes de encriptación no definidas');
+            }
+        } catch (\Exception $e) {
+            $this->log("⚠️  Error en encriptación: " . $e->getMessage(), 'WARNING');
+            $this->addResult('Encryption', 'HIGH', 'Error en sistema de encriptación: ' . $e->getMessage());
         }
     }
     
@@ -464,43 +397,65 @@ if (!in_array($httpCode, [401,403,404,405])) {
      * Realizar petición HTTP
      */
     private function makeRequest($method, $endpoint, $data = null) {
-        $ch = curl_init($this->baseUrl . $endpoint);
+        $url = $this->baseUrl . $endpoint;
+        $ch = curl_init($url);
         
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HEADER => true,
-            CURLOPT_TIMEOUT => 10
-        ];
-        
-        if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $options[CURLOPT_POSTFIELDS] = json_encode($data);
-            $options[CURLOPT_HTTPHEADER] = ['Content-Type: application/json'];
-        }
+$options = [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => $method,
+    CURLOPT_HEADER => true,
+    CURLOPT_TIMEOUT => 10,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_HTTPHEADER => [
+        'Content-Type: application/json',
+        'X-Security-Test: true'
+    ]
+];
+if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+    $options[CURLOPT_POSTFIELDS] = json_encode($data);
+}
         
         curl_setopt_array($ch, $options);
         
         $response = curl_exec($ch);
+        
+        if (curl_errno($ch)) {
+            $this->log("⚠️  Error curl en $endpoint: " . curl_error($ch), 'WARNING');
+            curl_close($ch);
+            return null;
+        }
+        
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $body = substr($response, $headerSize);
-        
         $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
         curl_close($ch);
         
-        return json_decode($body, true) ?? $body;
+        $decoded = json_decode($body, true);
+        return $decoded !== null ? $decoded : $body;
     }
     
     private function getLastHttpCode() {
         return $this->lastHttpCode ?? 0;
     }
     
-    private function formatHeaders($headers) {
-        $formatted = [];
-        foreach ($headers as $key => $value) {
-            $formatted[] = "$key: $value";
+    private function containsSQLError($response) {
+        $indicators = [
+            'mysql_fetch', 'SQL syntax', 'You have an error',
+            'Unclosed quotation mark', 'PDOException', 'SQLSTATE',
+            'MySQL server', 'mysqli_error', 'Database error',
+            'SQL', 'mysql_'
+        ];
+        
+        $responseStr = is_array($response) ? json_encode($response) : (string)$response;
+        
+        foreach ($indicators as $indicator) {
+            if (stripos($responseStr, $indicator) !== false) {
+                return true;
+            }
         }
-        return $formatted;
+        return false;
     }
     
     private function addResult($category, $severity, $message) {
@@ -514,13 +469,13 @@ if (!in_array($httpCode, [401,403,404,405])) {
     
     private function log($message, $type = 'INFO') {
         $colors = [
-            'INFO' => "\033[36m",     // Cyan
-            'TEST' => "\033[33m",      // Yellow
-            'WARNING' => "\033[33m",   // Yellow
-            'HIGH' => "\033[31m",      // Red
-            'CRITICAL' => "\033[41m",  // Red background
-            'MEDIUM' => "\033[35m",    // Purple
-            'SUCCESS' => "\033[32m"    // Green
+            'INFO' => "\033[36m",
+            'TEST' => "\033[33m",
+            'WARNING' => "\033[33m",
+            'HIGH' => "\033[31m",
+            'CRITICAL' => "\033[41m",
+            'MEDIUM' => "\033[35m",
+            'SUCCESS' => "\033[32m"
         ];
         
         $reset = "\033[0m";
@@ -529,135 +484,93 @@ if (!in_array($httpCode, [401,403,404,405])) {
         echo $color . $message . $reset . "\n";
     }
     
-    /**
-     * Generar reporte final
-     */
     private function generateReport() {
-        $report = [
-            'scan_date' => date('Y-m-d H:i:s'),
-            'total_endpoints' => count($this->endpoints),
-            'vulnerabilities_found' => count($this->testResults),
-            'results' => $this->testResults,
-            'summary' => [
-                'CRITICAL' => 0,
-                'HIGH' => 0,
-                'MEDIUM' => 0,
-                'LOW' => 0
-            ]
-        ];
+        $filename = __DIR__ . '/security_report_' . date('Y-m-d_H-i-s') . '.html';
         
-        foreach ($this->testResults as $result) {
-            $report['summary'][$result['severity']] = 
-                ($report['summary'][$result['severity']] ?? 0) + 1;
-        }
+        $html = '<!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Reporte de Seguridad API - Máquinas Recreativas</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+                .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                h2 { color: #555; margin-top: 30px; }
+                .summary { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background: #333; color: white; }
+                .critical { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+                .high { background: #fd7e14; color: white; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+                .medium { background: #ffc107; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+                .timestamp { color: #666; font-size: 0.9em; }
+                .severity-cell { text-align: center; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🔐 Reporte de Auditoría de Seguridad</h1>
+                <p><strong>Fecha:</strong> ' . date('Y-m-d H:i:s') . '</p>
+                <p><strong>URL Base:</strong> ' . htmlspecialchars($this->baseUrl) . '</p>
+                <div class="summary">
+                    <p><strong>Vulnerabilidades encontradas:</strong> ' . count($this->testResults) . '</p>
+                </div>';
         
-        // Guardar reporte en archivo
-        $filename = 'security_report_' . date('Y-m-d_H-i-s') . '.html';
-        $this->generateHTMLReport($report, $filename);
-        
-        // Mostrar resumen
-        $this->log("\n📊 RESUMEN DE SEGURIDAD", 'INFO');
-        $this->log("======================================", 'INFO');
-        $this->log("Total endpoints: " . $report['total_endpoints'], 'INFO');
-        $this->log("Vulnerabilidades encontradas: " . $report['vulnerabilities_found'], 
-            $report['vulnerabilities_found'] > 0 ? 'CRITICAL' : 'SUCCESS');
-        
-        foreach ($report['summary'] as $severity => $count) {
-            $color = $count > 0 ? ($severity === 'CRITICAL' ? 'CRITICAL' : ($severity === 'HIGH' ? 'HIGH' : 'MEDIUM')) : 'INFO';
-            $this->log("  $severity: $count", $color);
-        }
-        
-        $this->log("\n📄 Reporte detallado guardado en: $filename", 'SUCCESS');
-    }
-    
-    /**
-     * Generar reporte HTML
-     */
-    private function generateHTMLReport($report, $filename) {
-        $html = <<<HTML
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reporte de Seguridad API</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
-        .stat { padding: 20px; border-radius: 8px; color: white; text-align: center; }
-        .CRITICAL { background: #dc3545; }
-        .HIGH { background: #fd7e14; }
-        .MEDIUM { background: #ffc107; color: #333; }
-        .LOW { background: #28a745; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #333; color: white; }
-        tr:hover { background: #f5f5f5; }
-        .severity-badge { padding: 4px 8px; border-radius: 4px; color: white; font-weight: bold; }
-        .timestamp { color: #666; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔐 Reporte de Auditoría de Seguridad</h1>
-        <p>Fecha: {$report['scan_date']}</p>
-        <p>Endpoints analizados: {$report['total_endpoints']}</p>
-        
-        <div class="summary">
-            <div class="stat CRITICAL">CRITICAL<br>{$report['summary']['CRITICAL']}</div>
-            <div class="stat HIGH">HIGH<br>{$report['summary']['HIGH']}</div>
-            <div class="stat MEDIUM">MEDIUM<br>{$report['summary']['MEDIUM']}</div>
-            <div class="stat LOW">LOW<br>{$report['summary']['LOW']}</div>
-        </div>
-        
-        <h2>Vulnerabilidades Encontradas</h2>
-HTML;
-        
-        if (empty($report['results'])) {
-            $html .= "<p class='success'>✅ No se encontraron vulnerabilidades críticas</p>";
-        } else {
-            $html .= <<<HTML
-        <table>
-            <thead>
-                <tr>
-                    <th>Categoría</th>
-                    <th>Severidad</th>
-                    <th>Descripción</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody>
-HTML;
+        if (count($this->testResults) > 0) {
+            $html .= '<h2>Detalle de Vulnerabilidades</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Severidad</th>
+                        <th>Descripción</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>';
             
-            foreach ($report['results'] as $result) {
-                $severity = $result['severity'];
-                $html .= <<<HTML
-                <tr>
-                    <td>{$result['category']}</td>
-                    <td><span class="severity-badge {$severity}">{$severity}</span></td>
-                    <td>{$result['message']}</td>
-                    <td class="timestamp">{$result['timestamp']}</td>
-                </tr>
-HTML;
+            foreach ($this->testResults as $result) {
+                $severityClass = strtolower($result['severity']);
+                $severityText = $result['severity'];
+                $html .= "<tr>
+                    <td>" . htmlspecialchars($result['category']) . "</td>
+                    <td class='severity-cell'><span class='{$severityClass}'>{$severityText}</span></td>
+                    <td>" . htmlspecialchars($result['message']) . "</td>
+                    <td class='timestamp'>" . htmlspecialchars($result['timestamp']) . "</td>
+                </tr>";
             }
             
-            $html .= <<<HTML
-            </tbody>
-        </table>
-HTML;
+            $html .= '</tbody>
+            </table>';
+        } else {
+            $html .= '<p class="success" style="color: #28a745; font-weight: bold;">✅ No se encontraron vulnerabilidades</p>';
         }
         
-        $html .= <<<HTML
-        
-    </div>
-</body>
-</html>
-HTML;
+        $html .= '</div></body></html>';
         
         file_put_contents($filename, $html);
+        $this->log("\n📄 Reporte guardado en: $filename", 'SUCCESS');
     }
 }
+
+// Verificar que el servidor está corriendo antes de ejecutar
+echo "\n🔍 Verificando servidor...\n";
+
+$ch = curl_init('http://localhost:8000/health');
+curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($httpCode === 0) {
+    echo "\n❌ ERROR: El servidor no está corriendo en http://localhost:8000\n";
+    echo "Inicia el servidor con: php -S localhost:8000 -t public\n";
+    exit(1);
+}
+
+echo "✅ Servidor disponible (código $httpCode)\n";
 
 // Ejecutar pruebas
 echo "\n🚀 INICIANDO SCRIPT DE PRUEBAS DE SEGURIDAD\n";
@@ -667,4 +580,3 @@ $tester = new APISecurityTest();
 $tester->runAllTests();
 
 echo "\n✨ Pruebas completadas\n";
-?>

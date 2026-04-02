@@ -1,19 +1,11 @@
 <?php
-/**
- * maquinas_recreativas - Application Commands Handler
- *
- * Manejador del comando RegistrarUsuarioCommand.
- *
- * @package maquinas_recreativas\Application\Commands\Usuario
- * @author Tu Equipo
- * @version 1.0
- */
-
 namespace maquinas_recreativas\Application\Commands\Usuario;
 
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Email;
 use maquinas_recreativas\Domain\Usuario\Usuario;
+use maquinas_recreativas\Domain\Usuario\Tecnico;
+use maquinas_recreativas\Domain\Usuario\Logistica;
 use maquinas_recreativas\Domain\Usuario\TipoUsuario;
 use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
@@ -21,9 +13,6 @@ use maquinas_recreativas\Infrastructure\Security\PasswordHasher;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use InvalidArgumentException;
 
-/**
- * Class RegistrarUsuarioHandler
- */
 class RegistrarUsuarioHandler
 {
     private UsuarioRepository $usuarioRepository;
@@ -37,32 +26,58 @@ class RegistrarUsuarioHandler
 
     public function handle(RegistrarUsuarioCommand $command): Uuid
     {
-        // 1. Validaciones de negocio
         $this->ensureEmailIsUnique($command->getEmail());
         $this->ensureUsuarioAsignadoIsUnique($this->generarUsuarioAsignado($command));
 
-        // 2. Crear la entidad Usuario
-        $nuevoId = Uuid::v4();  // Cambiar random() por v4()
-        $hashContrasena = $this->passwordHasher->hash($command->getContrasenaPlana());
-        
-        // Encriptar datos sensibles
-        $ciEncriptada = CifradoHelper::encriptar($command->getCi());
-        $emailEncriptado = CifradoHelper::encriptar($command->getEmail());
+        $nuevoId         = Uuid::v4();
+        $hashContrasena  = $this->passwordHasher->hash($command->getContrasenaPlana());
+        $ciEncriptada    = CifradoHelper::encriptar($command->getCi());
+        $email           = new Email($command->getEmail());
+        $usuarioAsignado = $this->generarUsuarioAsignado($command);
+        $estado          = new EstadoUsuario('Activo');
 
-        $usuario = new Usuario(
-            $nuevoId,
-            $command->getNombre(),
-            $command->getApellido(),
-            $ciEncriptada,
-            new Email($command->getEmail()),  // Usar Email Value Object
-            $this->generarUsuarioAsignado($command),
-            $hashContrasena,
-            new TipoUsuario($command->getTipo()),  // Convertir a TipoUsuario
-            new EstadoUsuario('Activo'),  // Estado por defecto como Value Object
-            $command->getEspecialidad()
-        );
+        // ── Crear la subclase correcta según el tipo ──────────────────────
+        $tipo = $command->getTipo();
 
-        // 3. Persistir la entidad
+        if ($tipo === TipoUsuario::TECNICO) {
+            $usuario = new Tecnico(
+                $nuevoId,
+                $command->getNombre(),
+                $command->getApellido(),
+                $ciEncriptada,
+                $email,
+                $usuarioAsignado,
+                $hashContrasena,
+                $estado,
+                $command->getEspecialidad() ?? '',
+                0
+            );
+        } elseif ($tipo === TipoUsuario::LOGISTICA) {
+            $usuario = new Logistica(
+                $nuevoId,
+                $command->getNombre(),
+                $command->getApellido(),
+                $ciEncriptada,
+                $email,
+                $usuarioAsignado,
+                $hashContrasena,
+                $estado
+            );
+        } else {
+            $usuario = new Usuario(
+                $nuevoId,
+                $command->getNombre(),
+                $command->getApellido(),
+                $ciEncriptada,
+                $email,
+                $usuarioAsignado,
+                $hashContrasena,
+                new TipoUsuario($tipo),
+                $estado,
+                $command->getEspecialidad()
+            );
+        }
+
         $this->usuarioRepository->save($usuario);
 
         return $nuevoId;
@@ -85,8 +100,8 @@ class RegistrarUsuarioHandler
 
     private function generarUsuarioAsignado(RegistrarUsuarioCommand $command): string
     {
-        $base = strtolower(substr($command->getNombre(), 0, 1) . substr($command->getApellido(), 0, 3));
-        $usuario = $base;
+        $base     = strtolower(substr($command->getNombre(), 0, 1) . substr($command->getApellido(), 0, 3));
+        $usuario  = $base;
         $contador = 1;
         while ($this->usuarioRepository->searchByUsuarioAsignado($usuario) !== null) {
             $usuario = $base . $contador;

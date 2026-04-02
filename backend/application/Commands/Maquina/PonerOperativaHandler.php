@@ -26,27 +26,30 @@ final class PonerOperativaHandler implements CommandHandler
         $this->historialRepository = $historialRepository;
     }
 
-    public function handle(Command $command): void
-    {
-        if (!$command instanceof PonerOperativaCommand) {
-            throw new DomainException('Comando inválido');
-        }
+ public function handle(Command $command): void
+{
+    if (!$command instanceof PonerOperativaCommand) {
+        throw new DomainException('Comando inválido');
+    }
 
-        $idMaquina = new Uuid($command->idMaquina());
-        $maquina = $this->maquinaRepository->findById($idMaquina);
+    $idMaquina = new Uuid($command->idMaquina());
+    $maquina = $this->maquinaRepository->findById($idMaquina);
 
-        if (!$maquina) {
-            throw new DomainException('Máquina no encontrada');
-        }
+    if (!$maquina) {
+        throw new DomainException('Máquina no encontrada');
+    }
 
-        $maquina->ponerOperativa();
-        $this->maquinaRepository->save($maquina);
+    $maquina->ponerOperativa();
+    $this->maquinaRepository->save($maquina);
 
-        $this->distribucionRepository->updateEstado($idMaquina, 'Operativa');
+    $this->distribucionRepository->updateEstado($idMaquina, 'Operativa');
 
+    // Solo registrar historial si hay sesión activa con usuario válido
+    $idUsuarioSesion = $_SESSION['ID_Usuario'] ?? null;
+    if ($idUsuarioSesion !== null) {
         $historial = HistorialMaquina::registrar(
             $idMaquina,
-            new Uuid($_SESSION['ID_Usuario'] ?? 'sistema'),
+            new Uuid($idUsuarioSesion),
             $_SESSION['rol'] ?? 'Sistema',
             'Puesta en operativa',
             "Máquina marcada como operativa y en etapa de recaudación",
@@ -59,4 +62,5 @@ final class PonerOperativaHandler implements CommandHandler
         );
         $this->historialRepository->save($historial);
     }
+}
 }

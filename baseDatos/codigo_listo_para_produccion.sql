@@ -105,7 +105,7 @@ CREATE INDEX idx_notificacion_maquina_estado ON NotificacionMaquinaRecreativa(Es
 -- Tabla: componente (con UUID)
 CREATE TABLE componente (
     ID_Componente CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    tipo ENUM('Ensamblador', 'Comprobador', 'Mantenimiento', 'Logistico') NOT NULL,
+    tipo ENUM('Logistico', 'Electronico', 'Estructural', 'Accesorio') NOT NULL,
     nombre VARCHAR(50) NOT NULL,
     precio DECIMAL(10,2) DEFAULT 10.00
 );

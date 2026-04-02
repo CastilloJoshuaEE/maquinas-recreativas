@@ -10,7 +10,6 @@
 namespace maquinas_recreativas\Infrastructure\Security;
 
 use maquinas_recreativas\Infrastructure\Database\Database;
-use PDO;
 
 class HistorialHelper
 {
@@ -33,52 +32,62 @@ class HistorialHelper
     /**
      * Registrar actividad genérica.
      */
-    public function registrar(
-        ?string $idMaquina,
-        ?string $idUsuario,
-        ?string $tipoUsuario,
-        string $accion,
-        string $descripcion = '',
-        ?string $estadoAnterior = null,
-        ?string $estadoNuevo = null,
-        ?string $etapaAnterior = null,
-        ?string $etapaNueva = null,
-        ?string $ipAddress = null,
-        array $detalles = []
-    ): bool {
-        try {
-            $conn = $this->db->getConnection();
-            
-            $sql = "INSERT INTO historial_maquina (
-                        ID_Maquina, ID_Usuario, tipo_usuario, accion, descripcion,
-                        estado_anterior, estado_nuevo, etapa_anterior, etapa_nueva,
-                        ip_address, detalles, fecha_hora
-                    ) VALUES (
-                        :idMaquina, :idUsuario, :tipoUsuario, :accion, :descripcion,
-                        :estadoAnterior, :estadoNuevo, :etapaAnterior, :etapaNueva,
-                        :ipAddress, :detalles, NOW()
-                    )";
-            
-            $stmt = $conn->prepare($sql);
-            return $stmt->execute([
-                ':idMaquina' => $idMaquina,
-                ':idUsuario' => $idUsuario,
-                ':tipoUsuario' => $tipoUsuario,
-                ':accion' => $accion,
-                ':descripcion' => $descripcion,
-                ':estadoAnterior' => $estadoAnterior,
-                ':estadoNuevo' => $estadoNuevo,
-                ':etapaAnterior' => $etapaAnterior,
-                ':etapaNueva' => $etapaNueva,
-                ':ipAddress' => $ipAddress ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-                ':detalles' => json_encode($detalles, JSON_UNESCAPED_UNICODE)
-            ]);
-        } catch (\Exception $e) {
-            error_log("Error registrando historial: " . $e->getMessage());
+public function registrar(
+    ?string $idMaquina,
+    ?string $idUsuario,
+    ?string $tipoUsuario,
+    string $accion,
+    string $descripcion = '',
+    ?string $estadoAnterior = null,
+    ?string $estadoNuevo = null,
+    ?string $etapaAnterior = null,
+    ?string $etapaNueva = null,
+    ?string $ipAddress = null,
+    array $detalles = []
+): bool {
+    try {
+        $conn = $this->db->getConnection();
+        
+        $sql = "INSERT INTO historial_maquinas (
+                    ID_Maquina, ID_Usuario, tipo_usuario, accion, descripcion,
+                    estado_anterior, estado_nuevo, etapa_anterior, etapa_nueva,
+                    ip_address, detalles_adicionales, fecha_hora
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+        
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            error_log("Error preparando consulta: " . $conn->error);
             return false;
         }
+        
+        $detallesJson = json_encode($detalles, JSON_UNESCAPED_UNICODE);
+        $ip = $ipAddress ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        
+        // Usar null para valores que pueden ser nulos
+        $stmt->bind_param(
+            'sssssssssss',
+            $idMaquina,
+            $idUsuario,
+            $tipoUsuario,
+            $accion,
+            $descripcion,
+            $estadoAnterior,
+            $estadoNuevo,
+            $etapaAnterior,
+            $etapaNueva,
+            $ip,
+            $detallesJson
+        );
+        
+        $result = $stmt->execute();
+        $stmt->close();
+        
+        return $result;
+    } catch (\Exception $e) {
+        error_log("Error registrando historial: " . $e->getMessage());
+        return false;
     }
-
+}
     /**
      * Registrar envío a comprobación
      */
@@ -171,36 +180,35 @@ class HistorialHelper
      * Obtener tipo de usuario por ID
      */
     private function getTipoUsuario(?string $idUsuario): string
-{
-    if (!$idUsuario) {
-        return 'Desconocido';
-    }
+    {
+        if (!$idUsuario) {
+            return 'Desconocido';
+        }
 
-    try {
-        $conn = $this->db->getConnection(); // Asumiendo que es una conexión mysqli
-        $sql = "SELECT tipo FROM usuario WHERE ID_Usuario = ?";
-        $stmt = $conn->prepare($sql);
-        
-        if ($stmt === false) {
-            error_log("Error preparando consulta para getTipoUsuario: " . $conn->error);
+        try {
+            $conn = $this->db->getConnection();
+            $sql = "SELECT tipo FROM usuario WHERE ID_Usuario = ?";
+            $stmt = $conn->prepare($sql);
+            
+            if ($stmt === false) {
+                error_log("Error preparando consulta para getTipoUsuario: " . $conn->error);
+                return 'Desconocido';
+            }
+            
+            $stmt->bind_param('s', $idUsuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result && $row = $result->fetch_assoc()) {
+                $stmt->close();
+                return $row['tipo'];
+            }
+            
+            $stmt->close();
+            return 'Desconocido';
+        } catch (\Exception $e) {
+            error_log("Error obteniendo tipo usuario: " . $e->getMessage());
             return 'Desconocido';
         }
-        
-        $stmt->bind_param('s', $idUsuario);
-        $stmt->execute();
-        $result = $stmt->get_result(); // Obtener el resultado como mysqli_result
-        
-        if ($result && $row = $result->fetch_assoc()) { // Usar fetch_assoc para mysqli
-            return $row['tipo'];
-        } else {
-            error_log("No se encontró tipo para usuario: " . $idUsuario);
-            return 'Desconocido';
-        }
-        
-        $stmt->close();
-    } catch (\Exception $e) {
-        error_log("Error obteniendo tipo usuario: " . $e->getMessage());
-        return 'Desconocido';
     }
-}
 }

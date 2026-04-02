@@ -30,12 +30,12 @@ class MySQLComercioRepository implements ComercioRepository
     /**
      * {@inheritdoc}
      */
+
     public function guardar(Comercio $comercio): void
     {
         $conn = $this->db->getConnection();
         $data = $comercio->toArray();
 
-        // Verificar si existe
         $checkSql = "SELECT COUNT(*) as total FROM Comercio WHERE ID_Comercio = ?";
         $checkStmt = $conn->prepare($checkSql);
         $idValue = $data['id'];
@@ -76,9 +76,6 @@ class MySQLComercioRepository implements ComercioRepository
         $stmt->close();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buscarPorId(string $id): ?Comercio
     {
         $conn = $this->db->getConnection();
@@ -90,13 +87,25 @@ class MySQLComercioRepository implements ComercioRepository
         $data = $result->fetch_assoc();
         $stmt->close();
 
-        return $data ? Comercio::fromArray($data) : null;
-    }
+        if (!$data) {
+            return null;
+        }
 
+        // Asegurar que todos los campos tengan valores válidos
+        $data['nombre'] = $data['Nombre'] ?? '';
+        $data['tipo'] = $data['Tipo'] ?? '';
+        $data['direccion'] = $data['Direccion'] ?? '';
+        $data['telefono'] = $data['Telefono'] ?? '';
+        $data['cantidad_maquinas'] = $data['Cantidad_Maquinas'] ?? 0;
+        $data['fecha_registro'] = $data['Fecha_Registro'] ?? date('Y-m-d');
+        
+        return Comercio::fromArray($data);
+    }
+ 
     /**
      * {@inheritdoc}
      */
-    public function buscarPorNombre(string $nombre): ?Comercio
+   public function buscarPorNombre(string $nombre): ?Comercio
     {
         $conn = $this->db->getConnection();
         $sql = "SELECT * FROM Comercio WHERE Nombre = ?";
@@ -107,7 +116,11 @@ class MySQLComercioRepository implements ComercioRepository
         $data = $result->fetch_assoc();
         $stmt->close();
 
-        return $data ? Comercio::fromArray($data) : null;
+        if (!$data) {
+            return null;
+        }
+
+        return $this->buscarPorId($data['ID_Comercio']);
     }
 
     /**
