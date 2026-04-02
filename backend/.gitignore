@@ -16,3 +16,5 @@ phpunit
 code-unit
 swagger.php
 /vendor/
+backend/vendor/
+vendor/
