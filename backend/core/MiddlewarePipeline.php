@@ -70,18 +70,25 @@ class MiddlewarePipeline
      * @return object
      * @throws \RuntimeException
      */
-    private function resolveMiddleware(string $class): object
-    {
-        global $container;
-        
-        if (isset($container[$class])) {
-            return $container[$class];
-        }
-        
-        if (class_exists($class)) {
-            return new $class();
-        }
-        
-        throw new \RuntimeException("Middleware no encontrado: {$class}");
+ private function resolveMiddleware(string $class): object
+{
+    // ── Manejar shorthand "role:X" ──────────────────────────────────
+    if (str_starts_with($class, 'role:')) {
+        $roles = explode(',', substr($class, 5)); // soporta "role:Admin,Logistica"
+        return new \maquinas_recreativas\Middleware\RoleMiddleware($roles);
     }
+
+    // ── Resto del comportamiento original ───────────────────────────
+    global $container;
+
+    if (isset($container[$class])) {
+        return $container[$class];
+    }
+
+    if (class_exists($class)) {
+        return new $class();
+    }
+
+    throw new \RuntimeException("Middleware no encontrado: {$class}");
+}
 }

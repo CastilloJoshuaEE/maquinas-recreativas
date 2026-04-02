@@ -33,7 +33,7 @@ if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: '');
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME_TEST') ?: 'test_bd_recrea_sys');
 
 // Cargar constantes de configuración
-require_once __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/../Config/constants.php';
 
 // Configurar zona horaria
 date_default_timezone_set('America/Guayaquil');
