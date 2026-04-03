@@ -3,10 +3,10 @@ backend/tests/Perfomance/breakpoint-analyzer.php, HttpStressTestCase.php, run_st
 backend/tests/
 ├── Smoke/
 │   ├── SmokeTestCase.php          (clase base con helpers)
-│   ├── HealthSmokeTest.php        (endpoints públicos)
-│   ├── AuthSmokeTest.php          (login, registro, logout)
-│   ├── MaquinaSmokeTest.php       (endpoints clave de máquinas)
-│   └── ReporteSmokeTest.php       (reportes y comentarios)
+│   ├── SmokeHealthTest.php        (endpoints públicos)
+│   ├── SmokeAuthTest.php          (login, registro, logout)
+│   ├── SmokeMaquinaTest.php       (endpoints clave de máquinas)
+│   └── SmokeReporteTest.php       (reportes y comentarios)
 ├── Functional/
 │   └── UserFlowsTest.php          (tu prueba completa existente)
 └── bootstrap.php                   (configuración común)
@@ -106,6 +106,10 @@ vendor\b**in**\phpunit.bat
 
 vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Domain
 
+vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Application
+
+vendor\bin\phpunit --testsuite Security
+
 EJECUTAR TEST INTEGRATION
 
 vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Integration
@@ -137,7 +141,6 @@ o
 
 cd D:\xampp\htdocs\maquinas-recreativas\backend
 vendor\bin\phpunit -c tests/phpunit.xml
-
 
 EJECUTAR PRUEBAS DE SMOKE
 

@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # Servicio PHP-FPM con XDebug
+  php:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: maquinas_recreativas_php
+    working_dir: /var/www/html/backend
+    volumes:
+      - ../backend:/var/www/html/backend
+      - ../backend/php.ini:/usr/local/etc/php/php.ini
+      - ../backend/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    environment:
+      - PHP_IDE_CONFIG=serverName=maquinas_recreativas
+      - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
+      - XDEBUG_MODE=debug,coverage
+    networks:
+      - maquinas_network
+    depends_on:
+      - mysql
+      - redis
+
+  # Servidor Web Nginx
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: maquinas_recreativas_nginx
+    ports:
+      - "8000:80"
+      - "8443:443"
+    volumes:
+      - ../backend:/var/www/html/backend
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - maquinas_network
+    depends_on:
+      - php
+
+  # Base de datos MySQL
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: maquinas_recreativas_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: bd_recrea_sys
+      MYSQL_USER: recrea_user
+      MYSQL_PASSWORD: recrea_pass123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - maquinas_network
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Base de datos de pruebas
+  mysql_test:
+    image: mysql:8.0
+    container_name: maquinas_recreativas_mysql_test
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: test_bd_recrea_sys
+      MYSQL_USER: recrea_user
+      MYSQL_PASSWORD: recrea_pass123
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./mysql/init_test.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - maquinas_network
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # PHPMyAdmin para administrar BD
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: maquinas_recreativas_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 100M
+    networks:
+      - maquinas_network
+    depends_on:
+      - mysql
+
+  # Redis para cache y sesiones
+  redis:
+    image: redis:7.2-alpine
+    container_name: maquinas_recreativas_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - maquinas_network
+
+  # MailHog para pruebas de email
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: maquinas_recreativas_mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - maquinas_network
+
+  # Node.js para herramientas (opcional)
+  node:
+    image: node:18-alpine
+    container_name: maquinas_recreativas_node
+    working_dir: /var/www/html
+    volumes:
+      - ../backend:/var/www/html/backend
+    command: tail -f /dev/null
+    networks:
+      - maquinas_network
+
+networks:
+  maquinas_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  mysql_test_data:
+  redis_data:

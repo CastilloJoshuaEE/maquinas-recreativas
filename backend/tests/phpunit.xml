@@ -24,9 +24,13 @@
         <testsuite name="Smoke">
             <directory>Smoke</directory>
         </testsuite>
+        <testsuite name="Security">
+            <directory>Security</directory>
+        </testsuite>          
         <testsuite name="Performance">
             <directory>Performance</directory>
-        </testsuite>        
+        </testsuite>  
+              
     </testsuites>
     
     <php>

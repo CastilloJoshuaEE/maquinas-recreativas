@@ -55,3 +55,8 @@ function cleanTestDatabase(): void
     $testDb = \maquinas_recreativas\Tests\TestDatabase::getInstance();
     $testDb->cleanDatabase();
 }
+function resetTestDatabase(): void
+{
+    $testDb = \maquinas_recreativas\Tests\TestDatabase::getInstance();
+    $testDb->cleanDatabase();
+}

@@ -1,9 +1,9 @@
 <?php
-// tests/Smoke/HealthSmokeTest.php
+// tests/Smoke/SmokeHealthTest.php
 
 require_once __DIR__ . '/SmokeTestCase.php';
 
-class HealthSmokeTest extends SmokeTestCase
+class SmokeHealthTest extends SmokeTestCase
 {
     /**
      * @test

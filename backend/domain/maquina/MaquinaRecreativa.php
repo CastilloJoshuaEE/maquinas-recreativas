@@ -198,7 +198,10 @@ public function getTipo(): string
         $this->etapa = EtapaMaquina::MONTAJE();
         $this->idTecnicoMantenimiento = $idTecnicoMantenimiento;
     }
-
+public function fechaRegistro(): DateTimeImmutable
+{
+    return $this->fechaRegistro;
+}
     /**
      * Finaliza el mantenimiento de la máquina.
      *

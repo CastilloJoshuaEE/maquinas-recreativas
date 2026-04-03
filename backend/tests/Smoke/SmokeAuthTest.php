@@ -1,17 +1,14 @@
 <?php
-// tests/Smoke/AuthSmokeTest.php
+// tests/Smoke/SmokeAuthTest.php
 
 require_once __DIR__ . '/SmokeTestCase.php';
 
-class AuthSmokeTest extends SmokeTestCase
+class SmokeAuthTest extends SmokeTestCase
 {
-    /**
-     * @test
-     */
+    /** @test */
     public function sePuedeRegistrarUnUsuarioNuevo()
     {
         $userData = $this->createTestUser();
-
         $response = $this->makeRequest('POST', '/usuario/register', $userData);
 
         $this->assertEquals(201, $this->getLastHttpCode());
@@ -22,27 +19,20 @@ class AuthSmokeTest extends SmokeTestCase
         $this->testUserId = $response['userId'];
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function sePuedeIniciarSesionConCredencialesValidas()
     {
-        // Registrar
         $userData         = $this->createTestUser();
         $registerResponse = $this->makeRequest('POST', '/usuario/register', $userData);
 
-        $this->assertEquals(201, $this->getLastHttpCode(),
-            'El registro debería devolver 201');
+        $this->assertEquals(201, $this->getLastHttpCode(), 'El registro debería devolver 201');
         $this->assertTrue($this->isSuccessResponse($registerResponse));
 
-        $this->testUserId = $registerResponse['userId'] ?? null;
+        $this->testUserId     = $registerResponse['userId'] ?? null;
+        $assignedUsername     = $registerResponse['usuario_asignado'];
 
-        // El servidor asigna su propio usuario_asignado (lo genera desde nombre+apellido).
-        // Hay que leerlo de la RESPUESTA, no usar el que enviamos.
-        $assignedUsername = $registerResponse['usuario_asignado'];
         $this->assertNotEmpty($assignedUsername, 'El servidor debe devolver usuario_asignado');
 
-        // Login con las credenciales reales asignadas por el servidor
         $response = $this->makeRequest('POST', '/usuario/login', [
             'usuario_asignado' => $assignedUsername,
             'contrasena'       => $userData['contrasena'],
@@ -57,8 +47,10 @@ class AuthSmokeTest extends SmokeTestCase
     /**
      * @test
      *
-     * El servidor devuelve HTTP 200 con success:false para credenciales inválidas
-     * (comportamiento verificado en SmokeUsuarioTest::elLoginRespondeConCredencialesInvalidas).
+     * El servidor devuelve HTTP 200 para credenciales inválidas.
+     * La respuesta puede ser {"success": false, ...} o {"error": "..."} según
+     * si la excepción la maneja el controlador o el handler global — ambas formas
+     * indican fallo y son válidas para este smoke test.
      */
     public function noSePuedeIniciarSesionConCredencialesInvalidas()
     {
@@ -67,15 +59,16 @@ class AuthSmokeTest extends SmokeTestCase
             'contrasena'       => 'password_incorrecta',
         ]);
 
-        // El servidor responde 200 con success:false — nunca lanza 401 en login fallido
+        // El servidor siempre devuelve 200 (nunca 401) para login fallido
         $this->assertEquals(200, $this->getLastHttpCode());
-        $this->assertFalse($this->isSuccessResponse($response));
-        $this->assertArrayHasKey('message', $response);
+        // La respuesta no debe indicar éxito
+        $this->assertFalse(
+            $this->isSuccessResponse($response),
+            'Un login con credenciales inválidas no debe devolver success:true'
+        );
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function sePuedeCerrarSesion()
     {
         $this->loginAsTestUser();
@@ -88,15 +81,10 @@ class AuthSmokeTest extends SmokeTestCase
         $this->clearCookies();
     }
 
-    /**
-     * @test
-     *
-     * Verifica que las rutas privadas rechazan peticiones sin sesión.
-     * El servidor responde con success:false (no con HTTP 401).
-     */
+    /** @test */
     public function rutasPrivadasRequierenAutenticacion()
     {
-        $this->clearCookies(); // Garantizar que no hay sesión activa
+        $this->clearCookies();
 
         $rutasPrivadas = [
             ['GET',  '/usuario/perfil'],
@@ -108,7 +96,6 @@ class AuthSmokeTest extends SmokeTestCase
         foreach ($rutasPrivadas as [$method, $path]) {
             $response = $this->makeRequest($method, $path, []);
 
-            // El servidor usa success:false en vez de HTTP 401 como señal de no autenticado
             $this->assertFalse(
                 $this->isSuccessResponse($response),
                 "La ruta {$method} {$path} debería rechazar peticiones sin autenticación"
@@ -116,9 +103,7 @@ class AuthSmokeTest extends SmokeTestCase
         }
     }
 
-    /**
-     * @test
-     */
+    /** @test */
     public function sePuedeRecuperarNombreDeUsuarioPorEmail()
     {
         $userData = $this->createTestUser();
