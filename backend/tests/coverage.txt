@@ -1,32 +1,24 @@
 
 
-[1;37;40mCode Coverage Report:      [0m
-[1;37;40m  2026-04-02 12:54:51      [0m
-[1;37;40m                           [0m
-[1;37;40m Summary:                  [0m
-[30;43m  Classes: 63.64% (7/11)   [0m
-[30;43m  Methods: 85.56% (77/90)  [0m
-[30;43m  Lines:   77.45% (680/878)[0m
+[1;37;40mCode Coverage Report:       [0m
+[1;37;40m  2026-04-03 13:11:51       [0m
+[1;37;40m                            [0m
+[1;37;40m Summary:                   [0m
+[37;41m  Classes:  4.00% (1/25)    [0m
+[37;41m  Methods: 16.77% (28/167)  [0m
+[37;41m  Lines:   11.88% (246/2070)[0m
 
-maquinas_recreativas\Tests\Application\Commands\ComercioCommandTest
-  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 50/ 50)[0m
-maquinas_recreativas\Tests\Application\Commands\MaquinaCommandTest
-  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 78/ 78)[0m
-maquinas_recreativas\Tests\Application\Commands\UsuarioCommandTest
-  [37;41mMethods:  20.00% ( 2/10)[0m   [37;41mLines:   5.92% (  9/152)[0m
-maquinas_recreativas\Tests\Application\Queries\MaquinaQueryTest
-  [30;43mMethods:  71.43% ( 5/ 7)[0m   [30;43mLines:  84.51% ( 60/ 71)[0m
-maquinas_recreativas\Tests\Application\Queries\UsuarioQueryTest
-  [30;42mMethods:  90.91% (10/11)[0m   [30;42mLines:  98.70% ( 76/ 77)[0m
-maquinas_recreativas\Tests\Domain\ComentarioTest
-  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 22/ 22)[0m
-maquinas_recreativas\Tests\Domain\ComponenteTest
-  [30;42mMethods: 100.00% ( 9/ 9)[0m   [30;42mLines: 100.00% ( 79/ 79)[0m
-maquinas_recreativas\Tests\Domain\MaquinaTest
-  [30;42mMethods: 100.00% (11/11)[0m   [30;42mLines: 100.00% ( 68/ 68)[0m
-maquinas_recreativas\Tests\Domain\ReporteTest
-  [30;42mMethods: 100.00% ( 8/ 8)[0m   [30;42mLines: 100.00% ( 37/ 37)[0m
-maquinas_recreativas\Tests\Domain\UsuarioTest
-  [30;42mMethods: 100.00% (11/11)[0m   [30;42mLines: 100.00% (146/146)[0m
-maquinas_recreativas\Tests\Infrastructure\Repositories\RepositoryTest
-  [30;43mMethods:  75.00% ( 6/ 8)[0m   [30;43mLines:  56.12% ( 55/ 98)[0m
+AuthSmokeTest
+  [30;43mMethods:  83.33% ( 5/ 6)[0m   [30;43mLines:  87.50% ( 49/ 56)[0m
+HealthSmokeTest
+  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 35/ 35)[0m
+MaquinaSmokeTest
+  [30;43mMethods:  62.50% ( 5/ 8)[0m   [30;43mLines:  59.26% ( 32/ 54)[0m
+ReporteSmokeTest
+  [37;41mMethods:  50.00% ( 3/ 6)[0m   [30;43mLines:  76.74% ( 33/ 43)[0m
+SmokeComercioTest
+  [37;41mMethods:  50.00% ( 1/ 2)[0m   [30;42mLines:  90.00% (  9/ 10)[0m
+SmokeTestCase
+  [30;43mMethods:  60.00% ( 6/10)[0m   [30;43mLines:  76.92% ( 70/ 91)[0m
+SmokeUsuarioTest
+  [30;43mMethods:  75.00% ( 3/ 4)[0m   [30;42mLines:  90.00% ( 18/ 20)[0m

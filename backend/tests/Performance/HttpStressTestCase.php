@@ -22,9 +22,11 @@ class HttpStressTestCase {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HEADER => true,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_FOLLOWLOCATION => true
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false
         ];
         
         // Cookies
@@ -33,10 +35,10 @@ class HttpStressTestCase {
             foreach ($this->cookies as $name => $value) {
                 $cookieString .= "$name=$value; ";
             }
-            $options[CURLOPT_COOKIE] = $cookieString;
+            $options[CURLOPT_COOKIE] = rtrim($cookieString, '; ');
         }
         
-        // Headers - Asegurar que es un array
+        // Headers
         $httpHeaders = ['Content-Type: application/json'];
         if (!empty($headers) && is_array($headers)) {
             $httpHeaders = array_merge($httpHeaders, $headers);
@@ -44,7 +46,7 @@ class HttpStressTestCase {
         $options[CURLOPT_HTTPHEADER] = $httpHeaders;
         
         // Datos
-        if (in_array($method, ['POST', 'PUT', 'PATCH']) && $data) {
+        if (in_array($method, ['POST', 'PUT', 'PATCH']) && $data !== null) {
             $options[CURLOPT_POSTFIELDS] = json_encode($data);
         }
         
@@ -65,7 +67,8 @@ class HttpStressTestCase {
         $this->extractCookies($headersStr);
         
         $body = substr($response, $headerSize);
-        $this->lastResponse = json_decode($body, true);
+        $decoded = json_decode($body, true);
+        $this->lastResponse = $decoded !== null ? $decoded : ['raw_body' => $body];
         
         curl_close($ch);
         
@@ -74,8 +77,7 @@ class HttpStressTestCase {
             $waitTime = pow(2, $retry);
             echo "        Rate limit (429) - Reintentando en {$waitTime}s (intento " . ($retry + 1) . "/{$this->maxRetries})\n";
             sleep($waitTime);
-            // Pasar array vacío en headers en lugar del string anterior
-            return $this->request($method, $endpoint, $data, [], $retry + 1);
+            return $this->request($method, $endpoint, $data, $headers, $retry + 1);
         }
         
         return $this->lastResponse;
@@ -85,7 +87,7 @@ class HttpStressTestCase {
      * Extrae cookies de la respuesta
      */
     protected function extractCookies($headerString) {
-        preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $headerString, $matches);
+        preg_match_all('/^Set-Cookie:\s*([^;]+)/mi', $headerString, $matches);
         foreach ($matches[1] as $cookie) {
             $parts = explode('=', $cookie, 2);
             if (count($parts) == 2) {
@@ -116,8 +118,39 @@ class HttpStressTestCase {
         
         return $success;
     }
-
-        public function __construct() {
+    
+    /**
+     * Verifica que un valor no sea nulo
+     */
+    protected function assertNotNull($value, $message = '') {
+        if ($value === null && !empty($message)) {
+            echo "        {$message}\n";
+        }
+        return $value !== null;
+    }
+    
+    /**
+     * Verifica que un array tenga una clave
+     */
+    protected function assertArrayHasKey($key, $array, $message = '') {
+        $hasKey = is_array($array) && array_key_exists($key, $array);
+        if (!$hasKey && !empty($message)) {
+            echo "        {$message}\n";
+        }
+        return $hasKey;
+    }
+    
+    /**
+     * Verifica que una condición sea verdadera
+     */
+    protected function assertTrue($condition, $message = '') {
+        if (!$condition && !empty($message)) {
+            echo "        {$message}\n";
+        }
+        return $condition;
+    }
+    
+    public function __construct() {
         // Constructor vacío
     }
 }

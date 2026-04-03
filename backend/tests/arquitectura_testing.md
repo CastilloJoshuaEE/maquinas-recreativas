@@ -1,3 +1,16 @@
+backend/tests/Perfomance/breakpoint-analyzer.php, HttpStressTestCase.php, run_stress_test.php, StressTest.php
+
+backend/tests/
+├── Smoke/
+│   ├── SmokeTestCase.php          (clase base con helpers)
+│   ├── HealthSmokeTest.php        (endpoints públicos)
+│   ├── AuthSmokeTest.php          (login, registro, logout)
+│   ├── MaquinaSmokeTest.php       (endpoints clave de máquinas)
+│   └── ReporteSmokeTest.php       (reportes y comentarios)
+├── Functional/
+│   └── UserFlowsTest.php          (tu prueba completa existente)
+└── bootstrap.php                   (configuración común)
+
 backend/tests/Security/security-test.php
 
 backend/tests/Functional/AdminFlowsTest.php, HttpTestCase.php, ReporteFlowsTest.php, run_tests.php, UserFlowsTest.php
@@ -120,7 +133,16 @@ php -S localhost:8000 -t backend/public
 cd tests/Functional
 php run_tests.php
 
-o 
+o
 
 cd D:\xampp\htdocs\maquinas-recreativas\backend
 vendor\bin\phpunit -c tests/phpunit.xml
+
+
+EJECUTAR PRUEBAS DE SMOKE
+
+cd D:\xampp\htdocs\maquinas-recreativas\backend vendor\bin\phpunit -c tests/phpunit.xml --testsuite Smoke
+
+EJECUTAR LAS PRUEBAS DE PERFORMANCE
+
+D:\xampp\htdocs\maquinas-recreativas\backend\tests\Performance>php run_stress_test.php

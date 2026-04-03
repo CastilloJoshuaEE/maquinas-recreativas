@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <title>Dashboard for D:\xampp\htdocs\maquinas-recreativas\backend\tests\Smoke</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../_css/bootstrap.min.css?v=11.0.12" rel="stylesheet" type="text/css">
+  <link href="../_css/nv.d3.min.css?v=11.0.12" rel="stylesheet" type="text/css">
+  <link href="../_css/style.css?v=11.0.12" rel="stylesheet" type="text/css">
+  <link href="../_css/custom.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <header>
+   <div class="container-fluid">
+    <div class="row">
+     <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+       <ol class="breadcrumb">
+         <li class="breadcrumb-item"><a href="../index.html">D:\xampp\htdocs\maquinas-recreativas\backend\tests</a></li>
+         <li class="breadcrumb-item"><a href="index.html">Smoke</a></li>
+         <li class="breadcrumb-item active">(Dashboard)</li>
+
+       </ol>
+      </nav>
+     </div>
+    </div>
+   </div>
+  </header>
+  <div class="container-fluid">
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Classes</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="classCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="classComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="MaquinaSmokeTest.php.html#6">MaquinaSmokeTest</a></td><td class="text-right">59%</td></tr>
+       <tr><td><a href="ReporteSmokeTest.php.html#6">ReporteSmokeTest</a></td><td class="text-right">76%</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#6">SmokeTestCase</a></td><td class="text-right">76%</td></tr>
+       <tr><td><a href="AuthSmokeTest.php.html#6">AuthSmokeTest</a></td><td class="text-right">87%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Class</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="SmokeTestCase.php.html#6">SmokeTestCase</a></td><td class="text-right">24</td></tr>
+       <tr><td><a href="MaquinaSmokeTest.php.html#6">MaquinaSmokeTest</a></td><td class="text-right">16</td></tr>
+       <tr><td><a href="ReporteSmokeTest.php.html#6">ReporteSmokeTest</a></td><td class="text-right">8</td></tr>
+       <tr><td><a href="AuthSmokeTest.php.html#6">AuthSmokeTest</a></td><td class="text-right">7</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-12">
+     <h2>Methods</h2>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Coverage Distribution</h3>
+     <div id="methodCoverageDistribution" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Complexity</h3>
+     <div id="methodComplexity" style="height: 300px;">
+       <svg></svg>
+     </div>
+    </div>
+   </div>
+   <div class="row">
+    <div class="col-md-6">
+     <h3>Insufficient Coverage</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right">Coverage</th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="AuthSmokeTest.php.html#11"><abbr title="AuthSmokeTest::sePuedeRegistrarUnUsuarioNuevo">sePuedeRegistrarUnUsuarioNuevo</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="MaquinaSmokeTest.php.html#53"><abbr title="MaquinaSmokeTest::sePuedeRegistrarUnaMaquina">sePuedeRegistrarUnaMaquina</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#22"><abbr title="SmokeTestCase::setUpBeforeClass">setUpBeforeClass</abbr></a></td><td class="text-right">0%</td></tr>
+       <tr><td><a href="ReporteSmokeTest.php.html#49"><abbr title="ReporteSmokeTest::sePuedeCrearUnComentarioEnUnReporte">sePuedeCrearUnComentarioEnUnReporte</abbr></a></td><td class="text-right">12%</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#28"><abbr title="SmokeTestCase::setUp">setUp</abbr></a></td><td class="text-right">42%</td></tr>
+       <tr><td><a href="MaquinaSmokeTest.php.html#37"><abbr title="MaquinaSmokeTest::sePuedeGenerarUnaPlaca">sePuedeGenerarUnaPlaca</abbr></a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="ReporteSmokeTest.php.html#104"><abbr title="ReporteSmokeTest::noSePuedeCrearReporteSinDescripcion">noSePuedeCrearReporteSinDescripcion</abbr></a></td><td class="text-right">50%</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#75"><abbr title="SmokeTestCase::loginAsTestUser">loginAsTestUser</abbr></a></td><td class="text-right">54%</td></tr>
+       <tr><td><a href="MaquinaSmokeTest.php.html#98"><abbr title="MaquinaSmokeTest::sePuedenObtenerMaquinasPorEtapa">sePuedenObtenerMaquinasPorEtapa</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="SmokeUsuarioTest.php.html#42"><abbr title="SmokeUsuarioTest::elLoginRespondeConCredencialesInvalidas">elLoginRespondeConCredencialesInvalidas</abbr></a></td><td class="text-right">75%</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#117"><abbr title="SmokeTestCase::makeRequest">makeRequest</abbr></a></td><td class="text-right">85%</td></tr>
+       <tr><td><a href="SmokeComercioTest.php.html#16"><abbr title="SmokeComercioTest::elEndpointObtenerComerciosResponde">elEndpointObtenerComerciosResponde</abbr></a></td><td class="text-right">87%</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="col-md-6">
+     <h3>Project Risks</h3>
+     <div class="scrollbox">
+      <table class="table">
+       <thead>
+        <tr>
+         <th>Method</th>
+         <th class="text-right"><abbr title="Change Risk Anti-Patterns (CRAP) Index">CRAP</abbr></th>
+        </tr>
+       </thead>
+       <tbody>
+       <tr><td><a href="MaquinaSmokeTest.php.html#53"><abbr title="MaquinaSmokeTest::sePuedeRegistrarUnaMaquina">sePuedeRegistrarUnaMaquina</abbr></a></td><td class="text-right">6</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#75"><abbr title="SmokeTestCase::loginAsTestUser">loginAsTestUser</abbr></a></td><td class="text-right">5</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#117"><abbr title="SmokeTestCase::makeRequest">makeRequest</abbr></a></td><td class="text-right">4</td></tr>
+       <tr><td><a href="SmokeTestCase.php.html#28"><abbr title="SmokeTestCase::setUp">setUp</abbr></a></td><td class="text-right">2</td></tr>
+
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <hr/>
+    <p>
+     <small>Generated by <a href="https://github.com/sebastianbergmann/php-code-coverage" target="_top">php-code-coverage 11.0.12</a> using <a href="https://www.php.net/" target="_top">PHP 8.2.12</a> and <a href="https://phpunit.de/">PHPUnit 11.5.55</a> at Fri Apr 3 13:11:38 -05 2026.</small>
+    </p>
+   </footer>
+  </div>
+  <script src="../_js/jquery.min.js?v=11.0.12" type="text/javascript"></script>
+  <script src="../_js/d3.min.js?v=11.0.12" type="text/javascript"></script>
+  <script src="../_js/nv.d3.min.js?v=11.0.12" type="text/javascript"></script>
+  <script type="text/javascript">
+$(document).ready(function() {
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#classCoverageDistribution svg')
+      .datum(getCoverageDistributionData([0,0,0,0,0,0,1,0,2,1,2,1], "Class Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.multiBarChart();
+    chart.tooltips(false)
+      .showControls(false)
+      .showLegend(false)
+      .reduceXTicks(false)
+      .staggerLabels(true)
+      .yAxis.tickFormat(d3.format('d'));
+
+    d3.select('#methodCoverageDistribution svg')
+      .datum(getCoverageDistributionData([3,0,1,0,0,1,3,0,2,2,1,28], "Method Coverage"))
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getCoverageDistributionData(data, label) {
+    var labels = [
+      '0%',
+      '0-10%',
+      '10-20%',
+      '20-30%',
+      '30-40%',
+      '40-50%',
+      '50-60%',
+      '60-70%',
+      '70-80%',
+      '80-90%',
+      '90-100%',
+      '100%'
+    ];
+    var values = [];
+    $.each(labels, function(key) {
+      values.push({x: labels[key], y: data[key]});
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Cyclomatic Complexity');
+
+    d3.select('#classComplexity svg')
+      .datum(getComplexityData([[87.5,7,"<a href=\"AuthSmokeTest.php.html#6\">AuthSmokeTest<\/a>"],[100,6,"<a href=\"HealthSmokeTest.php.html#6\">HealthSmokeTest<\/a>"],[59.25925925925925,10,"<a href=\"MaquinaSmokeTest.php.html#6\">MaquinaSmokeTest<\/a>"],[76.74418604651163,8,"<a href=\"ReporteSmokeTest.php.html#6\">ReporteSmokeTest<\/a>"],[90,2,"<a href=\"SmokeComercioTest.php.html#4\">SmokeComercioTest<\/a>"],[76.92307692307693,20,"<a href=\"SmokeTestCase.php.html#6\">SmokeTestCase<\/a>"],[90,4,"<a href=\"SmokeUsuarioTest.php.html#4\">SmokeUsuarioTest<\/a>"]], 'Class Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var chart = nv.models.scatterChart()
+      .showDistX(true)
+      .showDistY(true)
+      .showLegend(false)
+      .forceX([0, 100]);
+    chart.tooltipContent(function(graph) {
+      return '<p>' + graph.point.class + '</p>';
+    });
+
+    chart.xAxis.axisLabel('Code Coverage (in percent)');
+    chart.yAxis.axisLabel('Method Complexity');
+
+    d3.select('#methodComplexity svg')
+      .datum(getComplexityData([[0,1,"<a href=\"AuthSmokeTest.php.html#11\">AuthSmokeTest::sePuedeRegistrarUnUsuarioNuevo<\/a>"],[100,1,"<a href=\"AuthSmokeTest.php.html#28\">AuthSmokeTest::sePuedeIniciarSesionConCredencialesValidas<\/a>"],[100,1,"<a href=\"AuthSmokeTest.php.html#63\">AuthSmokeTest::noSePuedeIniciarSesionConCredencialesInvalidas<\/a>"],[100,1,"<a href=\"AuthSmokeTest.php.html#79\">AuthSmokeTest::sePuedeCerrarSesion<\/a>"],[100,2,"<a href=\"AuthSmokeTest.php.html#97\">AuthSmokeTest::rutasPrivadasRequierenAutenticacion<\/a>"],[100,1,"<a href=\"AuthSmokeTest.php.html#122\">AuthSmokeTest::sePuedeRecuperarNombreDeUsuarioPorEmail<\/a>"],[100,1,"<a href=\"HealthSmokeTest.php.html#11\">HealthSmokeTest::elEndpointHealthRespondeCorrectamente<\/a>"],[100,1,"<a href=\"HealthSmokeTest.php.html#24\">HealthSmokeTest::elEndpointTestDbRespondeYConectaCorrectamente<\/a>"],[100,1,"<a href=\"HealthSmokeTest.php.html#37\">HealthSmokeTest::robotsTxtEstaAccesible<\/a>"],[100,1,"<a href=\"HealthSmokeTest.php.html#53\">HealthSmokeTest::sitemapXmlEstaAccesible<\/a>"],[100,2,"<a href=\"HealthSmokeTest.php.html#69\">HealthSmokeTest::rutasBloqueadasDevuelven404<\/a>"],[100,2,"<a href=\"MaquinaSmokeTest.php.html#13\">MaquinaSmokeTest::setUp<\/a>"],[50,1,"<a href=\"MaquinaSmokeTest.php.html#37\">MaquinaSmokeTest::sePuedeGenerarUnaPlaca<\/a>"],[0,2,"<a href=\"MaquinaSmokeTest.php.html#53\">MaquinaSmokeTest::sePuedeRegistrarUnaMaquina<\/a>"],[100,1,"<a href=\"MaquinaSmokeTest.php.html#85\">MaquinaSmokeTest::sePuedenObtenerMaquinasPorEstado<\/a>"],[75,1,"<a href=\"MaquinaSmokeTest.php.html#98\">MaquinaSmokeTest::sePuedenObtenerMaquinasPorEtapa<\/a>"],[100,1,"<a href=\"MaquinaSmokeTest.php.html#110\">MaquinaSmokeTest::sePuedenObtenerComponentes<\/a>"],[100,1,"<a href=\"MaquinaSmokeTest.php.html#123\">MaquinaSmokeTest::sePuedenObtenerComponentesDisponibles<\/a>"],[100,1,"<a href=\"MaquinaSmokeTest.php.html#132\">MaquinaSmokeTest::tearDown<\/a>"],[100,2,"<a href=\"ReporteSmokeTest.php.html#11\">ReporteSmokeTest::setUp<\/a>"],[100,1,"<a href=\"ReporteSmokeTest.php.html#29\">ReporteSmokeTest::sePuedeCrearUnReporte<\/a>"],[12.5,1,"<a href=\"ReporteSmokeTest.php.html#49\">ReporteSmokeTest::sePuedeCrearUnComentarioEnUnReporte<\/a>"],[100,1,"<a href=\"ReporteSmokeTest.php.html#66\">ReporteSmokeTest::sePuedenObtenerReportesPorUsuario<\/a>"],[90.9090909090909,2,"<a href=\"ReporteSmokeTest.php.html#79\">ReporteSmokeTest::sePuedeActualizarEstadoDeUnReporte<\/a>"],[50,1,"<a href=\"ReporteSmokeTest.php.html#104\">ReporteSmokeTest::noSePuedeCrearReporteSinDescripcion<\/a>"],[100,1,"<a href=\"SmokeComercioTest.php.html#6\">SmokeComercioTest::setUp<\/a>"],[87.5,1,"<a href=\"SmokeComercioTest.php.html#16\">SmokeComercioTest::elEndpointObtenerComerciosResponde<\/a>"],[0,1,"<a href=\"SmokeTestCase.php.html#22\">SmokeTestCase::setUpBeforeClass<\/a>"],[42.857142857142854,2,"<a href=\"SmokeTestCase.php.html#28\">SmokeTestCase::setUp<\/a>"],[100,1,"<a href=\"SmokeTestCase.php.html#43\">SmokeTestCase::tearDown<\/a>"],[100,1,"<a href=\"SmokeTestCase.php.html#49\">SmokeTestCase::isServerRunning<\/a>"],[100,1,"<a href=\"SmokeTestCase.php.html#61\">SmokeTestCase::createTestUser<\/a>"],[54.54545454545454,4,"<a href=\"SmokeTestCase.php.html#75\">SmokeTestCase::loginAsTestUser<\/a>"],[85.29411764705883,4,"<a href=\"SmokeTestCase.php.html#117\">SmokeTestCase::makeRequest<\/a>"],[100,2,"<a href=\"SmokeTestCase.php.html#164\">SmokeTestCase::isSuccessResponse<\/a>"],[100,3,"<a href=\"SmokeTestCase.php.html#173\">SmokeTestCase::clearCookies<\/a>"],[100,1,"<a href=\"SmokeTestCase.php.html#181\">SmokeTestCase::getLastHttpCode<\/a>"],[100,1,"<a href=\"SmokeUsuarioTest.php.html#6\">SmokeUsuarioTest::setUp<\/a>"],[100,1,"<a href=\"SmokeUsuarioTest.php.html#16\">SmokeUsuarioTest::elEndpointHealthResponde<\/a>"],[100,1,"<a href=\"SmokeUsuarioTest.php.html#29\">SmokeUsuarioTest::elEndpointTestDbResponde<\/a>"],[75,1,"<a href=\"SmokeUsuarioTest.php.html#42\">SmokeUsuarioTest::elLoginRespondeConCredencialesInvalidas<\/a>"]], 'Method Complexity'))
+      .transition()
+      .duration(500)
+      .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    return chart;
+  });
+
+  function getComplexityData(data, label) {
+    var values = [];
+    $.each(data, function(key) {
+      var value = Math.round(data[key][0]*100) / 100;
+      values.push({
+        x: value,
+        y: data[key][1],
+        class: data[key][2],
+        size: 0.05,
+        shape: 'diamond'
+      });
+    });
+
+    return [
+      {
+        key: label,
+        values: values,
+        color: "#4572A7"
+      }
+    ];
+  }
+});
+  </script>
+ </body>
+</html>

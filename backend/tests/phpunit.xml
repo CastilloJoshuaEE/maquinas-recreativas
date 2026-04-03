@@ -21,6 +21,12 @@
         <testsuite name="Functional">
             <directory>Functional</directory>
         </testsuite>
+        <testsuite name="Smoke">
+            <directory>Smoke</directory>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>Performance</directory>
+        </testsuite>        
     </testsuites>
     
     <php>
@@ -36,6 +42,10 @@
             <directory suffix=".php">Domain</directory>
             <directory suffix=".php">Application</directory>
             <directory suffix=".php">Infrastructure</directory>
+            <directory suffix=".php">Integration</directory>
+            <directory suffix=".php">Smoke</directory>
+            <directory suffix=".php">Performance</directory>
+
         </include>
     </source>
 

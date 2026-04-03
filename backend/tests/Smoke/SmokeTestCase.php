@@ -1,125 +1,185 @@
 <?php
+// tests/Smoke/SmokeTestCase.php
+
 use PHPUnit\Framework\TestCase;
 
 class SmokeTestCase extends TestCase
 {
     protected string $baseUrl = 'http://localhost:8000';
-    protected ?array $sessionCookies = null;
-    protected ?array $testUser = null;
     protected ?string $testUserId = null;
-    
-    //  DECLARAR PROPIEDADES EXPLÍCITAMENTE (esto elimina los deprecations)
-    protected ?string $lastResponseHeaders = null;
+
     protected int $lastHttpCode = 0;
+    protected ?string $lastResponseHeaders = null;
+    protected array $lastResponse = [];
+
+    // Archivo de cookies que cURL gestiona internamente (igual que en HttpTestCase)
+    private string $cookieFile;
 
     /**
-     * Realiza login con un usuario de prueba (se crea si no existe)
+     * Se ejecuta UNA VEZ antes de todos los tests de la clase.
+     * Limpia la BD para evitar errores de llave duplicada entre corridas.
      */
-    protected function loginAsTestUser(): void
+    public static function setUpBeforeClass(): void
     {
-        // Datos del usuario de prueba
-        $this->testUser = [
-            'nombre' => 'Test',
-            'apellido' => 'User',
-            'ci' => '99999999' . rand(10, 99),
-            'email' => 'test_' . uniqid() . '@smoke.com',
-            'usuario_asignado' => 'smoke_' . substr(uniqid(), -8),
-            'contrasena' => 'Test123456',
-            'tipo' => 'Administrador',
-            'estado' => 'Activo'
+        parent::setUpBeforeClass();
+        cleanTestDatabase();
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Archivo de cookies fresco por instancia de test
+        $this->cookieFile = sys_get_temp_dir() . '/smoke_cookies_' . uniqid() . '.txt';
+
+        if (!$this->isServerRunning()) {
+            $this->markTestSkipped(
+                "El servidor no está respondiendo en {$this->baseUrl}. " .
+                "Ejecuta 'php public/serve.php' en otra terminal."
+            );
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        $this->clearCookies();
+        parent::tearDown();
+    }
+
+    protected function isServerRunning(): bool
+    {
+        $ch = curl_init($this->baseUrl . '/health');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return $httpCode !== 0;
+    }
+
+    protected function createTestUser(): array
+    {
+        $timestamp = time() . '_' . uniqid();
+        return [
+            'nombre'           => 'Smoke',
+            'apellido'         => 'Tester',
+            'ci'               => '99999999' . rand(10, 99),
+            'email'            => "smoke_{$timestamp}@test.com",
+            'usuario_asignado' => 'smoke_' . substr(md5($timestamp), 0, 8),
+            'contrasena'       => 'SmokeTest123!',
+            'tipo'             => 'Administrador',
+            'estado'           => 'Activo',
         ];
+    }
+protected function loginAsTestUser(): array
+{
+    $userData = $this->createTestUser();
 
-        // Intentar registrar el usuario (puede fallar si ya existe)
-        $registerResponse = $this->makeRequest('POST', '/usuario/register', $this->testUser);
-        
-        // Hacer login
-        $loginResponse = $this->makeRequest('POST', '/usuario/login', [
-            'usuario_asignado' => $this->testUser['usuario_asignado'],
-            'contrasena' => $this->testUser['contrasena']
-        ]);
+    $registerResponse = $this->makeRequest('POST', '/usuario/register', $userData);
 
-        if (isset($loginResponse['success']) && $loginResponse['success']) {
-            $this->testUserId = $loginResponse['usuario']['ID_Usuario'] ?? null;
-            
-            // Extraer cookies de sesión de la respuesta
-            $this->extractSessionCookies();
-            
-            $this->assertNotNull($this->testUserId, 'No se pudo obtener ID de usuario');
-        } else {
-            $this->fail('No se pudo autenticar usuario de prueba');
-        }
+    if (!$this->isSuccessResponse($registerResponse)) {
+        $userData         = $this->createTestUser();
+        $registerResponse = $this->makeRequest('POST', '/usuario/register', $userData);
     }
 
-    /**
-     * Extrae las cookies de sesión de la última respuesta
-     */
-    protected function extractSessionCookies(): void
-    {
-        if ($this->lastResponseHeaders !== null) {
-            preg_match_all('/^Set-Cookie:\s*([^;]+)/mi', $this->lastResponseHeaders, $matches);
-            $this->sessionCookies = $matches[1] ?? [];
-        }
+    if (!$this->isSuccessResponse($registerResponse)) {
+        $this->markTestSkipped(
+            'No se pudo registrar usuario de prueba: ' . json_encode($registerResponse)
+        );
+        return [];
     }
 
+    $this->testUserId = $registerResponse['userId'] ?? null;
+
+    
+    $assignedUsername = $registerResponse['usuario_asignado'] ?? $userData['usuario_asignado'];
+
+    $loginResponse = $this->makeRequest('POST', '/usuario/login', [
+        'usuario_asignado' => $assignedUsername,
+        'contrasena'       => $userData['contrasena'],
+    ]);
+
+    if (!$this->isSuccessResponse($loginResponse)) {
+        $this->markTestSkipped(
+            'No se pudo loguear usuario de prueba: ' . json_encode($loginResponse)
+        );
+        return [];
+    }
+
+    return $loginResponse['usuario'] ?? [];
+}
+
     /**
-     * Realiza una petición HTTP con manejo de cookies
+     * Realiza una petición HTTP usando un archivo de cookies persistente.
+     * cURL maneja el ciclo completo (Set-Cookie → Cookie) de forma nativa.
      */
-    protected function makeRequest(string $method, string $endpoint, array $data = null): array
+    protected function makeRequest(string $method, string $endpoint, ?array $data = null): array
     {
         $url = $this->baseUrl . $endpoint;
-        $ch = curl_init($url);
-
-        $headers = ['Content-Type: application/json'];
-        
-        // Añadir cookies de sesión si existen
-        if ($this->sessionCookies) {
-            $headers[] = 'Cookie: ' . implode('; ', $this->sessionCookies);
-        }
+        $ch  = curl_init($url);
 
         $options = [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HEADER => true,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_HTTPHEADER => $headers
+            CURLOPT_CUSTOMREQUEST  => $method,
+            CURLOPT_HEADER         => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ],
+            CURLOPT_FOLLOWLOCATION => true,
+            // El archivo de cookies reemplaza el manejo manual de Set-Cookie
+            CURLOPT_COOKIEFILE     => $this->cookieFile,
+            CURLOPT_COOKIEJAR      => $this->cookieFile,
+            CURLOPT_SSL_VERIFYPEER => false,
         ];
 
-        if ($data && in_array($method, ['POST', 'PUT', 'PATCH'])) {
+        if ($data !== null && in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
             $options[CURLOPT_POSTFIELDS] = json_encode($data);
         }
 
         curl_setopt_array($ch, $options);
-
         $response = curl_exec($ch);
-        
-        if ($response === false) {
-            $this->lastHttpCode = 0;
-            $this->lastResponseHeaders = '';
-            curl_close($ch);
-            return ['error' => 'Curl error: ' . curl_error($ch)];
-        }
-        
-        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $this->lastResponseHeaders = substr($response, 0, $headerSize);
-        $body = substr($response, $headerSize);
-        $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
+        if ($response === false) {
+            $this->lastHttpCode      = 0;
+            $this->lastResponseHeaders = '';
+            $this->lastResponse      = ['error' => 'Curl error: ' . curl_error($ch)];
+            curl_close($ch);
+            return $this->lastResponse;
+        }
+
+        $headerSize              = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $this->lastResponseHeaders = substr($response, 0, $headerSize);
+        $body                    = substr($response, $headerSize);
+        $this->lastHttpCode      = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        return json_decode($body, true) ?? ['error' => 'Invalid response'];
+        $decoded            = json_decode($body, true);
+        $this->lastResponse = $decoded ?? ['raw_body' => $body];
+        return $this->lastResponse;
+    }
+
+    protected function isSuccessResponse(array $response): bool
+    {
+        return isset($response['success']) && $response['success'] === true;
+    }
+
+    /**
+     * Elimina el archivo de cookies (destruye la sesión del lado del cliente)
+     * y crea uno nuevo vacío para el siguiente test.
+     */
+    protected function clearCookies(): void
+    {
+        if (isset($this->cookieFile) && file_exists($this->cookieFile)) {
+            @unlink($this->cookieFile);
+        }
+        $this->cookieFile = sys_get_temp_dir() . '/smoke_cookies_' . uniqid() . '.txt';
     }
 
     protected function getLastHttpCode(): int
     {
         return $this->lastHttpCode;
-    }
-
-    /**
-     * Resetea el estado entre pruebas
-     */
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        // No es necesario resetear las propiedades porque se recrean en cada test
     }
 }

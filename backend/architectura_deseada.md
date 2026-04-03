@@ -1,4 +1,8 @@
 Basado en TU sistema de máquinas recreativas:
+Arquitectura Hexagonal (Ports and Adapters) + DDD + CQRS
+
+"Arquitectura Hexagonal orientada a Domain-Driven Design (DDD) con implementación de CQRS"
+
 backend/
 ├── .env
 ├── .htaccess (opcional)
