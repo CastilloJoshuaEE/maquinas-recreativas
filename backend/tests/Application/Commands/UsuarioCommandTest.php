@@ -33,23 +33,17 @@ class UsuarioCommandTest extends TestCase
     protected function setUp(): void
     {
         $this->testDb = TestDatabase::getInstance();
-        $this->testDb->cleanDatabase(); // Limpiar antes de cada test
+        $this->testDb->cleanDatabase();
         
         $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
     }
     
-    /**
-     * Generar CI único para evitar duplicados
-     */
     private function generarCiUnico(): string
     {
-        return time() . rand(1000, 9999);
+        return '1' . time() . rand(1000, 9999);
     }
     
-    /**
-     * Generar email único
-     */
     private function generarEmailUnico(string $base = 'test'): string
     {
         return $base . '_' . time() . '_' . rand(1000, 9999) . '@test.com';
@@ -62,11 +56,14 @@ class UsuarioCommandTest extends TestCase
     {
         $handler = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
         
+        $ci = $this->generarCiUnico();
+        $email = $this->generarEmailUnico('juan');
+        
         $command = new RegistrarUsuarioCommand(
             'Juan',
             'Perez',
-            $this->generarCiUnico(),
-            $this->generarEmailUnico('juan'),
+            $ci,
+            $email,
             'password123',
             'Usuario'
         );
@@ -78,6 +75,7 @@ class UsuarioCommandTest extends TestCase
         $usuario = $this->usuarioRepository->findById($userId);
         $this->assertNotNull($usuario);
         $this->assertEquals('Juan', $usuario->getNombre());
+        $this->assertEquals('Perez', $usuario->getApellido());
     }
     
     /**
@@ -119,10 +117,14 @@ class UsuarioCommandTest extends TestCase
         $registrarCommand = new RegistrarUsuarioCommand(
             'Juan', 'Perez', $ci, $email, 'password123', 'Usuario'
         );
-        $registrarHandler->handle($registrarCommand);
+        $userId = $registrarHandler->handle($registrarCommand);
+        
+        // Obtener el usuario para conocer el usuario_asignado generado
+        $usuario = $this->usuarioRepository->findById($userId);
+        $usuarioAsignado = $usuario->getUsuarioAsignado();
         
         $loginHandler = new LoginHandler($this->usuarioRepository);
-        $loginCommand = new LoginCommand('juanperez', 'password123');
+        $loginCommand = new LoginCommand($usuarioAsignado, 'password123');
         
         $resultado = $loginHandler->handle($loginCommand);
         
@@ -137,7 +139,7 @@ class UsuarioCommandTest extends TestCase
     public function testLoginUsuarioIncorrecto(): void
     {
         $loginHandler = new LoginHandler($this->usuarioRepository);
-        $loginCommand = new LoginCommand('usuariofalso', 'password123');
+        $loginCommand = new LoginCommand('usuariofalso_' . time(), 'password123');
         
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Credenciales inválidas');
@@ -158,10 +160,13 @@ class UsuarioCommandTest extends TestCase
         $registrarCommand = new RegistrarUsuarioCommand(
             'Juan', 'Perez', $ci, $email, 'password123', 'Usuario'
         );
-        $registrarHandler->handle($registrarCommand);
+        $userId = $registrarHandler->handle($registrarCommand);
+        
+        $usuario = $this->usuarioRepository->findById($userId);
+        $usuarioAsignado = $usuario->getUsuarioAsignado();
         
         $loginHandler = new LoginHandler($this->usuarioRepository);
-        $loginCommand = new LoginCommand('juanperez', 'contraseñaincorrecta');
+        $loginCommand = new LoginCommand($usuarioAsignado, 'contraseñaincorrecta');
         
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Credenciales inválidas');
@@ -182,7 +187,10 @@ class UsuarioCommandTest extends TestCase
         $registrarCommand = new RegistrarUsuarioCommand(
             'Juan', 'Perez', $ci, $email, 'password123', 'Usuario'
         );
-        $registrarHandler->handle($registrarCommand);
+        $userId = $registrarHandler->handle($registrarCommand);
+        
+        $usuario = $this->usuarioRepository->findById($userId);
+        $usuarioAsignado = $usuario->getUsuarioAsignado();
         
         $recuperarHandler = new RecuperarContrasenaHandler($this->usuarioRepository);
         $recuperarCommand = new RecuperarContrasenaCommand($email, 'nuevapassword456');
@@ -190,7 +198,7 @@ class UsuarioCommandTest extends TestCase
         
         // Verificar login con nueva contraseña
         $loginHandler = new LoginHandler($this->usuarioRepository);
-        $loginCommand = new LoginCommand('juanperez', 'nuevapassword456');
+        $loginCommand = new LoginCommand($usuarioAsignado, 'nuevapassword456');
         $resultado = $loginHandler->handle($loginCommand);
         
         $this->assertIsArray($resultado);
@@ -204,7 +212,6 @@ class UsuarioCommandTest extends TestCase
     {
         $handler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
         
-        // Usar email y CI únicos para evitar conflicto con admin existente
         $ci = $this->generarCiUnico();
         $email = $this->generarEmailUnico('admin_new');
         
@@ -213,7 +220,7 @@ class UsuarioCommandTest extends TestCase
             'Test',
             $ci,
             $email,
-            'admin_nuevo_user',
+            'admin_nuevo_' . time(),
             'admin123',
             'Administrador',
             'Activo'
@@ -248,6 +255,7 @@ class UsuarioCommandTest extends TestCase
         
         $usuario = $this->usuarioRepository->findById($userId);
         $this->assertFalse($usuario->estaActivo());
+        $this->assertEquals('Inactivo', $usuario->getEstado()->value());
     }
     
     /**
@@ -267,12 +275,15 @@ class UsuarioCommandTest extends TestCase
         
         $actualizarHandler = new ActualizarPerfilHandler($this->usuarioRepository, $this->passwordHasher);
         
+        $nuevaCi = $this->generarCiUnico();
+        $nuevoEmail = $this->generarEmailUnico('nuevoemail');
+        
         $actualizarCommand = new ActualizarPerfilCommand(
             $userId->value(),
             'Juan Carlos',
             'Perez Gomez',
-            $this->generarEmailUnico('nuevoemail'),
-            $this->generarCiUnico(),
+            $nuevoEmail,
+            $nuevaCi,
             'Usuario',
             'Activo',
             null,
@@ -284,5 +295,6 @@ class UsuarioCommandTest extends TestCase
         $usuario = $this->usuarioRepository->findById($userId);
         $this->assertEquals('Juan Carlos', $usuario->getNombre());
         $this->assertEquals('Perez Gomez', $usuario->getApellido());
+        $this->assertEquals($nuevaCi, $usuario->getCi());
     }
 }
