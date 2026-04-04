@@ -1,3 +1,6 @@
+CREATE USER 'recrea_user'@'localhost' IDENTIFIED BY 'recrea_pass123';
+GRANT ALL PRIVILEGES ON bd_recrea_sys.* TO 'recrea_user'@'localhost';
+FLUSH PRIVILEGES;
 -- Seleccionar base de datos principal
 USE `bd_recrea_sys`;
 CREATE DATABASE IF NOT EXISTS bd_recrea_sys;

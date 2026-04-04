@@ -192,14 +192,12 @@ class EnvManager
     public static function getDatabaseName(): string
     {
         if (self::isTesting()) {
-            return self::get('DB_NAME_TEST', self::get('DB_NAME', 'bd_recrea_sys_test'));
+            return self::get('DB_NAME_TEST', self::get('DB_NAME'));
         }
         return self::get('DB_NAME', 'bd_recrea_sys');
     }
 }
 
-// Cargar variables de entorno inmediatamente
-EnvManager::load();
 
 // Definir constantes útiles para acceso rápido
 if (!defined('APP_ENV')) {
@@ -214,18 +212,7 @@ if (!defined('APP_URL')) {
     define('APP_URL', EnvManager::get('APP_URL', 'http://localhost:8000'));
 }
 
-if (!defined('DB_HOST')) {
-    define('DB_HOST', EnvManager::get('DB_HOST', 'localhost'));
-}
-
-if (!defined('DB_USER')) {
-    define('DB_USER', EnvManager::get('DB_USER', 'root'));
-}
-
-if (!defined('DB_PASS')) {
-    define('DB_PASS', EnvManager::get('DB_PASS', ''));
-}
-
-if (!defined('DB_NAME')) {
-    define('DB_NAME', EnvManager::getDatabaseName());
-}
+define('DB_HOST', EnvManager::get('DB_HOST'));
+define('DB_USER', EnvManager::get('DB_USER'));
+define('DB_PASS', EnvManager::get('DB_PASS'));
+define('DB_NAME', EnvManager::getDatabaseName());
