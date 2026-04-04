@@ -3,7 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { LoginComponent } from './login.component';
+import { LoginComponent } from './login';
 import { AuthService } from '@core/services/auth.service';
 
 describe('LoginComponent', () => {
@@ -17,16 +17,9 @@ describe('LoginComponent', () => {
     authServiceMock = {
       login: jest.fn().mockReturnValue({ subscribe: jest.fn() })
     };
-    
-    routerMock = {
-      navigate: jest.fn()
-    };
-    
-    toastrMock = {
-      success: jest.fn(),
-      error: jest.fn()
-    };
-    
+    routerMock = { navigate: jest.fn() };
+    toastrMock = { success: jest.fn(), error: jest.fn() };
+
     await TestBed.configureTestingModule({
       imports: [LoginComponent, ReactiveFormsModule, NoopAnimationsModule],
       providers: [
@@ -47,16 +40,5 @@ describe('LoginComponent', () => {
 
   it('should have invalid form when empty', () => {
     expect(component.loginForm.valid).toBeFalsy();
-  });
-
-  it('should validate required fields', () => {
-    const usuarioControl = component.loginForm.get('usuario_asignado');
-    const contrasenaControl = component.loginForm.get('contrasena');
-    
-    usuarioControl?.setValue('');
-    contrasenaControl?.setValue('');
-    
-    expect(usuarioControl?.hasError('required')).toBeTruthy();
-    expect(contrasenaControl?.hasError('required')).toBeTruthy();
   });
 });

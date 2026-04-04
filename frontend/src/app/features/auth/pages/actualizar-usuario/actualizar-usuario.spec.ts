@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { RecuperarContrasenaComponent } from './recuperar-contrasena';
+import { ActualizarUsuarioComponent } from './actualizar-usuario';
 
-describe('RecuperarContrasenaComponent', () => {
-  let component: RecuperarContrasenaComponent;
-  let fixture: ComponentFixture<RecuperarContrasenaComponent>;
+describe('ActualizarUsuarioComponent', () => {
+  let component: ActualizarUsuarioComponent;
+  let fixture: ComponentFixture<ActualizarUsuarioComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RecuperarContrasenaComponent, ReactiveFormsModule, NoopAnimationsModule]
+      imports: [ActualizarUsuarioComponent, ReactiveFormsModule, NoopAnimationsModule]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RecuperarContrasenaComponent);
+    fixture = TestBed.createComponent(ActualizarUsuarioComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -12,6 +12,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '@core/services/user.service';
@@ -27,74 +28,11 @@ import { UserService } from '@core/services/user.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule
   ],
-  template: `
-    <div class="recuperacion-container">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>
-            <h2>Recuperar Usuario</h2>
-          </mat-card-title>
-        </mat-card-header>
-        
-        <mat-card-content>
-          <form [formGroup]="recuperacionForm" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Correo electrónico registrado</mat-label>
-              <input matInput formControlName="email" placeholder="ejemplo@correo.com" type="email">
-              <mat-icon matPrefix>email</mat-icon>
-              <mat-error *ngIf="recuperacionForm.get('email')?.hasError('required')">
-                Email requerido
-              </mat-error>
-              <mat-error *ngIf="recuperacionForm.get('email')?.hasError('email')">
-                Email inválido
-              </mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nuevo usuario</mat-label>
-              <input matInput formControlName="nuevo_usuario" placeholder="Elija un nuevo nombre de usuario">
-              <mat-icon matPrefix>account_circle</mat-icon>
-              <mat-error *ngIf="recuperacionForm.get('nuevo_usuario')?.hasError('required')">
-                Nuevo usuario requerido
-              </mat-error>
-              <mat-error *ngIf="recuperacionForm.get('nuevo_usuario')?.hasError('maxlength')">
-                Máximo 15 caracteres
-              </mat-error>
-            </mat-form-field>
-
-            <div class="form-actions">
-              <button mat-raised-button color="primary" type="submit" [disabled]="recuperacionForm.invalid || loading">
-                <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-                <span *ngIf="!loading">Actualizar usuario</span>
-              </button>
-              <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .recuperacion-container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-    
-    .full-width {
-      width: 100%;
-      margin-bottom: 1rem;
-    }
-    
-    .form-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 1.5rem;
-    }
-  `]
+  templateUrl: './recuperar-usuario.html',
+  styleUrls: ['./recuperar-usuario.css']
 })
 export class RecuperarUsuarioComponent {
   private fb = inject(FormBuilder);

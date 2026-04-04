@@ -1,0 +1,158 @@
+<div class="editar-usuario-container">
+  <app-admin-header></app-admin-header>
+  
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>{{ modo === 'actualizar' ? 'Editar Usuario' : 'Cambiar Estado de Usuario' }}</h2>
+    </div>
+
+    <mat-card>
+      <mat-card-content>
+        <div *ngIf="loading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando datos del usuario...</p>
+        </div>
+
+        <div *ngIf="error" class="error-message">
+          {{ error }}
+        </div>
+
+        <div *ngIf="!loading && usuario">
+          <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
+            <!-- Modo Actualizar -->
+            <ng-container *ngIf="modo === 'actualizar'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="nombre">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('required')">
+                  Nombre requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Apellido</mat-label>
+                <input matInput formControlName="apellido">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="usuarioForm.get('apellido')?.hasError('required')">
+                  Apellido requerido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cédula</mat-label>
+                <input matInput formControlName="ci">
+                <mat-icon matPrefix>badge</mat-icon>
+                <mat-error *ngIf="usuarioForm.get('ci')?.hasError('required')">
+                  Cédula requerida
+                </mat-error>
+                <mat-error *ngIf="usuarioForm.get('ci')?.hasError('pattern')">
+                  Cédula debe tener 10 dígitos
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="email" type="email">
+                <mat-icon matPrefix>email</mat-icon>
+                <mat-error *ngIf="usuarioForm.get('email')?.hasError('required')">
+                  Email requerido
+                </mat-error>
+                <mat-error *ngIf="usuarioForm.get('email')?.hasError('email')">
+                  Email inválido
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Usuario Asignado</mat-label>
+                <input matInput formControlName="usuario_asignado">
+                <mat-icon matPrefix>account_circle</mat-icon>
+                <mat-error *ngIf="usuarioForm.get('usuario_asignado')?.hasError('required')">
+                  Usuario requerido
+                </mat-error>
+                <mat-error *ngIf="usuarioForm.get('usuario_asignado')?.hasError('maxlength')">
+                  Máximo 15 caracteres
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tipo de Usuario</mat-label>
+                <mat-select formControlName="tipo">
+                  <mat-option value="Administrador">Administrador del sistema</mat-option>
+                  <mat-option value="Contabilidad">Contabilidad</mat-option>
+                  <mat-option value="Logistica">Logística</mat-option>
+                  <mat-option value="Tecnico">Técnico</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>work</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width" *ngIf="usuarioForm.get('tipo')?.value === 'Tecnico'">
+                <mat-label>Especialidad</mat-label>
+                <mat-select formControlName="especialidad">
+                  <mat-option value="Ensamblador">Ensamblador</mat-option>
+                  <mat-option value="Comprobador">Comprobador</mat-option>
+                  <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>build</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nueva Contraseña (opcional)</mat-label>
+                <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+                <mat-icon matPrefix>lock</mat-icon>
+                <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+                  {{hidePassword ? 'visibility_off' : 'visibility'}}
+                </mat-icon>
+                <mat-hint>Dejar vacío para mantener la contraseña actual</mat-hint>
+                <mat-error *ngIf="usuarioForm.get('contrasena')?.hasError('minlength')">
+                  Mínimo 8 caracteres
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Estado Actual</mat-label>
+                <input matInput [value]="usuario.estado" readonly disabled>
+                <mat-icon matPrefix>info</mat-icon>
+              </mat-form-field>
+            </ng-container>
+
+            <!-- Modo Estado -->
+            <ng-container *ngIf="modo === 'estado'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Estado Actual</mat-label>
+                <input matInput [value]="usuario.estado" readonly disabled>
+                <mat-icon matPrefix>info</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nuevo Estado</mat-label>
+                <mat-select formControlName="estado">
+                  <mat-option value="Activo">Activo</mat-option>
+                  <mat-option value="Inhabilitado">Inhabilitado</mat-option>
+                  <mat-option value="Pendiente de asignacion">Pendiente de asignación</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>toggle_on</mat-icon>
+              </mat-form-field>
+            </ng-container>
+
+            <div class="form-actions">
+              <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+                <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+                <span *ngIf="!submitting">Guardar Cambios</span>
+              </button>
+              <button mat-button type="button" (click)="regresar()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+
+        <div *ngIf="success" class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          <p>¡Operación realizada correctamente! Redirigiendo...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

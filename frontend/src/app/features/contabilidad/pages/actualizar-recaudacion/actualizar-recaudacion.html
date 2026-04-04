@@ -1,0 +1,92 @@
+<div class="actualizar-container">
+  <app-admin-header></app-admin-header>
+  
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>Actualizar Recaudación</h2>
+    </div>
+
+    <mat-card>
+      <mat-card-content>
+        <div *ngIf="loading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando datos...</p>
+        </div>
+        <div *ngIf="error" class="error-message">{{ error }}</div>
+
+        <div *ngIf="!loading && recaudacion">
+          <form [formGroup]="recaudacionForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Máquina</mat-label>
+              <mat-select formControlName="ID_Maquina" disabled>
+                <mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>videogame_asset</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Tipo de Comercio</mat-label>
+              <input matInput formControlName="Tipo_Comercio" readonly>
+              <mat-icon matPrefix>store</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Monto Total</mat-label>
+              <input matInput type="number" step="0.01" formControlName="Monto_Total">
+              <mat-icon matPrefix>attach_money</mat-icon>
+              <mat-error *ngIf="recaudacionForm.get('Monto_Total')?.hasError('required')">Monto total requerido</mat-error>
+              <mat-error *ngIf="recaudacionForm.get('Monto_Total')?.hasError('min')">Monto debe ser mayor a 0</mat-error>
+            </mat-form-field>
+
+            <div *ngIf="recaudacionForm.get('Tipo_Comercio')?.value === 'Mayorista'">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Porcentaje para Comercio (%)</mat-label>
+                <input matInput type="number" step="0.01" formControlName="Porcentaje_Comercio">
+                <mat-icon matPrefix>percent</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Monto para Comercio</mat-label>
+                <input matInput formControlName="Monto_Comercio" readonly>
+                <mat-icon matPrefix>store</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Monto para Empresa</mat-label>
+                <input matInput formControlName="Monto_Empresa" readonly>
+                <mat-icon matPrefix>business</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Fecha y Hora</mat-label>
+              <input matInput type="datetime-local" formControlName="fecha">
+              <mat-icon matPrefix>calendar_today</mat-icon>
+              <mat-error *ngIf="recaudacionForm.get('fecha')?.hasError('required')">Fecha requerida</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Detalles</mat-label>
+              <textarea matInput formControlName="detalle" rows="3"></textarea>
+              <mat-icon matPrefix>description</mat-icon>
+            </mat-form-field>
+
+            <div class="form-actions">
+              <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+                <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+                <span *ngIf="!submitting">Actualizar Recaudación</span>
+              </button>
+              <button mat-button type="button" (click)="regresar()">Cancelar</button>
+            </div>
+          </form>
+        </div>
+
+        <div *ngIf="success" class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          <p>¡Recaudación actualizada correctamente! Redirigiendo...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

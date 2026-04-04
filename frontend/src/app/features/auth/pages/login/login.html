@@ -1,0 +1,59 @@
+<div class="login-page">
+  <header>
+    <h1>Bienvenido a Recrea Sys</h1>
+    <nav>
+      <a routerLink="/auth/login">Iniciar sesión</a>
+      <button mat-button (click)="irARegistro()" class="btn-trabajar">
+        ¿QUIERES TRABAJAR CON NOSOTROS?
+      </button>
+    </nav>
+  </header>
+
+  <main class="pantalla_completa">
+    <div class="contenedor_todo">
+      <button class="boton-info-sistema" (click)="irAInformacion()" title="Información del sistema">
+        Información del sistema
+      </button>
+
+      <div class="contenedor_login_register">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="formulario_login">
+          <h2>Iniciar Sesión</h2>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Usuario asignado</mat-label>
+            <input matInput formControlName="usuario_asignado" placeholder="Ingrese su usuario">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="loginForm.get('usuario_asignado')?.hasError('required')">
+              Usuario requerido
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('usuario_asignado')?.hasError('maxlength')">
+              Máximo 15 caracteres
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+              {{hidePassword ? 'visibility_off' : 'visibility'}}
+            </mat-icon>
+            <mat-error *ngIf="loginForm.get('contrasena')?.hasError('required')">
+              Contraseña requerida
+            </mat-error>
+          </mat-form-field>
+
+          <div class="enlaces_recuperacion">
+            <a routerLink="/auth/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
+            <a routerLink="/auth/recuperar-usuario">¿Olvidaste tu usuario?</a>
+          </div>
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || loading" class="full-width">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">Entrar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>

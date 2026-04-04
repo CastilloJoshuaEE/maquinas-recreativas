@@ -1,0 +1,129 @@
+<div class="registrar-usuario-container">
+  <app-admin-header></app-admin-header>
+  
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>Registrar Nuevo Usuario</h2>
+    </div>
+
+    <mat-stepper [linear]="true" #stepper>
+      <!-- Paso 1 -->
+      <mat-step [stepControl]="personalForm">
+        <form [formGroup]="personalForm">
+          <ng-template matStepLabel>Información Personal</ng-template>
+          <div class="step-content">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="nombre">
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Apellido</mat-label>
+              <input matInput formControlName="apellido">
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Cédula</mat-label>
+              <input matInput formControlName="ci" maxlength="10">
+              <mat-icon matPrefix>badge</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email">
+              <mat-icon matPrefix>email</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="step-actions">
+            <button mat-button matStepperNext [disabled]="personalForm.invalid">Siguiente</button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Paso 2 -->
+      <mat-step [stepControl]="credencialesForm">
+        <form [formGroup]="credencialesForm">
+          <ng-template matStepLabel>Credenciales</ng-template>
+          <div class="step-content">
+            <mat-form-field appearance="outline">
+              <mat-label>Usuario Asignado</mat-label>
+              <input matInput formControlName="usuario_asignado">
+              <mat-icon matPrefix>account_circle</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Contraseña</mat-label>
+              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+              <mat-icon matPrefix>lock</mat-icon>
+              <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+                {{hidePassword ? 'visibility_off' : 'visibility'}}
+              </mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Confirmar Contraseña</mat-label>
+              <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmar_contrasena">
+              <mat-icon matPrefix>lock</mat-icon>
+              <mat-icon matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
+                {{hideConfirmPassword ? 'visibility_off' : 'visibility'}}
+              </mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>Atrás</button>
+            <button mat-button matStepperNext [disabled]="credencialesForm.invalid">Siguiente</button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Paso 3 -->
+      <mat-step [stepControl]="rolForm">
+        <form [formGroup]="rolForm">
+          <ng-template matStepLabel>Rol y Configuración</ng-template>
+          <div class="step-content">
+            <mat-form-field appearance="outline">
+              <mat-label>Tipo de Usuario</mat-label>
+              <mat-select formControlName="tipo">
+                <mat-option value="Administrador">Administrador</mat-option>
+                <mat-option value="Contabilidad">Contabilidad</mat-option>
+                <mat-option value="Logistica">Logística</mat-option>
+                <mat-option value="Tecnico">Técnico</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>work</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="rolForm.get('tipo')?.value === 'Tecnico'">
+              <mat-label>Especialidad</mat-label>
+              <mat-select formControlName="especialidad">
+                <mat-option value="Ensamblador">Ensamblador</mat-option>
+                <mat-option value="Comprobador">Comprobador</mat-option>
+                <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>build</mat-icon>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Estado</mat-label>
+              <mat-select formControlName="estado">
+                <mat-option value="Activo">Activo</mat-option>
+                <mat-option value="Inhabilitado">Inhabilitado</mat-option>
+                <mat-option value="Pendiente de asignacion">Pendiente</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>toggle_on</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>Atrás</button>
+            <button mat-raised-button color="primary" [disabled]="rolForm.invalid || submitting" (click)="registrarUsuario(stepper)">
+              <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+              <span *ngIf="!submitting">Registrar Usuario</span>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+    </mat-stepper>
+
+    <div *ngIf="success" class="success-message">
+      <mat-icon>check_circle</mat-icon>
+      <p>¡Usuario registrado correctamente! Redirigiendo...</p>
+    </div>
+  </div>
+</div>

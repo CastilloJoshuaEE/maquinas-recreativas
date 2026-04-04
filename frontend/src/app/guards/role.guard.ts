@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 
 /**
  * Guard que verifica si el usuario tiene el rol permitido

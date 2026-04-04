@@ -1,0 +1,63 @@
+<div class="recuperacion-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <h2>Recuperar Contraseña</h2>
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="recuperacionForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Correo electrónico registrado</mat-label>
+          <input matInput formControlName="email" placeholder="ejemplo@correo.com" type="email">
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-error *ngIf="recuperacionForm.get('email')?.hasError('required')">
+            Email requerido
+          </mat-error>
+          <mat-error *ngIf="recuperacionForm.get('email')?.hasError('email')">
+            Email inválido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nueva contraseña</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="nueva_contrasena">
+          <mat-icon matPrefix>lock</mat-icon>
+          <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+            {{hidePassword ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
+          <mat-error *ngIf="recuperacionForm.get('nueva_contrasena')?.hasError('required')">
+            Nueva contraseña requerida
+          </mat-error>
+          <mat-error *ngIf="recuperacionForm.get('nueva_contrasena')?.hasError('minlength')">
+            Mínimo 8 caracteres
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Repetir contraseña</mat-label>
+          <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="repetir_contrasena">
+          <mat-icon matPrefix>lock</mat-icon>
+          <mat-icon matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
+            {{hideConfirmPassword ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
+          <mat-error *ngIf="recuperacionForm.get('repetir_contrasena')?.hasError('required')">
+            Confirmar contraseña requerida
+          </mat-error>
+          <mat-error *ngIf="recuperacionForm.hasError('passwordMismatch')">
+            Las contraseñas no coinciden
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="recuperacionForm.invalid || loading">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">Actualizar contraseña</span>
+          </button>
+          <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,31 @@
+<div class="dashboard-container">
+  <app-admin-header></app-admin-header>
+  
+  <div class="admin-content">
+    <div class="admin-cards-container">
+      <mat-card class="admin-card" (click)="irAGestionUsuarios()">
+        <mat-card-content>
+          <div class="card-icon">👥</div>
+          <h3>Gestión de Usuarios</h3>
+          <p>Administrar usuarios del sistema</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="admin-card" (click)="irARegistrarUsuario()">
+        <mat-card-content>
+          <div class="card-icon">👤</div>
+          <h3>Registrar Usuario</h3>
+          <p>Crear un nuevo usuario</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="admin-card" (click)="irAConsultarUsuarios()">
+        <mat-card-content>
+          <div class="card-icon">📋</div>
+          <h3>Consultar Usuarios</h3>
+          <p>Ver, editar y eliminar usuarios</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

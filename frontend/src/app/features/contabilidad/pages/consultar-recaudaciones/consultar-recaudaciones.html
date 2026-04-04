@@ -1,0 +1,51 @@
+<div class="consultar-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button"><mat-icon>arrow_back</mat-icon></button>
+      <h2>Consultar Recaudaciones</h2>
+    </div>
+
+    <div class="filtros-container">
+      <form [formGroup]="filtrosForm" class="filtros-form">
+        <mat-form-field appearance="outline"><mat-label>Fecha Inicio</mat-label><input matInput [matDatepicker]="pickerInicio" formControlName="fecha_inicio"><mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle><mat-datepicker #pickerInicio></mat-datepicker><mat-icon matPrefix>calendar_today</mat-icon></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Fecha Fin</mat-label><input matInput [matDatepicker]="pickerFin" formControlName="fecha_fin"><mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle><mat-datepicker #pickerFin></mat-datepicker><mat-icon matPrefix>calendar_today</mat-icon></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Máquina</mat-label><mat-select formControlName="ID_Maquina"><mat-option value="">Todas</mat-option><mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option></mat-select><mat-icon matPrefix>videogame_asset</mat-icon></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Tipo Comercio</mat-label><mat-select formControlName="Tipo_Comercio"><mat-option value="">Todos</mat-option><mat-option value="Minorista">Minorista</mat-option><mat-option value="Mayorista">Mayorista</mat-option></mat-select><mat-icon matPrefix>store</mat-icon></mat-form-field>
+        <div class="filter-actions">
+          <button mat-raised-button color="primary" (click)="buscarRecaudaciones()" [disabled]="loading"><mat-icon>search</mat-icon> Buscar</button>
+          <button mat-raised-button (click)="limpiarFiltros()" [disabled]="loading"><mat-icon>clear</mat-icon> Limpiar</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="tabla-container">
+      <div *ngIf="loading" class="loading-container"><mat-spinner diameter="40"></mat-spinner><p>Cargando recaudaciones...</p></div>
+      <div *ngIf="!loading && error" class="error-message">{{ error }}</div>
+      <div *ngIf="!loading && !error">
+        <div class="table-header"><h3>Resultados ({{ dataSource.data.length }})</h3></div>
+        <div class="mat-elevation-z8">
+          <table mat-table [dataSource]="dataSource" matSort>
+            <ng-container matColumnDef="Nombre_Comercio"><th mat-header-cell *matHeaderCellDef mat-sort-header>Comercio</th><td mat-cell *matCellDef="let row">{{row.Nombre_Comercio}}</td></ng-container>
+            <ng-container matColumnDef="Nombre_Maquina"><th mat-header-cell *matHeaderCellDef mat-sort-header>Máquina</th><td mat-cell *matCellDef="let row">{{row.Nombre_Maquina}}</td></ng-container>
+            <ng-container matColumnDef="Tipo_Comercio"><th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th><td mat-cell *matCellDef="let row"><span class="tipo-badge" [ngClass]="{'minorista': row.Tipo_Comercio === 'Minorista', 'mayorista': row.Tipo_Comercio === 'Mayorista'}">{{row.Tipo_Comercio}}</span></td></ng-container>
+            <ng-container matColumnDef="Monto_Total"><th mat-header-cell *matHeaderCellDef mat-sort-header>Monto Total</th><td mat-cell *matCellDef="let row" class="monto-total">${{row.Monto_Total | number:'1.2-2'}}</td></ng-container>
+            <ng-container matColumnDef="Monto_Empresa"><th mat-header-cell *matHeaderCellDef mat-sort-header>Monto Empresa</th><td mat-cell *matCellDef="let row" class="monto-empresa">${{row.Monto_Empresa | number:'1.2-2'}}</td></ng-container>
+            <ng-container matColumnDef="fecha"><th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th><td mat-cell *matCellDef="let row">{{row.fecha | date:'dd/MM/yyyy HH:mm'}}</td></ng-container>
+            <ng-container matColumnDef="detalle"><th mat-header-cell *matHeaderCellDef>Detalles</th><td mat-cell *matCellDef="let row">{{row.detalle || '-'}}</td></ng-container>
+            <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let row">
+              <button mat-icon-button color="primary" (click)="verInforme(row)" matTooltip="Ver Informe" *ngIf="row.ID_Informe"><mat-icon>description</mat-icon></button>
+              <button mat-icon-button color="accent" (click)="levantarInforme(row)" matTooltip="Levantar Informe" *ngIf="!row.ID_Informe"><mat-icon>post_add</mat-icon></button>
+              <button mat-icon-button color="primary" (click)="editarRecaudacion(row)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button color="warn" (click)="eliminarRecaudacion(row)" matTooltip="Eliminar"><mat-icon>delete</mat-icon></button>
+            </td></ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></table>
+          </table>
+          <mat-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20,50,100]" (page)="onPageChange($event)"></mat-paginator>
+        </div>
+        <div *ngIf="dataSource.data.length === 0" class="no-results"><mat-icon>info</mat-icon><p>No se encontraron recaudaciones</p></div>
+      </div>
+    </div>
+  </div>
+</div>

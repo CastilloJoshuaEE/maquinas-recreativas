@@ -1,0 +1,110 @@
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%);
+}
+
+header {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  color: #2c3e50;
+  margin: 0;
+}
+
+.pantalla_completa {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.contenedor_todo {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1100px;
+  padding: 1rem;
+  position: relative;
+}
+
+.contenedor_login_register {
+  flex: 1;
+  max-width: 450px;
+}
+
+.formulario_login {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  color: white;
+}
+
+.formulario_login h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.enlaces_recuperacion {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.enlaces_recuperacion a {
+  color: #4f6bed;
+  text-decoration: none;
+}
+
+.enlaces_recuperacion a:hover {
+  text-decoration: underline;
+}
+
+.boton-info-sistema {
+  position: absolute;
+  bottom: -60px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  cursor: pointer;
+}
+
+.btn-trabajar {
+  background: #4f6bed;
+  color: white;
+  margin-left: 1rem;
+}
+
+@media (max-width: 850px) {
+  .contenedor_todo {
+    flex-direction: column;
+    align-items: center;
+  }
+  .boton-info-sistema {
+    position: static;
+    margin-top: 1rem;
+  }
+}

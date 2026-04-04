@@ -1,0 +1,112 @@
+<div class="registro-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <h2>Formulario de Registro</h2>
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="registroForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre">
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Apellido</mat-label>
+          <input matInput formControlName="apellido">
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Cédula (CI)</mat-label>
+          <input matInput formControlName="ci" maxlength="10">
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput formControlName="email" type="email">
+          <mat-icon matPrefix>email</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Área donde hay vacantes</mat-label>
+          <mat-select formControlName="tipo">
+            <mat-option value="Logistica">Área de Logística</mat-option>
+            <mat-option value="Tecnico">Técnico</mat-option>
+            <mat-option value="Contabilidad">Área de Contabilidad</mat-option>
+            <mat-option value="Administrador">Administrador del sistema</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>work</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width" *ngIf="registroForm.get('tipo')?.value === 'Tecnico'">
+          <mat-label>Especialidad</mat-label>
+          <mat-select formControlName="especialidad">
+            <mat-option value="Ensamblador">Ensamblador</mat-option>
+            <mat-option value="Comprobador">Comprobador</mat-option>
+            <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+          </mat-select>
+          <mat-icon matPrefix>build</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre de usuario</mat-label>
+          <input matInput formControlName="usuario_asignado">
+          <mat-icon matPrefix>account_circle</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+          <mat-icon matPrefix>lock</mat-icon>
+          <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+            {{hidePassword ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
+        </mat-form-field>
+
+        <div class="file-upload">
+          <label class="file-label">
+            <mat-icon>attach_file</mat-icon>
+            Subir Currículum (PDF)
+            <input type="file" accept=".pdf" (change)="onFileSelected($event)" hidden>
+          </label>
+          <span *ngIf="fileName" class="file-name">{{ fileName }}</span>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="registroForm.invalid || loading">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">Registrar</span>
+          </button>
+          <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <section class="requisitos-postulante">
+    <h2>¿Qué buscamos en nuestros postulantes?</h2>
+    <div class="requisitos-tipos">
+      <div class="requisito-card">
+        <h3>🛠 Técnico</h3>
+        <ul><li>Conocimiento en mantenimiento de hardware o electrónica básica</li></ul>
+      </div>
+      <div class="requisito-card">
+        <h3>📦 Logística</h3>
+        <ul><li>Buena comunicación con técnicos y contabilidad</li></ul>
+      </div>
+      <div class="requisito-card">
+        <h3>💰 Contabilidad</h3>
+        <ul><li>Conocimiento en manejo de recaudaciones por máquina</li></ul>
+      </div>
+      <div class="requisito-card">
+        <h3>🧠 Administrador del sistema</h3>
+        <ul><li>Conocimientos técnicos y administrativos del sistema web</li></ul>
+      </div>
+    </div>
+  </section>
+</div>
