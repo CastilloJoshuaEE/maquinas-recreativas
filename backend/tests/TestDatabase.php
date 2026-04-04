@@ -112,7 +112,7 @@ class TestDatabase extends Database
         $this->connection->query("CREATE TABLE historial_actividades (
             ID_Historial_Actividades CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ID_Usuario CHAR(36) NOT NULL,
-            descripcion TEXT DEFAULT 'Estuvo en su main',
+            descripcion TEXT NOT NULL,
             fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
         )");

@@ -9,23 +9,36 @@
  * @author Tu Equipo
  * @version 1.0
  */
-$envPath = __DIR__ .'/../.env';
-if(!file_exists($envPath)) {
-    die("Error: Archivo .env no encontrado en:".$envPath);
+require_once __DIR__ . '/../Config/env.php';
+
+// Asegurar que se carguen las variables
+EnvManager::load();
+
+// Definir constantes globales (opcional pero útil)
+if (!defined('APP_ENV')) {
+    define('APP_ENV', EnvManager::get('APP_ENV', 'production'));
 }
-$env= parse_ini_file($envPath);
-if($env===false) {
-    die("Error: No se pudo parsear el archivo .env");
+
+if (!defined('APP_DEBUG')) {
+    define('APP_DEBUG', EnvManager::get('APP_DEBUG', false));
 }
-// Definir constantes de entorno
-foreach($env as $key=>$value) {
-    if(!defined($key)) {
-        define($key,$value);
-    }
-    putenv("$key=$value");
-    $_ENV[$key]=$value;
+
+if (!defined('DB_HOST')) {
+    define('DB_HOST', EnvManager::get('DB_HOST', 'mysql'));
 }
-// Entorno actual
-if(!defined('APP_ENV')){
-    define('APP_ENV', $env['APP_ENV'] ?? 'production');
+
+if (!defined('DB_PORT')) {
+    define('DB_PORT', EnvManager::get('DB_PORT', 3306));
+}
+
+if (!defined('DB_NAME')) {
+    define('DB_NAME', EnvManager::getDatabaseName());
+}
+
+if (!defined('DB_USER')) {
+    define('DB_USER', EnvManager::get('DB_USER', 'root'));
+}
+
+if (!defined('DB_PASS')) {
+    define('DB_PASS', EnvManager::get('DB_PASS', ''));
 }

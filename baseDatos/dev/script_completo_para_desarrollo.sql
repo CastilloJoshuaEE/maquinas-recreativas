@@ -1,3 +1,5 @@
+-- Seleccionar base de datos principal
+USE `bd_recrea_sys`;
 CREATE DATABASE IF NOT EXISTS bd_recrea_sys;
 USE bd_recrea_sys;
 -- DROP DATABASE bd_recrea_sys;
@@ -43,7 +45,7 @@ CREATE TABLE Logistica(
 CREATE TABLE historial_actividades (
     ID_Historial_Actividades CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     ID_Usuario CHAR(36) NOT NULL,
-    descripcion TEXT DEFAULT 'Estuvo en su main',
+    descripcion TEXT NOT NULL,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario)
 );
@@ -65,7 +67,7 @@ CREATE TABLE MaquinaRecreativa (
     Nombre_Maquina VARCHAR(100) NOT NULL,
     Tipo VARCHAR(50) NOT NULL,
     Etapa ENUM('Montaje', 'Distribucion', 'Recaudacion') DEFAULT 'Montaje' NOT NULL,
-    Estado ENUM('Ensamblandose', 'Comprobandose', 'Reensamblandose', 'Distribuyendose', 'Operativa', 'No operativa', 'Retirada') DEFAULT 'Ensamblándose' NOT NULL,
+    Estado ENUM('Ensamblandose', 'Comprobandose', 'Reensamblandose', 'Distribuyendose', 'Operativa', 'No operativa', 'Retirada') DEFAULT 'Ensamblandose' NOT NULL,
     Fecha_Registro DATE NOT NULL,
     ID_Tecnico_Ensamblador CHAR(36) NOT NULL,
     ID_Tecnico_Comprobador CHAR(36) NOT NULL,
