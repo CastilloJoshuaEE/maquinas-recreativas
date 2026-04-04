@@ -482,6 +482,7 @@ use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoEnsambladorControlle
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoComprobadorController;
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoMantenimientoController;
 use maquinas_recreativas\Interfaces\Http\Controllers\LogisticoController;
+use maquinas_recreativas\Infrastructure\Cache\RedisCache;
 
 /**
  * Clase contenedor de dependencias (Service Container)
@@ -531,7 +532,11 @@ $database = new \maquinas_recreativas\Infrastructure\Database\Database();
 Dependencies::register(\maquinas_recreativas\Infrastructure\Database\Database::class, function() use ($database) {
     return $database;
 });
-
+// Registrar RedisCache
+Dependencies::register(RedisCache::class, function() {
+    $redisConfig = require __DIR__ . '/redis.php';
+    return new RedisCache($redisConfig['host'], $redisConfig['port'], $redisConfig['prefix']);
+});
 // Password Hasher
 Dependencies::register(BcryptPasswordHasher::class, function() {
     return new BcryptPasswordHasher();

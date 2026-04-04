@@ -74,3 +74,6 @@ if ($isTestEnvironment && !defined('TEST_ENVIRONMENT')) {
 // 8. INICIALIZAR CONTENEDOR DE DEPENDENCIAS
 // =============================================
 require_once __DIR__ . '/../config/dependencies.php';
+// Cargar Redis y configurar sesiones
+
+require_once __DIR__ . '/redis.php';
