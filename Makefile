@@ -81,3 +81,19 @@ status: ## Ver estado de los servicios
 
 init: build up composer-install ## Inicializar proyecto completo
 	@echo "${GREEN} Proyecto inicializado correctamente${RESET}"
+
+
+redis-cli: ## Conectar a Redis CLI
+	docker exec -it maquinas_recreativas_redis redis-cli
+
+redis-flush: ## Limpiar toda la cache de Redis
+	docker exec -it maquinas_recreativas_redis redis-cli FLUSHDB
+
+redis-keys: ## Ver todas las claves en Redis
+	docker exec -it maquinas_recreativas_redis redis-cli KEYS "maquinas:*"
+
+redis-stats: ## Ver estadísticas de Redis
+	docker exec -it maquinas_recreativas_redis redis-cli INFO stats
+
+redis-monitor: ## Monitorear comandos Redis en tiempo real
+	docker exec -it maquinas_recreativas_redis redis-cli MONITOR

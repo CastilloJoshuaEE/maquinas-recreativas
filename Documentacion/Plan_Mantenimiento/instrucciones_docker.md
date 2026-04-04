@@ -1,3 +1,5 @@
+# ENTORNO EN CMD DE WINDOWS
+
 # 1. estructura
 
 D:\xampp\htdocs\maquinas-recreativas
