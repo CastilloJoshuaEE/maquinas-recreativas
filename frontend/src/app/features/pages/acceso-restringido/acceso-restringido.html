@@ -1,0 +1,21 @@
+<div class="acceso-restringido-container">
+  <div *ngIf="!showReportForm" class="restringido-card">
+    <mat-card>
+      <mat-card-content>
+        <div class="icono"><mat-icon>warning</mat-icon></div>
+        <h1>Acceso Restringido</h1>
+        <div class="user-info" *ngIf="userData">
+          <p><strong>Usuario:</strong> {{ userData.nombre }} {{ userData.apellido }}</p>
+          <p><strong>Cédula:</strong> {{ userData.ci }}</p>
+          <p><strong>Estado:</strong> <span class="estado-badge" [ngClass]="{'estado-inhabilitado': userData.estado === 'Inhabilitado', 'estado-pendiente': userData.estado === 'Pendiente de asignacion'}">{{ userData.estado }}</span></p>
+          <p class="motivo">{{ mensajeMotivo }}</p>
+        </div>
+        <div class="botones-accion">
+          <button mat-raised-button (click)="volverLogin()"><mat-icon>arrow_back</mat-icon> Volver al Login</button>
+          <button mat-raised-button color="primary" (click)="contactarAdmin()" *ngIf="mostrarContacto"><mat-icon>contact_support</mat-icon> Contactar con Administrador</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div *ngIf="showReportForm" class="reporte-container"><app-gestion-reportes></app-gestion-reportes></div>
+</div>

@@ -1,0 +1,16 @@
+.acceso-restringido-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); padding: 2rem; }
+.restringido-card { max-width: 500px; width: 100%; }
+mat-card { background: white; border-radius: 20px; text-align: center; animation: fadeInUp 0.5s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.icono mat-icon { font-size: 4rem; width: auto; height: auto; color: #ffc107; margin-bottom: 1rem; }
+h1 { color: #856404; margin-bottom: 1.5rem; font-size: 1.8rem; }
+.user-info { text-align: left; background: #f8f9fa; padding: 1rem; border-radius: 12px; margin: 1rem 0; }
+.user-info p { margin: 0.5rem 0; color: #555; }
+.user-info strong { color: #333; }
+.estado-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.estado-inhabilitado { background: #f8d7da; color: #721c24; }
+.estado-pendiente { background: #fff3cd; color: #856404; }
+.motivo { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e0e0e0; color: #666; font-style: italic; }
+.botones-accion { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+.reporte-container { width: 100%; max-width: 800px; }
+@media (max-width: 768px) { .acceso-restringido-container { padding: 1rem; } .botones-accion { flex-direction: column; } .botones-accion button { width: 100%; } }

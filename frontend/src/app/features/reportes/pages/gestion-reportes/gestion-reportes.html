@@ -1,0 +1,42 @@
+<div class="gestion-reportes-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header"><button mat-icon-button (click)="regresar()" class="back-button" *ngIf="modoAdmin"><mat-icon>arrow_back</mat-icon></button><h2>{{ esUsuarioInhabilitado ? 'Solicitud de Reactivación' : 'Gestión de Reportes' }}</h2></div>
+    <div *ngIf="statusMessage" class="status-message" [class.error]="isError">{{ statusMessage }}</div>
+    <mat-card class="nuevo-reporte-card">
+      <mat-card-header><mat-card-title><mat-icon>{{ esUsuarioInhabilitado ? 'warning' : 'add_circle' }}</mat-icon>{{ esUsuarioInhabilitado ? 'Solicitar Reactivación de Cuenta' : 'Crear Nuevo Reporte' }}</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <form (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width" *ngIf="!esUsuarioInhabilitado && !modoAdmin"><mat-label>Área del destinatario</mat-label><mat-select [(ngModel)]="nuevoReporte.tipoDestinatario" name="tipoDestinatario" required (selectionChange)="cargarUsuariosPorTipo()"><mat-option value="">Seleccionar área</mat-option><mat-option *ngFor="let tipo of tiposUsuario" [value]="tipo">{{ tipo }}</mat-option></mat-select><mat-icon matPrefix>business</mat-icon></mat-form-field>
+          <mat-form-field appearance="outline" class="full-width" *ngIf="!esUsuarioInhabilitado && !modoAdmin"><mat-label>Destinatario</mat-label><mat-select [(ngModel)]="nuevoReporte.destinatario" name="destinatario" required [disabled]="!nuevoReporte.tipoDestinatario"><mat-option value="">Seleccionar destinatario</mat-option><mat-option *ngFor="let user of usuariosDisponibles" [value]="user.ID_Usuario">{{ user.nombre }} {{ user.apellido }} ({{ user.email }})</mat-option></mat-select><mat-icon matPrefix>person</mat-icon></mat-form-field>
+          <mat-form-field appearance="outline" class="full-width" *ngIf="esUsuarioInhabilitado"><mat-label>Administrador</mat-label><mat-select [(ngModel)]="nuevoReporte.destinatario" name="destinatario" required><mat-option value="">Seleccionar administrador</mat-option><mat-option *ngFor="let admin of administradores" [value]="admin.ID_Usuario">{{ admin.nombre }} {{ admin.apellido }} ({{ admin.email }})</mat-option></mat-select><mat-icon matPrefix>admin_panel_settings</mat-icon></mat-form-field>
+          <mat-form-field appearance="outline" class="full-width"><mat-label>{{ esUsuarioInhabilitado ? 'Explicación para reactivación' : 'Descripción' }}</mat-label><textarea matInput [(ngModel)]="nuevoReporte.descripcion" name="descripcion" rows="4" [placeholder]="esUsuarioInhabilitado ? 'Por favor explique por qué desea reactivar su cuenta...' : 'Describe tu situación...'" required></textarea><mat-icon matPrefix>description</mat-icon></mat-form-field>
+          <div class="form-actions"><button mat-raised-button color="primary" type="submit" [disabled]="enviando"><mat-spinner diameter="20" *ngIf="enviando"></mat-spinner><span *ngIf="!enviando">{{ esUsuarioInhabilitado ? 'Enviar Solicitud' : 'Enviar Reporte' }}</span></button><button mat-button type="button" (click)="regresar()" *ngIf="!modoAdmin">Volver al inicio</button></div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="reportes-list-card" *ngIf="!esUsuarioInhabilitado && !modoAdmin">
+      <mat-card-header><mat-card-title><mat-icon>list_alt</mat-icon> Mis Reportes</mat-card-title><div class="filtros-reportes"><mat-form-field appearance="outline"><mat-label>Filtrar por estado</mat-label><mat-select [(ngModel)]="filtroEstado" (selectionChange)="filtrarReportes()"><mat-option value="todos">Todos</mat-option><mat-option value="Pendiente">Pendientes</mat-option><mat-option value="En proceso">En proceso</mat-option><mat-option value="Resuelto">Resueltos</mat-option></mat-select></mat-form-field></div></mat-card-header>
+      <mat-card-content>
+        <div *ngIf="cargandoReportes" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+        <div *ngIf="!cargandoReportes && reportesFiltrados.length === 0" class="no-data"><mat-icon>inbox</mat-icon><p>No hay reportes</p></div>
+        <div *ngIf="!cargandoReportes && reportesFiltrados.length > 0" class="reportes-table">
+          <table class="tabla-reportes">
+            <thead><tr><th>ID</th><th>Fecha</th><th>Descripción</th><th>Estado</th><th>Emisor</th><th>Destinatario</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let reporte of reportesFiltrados">
+                <td>{{ reporte.ID_Reporte | slice:0:8 }}...</td>
+                <td>{{ reporte.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="descripcion-cell">{{ reporte.descripcion }}</td>
+                <td><span class="estado-badge" [ngClass]="{'estado-pendiente': reporte.estado === 'Pendiente', 'estado-proceso': reporte.estado === 'En proceso', 'estado-resuelto': reporte.estado === 'Resuelto'}">{{ reporte.estado }}</span></td>
+                <td>{{ reporte.emisor_nombre }} {{ reporte.emisor_apellido }}</td>
+                <td>{{ reporte.destinatario_nombre }} {{ reporte.destinatario_apellido }}</td>
+                <td><button mat-icon-button color="primary" (click)="verChat(reporte)" matTooltip="Ver Chat"><mat-icon>chat</mat-icon></button><mat-select *ngIf="puedeCambiarEstado(reporte)" [(ngModel)]="reporte.estado" (selectionChange)="cambiarEstado(reporte)" class="estado-select"><mat-option value="Pendiente">Pendiente</mat-option><mat-option value="En proceso">En proceso</mat-option><mat-option value="Resuelto">Resuelto</mat-option></mat-select></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
