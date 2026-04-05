@@ -1,0 +1,31 @@
+<div class="modal-overlay" (click)="onClose.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2>Registrar Nueva Máquina Recreativa</h2><button class="modal-close" (click)="onClose.emit()">×</button></div>
+    <div class="modal-body">
+      <div *ngIf="error" class="error-message">{{ error }}</div>
+      <mat-stepper [linear]="true" #stepper>
+        <mat-step>
+          <ng-template matStepLabel>Crear Componentes</ng-template>
+          <div class="step-content">
+            <p class="step-info">Por favor, cree primero una placa y una carcasa antes de registrar la máquina.</p>
+            <div class="componente-item"><h4>Placa base Logística</h4><button mat-raised-button (click)="crearPlaca()" [disabled]="placaCreada || creandoPlaca" color="primary"><mat-spinner diameter="20" *ngIf="creandoPlaca"></mat-spinner><span *ngIf="!creandoPlaca && !placaCreada">Crear Placa</span><span *ngIf="!creandoPlaca && placaCreada">✓ Placa creada: {{ placaId | slice:0:8 }}...</span></button><div *ngIf="errorPlaca" class="component-error">{{ errorPlaca }}</div></div>
+            <div class="componente-item"><h4>Carcasa estándar</h4><mat-form-field appearance="outline" class="full-width"><mat-label>Seleccione una carcasa</mat-label><mat-select [(ngModel)]="carcasaSeleccionada" [disabled]="carcasaAsignada"><mat-option *ngFor="let carcasa of carcasasDisponibles" [value]="carcasa.ID_Componente">{{ carcasa.nombre }} (${{ carcasa.precio }})</mat-option></mat-select></mat-form-field><button mat-raised-button (click)="asignarCarcasa()" [disabled]="carcasaAsignada || !carcasaSeleccionada || asignandoCarcasa" color="primary"><mat-spinner diameter="20" *ngIf="asignandoCarcasa"></mat-spinner><span *ngIf="!asignandoCarcasa && !carcasaAsignada">Asignar Carcasa</span><span *ngIf="!asignandoCarcasa && carcasaAsignada">✓ Carcasa asignada</span></button><div *ngIf="errorCarcasa" class="component-error">{{ errorCarcasa }}</div></div>
+            <div class="step-actions"><button mat-button matStepperNext [disabled]="!placaCreada || !carcasaAsignada">Siguiente</button><button mat-button type="button" (click)="onClose.emit()">Cancelar</button></div>
+          </div>
+        </mat-step>
+        <mat-step [stepControl]="maquinaForm">
+          <form [formGroup]="maquinaForm">
+            <ng-template matStepLabel>Datos de la Máquina</ng-template>
+            <div class="step-content">
+              <mat-form-field appearance="outline" class="full-width"><mat-label>Nombre</mat-label><input matInput formControlName="nombre"><mat-icon matPrefix>videogame_asset</mat-icon><mat-error *ngIf="maquinaForm.get('nombre')?.hasError('required')">Nombre requerido</mat-error></mat-form-field>
+              <mat-form-field appearance="outline" class="full-width"><mat-label>Tipo</mat-label><input matInput formControlName="tipo"><mat-icon matPrefix>category</mat-icon><mat-error *ngIf="maquinaForm.get('tipo')?.hasError('required')">Tipo requerido</mat-error></mat-form-field>
+              <mat-form-field appearance="outline" class="full-width"><mat-label>Comercio</mat-label><mat-select formControlName="idComercio"><mat-option value="">-- Seleccione un comercio --</mat-option><mat-option *ngFor="let comercio of comercios" [value]="comercio.ID_Comercio">{{ comercio.Nombre }} ({{ comercio.Tipo }})</mat-option></mat-select><mat-icon matPrefix>store</mat-icon><mat-error *ngIf="maquinaForm.get('idComercio')?.hasError('required')">Comercio requerido</mat-error></mat-form-field>
+              <div class="tecnicos-info"><mat-form-field appearance="outline" class="full-width"><mat-label>Técnico Ensamblador</mat-label><input matInput [value]="ensambladorNombre" readonly><mat-icon matPrefix>engineering</mat-icon></mat-form-field><mat-form-field appearance="outline" class="full-width"><mat-label>Técnico Comprobador</mat-label><input matInput [value]="comprobadorNombre" readonly><mat-icon matPrefix>engineering</mat-icon></mat-form-field></div>
+            </div>
+            <div class="step-actions"><button mat-button matStepperPrevious>Atrás</button><button mat-raised-button color="primary" [disabled]="maquinaForm.invalid || registrando" (click)="registrarMaquina(stepper)"><mat-spinner diameter="20" *ngIf="registrando"></mat-spinner><span *ngIf="!registrando">Registrar Máquina</span></button></div>
+          </form>
+        </mat-step>
+      </mat-stepper>
+    </div>
+  </div>
+</div>

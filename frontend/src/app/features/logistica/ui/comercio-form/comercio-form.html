@@ -1,0 +1,15 @@
+<div class="modal-overlay" (click)="onClose.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2>Registrar Nuevo Comercio</h2><button class="modal-close" (click)="onClose.emit()">×</button></div>
+    <div class="modal-body">
+      <div *ngIf="error" class="error-message">{{ error }}</div>
+      <form [formGroup]="comercioForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Nombre</mat-label><input matInput formControlName="nombre"><mat-icon matPrefix>store</mat-icon><mat-error *ngIf="comercioForm.get('nombre')?.hasError('required')">Nombre requerido</mat-error></mat-form-field>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Tipo</mat-label><mat-select formControlName="tipo"><mat-option value="Minorista">Minorista</mat-option><mat-option value="Mayorista">Mayorista</mat-option></mat-select><mat-icon matPrefix>category</mat-icon><mat-error *ngIf="comercioForm.get('tipo')?.hasError('required')">Tipo requerido</mat-error></mat-form-field>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Dirección</mat-label><input matInput formControlName="direccion"><mat-icon matPrefix>location_on</mat-icon><mat-error *ngIf="comercioForm.get('direccion')?.hasError('required')">Dirección requerida</mat-error></mat-form-field>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Teléfono</mat-label><input matInput formControlName="telefono" maxlength="10"><mat-icon matPrefix>phone</mat-icon><mat-error *ngIf="comercioForm.get('telefono')?.hasError('required')">Teléfono requerido</mat-error><mat-error *ngIf="comercioForm.get('telefono')?.hasError('pattern')">Teléfono debe tener 10 dígitos</mat-error></mat-form-field>
+        <div class="form-actions"><button mat-raised-button color="primary" type="submit" [disabled]="comercioForm.invalid || submitting"><mat-spinner diameter="20" *ngIf="submitting"></mat-spinner><span *ngIf="!submitting">Registrar Comercio</span></button><button mat-button type="button" (click)="onClose.emit()">Cancelar</button></div>
+      </form>
+    </div>
+  </div>
+</div>

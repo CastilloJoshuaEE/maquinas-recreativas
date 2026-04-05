@@ -1,0 +1,35 @@
+<div class="ver-informe-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button"><mat-icon>arrow_back</mat-icon></button>
+      <h2>Informe de Recaudación</h2>
+    </div>
+    <div *ngIf="loading" class="loading-container"><mat-spinner diameter="40"></mat-spinner><p>Cargando informe...</p></div>
+    <div *ngIf="error" class="error-message">{{ error }}</div>
+    
+    <div *ngIf="!loading && informe" class="informe-content">
+      <mat-card class="informe-section"><mat-card-header><mat-card-title><mat-icon>store</mat-icon> Datos del Comercio</mat-card-title></mat-card-header>
+        <mat-card-content><p><strong>Nombre:</strong> {{ informe.Nombre_Comercio }}</p><p><strong>Dirección:</strong> {{ informe.Direccion_Comercio }}</p><p><strong>Teléfono:</strong> {{ informe.Telefono_Comercio }}</p></mat-card-content>
+      </mat-card>
+      
+      <mat-card class="informe-section"><mat-card-header><mat-card-title><mat-icon>attach_money</mat-icon> Datos de la Recaudación</mat-card-title></mat-card-header>
+        <mat-card-content><p><strong>Máquina:</strong> {{ informe.Nombre_Maquina }}</p><p><strong>Monto Total:</strong> ${{ (recaudacion?.Monto_Total || informe.Monto_Total) | number:'1.2-2' }}</p><p><strong>Monto Empresa:</strong> ${{ recaudacion?.Monto_Empresa || 'N/A' | number:'1.2-2' }}</p><p *ngIf="recaudacion?.Tipo_Comercio === 'Mayorista'"><strong>Monto Comercio:</strong> ${{ recaudacion?.Monto_Comercio }} ({{ recaudacion?.Porcentaje_Comercio }}%)</p><p><strong>Fecha:</strong> {{ recaudacion?.fecha | date:'dd/MM/yyyy HH:mm' }}</p><p><strong>Detalles:</strong> {{ recaudacion?.detalle || 'Ninguno' }}</p></mat-card-content>
+      </mat-card>
+      
+      <mat-card class="informe-section"><mat-card-header><mat-card-title><mat-icon>engineering</mat-icon> Técnicos Involucrados</mat-card-title></mat-card-header>
+        <mat-card-content><div class="tecnico-info" *ngIf="informe.Pago_Ensamblador > 0"><h4>Ensamblador</h4><p><strong>Pago:</strong> ${{ informe.Pago_Ensamblador | number:'1.2-2' }}</p></div>
+        <div class="tecnico-info" *ngIf="informe.Pago_Comprobador > 0"><h4>Comprobador</h4><p><strong>Pago:</strong> ${{ informe.Pago_Comprobador | number:'1.2-2' }}</p></div>
+        <div class="tecnico-info" *ngIf="informe.Pago_Mantenimiento && informe.Pago_Mantenimiento > 0"><h4>Mantenimiento</h4><p><strong>Pago:</strong> ${{ informe.Pago_Mantenimiento | number:'1.2-2' }}</p></div></mat-card-content>
+      </mat-card>
+      
+      <mat-card class="informe-section"><mat-card-header><mat-card-title><mat-icon>memory</mat-icon> Componentes Utilizados</mat-card-title></mat-card-header>
+        <mat-card-content><div *ngIf="componentes.length > 0; else sinComponentes"><table class="componentes-table"><thead><tr><th>Componente</th><th>Tipo</th><th>Precio</th></tr></thead><tbody><tr *ngFor="let comp of componentes"><td>{{ comp.nombre }}</td><td>{{ comp.tipo }}</td><td>${{ comp.precio | number:'1.2-2' }}</td></tr></tbody><tfoot><tr><td colspan="2"><strong>Total componentes:</strong></td><td><strong>${{ totalComponentes | number:'1.2-2' }}</strong></td></tr></tfoot></table></div><ng-template #sinComponentes><p>No se utilizaron componentes</p></ng-template></mat-card-content>
+      </mat-card>
+      
+      <mat-card class="informe-footer"><mat-card-content><p><strong>Empresa:</strong> {{ informe.empresa_nombre || 'Recrea Sys S.A.' }}</p><p><strong>Fecha de emisión:</strong> {{ informe.fecha_emision | date:'dd/MM/yyyy HH:mm' }}</p></mat-card-content></mat-card>
+      
+      <div class="informe-actions"><button mat-raised-button color="primary" (click)="imprimirInforme()"><mat-icon>print</mat-icon> Imprimir</button><button mat-raised-button (click)="regresar()"><mat-icon>arrow_back</mat-icon> Volver</button></div>
+    </div>
+  </div>
+</div>
