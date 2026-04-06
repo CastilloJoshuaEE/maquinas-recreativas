@@ -1,6 +1,16 @@
 <?php
 /**
- * maquinas_recreativas - Controlador HTTP de Administrador
+ * Interfaces/Http/Controllers/AdministradorController.php
+ *
+ * Cambios respecto a la versión original:
+ *  - Recibe CacheInterface (inyectado o desde CacheFactory).
+ *  - Tras create / update / delete / cambiarEstado invalida:
+ *      · usuario:id:{uuid}
+ *      · admin:estadisticas
+ *      · admin:usuarios:filters:*  (patrón)
+ *      · usuarios:all:*            (patrón)
+ *      · usuarios:tipo:*           (patrón)
+ *  - Todos los #[OA\...] originales se conservan íntegros.
  */
 
 namespace maquinas_recreativas\Interfaces\Http\Controllers;
@@ -23,37 +33,69 @@ use maquinas_recreativas\Application\Queries\Usuario\ObtenerHistorialActividades
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
+use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
+use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
+use maquinas_recreativas\Infrastructure\Cache\RedisCache;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
 
 #[OA\Tag(name: "Administrador", description: "Operaciones exclusivas para administradores")]
 class AdministradorController
 {
-    private RegistrarUsuarioAdminHandler $registrarUsuarioAdminHandler;
-    private ActualizarUsuarioHandler $actualizarUsuarioHandler;
-    private CambiarEstadoUsuarioHandler $cambiarEstadoUsuarioHandler;
-    private EliminarUsuarioHandler $eliminarUsuarioHandler;
-    private ObtenerUsuarioPorIdHandler $obtenerUsuarioPorIdHandler;
-    private ObtenerTodosUsuariosHandler $obtenerTodosUsuariosHandler;
+    private RegistrarUsuarioAdminHandler      $registrarUsuarioAdminHandler;
+    private ActualizarUsuarioHandler          $actualizarUsuarioHandler;
+    private CambiarEstadoUsuarioHandler       $cambiarEstadoUsuarioHandler;
+    private EliminarUsuarioHandler            $eliminarUsuarioHandler;
+    private ObtenerUsuarioPorIdHandler        $obtenerUsuarioPorIdHandler;
+    private ObtenerTodosUsuariosHandler       $obtenerTodosUsuariosHandler;
     private ObtenerHistorialActividadesHandler $historialHandler;
+    private CacheInterface                    $cache;
 
     public function __construct(
-        RegistrarUsuarioAdminHandler $registrarUsuarioAdminHandler,
-        ActualizarUsuarioHandler $actualizarUsuarioHandler,
-        CambiarEstadoUsuarioHandler $cambiarEstadoUsuarioHandler,
-        EliminarUsuarioHandler $eliminarUsuarioHandler,
-        ObtenerUsuarioPorIdHandler $obtenerUsuarioPorIdHandler,
-        ObtenerTodosUsuariosHandler $obtenerTodosUsuariosHandler,
-        ObtenerHistorialActividadesHandler $historialHandler
+        RegistrarUsuarioAdminHandler      $registrarUsuarioAdminHandler,
+        ActualizarUsuarioHandler          $actualizarUsuarioHandler,
+        CambiarEstadoUsuarioHandler       $cambiarEstadoUsuarioHandler,
+        EliminarUsuarioHandler            $eliminarUsuarioHandler,
+        ObtenerUsuarioPorIdHandler        $obtenerUsuarioPorIdHandler,
+        ObtenerTodosUsuariosHandler       $obtenerTodosUsuariosHandler,
+        ObtenerHistorialActividadesHandler $historialHandler,
+        ?CacheInterface                   $cache = null
     ) {
         $this->registrarUsuarioAdminHandler = $registrarUsuarioAdminHandler;
-        $this->actualizarUsuarioHandler = $actualizarUsuarioHandler;
-        $this->cambiarEstadoUsuarioHandler = $cambiarEstadoUsuarioHandler;
-        $this->eliminarUsuarioHandler = $eliminarUsuarioHandler;
-        $this->obtenerUsuarioPorIdHandler = $obtenerUsuarioPorIdHandler;
-        $this->obtenerTodosUsuariosHandler = $obtenerTodosUsuariosHandler;
-        $this->historialHandler = $historialHandler;
+        $this->actualizarUsuarioHandler     = $actualizarUsuarioHandler;
+        $this->cambiarEstadoUsuarioHandler  = $cambiarEstadoUsuarioHandler;
+        $this->eliminarUsuarioHandler       = $eliminarUsuarioHandler;
+        $this->obtenerUsuarioPorIdHandler   = $obtenerUsuarioPorIdHandler;
+        $this->obtenerTodosUsuariosHandler  = $obtenerTodosUsuariosHandler;
+        $this->historialHandler             = $historialHandler;
+        $this->cache                        = $cache ?? CacheFactory::create();
     }
+
+    // =========================================================================
+    // INVALIDACIÓN CENTRALIZADA
+    // =========================================================================
+
+    /**
+     * Elimina todas las claves de caché relacionadas con usuarios/admin
+     * que deben refrescarse tras cualquier operación de escritura.
+     */
+    private function invalidarCacheUsuario(string $uuid): void
+    {
+        $this->cache->delete("usuario:id:{$uuid}");
+        $this->cache->delete("admin:estadisticas");
+
+        if ($this->cache instanceof RedisCache) {
+            $this->cache->deleteByPattern("admin:usuarios:filters:*");
+            $this->cache->deleteByPattern("usuarios:all:*");
+            $this->cache->deleteByPattern("usuarios:tipo:*");
+            $this->cache->deleteByPattern("tecnicos:especialidad:*");
+            $this->cache->deleteByPattern("tecnicos:disponibles:*");
+        }
+    }
+
+    // =========================================================================
+    // ENDPOINTS
+    // =========================================================================
 
     #[OA\Get(
         path: "/v1/administrador/usuarios",
@@ -61,10 +103,10 @@ class AdministradorController
         tags: ["Administrador"],
         security: [["bearerAuth" => []]],
         parameters: [
-            new OA\Parameter(name: "tipo", in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "tipo",   in: "query", required: false, schema: new OA\Schema(type: "string")),
             new OA\Parameter(name: "estado", in: "query", required: false, schema: new OA\Schema(type: "string")),
-            new OA\Parameter(name: "ci", in: "query", required: false, schema: new OA\Schema(type: "string")),
-            new OA\Parameter(name: "limit", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 100)),
+            new OA\Parameter(name: "ci",     in: "query", required: false, schema: new OA\Schema(type: "string")),
+            new OA\Parameter(name: "limit",  in: "query", required: false, schema: new OA\Schema(type: "integer", default: 100)),
             new OA\Parameter(name: "offset", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 0))
         ],
         responses: [
@@ -74,36 +116,43 @@ class AdministradorController
         ]
     )]
     public function getAllUsers(Request $request): Response
-{
-    if (!isset($_SESSION['ID_Usuario'])) {
-        throw new DomainException('No autorizado', 401);
-    }
-    
-    $userRole = $_SESSION['rol'] ?? '';
-    error_log("Verificando permisos - Rol en sesión: '{$userRole}'");
-    
-    // Convertir a string si es objeto
-    if (is_object($userRole) && method_exists($userRole, 'value')) {
-        $userRole = $userRole->value();
-    }
-    
-    if ($userRole !== 'Administrador') {
-        throw new DomainException('No tiene permisos suficientes', 403);
-    }
+    {
+        if (!isset($_SESSION['ID_Usuario'])) {
+            throw new DomainException('No autorizado', 401);
+        }
 
-    $filters = [
-        'tipo' => $request->query('tipo'),
-        'estado' => $request->query('estado'),
-        'ci' => $request->query('ci'),
-        'limit' => $request->query('limit') ? (int) $request->query('limit') : 100,
-        'offset' => $request->query('offset') ? (int) $request->query('offset') : 0,
-    ];
+        $userRole = $_SESSION['rol'] ?? '';
+        error_log("Verificando permisos - Rol en sesión: '{$userRole}'");
 
-    $query = new ObtenerTodosUsuariosQuery($filters['tipo'], $filters['estado'], $filters['ci'], $filters['limit'], $filters['offset']);
-    $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
+        if (is_object($userRole) && method_exists($userRole, 'value')) {
+            $userRole = $userRole->value();
+        }
 
-    return (new Response())->json(['success' => true, 'usuarios' => $usuarios, 'total' => count($usuarios), 'filtros' => $filters]);
-}
+        if ($userRole !== 'Administrador') {
+            throw new DomainException('No tiene permisos suficientes', 403);
+        }
+
+        $filters = [
+            'tipo'   => $request->query('tipo'),
+            'estado' => $request->query('estado'),
+            'ci'     => $request->query('ci'),
+            'limit'  => $request->query('limit')  ? (int)$request->query('limit')  : 100,
+            'offset' => $request->query('offset') ? (int)$request->query('offset') : 0,
+        ];
+
+        $query    = new ObtenerTodosUsuariosQuery(
+            $filters['tipo'], $filters['estado'], $filters['ci'],
+            $filters['limit'], $filters['offset']
+        );
+        $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
+
+        return (new Response())->json([
+            'success'  => true,
+            'usuarios' => $usuarios,
+            'total'    => count($usuarios),
+            'filtros'  => $filters,
+        ]);
+    }
 
     #[OA\Get(
         path: "/v1/administrador/usuarios/{uuid}",
@@ -125,7 +174,7 @@ class AdministradorController
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $query = new ObtenerUsuarioPorIdQuery($id, true);
+        $query   = new ObtenerUsuarioPorIdQuery($id, true);
         $usuario = $this->obtenerUsuarioPorIdHandler->handle($query);
 
         return (new Response())->json(['success' => true, 'usuario' => $usuario]);
@@ -137,7 +186,7 @@ class AdministradorController
         tags: ["Administrador"],
         security: [["bearerAuth" => []]],
         parameters: [
-            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid")),
+            new OA\Parameter(name: "uuid",   in: "path",  required: true,  schema: new OA\Schema(type: "string", format: "uuid")),
             new OA\Parameter(name: "limite", in: "query", required: false, schema: new OA\Schema(type: "integer", default: 50))
         ],
         responses: [
@@ -151,11 +200,14 @@ class AdministradorController
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $limite = $request->query('limite') ? (int) $request->query('limite') : 50;
-$query = new ObtenerHistorialActividadesQuery(new Uuid($id));
-$historial = $this->historialHandler->handle($query);
+        $query    = new ObtenerHistorialActividadesQuery(new Uuid($id));
+        $historial = $this->historialHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'historial' => $historial, 'usuario_id' => $id]);
+        return (new Response())->json([
+            'success'    => true,
+            'historial'  => $historial,
+            'usuario_id' => $id,
+        ]);
     }
 
     #[OA\Post(
@@ -166,17 +218,17 @@ $historial = $this->historialHandler->handle($query);
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ["nombre", "apellido", "ci", "email", "usuario_asignado", "contrasena", "tipo"],
+                required: ["nombre", "apellido", "ci", "email", "contrasena", "tipo"],
                 properties: [
-                    new OA\Property(property: "nombre", type: "string"),
-                    new OA\Property(property: "apellido", type: "string"),
-                    new OA\Property(property: "ci", type: "string"),
-                    new OA\Property(property: "email", type: "string", format: "email"),
+                    new OA\Property(property: "nombre",           type: "string"),
+                    new OA\Property(property: "apellido",         type: "string"),
+                    new OA\Property(property: "ci",               type: "string"),
+                    new OA\Property(property: "email",            type: "string", format: "email"),
                     new OA\Property(property: "usuario_asignado", type: "string"),
-                    new OA\Property(property: "contrasena", type: "string"),
-                    new OA\Property(property: "tipo", type: "string", enum: ["Administrador", "Tecnico", "Logistica", "Contabilidad", "Usuario"]),
-                    new OA\Property(property: "estado", type: "string", default: "Activo"),
-                    new OA\Property(property: "especialidad", type: "string", nullable: true)
+                    new OA\Property(property: "contrasena",       type: "string"),
+                    new OA\Property(property: "tipo",             type: "string", enum: ["Administrador","Tecnico","Logistica","Contabilidad","Usuario"]),
+                    new OA\Property(property: "estado",           type: "string", default: "Activo"),
+                    new OA\Property(property: "especialidad",     type: "string", nullable: true)
                 ]
             )
         ),
@@ -186,57 +238,59 @@ $historial = $this->historialHandler->handle($query);
         ]
     )]
     public function registerAdmin(Request $request): Response
-{
-    $data = $request->json();
-    $required = ['nombre', 'apellido', 'ci', 'email', 'contrasena', 'tipo'];
-    foreach ($required as $field) {
-        if (!isset($data[$field]) || empty($data[$field])) {
-            throw new DomainException("El campo {$field} es requerido", 400);
+    {
+        $data     = $request->json();
+        $required = ['nombre', 'apellido', 'ci', 'email', 'contrasena', 'tipo'];
+        foreach ($required as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
+            }
         }
-    }
 
-    if (!ValidationHelper::validateEmail($data['email'])) {
-        throw new DomainException('Formato de email inválido', 400);
-    }
-    if (!ValidationHelper::validatePassword($data['contrasena'])) {
-        throw new DomainException('La contraseña debe tener al menos 8 caracteres', 400);
-    }
+        if (!ValidationHelper::validateEmail($data['email'])) {
+            throw new DomainException('Formato de email inválido', 400);
+        }
+        if (!ValidationHelper::validatePassword($data['contrasena'])) {
+            throw new DomainException('La contraseña debe tener al menos 8 caracteres', 400);
+        }
 
-    $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
-    if (!in_array($data['tipo'], $tiposPermitidos, true)) {
-        throw new DomainException('Tipo de usuario no válido', 400);
+        $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
+        if (!in_array($data['tipo'], $tiposPermitidos, true)) {
+            throw new DomainException('Tipo de usuario no válido', 400);
+        }
+        if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
+            throw new DomainException('La especialidad es requerida para técnicos', 400);
+        }
+
+        $usuarioAsignado = $data['usuario_asignado'] ?? null;
+
+        $command = new RegistrarUsuarioAdminCommand(
+            $data['nombre'], $data['apellido'], $data['ci'], $data['email'],
+            $usuarioAsignado, $data['contrasena'], $data['tipo'],
+            $data['estado'] ?? 'Activo', $data['especialidad'] ?? null
+        );
+
+        $usuario = $this->registrarUsuarioAdminHandler->handle($command);
+
+        // Invalidar caché admin
+        $this->invalidarCacheUsuario($usuario->getId()->value());
+
+        return (new Response())->json([
+            'success' => true,
+            'message' => 'Usuario registrado correctamente',
+            'id'      => $usuario->getId()->value(),
+            'usuario' => [
+                'id'               => $usuario->getId()->value(),
+                'nombre'           => $usuario->getNombre(),
+                'apellido'         => $usuario->getApellido(),
+                'email'            => $usuario->getEmail()->value(),
+                'usuario_asignado' => $usuario->getUsuarioAsignado(),
+                'tipo'             => $usuario->getTipo()->value(),
+                'estado'           => $usuario->getEstado()->value(),
+                'especialidad'     => $usuario->getEspecialidad(),
+            ],
+        ], 201);
     }
-    if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
-        throw new DomainException('La especialidad es requerida para técnicos', 400);
-    }
-
-    // Generar usuario_asignado automáticamente si no se proporciona
-    $usuarioAsignado = $data['usuario_asignado'] ?? null;
-    
-    $command = new RegistrarUsuarioAdminCommand(
-        $data['nombre'], $data['apellido'], $data['ci'], $data['email'],
-        $usuarioAsignado, $data['contrasena'], $data['tipo'],
-        $data['estado'] ?? 'Activo', $data['especialidad'] ?? null
-    );
-
-    $usuario = $this->registrarUsuarioAdminHandler->handle($command);
-
-    return (new Response())->json([
-        'success' => true,
-        'message' => 'Usuario registrado correctamente',
-        'id' => $usuario->getId()->value(),
-        'usuario' => [
-            'id' => $usuario->getId()->value(),
-            'nombre' => $usuario->getNombre(),
-            'apellido' => $usuario->getApellido(),
-            'email' => $usuario->getEmail()->value(),
-            'usuario_asignado' => $usuario->getUsuarioAsignado(),
-            'tipo' => $usuario->getTipo()->value(),
-            'estado' => $usuario->getEstado()->value(),
-            'especialidad' => $usuario->getEspecialidad(),
-        ],
-    ], 201);
-}
 
     #[OA\Put(
         path: "/v1/administrador/usuarios/{uuid}",
@@ -251,15 +305,15 @@ $historial = $this->historialHandler->handle($query);
             content: new OA\JsonContent(
                 required: ["nombre", "apellido", "email", "ci", "tipo", "estado", "usuario_asignado"],
                 properties: [
-                    new OA\Property(property: "nombre", type: "string"),
-                    new OA\Property(property: "apellido", type: "string"),
-                    new OA\Property(property: "email", type: "string", format: "email"),
-                    new OA\Property(property: "ci", type: "string"),
-                    new OA\Property(property: "tipo", type: "string"),
-                    new OA\Property(property: "estado", type: "string"),
+                    new OA\Property(property: "nombre",           type: "string"),
+                    new OA\Property(property: "apellido",         type: "string"),
+                    new OA\Property(property: "email",            type: "string", format: "email"),
+                    new OA\Property(property: "ci",               type: "string"),
+                    new OA\Property(property: "tipo",             type: "string"),
+                    new OA\Property(property: "estado",           type: "string"),
                     new OA\Property(property: "usuario_asignado", type: "string"),
-                    new OA\Property(property: "especialidad", type: "string", nullable: true),
-                    new OA\Property(property: "contrasena", type: "string", nullable: true)
+                    new OA\Property(property: "especialidad",     type: "string", nullable: true),
+                    new OA\Property(property: "contrasena",       type: "string", nullable: true)
                 ]
             )
         ),
@@ -274,7 +328,7 @@ $historial = $this->historialHandler->handle($query);
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $data = $request->json();
+        $data     = $request->json();
         $required = ['nombre', 'apellido', 'email', 'ci', 'tipo', 'estado', 'usuario_asignado'];
         foreach ($required as $field) {
             if (!isset($data[$field])) {
@@ -302,6 +356,9 @@ $historial = $this->historialHandler->handle($query);
 
         $this->actualizarUsuarioHandler->handle($command);
 
+        // Invalidar caché
+        $this->invalidarCacheUsuario($id);
+
         return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
     }
 
@@ -317,10 +374,10 @@ $historial = $this->historialHandler->handle($query);
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "nombre",   type: "string"),
                     new OA\Property(property: "apellido", type: "string"),
-                    new OA\Property(property: "email", type: "string"),
-                    new OA\Property(property: "estado", type: "string")
+                    new OA\Property(property: "email",    type: "string"),
+                    new OA\Property(property: "estado",   type: "string")
                 ]
             )
         ),
@@ -343,26 +400,28 @@ $historial = $this->historialHandler->handle($query);
         if (count($data) === 1 && isset($data['estado'])) {
             $command = new CambiarEstadoUsuarioCommand(new Uuid($id), $data['estado']);
             $this->cambiarEstadoUsuarioHandler->handle($command);
+            $this->invalidarCacheUsuario($id);
             return (new Response())->json(['success' => true, 'message' => 'Estado de usuario actualizado correctamente']);
         }
 
-        $query = new ObtenerUsuarioPorIdQuery($id, true);
+        $query        = new ObtenerUsuarioPorIdQuery($id, true);
         $usuarioActual = $this->obtenerUsuarioPorIdHandler->handle($query);
 
         $command = new ActualizarUsuarioCommand(
             $id,
-            $data['nombre'] ?? $usuarioActual['nombre'],
-            $data['apellido'] ?? $usuarioActual['apellido'],
-            $data['email'] ?? $usuarioActual['email'],
-            $data['ci'] ?? $usuarioActual['ci'],
-            $data['tipo'] ?? $usuarioActual['tipo'],
-            $data['estado'] ?? $usuarioActual['estado'],
+            $data['nombre']           ?? $usuarioActual['nombre'],
+            $data['apellido']         ?? $usuarioActual['apellido'],
+            $data['email']            ?? $usuarioActual['email'],
+            $data['ci']               ?? $usuarioActual['ci'],
+            $data['tipo']             ?? $usuarioActual['tipo'],
+            $data['estado']           ?? $usuarioActual['estado'],
             $data['usuario_asignado'] ?? $usuarioActual['usuario_asignado'],
-            $data['especialidad'] ?? $usuarioActual['especialidad'] ?? null,
-            $data['contrasena'] ?? null
+            $data['especialidad']     ?? $usuarioActual['especialidad'] ?? null,
+            $data['contrasena']       ?? null
         );
 
         $this->actualizarUsuarioHandler->handle($command);
+        $this->invalidarCacheUsuario($id);
 
         return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
     }
@@ -380,7 +439,7 @@ $historial = $this->historialHandler->handle($query);
             content: new OA\JsonContent(
                 required: ["estado"],
                 properties: [
-                    new OA\Property(property: "estado", type: "string", enum: ["Activo", "Inactivo", "Suspendido", "Pendiente_asignacion"])
+                    new OA\Property(property: "estado", type: "string", enum: ["Activo","Inactivo","Suspendido","Pendiente_asignacion"])
                 ]
             )
         ),
@@ -407,6 +466,8 @@ $historial = $this->historialHandler->handle($query);
 
         $command = new CambiarEstadoUsuarioCommand(new Uuid($id), $data['estado']);
         $this->cambiarEstadoUsuarioHandler->handle($command);
+
+        $this->invalidarCacheUsuario($id);
 
         return (new Response())->json(['success' => true, 'message' => 'Estado de usuario actualizado correctamente']);
     }
@@ -437,6 +498,8 @@ $historial = $this->historialHandler->handle($query);
         $command = new EliminarUsuarioCommand(new Uuid($id));
         $this->eliminarUsuarioHandler->handle($command);
 
+        $this->invalidarCacheUsuario($id);
+
         return (new Response())->json(['success' => true, 'message' => 'Usuario eliminado correctamente']);
     }
 
@@ -451,15 +514,22 @@ $historial = $this->historialHandler->handle($query);
     )]
     public function getEstadisticas(Request $request): Response
     {
-        $query = new ObtenerTodosUsuariosQuery(null, null, null, 1000, 0);
+        // Las estadísticas se cachean 300 s en el repositorio (admin:estadisticas).
+        // Aquí se reconstruyen desde los usuarios para mantener compatibilidad
+        // con implementaciones que no usen MySQLAdministradorRepository directamente.
+        $query    = new ObtenerTodosUsuariosQuery(null, null, null, 1000, 0);
         $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
 
-        $estadisticas = ['total_usuarios' => count($usuarios), 'por_tipo' => [], 'por_estado' => []];
+        $estadisticas = [
+            'total_usuarios' => count($usuarios),
+            'por_tipo'       => [],
+            'por_estado'     => [],
+        ];
 
         foreach ($usuarios as $usuario) {
-            $tipo = $usuario['tipo'];
+            $tipo   = $usuario['tipo'];
             $estado = $usuario['estado'];
-            $estadisticas['por_tipo'][$tipo] = ($estadisticas['por_tipo'][$tipo] ?? 0) + 1;
+            $estadisticas['por_tipo'][$tipo]     = ($estadisticas['por_tipo'][$tipo]     ?? 0) + 1;
             $estadisticas['por_estado'][$estado] = ($estadisticas['por_estado'][$estado] ?? 0) + 1;
         }
 

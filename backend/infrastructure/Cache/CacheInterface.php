@@ -1,4 +1,7 @@
 <?php
+/**
+ * Infrastructure/Cache/CacheInterface.php
+ */
 namespace maquinas_recreativas\Infrastructure\Cache;
 
 interface CacheInterface
@@ -11,4 +14,7 @@ interface CacheInterface
     public function decrement(string $key, int $amount = 1): int;
     public function flush(): bool;
     public function remember(string $key, callable $callback, int $ttl = null);
+    public function checkRateLimit(string $key, int $limit, int $window): bool;
+    public function getRemaining(string $key, int $limit, int $window): int;
+    public function isAvailable(): bool;
 }
