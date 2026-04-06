@@ -1,0 +1,23 @@
+<div class="perfil-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header"><button mat-icon-button (click)="regresar()" class="back-button"><mat-icon>arrow_back</mat-icon></button><h2>Mi Perfil</h2></div>
+    <div *ngIf="loading" class="loading-container"><mat-spinner diameter="40"></mat-spinner><p>Cargando perfil...</p></div>
+    <div *ngIf="error" class="error-message">{{ error }}<button mat-button (click)="cargarPerfil()">Reintentar</button></div>
+    <mat-card *ngIf="!loading && !error && usuario" class="perfil-card">
+      <mat-card-header><mat-card-title><mat-icon>account_circle</mat-icon> Datos Personales</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="perfil-info">
+          <div class="info-row"><span class="info-label">Cédula:</span><span class="info-value">{{ usuario.ci }}</span></div>
+          <div class="info-row"><span class="info-label">Nombre:</span><span class="info-value">{{ usuario.nombre }} {{ usuario.apellido }}</span></div>
+          <div class="info-row"><span class="info-label">Correo electrónico:</span><span class="info-value">{{ usuario.email }}</span></div>
+          <div class="info-row"><span class="info-label">Usuario asignado:</span><span class="info-value">{{ usuario.usuario_asignado }}</span></div>
+          <div class="info-row"><span class="info-label">Función del sistema:</span><span class="info-value"><span class="tipo-badge" [ngClass]="{'tipo-admin': usuario.tipo === 'Administrador', 'tipo-contabilidad': usuario.tipo === 'Contabilidad', 'tipo-logistica': usuario.tipo === 'Logistica', 'tipo-tecnico': usuario.tipo === 'Tecnico'}">{{ usuario.tipo }}</span></span></div>
+          <div class="info-row" *ngIf="usuario.Especialidad"><span class="info-label">Especialidad:</span><span class="info-value">{{ usuario.Especialidad }}</span></div>
+          <div class="info-row"><span class="info-label">Estado:</span><span class="info-value"><span class="estado-badge" [ngClass]="{'estado-activo': usuario.estado === 'Activo', 'estado-inhabilitado': usuario.estado === 'Inhabilitado', 'estado-pendiente': usuario.estado === 'Pendiente de asignacion'}">{{ usuario.estado }}</span></span></div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions><button mat-raised-button color="primary" (click)="editarPerfil()"><mat-icon>edit</mat-icon> Editar Perfil</button><button mat-raised-button color="warn" (click)="cerrarSesion()"><mat-icon>exit_to_app</mat-icon> Cerrar Sesión</button></mat-card-actions>
+    </mat-card>
+  </div>
+</div>

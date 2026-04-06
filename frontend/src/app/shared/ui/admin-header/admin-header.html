@@ -1,0 +1,19 @@
+<header class="admin-header">
+  <div class="header-left"><h1 class="titulo-header">Bienvenido</h1></div>
+  <div class="header-controls"><ng-content select="[header-buttons]"></ng-content></div>
+  <div class="profile-section">
+    <button mat-button class="profile-button" [matMenuTriggerFor]="menu" aria-label="Menú de perfil">
+      <mat-icon>account_circle</mat-icon><span>{{ currentUser?.usuario_asignado || 'Usuario' }}</span><mat-icon class="profile-arrow">arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="verPerfil()"><mat-icon>person</mat-icon><span>Ver Perfil</span></button>
+      <button mat-menu-item (click)="editarPerfil()"><mat-icon>edit</mat-icon><span>Editar Perfil</span></button>
+      <button mat-menu-item (click)="verNotificaciones()"><mat-icon [matBadge]="unreadCount" matBadgeColor="warn" matBadgeOverlap="false">notifications</mat-icon><span>Notificaciones</span></button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="cerrarSesion()" class="logout-button"><mat-icon>exit_to_app</mat-icon><span>Cerrar Sesión</span></button>
+    </mat-menu>
+  </div>
+</header>
+<div *ngIf="showNotifications" class="modal-panel">
+  <app-notificaciones-list [currentUser]="currentUser" (close)="showNotifications = false"></app-notificaciones-list>
+</div>

@@ -1,0 +1,33 @@
+<div class="historial-modal-overlay" (click)="onClose.emit()">
+  <div class="historial-modal" (click)="$event.stopPropagation()">
+    <div class="historial-header"><h2>Historial de: {{ nombreMaquina }}</h2><button class="close-btn" (click)="onClose.emit()">×</button></div>
+    <div class="historial-filtros">
+      <mat-form-field appearance="outline"><mat-label>Fecha Inicio</mat-label><input matInput [matDatepicker]="pickerInicio" [(ngModel)]="filtros.fecha_inicio"><mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle><mat-datepicker #pickerInicio></mat-datepicker></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Fecha Fin</mat-label><input matInput [matDatepicker]="pickerFin" [(ngModel)]="filtros.fecha_fin"><mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle><mat-datepicker #pickerFin></mat-datepicker></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Tipo Usuario</mat-label><mat-select [(ngModel)]="filtros.tipo_usuario"><mat-option value="">Todos</mat-option><mat-option value="Tecnico">Técnicos</mat-option><mat-option value="Logistica">Logística</mat-option><mat-option value="Administrador">Administradores</mat-option><mat-option value="Contabilidad">Contabilidad</mat-option></mat-select></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Acción</mat-label><input matInput [(ngModel)]="filtros.accion" placeholder="Buscar acción..."></mat-form-field>
+      <button mat-raised-button (click)="limpiarFiltros()"><mat-icon>clear</mat-icon> Limpiar</button>
+    </div>
+    <div *ngIf="loading" class="historial-loading"><mat-spinner diameter="40"></mat-spinner><p>Cargando historial...</p></div>
+    <div *ngIf="error" class="historial-error">{{ error }}</div>
+    <div *ngIf="!loading && !error" class="historial-timeline">
+      <div *ngIf="historial.length === 0" class="sin-registros">No hay registros de actividad</div>
+      <div *ngFor="let item of historial" class="timeline-item">
+        <div class="timeline-icon" [style.backgroundColor]="getColorAccion(item.accion)">{{ getIconoAccion(item.accion) }}</div>
+        <div class="timeline-content">
+          <div class="timeline-header"><span class="timeline-accion">{{ item.accion }}</span><span class="timeline-fecha">{{ item.fecha_hora | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+          <div class="timeline-usuario"><strong>👤 Usuario:</strong> {{ item.usuario_nombre }} {{ item.usuario_apellido }} ({{ item.tipo_usuario }})</div>
+          <div class="timeline-descripcion" *ngIf="item.descripcion"><strong>📝 Descripción:</strong> {{ item.descripcion }}</div>
+          <div class="timeline-cambio-estado" *ngIf="item.estado_anterior || item.estado_nuevo"><strong>🔄 Cambio de estado:</strong><span class="estado-anterior" *ngIf="item.estado_anterior">{{ item.estado_anterior }}</span><span *ngIf="item.estado_anterior && item.estado_nuevo"> → </span><span class="estado-nuevo" *ngIf="item.estado_nuevo">{{ item.estado_nuevo }}</span></div>
+          <div class="timeline-cambio-etapa" *ngIf="item.etapa_anterior && item.etapa_nueva"><strong>📊 Cambio de etapa:</strong><span class="etapa-anterior">{{ item.etapa_anterior }}</span><span> → </span><span class="etapa-nueva">{{ item.etapa_nueva }}</span></div>
+          <div class="timeline-ip"><small>🌐 IP: {{ item.ip_address || 'Desconocida' }}</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="historial-paginacion" *ngIf="paginacion.total_paginas > 1">
+      <button (click)="cambiarPagina(paginacion.pagina_actual - 1)" [disabled]="paginacion.pagina_actual === 1">Anterior</button>
+      <span>Página {{ paginacion.pagina_actual }} de {{ paginacion.total_paginas }} (Total: {{ paginacion.total }} registros)</span>
+      <button (click)="cambiarPagina(paginacion.pagina_actual + 1)" [disabled]="paginacion.pagina_actual === paginacion.total_paginas">Siguiente</button>
+    </div>
+  </div>
+</div>

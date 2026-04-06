@@ -1,0 +1,39 @@
+<div class="gestion-componentes-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header"><button mat-icon-button (click)="regresar()" class="back-button"><mat-icon>arrow_back</mat-icon></button><h2>Gestión de Componentes</h2></div>
+    <div class="selected-machine-info" *ngIf="selectedMachine"><h3>Máquina: {{ selectedMachine.Nombre_Maquina }}</h3><p>Comercio: {{ selectedMachine.NombreComercio }}</p></div>
+    <div class="componentes-section"><h3>Componentes Disponibles</h3>
+      <div class="filtros-componentes"><mat-form-field appearance="outline"><mat-label>Tipo de Componente</mat-label><mat-select [(ngModel)]="filtroTipo" (selectionChange)="cargarComponentesDisponibles()"><mat-option value="">Todos</mat-option><mat-option value="Placa">Placa</mat-option><mat-option value="Carcasa">Carcasa</mat-option><mat-option value="Electronico">Electrónico</mat-option><mat-option value="Mecanico">Mecánico</mat-option></mat-select></mat-form-field></div>
+      <div *ngIf="cargandoDisponibles" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
+      <div *ngIf="!cargandoDisponibles && componentesDisponibles.length === 0" class="no-data"><p>No hay componentes disponibles</p></div>
+      <div *ngIf="!cargandoDisponibles && componentesDisponibles.length > 0">
+        <table mat-table [dataSource]="componentesDisponibles" class="mat-elevation-z8">
+          <ng-container matColumnDef="ID_Componente"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let comp">{{comp.ID_Componente | slice:0:8}}...<\/td><\/ng-container>
+          <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Nombre</th><td mat-cell *matCellDef="let comp">{{comp.nombre}}<\/td><\/ng-container>
+          <ng-container matColumnDef="tipo"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let comp">{{comp.tipo}}<\/td><\/ng-container>
+          <ng-container matColumnDef="precio"><th mat-header-cell *matHeaderCellDef>Precio</th><td mat-cell *matCellDef="let comp">${{comp.precio | number:'1.2-2'}}<\/td><\/ng-container>
+          <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let comp"><button mat-raised-button color="primary" (click)="usarComponente(comp)" [disabled]="!selectedMachine || componenteEnUso(comp)">Usar<\/button><\/td><\/ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumnsDisponibles"><\/tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumnsDisponibles;"><\/tr>
+        <\/table>
+        <mat-paginator [length]="totalDisponibles" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20,50]" (page)="onPageChangeDisponibles($event)"><\/mat-paginator>
+      <\/div>
+    <\/div>
+    <div class="componentes-en-uso-section"><h3>Componentes en Uso</h3>
+      <div *ngIf="cargandoEnUso" class="loading-container"><mat-spinner diameter="40"></mat-spinner><\/div>
+      <div *ngIf="!cargandoEnUso && componentesEnUso.length === 0" class="no-data"><p>No hay componentes en uso actualmente<\/p><\/div>
+      <div *ngIf="!cargandoEnUso && componentesEnUso.length > 0">
+        <table mat-table [dataSource]="componentesEnUso" class="mat-elevation-z8">
+          <ng-container matColumnDef="ID_Componente"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let comp">{{comp.ID_Componente | slice:0:8}}...<\/td><\/ng-container>
+          <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Nombre</th><td mat-cell *matCellDef="let comp">{{comp.nombre}}<\/td><\/ng-container>
+          <ng-container matColumnDef="tipo"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let comp">{{comp.tipo}}<\/td><\/ng-container>
+          <ng-container matColumnDef="Nombre_Maquina"><th mat-header-cell *matHeaderCellDef>Máquina</th><td mat-cell *matCellDef="let comp">{{comp.Nombre_Maquina || 'N/A'}}<\/td><\/ng-container>
+          <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let comp"><button mat-raised-button color="warn" (click)="liberarComponente(comp)">Liberar<\/button><\/td><\/ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumnsEnUso"><\/tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumnsEnUso;"><\/tr>
+        <\/table>
+      <\/div>
+    <\/div>
+  <\/div>
+<\/div>

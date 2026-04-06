@@ -1,0 +1,32 @@
+<div class="chat-container" [class.panel-mode]="asPanel" [class.modal-scrollable]="modalScrollable">
+  <div class="chat-sidebar" *ngIf="showUserList">
+    <div class="sidebar-header"><h3>Conversaciones</h3><button mat-icon-button (click)="onClose.emit()" *ngIf="asPanel"><mat-icon>close</mat-icon></button></div>
+    <div class="usuarios-search" *ngIf="showSearch"><mat-form-field appearance="outline" class="search-field"><mat-label>Buscar usuario</mat-label><input matInput [(ngModel)]="searchTerm" (ngModelChange)="filtrarUsuarios()"><mat-icon matPrefix>search</mat-icon></mat-form-field></div>
+    <div *ngIf="cargandoUsuarios" class="loading-users"><mat-spinner diameter="30"></mat-spinner></div>
+    <ul class="usuarios-list" *ngIf="!cargandoUsuarios">
+      <li *ngFor="let usuario of usuariosFiltrados" class="usuario-chat-item" [class.activo]="selectedUser?.ID_Usuario === usuario.ID_Usuario" [ngClass]="'tipo-' + (usuario.tipo | lowercase)" (click)="seleccionarUsuario(usuario)">
+        <div class="usuario-info"><strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong><small>{{ usuario.tipo }}</small><small class="usuario-email">{{ usuario.email }}</small></div>
+        <div class="unread-badge" *ngIf="getUnreadCount(usuario.ID_Usuario) > 0">{{ getUnreadCount(usuario.ID_Usuario) }}</div>
+      </li>
+      <li *ngIf="usuariosFiltrados.length === 0" class="no-usuarios">No hay usuarios disponibles</li>
+    </ul>
+  </div>
+  <div class="chat-main">
+    <div class="chat-header" *ngIf="selectedUser"><div class="user-info"><h3>{{ selectedUser.nombre }} {{ selectedUser.apellido }}</h3><small>{{ selectedUser.tipo }} - {{ selectedUser.email }}</small></div><button mat-icon-button (click)="cerrarChat()" *ngIf="!asPanel"><mat-icon>close</mat-icon></button></div>
+    <div class="no-chat-selected" *ngIf="!selectedUser"><mat-icon>chat</mat-icon><p>Selecciona un usuario para chatear</p></div>
+    <div class="reportes-list" *ngIf="selectedUser && reportes.length > 0"><mat-form-field appearance="outline"><mat-label>Seleccionar reporte</mat-label><mat-select [(ngModel)]="selectedReporteId" (selectionChange)="cargarComentarios()"><mat-option *ngFor="let reporte of reportes" [value]="reporte.ID_Reporte">Reporte #{{ reporte.ID_Reporte | slice:0:8 }} - {{ reporte.estado }}</mat-option></mat-select></mat-form-field></div>
+    <div class="chat-mensajes" #mensajesContainer>
+      <div *ngIf="cargandoMensajes" class="loading-mensajes"><mat-spinner diameter="30"></mat-spinner></div>
+      <div *ngFor="let comentario of comentarios" class="comentario-item" [ngClass]="{'emisor': comentario.ID_Usuario_Emisor === currentUserId, 'receptor': comentario.ID_Usuario_Emisor !== currentUserId}">
+        <div class="comentario-header"><strong>{{ comentario.nombre }} {{ comentario.apellido }}</strong><small>{{ comentario.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</small></div>
+        <p>{{ comentario.comentario }}</p>
+      </div>
+      <div *ngIf="!cargandoMensajes && comentarios.length === 0 && selectedUser" class="no-mensajes"><p>No hay mensajes aún. ¡Envía el primero!</p></div>
+      <div #scrollAnchor></div>
+    </div>
+    <form class="chat-form" (ngSubmit)="enviarMensaje()" *ngIf="selectedUser">
+      <mat-form-field appearance="outline" class="message-input"><mat-label>Escribe un mensaje...</mat-label><textarea matInput [(ngModel)]="nuevoMensaje" name="mensaje" rows="2" [disabled]="enviando"></textarea></mat-form-field>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!nuevoMensaje.trim() || enviando"><mat-icon>send</mat-icon> Enviar</button>
+    </form>
+  </div>
+</div>

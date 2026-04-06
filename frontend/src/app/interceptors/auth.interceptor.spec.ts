@@ -12,21 +12,13 @@ describe('authInterceptor', () => {
   let authServiceMock: any;
 
   beforeEach(() => {
-    authServiceMock = {
-      getToken: jest.fn()
-    };
-    
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AuthService, useValue: authServiceMock }
-      ]
-    });
+    authServiceMock = { getToken: jest.fn() };
+    TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: authServiceMock }] });
   });
 
   it('should add Authorization header when token exists', () => {
     authServiceMock.getToken.mockReturnValue('test-token');
     const req = new HttpRequest('GET', '/api/test');
-    
     TestBed.runInInjectionContext(() => {
       authInterceptor(req, (handledReq) => {
         expect(handledReq.headers.has('Authorization')).toBe(true);
@@ -39,7 +31,6 @@ describe('authInterceptor', () => {
   it('should not add Authorization header for login requests', () => {
     authServiceMock.getToken.mockReturnValue('test-token');
     const req = new HttpRequest('POST', '/api/usuario/login');
-    
     TestBed.runInInjectionContext(() => {
       authInterceptor(req, (handledReq) => {
         expect(handledReq.headers.has('Authorization')).toBe(false);
@@ -51,7 +42,6 @@ describe('authInterceptor', () => {
   it('should not add Authorization header when token is missing', () => {
     authServiceMock.getToken.mockReturnValue(null);
     const req = new HttpRequest('GET', '/api/test');
-    
     TestBed.runInInjectionContext(() => {
       authInterceptor(req, (handledReq) => {
         expect(handledReq.headers.has('Authorization')).toBe(false);

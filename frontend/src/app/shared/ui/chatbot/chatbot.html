@@ -1,0 +1,12 @@
+<div class="chatbot-container" [class.minimized]="minimized">
+  <div class="chatbot-header" (click)="toggleMinimize()"><div class="header-content"><mat-icon>smart_toy</mat-icon><h3>Asistente Virtual</h3></div><button mat-icon-button class="minimize-btn"><mat-icon>{{ minimized ? 'add' : 'remove' }}</mat-icon></button></div>
+  <div class="chatbot-content" *ngIf="!minimized">
+    <div class="chatbot-messages" #messagesContainer>
+      <div *ngFor="let msg of messages" class="message" [ngClass]="msg.sender"><div class="message-text">{{ msg.text }}</div><button *ngIf="msg.isButton" class="message-button" (click)="msg.onClick()">Solicitar reactivación</button></div>
+      <div *ngIf="cargando" class="message bot typing"><div class="typing-indicator"><span></span><span></span><span></span></div></div>
+      <div #scrollAnchor></div>
+    </div>
+    <div class="chatbot-options" *ngIf="showOptions && !cargando"><button *ngFor="let opt of options" class="option-button" (click)="handleOptionSelect(opt)">{{ opt }}</button></div>
+    <div class="chatbot-input" *ngIf="!showOptions || collectingInfo"><input type="text" [(ngModel)]="inputValue" (keyup.enter)="sendMessage()" [placeholder]="inputPlaceholder" [disabled]="cargando"><button (click)="sendMessage()" [disabled]="cargando || !inputValue.trim()"><mat-icon>send</mat-icon></button></div>
+  </div>
+</div>

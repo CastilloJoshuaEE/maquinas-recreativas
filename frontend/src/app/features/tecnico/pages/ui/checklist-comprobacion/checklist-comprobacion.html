@@ -1,0 +1,7 @@
+<div class="checklist-container">
+  <h3>Checklist de comprobación</h3>
+  <div class="checklist-item"><mat-checkbox [(ngModel)]="checklist.placaFuncional">¿Placa funcional?</mat-checkbox></div>
+  <div class="checklist-item"><mat-checkbox [(ngModel)]="checklist.carcasaBuenEstado">¿Carcasa en buen estado?</mat-checkbox></div>
+  <div class="checklist-item"><mat-checkbox [(ngModel)]="checklist.experienciaJuegoAcorde">¿Experiencia de juego acorde?</mat-checkbox></div>
+  <div class="action-buttons"><button mat-raised-button color="primary" (click)="onAprobar.emit(checklist)" [disabled]="!allChecksPassed()"><mat-icon>check_circle</mat-icon> Mandar a distribución</button><button mat-raised-button color="warn" (click)="onRechazar.emit()"><mat-icon>cancel</mat-icon> Mandar a reensamblar</button></div>
+</div>

@@ -1,0 +1,37 @@
+.dashboard-container { min-height: 100vh; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); }
+.dashboard-sections { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+hr { margin: 1.5rem 0; border: none; height: 1px; background: rgba(255,255,255,0.2); }
+.profile-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; color: white; }
+.profile-section h2 { color: white; margin-bottom: 1rem; }
+.profile-info p { margin: 0.5rem 0; color: rgba(255,255,255,0.9); }
+.notifications-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1rem; }
+.notifications-section h2 { cursor: pointer; color: white; margin: 0; padding: 0.5rem; }
+.notificaciones-list { list-style: none; padding: 0; margin-top: 1rem; }
+.notificacion-item { padding: 1rem; margin: 0.5rem 0; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.notificacion-item:hover { background: rgba(255,255,255,0.1); }
+.notificacion-item.no-leida { background: rgba(79,107,237,0.2); border-left: 3px solid #4f6bed; }
+.notificacion-content { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+.machines-section h2 { color: white; margin-bottom: 1rem; }
+.machine-list { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.machine-list h3 { cursor: pointer; color: white; margin: 0; padding: 0.5rem; }
+.machine-list ul { list-style: none; padding: 0; margin-top: 0.5rem; }
+.li-maquina { padding: 1rem; margin: 0.5rem 0; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+.li-maquina:hover { background: rgba(255,255,255,0.1); }
+.li-maquina.selected { background: rgba(79,107,237,0.3); border-left-color: #4f6bed; }
+.li-maquina-content { display: block; }
+.span-comercio-details { display: block; font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 0.25rem; }
+.actions-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; }
+.actions-section h2 { color: white; margin-bottom: 1rem; }
+.action-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+button[color="success"] { background-color: #28a745; color: white; }
+.loading-small { display: flex; justify-content: center; padding: 1rem; }
+.no-data { text-align: center; padding: 1rem; color: rgba(255,255,255,0.7); }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-mensaje { background: white; border-radius: 12px; width: 90%; max-width: 500px; overflow: hidden; }
+.modal-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #4f6bed, #3d55c3); color: white; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; color: white; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; }
+.modal-body { padding: 1.5rem; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 1rem; }
+.mensaje-textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; resize: vertical; font-family: inherit; }
+@media (max-width: 768px) { .dashboard-sections { padding: 1rem; } .action-buttons { flex-direction: column; } .action-buttons button { width: 100%; } }

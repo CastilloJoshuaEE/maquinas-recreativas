@@ -16,7 +16,7 @@ export const routes: Routes = [
   // Redirección por defecto
   { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
   
-  // Módulo de autenticación (sin lazy loading por ser página inicial)
+  // Módulo de autenticación
   {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
@@ -69,18 +69,10 @@ export const routes: Routes = [
   },
   
   // Páginas públicas
-  {
-    path: 'informacion',
-    loadComponent: () => import('./features/pages/informacion/informacion.component').then(m => m.InformacionComponent)
-  },
-  {
-    path: 'no-autorizado',
-    loadComponent: () => import('./features/pages/no-autorizado/no-autorizado.component').then(m => m.NoAutorizadoComponent)
-  },
-  {
-    path: 'acceso-restringido',
-    loadComponent: () => import('./features/pages/acceso-restringido/acceso-restringido.component').then(m => m.AccesoRestringidoComponent)
-  },
+  { path: 'informacion', loadComponent: () => import('./features/pages/informacion/informacion').then(m => m.InformacionComponent) },
+  { path: 'no-autorizado', loadComponent: () => import('./features/pages/no-autorizado/no-autorizado').then(m => m.NoAutorizadoComponent) },
+  { path: 'acceso-restringido', loadComponent: () => import('./features/pages/acceso-restringido/acceso-restringido').then(m => m.AccesoRestringidoComponent) },
+  { path: 'historial-general', loadComponent: () => import('./features/pages/historial-general/historial-general').then(m => m.HistorialGeneralComponent) },
   
   // Ruta comodín - redirige a login
   { path: '**', redirectTo: '/auth/login' }

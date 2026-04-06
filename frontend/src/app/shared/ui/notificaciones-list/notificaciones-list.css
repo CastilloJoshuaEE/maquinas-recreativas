@@ -1,0 +1,108 @@
+.notificaciones-list-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.notificaciones-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.notificaciones-header h3 {
+  margin: 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unread-badge {
+  background: #ff4757;
+  color: white;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+}
+
+.close-btn {
+  color: white;
+}
+
+.notificaciones-content {
+  padding: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notificaciones-ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notificacion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin: 0.25rem 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notificacion-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notificacion-item.no-leida {
+  background: rgba(79, 107, 237, 0.2);
+  border-left: 3px solid #4f6bed;
+}
+
+.notificacion-content {
+  flex: 1;
+}
+
+.notificacion-mensaje {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.notificacion-fecha {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+}
+
+.notificacion-detalles {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notificacion-detalles span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mark-read-btn {
+  color: #4f6bed;
+}
+
+.empty-message, .loading-container {
+  text-align: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}

@@ -1,0 +1,13 @@
+.filtros-container { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; margin-bottom: 1rem; overflow: hidden; transition: all 0.3s ease; }
+.filtros-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; cursor: pointer; background: rgba(0,0,0,0.2); }
+.filtros-header h3 { margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
+.filtros-header h3 mat-icon { font-size: 1.2rem; }
+.filtros-body { padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.2); }
+.filtros-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 1rem; align-items: start; }
+.filter-field mat-form-field { width: 100%; }
+.date-range { display: flex; gap: 1rem; }
+.date-range mat-form-field { flex: 1; }
+.filter-actions { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+.active-filters { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.active-label { color: white; font-size: 0.85rem; }
+@media (max-width: 768px) { .filtros-form { grid-template-columns: 1fr; } .date-range { flex-direction: column; gap: 0; } .filter-actions { flex-direction: column; } .filter-actions button { width: 100%; } }

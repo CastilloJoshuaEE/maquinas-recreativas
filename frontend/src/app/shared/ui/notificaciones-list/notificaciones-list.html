@@ -1,0 +1,46 @@
+<div class="notificaciones-list-container">
+  <div class="notificaciones-header" (click)="toggleMostrar()">
+    <h3>
+      <mat-icon>notifications</mat-icon>
+      Notificaciones
+      <span class="unread-badge" *ngIf="noLeidas > 0">{{ noLeidas }}</span>
+    </h3>
+    <button mat-icon-button class="close-btn" *ngIf="onClose.observed" (click)="cerrar(); $event.stopPropagation()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <div *ngIf="mostrarNotificaciones" class="notificaciones-content">
+    <div *ngIf="cargando" class="loading-container">
+      <mat-spinner diameter="30"></mat-spinner>
+    </div>
+    
+    <div *ngIf="!cargando && notificaciones.length === 0" class="empty-message">
+      <p>{{ emptyMessage }}</p>
+    </div>
+    
+    <ul *ngIf="!cargando && notificaciones.length > 0" class="notificaciones-ul">
+      <li *ngFor="let notif of notificaciones" 
+          class="notificacion-item"
+          [class.no-leida]="!notif.leida">
+        <div class="notificacion-content" (click)="verReporte(notif.ID_Reporte)">
+          <div class="notificacion-mensaje">
+            <strong>{{ notif.Tipo }}</strong> - {{ notif.mensaje }}
+          </div>
+          <div class="notificacion-fecha">
+            {{ notif.fecha_hora | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+          <div class="notificacion-detalles" *ngIf="notif.Nombre_Maquina">
+            <span><mat-icon>videogame_asset</mat-icon> {{ notif.Nombre_Maquina }}</span>
+          </div>
+        </div>
+        <button mat-icon-button class="mark-read-btn" 
+                *ngIf="!notif.leida"
+                (click)="marcarComoLeida(notif.ID_Notificaciones); $event.stopPropagation()"
+                matTooltip="Marcar como leída">
+          <mat-icon>done</mat-icon>
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>

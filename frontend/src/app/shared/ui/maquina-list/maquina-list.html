@@ -1,0 +1,48 @@
+<div class="machine-list">
+  <h3 class="machine-list-header" (click)="toggleMostrar()">
+    {{ title }} {{ mostrarMaquinas ? '🔽' : '▶️' }}
+  </h3>
+  
+  <div *ngIf="mostrarMaquinas">
+    <div *ngIf="maquinas.length === 0" class="empty-message">
+      <p>{{ emptyMessage }}</p>
+    </div>
+    
+    <ul *ngIf="maquinas.length > 0" class="maquinas-ul">
+      <li *ngFor="let maquina of maquinas" 
+          class="li-maquina"
+          [class.selected]="isSelected(maquina)"
+          (click)="seleccionarMaquina(maquina)">
+        <div class="li-maquina-content">
+          <strong>{{ maquina.Nombre_Maquina }}</strong>
+          <br />
+          <span class="span-comercio-details" *ngIf="maquina.NombreComercio">
+            <strong>Comercio:</strong> {{ maquina.NombreComercio }}
+          </span>
+          <span class="span-comercio-details" *ngIf="maquina.DireccionComercio">
+            <strong>Dirección:</strong> {{ maquina.DireccionComercio }}
+          </span>
+        </div>
+      </li>
+    </ul>
+    
+    <!-- Botón de componentes (fuera del collapse) -->
+    <div class="action-buttons-container" *ngIf="showComponentButton && selectedMaquina">
+      <button mat-raised-button color="primary" (click)="abrirComponentes()">
+        <mat-icon>memory</mat-icon>
+        Usar componentes
+      </button>
+    </div>
+    
+    <!-- Botones de acción adicionales -->
+    <div class="action-buttons-container" *ngIf="actionButtons.length > 0">
+      <button *ngFor="let btn of actionButtons" 
+              mat-raised-button 
+              [color]="btn.label.includes('alta') ? 'primary' : (btn.label.includes('baja') ? 'warn' : 'accent')"
+              (click)="btn.onClick()"
+              [disabled]="btn.disabled">
+        {{ btn.label }}
+      </button>
+    </div>
+  </div>
+</div>

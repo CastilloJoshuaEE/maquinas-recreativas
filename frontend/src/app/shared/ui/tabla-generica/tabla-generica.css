@@ -1,0 +1,11 @@
+.tabla-generica-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.toolbar { padding: 1rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.table-responsive { overflow-x: auto; }
+table { width: 100%; }
+.clickable tr.mat-row { cursor: pointer; }
+.clickable tr.mat-row:hover { background: #f5f5f5; }
+.badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.actions-cell { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.no-data { text-align: center; padding: 2rem; color: #999; }
+.no-data mat-icon { font-size: 3rem; width: auto; height: auto; margin-bottom: 0.5rem; }
+@media (max-width: 768px) { .toolbar { flex-direction: column; align-items: stretch; } }

@@ -1,0 +1,10 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onBackdropClick()" [class.modal-fixed]="fixed">
+  <div class="modal-container" [ngClass]="modalClass" (click)="$event.stopPropagation()" [style.width]="width" [style.max-width]="maxWidth">
+    <div class="modal-header" *ngIf="showHeader">
+      <h2 *ngIf="title">{{ title }}</h2><h3 *ngIf="subtitle">{{ subtitle }}</h3>
+      <button class="modal-close" (click)="close()" aria-label="Cerrar" *ngIf="showCloseButton"><mat-icon>close</mat-icon></button>
+    </div>
+    <div class="modal-body"><ng-content></ng-content><ng-container *ngIf="contentTemplate"><ng-template [ngTemplateOutlet]="contentTemplate"></ng-template></ng-container></div>
+    <div class="modal-footer" *ngIf="showFooter"><ng-content select="[modal-footer]"></ng-content><div class="footer-actions" *ngIf="!customFooter"><button mat-button (click)="close()" *ngIf="showCancelButton">{{ cancelText }}</button><button mat-raised-button color="primary" (click)="confirm()" *ngIf="showConfirmButton" [disabled]="confirmDisabled">{{ confirmText }}</button></div></div>
+  </div>
+</div>
