@@ -6,7 +6,7 @@
 
 import { Component, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule,FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -22,13 +22,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
-import { Recaudacion, Maquina } from '@core/models/recaudacion.model';
-
+import { Recaudacion } from '@core/models/recaudacion.model';
+import { Maquina } from '@core/models/maquina.model';
 @Component({
   selector: 'app-consultar-recaudaciones',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatTableModule, MatPaginatorModule, MatSortModule,
+    CommonModule,FormsModule,MatSelectModule, ReactiveFormsModule, MatTableModule, MatPaginatorModule, MatSortModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule, AdminHeaderComponent
   ],
@@ -77,7 +77,9 @@ export class ConsultarRecaudacionesComponent implements OnInit, AfterViewInit {
   private cargarMaquinas(): void {
     this.contabilidadService.getMaquinasRecaudacion().subscribe({
       next: (data) => { this.maquinas = data; },
-      error: () => { this.snackBar.error('Error al cargar máquinas', 'Cerrar'); }
+      error: () => { 
+        this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 });
+      }
     });
   }
   

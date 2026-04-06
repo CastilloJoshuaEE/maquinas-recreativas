@@ -102,12 +102,12 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.maquinas = data;
         this.cargandoMaquinas = false;
-        if (data.length === 0) this.snackBar.warning('No hay máquinas operativas para este comercio', 'Cerrar');
+        if (data.length === 0) this.snackBar.open('No hay máquinas operativas para este comercio', 'Cerrar', { duration: 3000 });
       },
       error: () => {
         this.maquinas = [];
         this.cargandoMaquinas = false;
-        this.snackBar.error('Error al cargar máquinas', 'Cerrar');
+        this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 });
       }
     });
   }
@@ -150,15 +150,18 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
     this.submitting = true;
     const currentUser = this.authService.getCurrentUser();
     const formValue = this.recaudacionForm.getRawValue();
-    const data = {
-      ID_Comercio: formValue.ID_Comercio, ID_Maquina: formValue.ID_Maquina,
-      Tipo_Comercio: formValue.Tipo_Comercio,
-      Porcentaje_Comercio: formValue.Tipo_Comercio === 'Mayorista' ? formValue.Porcentaje_Comercio : 0,
-      Monto_Total: parseFloat(formValue.Monto_Total), Monto_Comercio: parseFloat(formValue.Monto_Comercio),
-      Monto_Empresa: parseFloat(formValue.Monto_Empresa),
-      fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
-      detalle: formValue.detalle, ID_Usuario: currentUser?.ID_Usuario
-    };
+const data = {
+  ID_Comercio: formValue.ID_Comercio,
+  ID_Maquina: formValue.ID_Maquina,
+  Tipo_Comercio: formValue.Tipo_Comercio,
+  Porcentaje_Comercio: formValue.Tipo_Comercio === 'Mayorista' ? formValue.Porcentaje_Comercio : 0,
+  Monto_Total: parseFloat(formValue.Monto_Total),
+  Monto_Comercio: parseFloat(formValue.Monto_Comercio),
+  Monto_Empresa: parseFloat(formValue.Monto_Empresa),
+  fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
+  detalle: formValue.detalle,
+  ID_Usuario: currentUser?.ID_Usuario || ''
+};
     
     this.contabilidadService.registrarRecaudacion(data).subscribe({
       next: (response) => {

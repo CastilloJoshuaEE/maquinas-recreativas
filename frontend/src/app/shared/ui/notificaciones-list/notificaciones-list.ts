@@ -23,9 +23,9 @@ import { User } from '@core/models/user.model';
 export class NotificacionesListComponent implements OnInit {
   @Input() user: User | null = null;
   @Input() emptyMessage: string = 'No hay notificaciones...';
-  
+  @Input() currentUser: User | null = null;
   @Output() onClose = new EventEmitter<void>();
-  
+  @Output() close = new EventEmitter<void>();
   private notificationService = inject(NotificationService);
   private router = inject(Router);
   

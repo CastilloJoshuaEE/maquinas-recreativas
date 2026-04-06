@@ -42,7 +42,7 @@ function applySecurityHeaders(): void
     // Content Security Policy
     $cspRules = [
         "default-src 'self'",
-        "connect-src 'self' http://localhost:5173 https://maquinas_recreativas.infinityfree.me",
+        "connect-src 'self' http://localhost:4200 https://maquinas_recreativas.infinityfree.me",
         "img-src 'self' data:",
         "script-src 'self'",
         "style-src 'self'",

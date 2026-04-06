@@ -87,8 +87,8 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   private handleEmailCollection(email: string): void {
     this.apiService.post(API_ENDPOINTS.SEARCH_BY_EMAIL, { email }).subscribe({
       next: (response) => {
-        if (response.success && response.usuario) {
-          const userData = response.usuario;
+if (response.success && response['usuario']) {
+  const userData = response['usuario'];
           if (userData.estado === 'Inhabilitado') {
             this.messages.push({ text: "Hemos detectado que tu cuenta ha sido inhabilitada. ¿Deseas hacer la solicitud para reactivarla?", sender: 'bot' });
             this.messages.push({ text: "Haz clic aquí para iniciar el proceso de reactivación.", sender: 'bot', isButton: true, onClick: () => { this.router.navigate(['/reportes/gestion'], { state: { userData, isDisabledUser: true } }); } });

@@ -19,9 +19,8 @@ import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
 import { Maquina } from '@core/models/maquina.model';
 import { User } from '@core/models/user.model';
-import { ComercioFormComponent } from '../ui/comercio-form/comercio-form';
-import { MaquinaFormComponent } from '../ui/maquina-form/maquina-form';
-
+import { ComercioFormComponent } from '../../ui/comercio-form/comercio-form';
+import { MaquinaFormComponent } from '../../ui/maquina-form/maquina-form';
 @Component({
   selector: 'app-dashboard-logistica',
   standalone: true,

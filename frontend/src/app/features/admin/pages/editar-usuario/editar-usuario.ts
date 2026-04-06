@@ -75,8 +75,9 @@ export class EditarUsuarioComponent implements OnInit {
     
     this.apiService.get(API_ENDPOINTS.ADMIN_USER_BY_ID(uuid)).subscribe({
       next: (response) => {
-        if (response.success && response.usuario) {
-          this.usuario = response.usuario;
+        // Corrección: Acceder a 'usuario' con corchetes
+        if (response.success && response['usuario']) {
+          this.usuario = response['usuario'];
           this.inicializarFormulario();
         } else {
           this.error = response.message || 'Usuario no encontrado';

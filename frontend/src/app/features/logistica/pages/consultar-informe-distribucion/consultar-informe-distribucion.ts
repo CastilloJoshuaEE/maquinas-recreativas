@@ -83,14 +83,14 @@ export class ConsultarInformeDistribucionLogisticaComponent implements OnInit, A
   private cargarMaquinas(): void {
     this.logisticaService.getMaquinasPorEstado('Operativa').subscribe({
       next: (data) => { this.maquinas = data; },
-      error: () => { this.snackBar.error('Error al cargar máquinas', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 }); }
     });
   }
   
   private cargarComercios(): void {
     this.logisticaService.getComercios().subscribe({
       next: (data) => { this.comercios = data; },
-      error: () => { this.snackBar.error('Error al cargar comercios', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar comercios', 'Cerrar', { duration: 3000 }); }
     });
   }
   

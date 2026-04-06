@@ -395,7 +395,6 @@ frontend/
 
 ## Cómo instalarlo
 
-
 Navegar a la carpeta del proyecto
 powershell
 cd C:\ruta\de\tu\proyecto\frontend
@@ -415,14 +414,14 @@ powershell
 npm install chart.js@4.4.0 moment@2.30.1
 9. Instalar ngx-toastr y ngx-pagination
 powershell
-npm install ngx-toastr@19.0.0 ngx-pagination@6.0.3 10. Instalar dependencias de desarrollo  npm install -D 
-@angular-devkit/build-angular@20.3.18 
-@angular-eslint/builder@20.3.18 
-@angular-eslint/eslint-plugin@20.3.18 
-@angular-eslint/eslint-plugin-template@20.3.18 
-@angular-eslint/schematics@20.3.18 
-@angular-eslint/template-parser@20.3.18 
-@angular/cli@20.3.18 
+npm install ngx-toastr@19.0.0 ngx-pagination@6.0.3 10. Instalar dependencias de desarrollo  npm install -D
+@angular-devkit/build-angular@20.3.18
+@angular-eslint/builder@20.3.18
+@angular-eslint/eslint-plugin@20.3.18
+@angular-eslint/eslint-plugin-template@20.3.18
+@angular-eslint/schematics@20.3.18
+@angular-eslint/template-parser@20.3.18
+@angular/cli@20.3.18
 @angular/compiler-cli@20.3.18  11. Instalar Compodoc para documentación
 powershell
 npm install -D @compodoc/compodoc@1.1.25  12. Instalar herramientas de testing
@@ -481,8 +480,6 @@ Verificar instalación
 powershell
 npm list --depth=0
 
-
-
 angular.json:
 
 **"styles"**: [
@@ -490,6 +487,8 @@ angular.json:
 "src/styles.css"
 ],
 "scripts": []
+
+npm install --save-dev jest @types/jest ts-jest
 
 ## Cómo generar la documentación
 

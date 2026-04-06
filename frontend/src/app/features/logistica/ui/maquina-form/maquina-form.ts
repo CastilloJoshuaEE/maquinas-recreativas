@@ -6,7 +6,7 @@
 
 import { Component, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule,FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -24,7 +24,7 @@ import { User } from '@core/models/user.model';
   selector: 'app-maquina-form',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, MatStepperModule, MatFormFieldModule,
+    CommonModule, FormsModule,ReactiveFormsModule, MatStepperModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
   ],
   templateUrl: './maquina-form.html',

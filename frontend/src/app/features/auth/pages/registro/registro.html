@@ -43,15 +43,18 @@
           <mat-icon matPrefix>work</mat-icon>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width" *ngIf="registroForm.get('tipo')?.value === 'Tecnico'">
-          <mat-label>Especialidad</mat-label>
-          <mat-select formControlName="especialidad">
-            <mat-option value="Ensamblador">Ensamblador</mat-option>
-            <mat-option value="Comprobador">Comprobador</mat-option>
-            <mat-option value="Mantenimiento">Mantenimiento</mat-option>
-          </mat-select>
-          <mat-icon matPrefix>build</mat-icon>
-        </mat-form-field>
+        <!-- Cambiado: Usar @if en lugar de *ngIf -->
+        @if (registroForm.get('tipo')?.value === 'Tecnico') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Especialidad</mat-label>
+            <mat-select formControlName="especialidad">
+              <mat-option value="Ensamblador">Ensamblador</mat-option>
+              <mat-option value="Comprobador">Comprobador</mat-option>
+              <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>build</mat-icon>
+          </mat-form-field>
+        }
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nombre de usuario</mat-label>
@@ -74,13 +77,21 @@
             Subir Currículum (PDF)
             <input type="file" accept=".pdf" (change)="onFileSelected($event)" hidden>
           </label>
-          <span *ngIf="fileName" class="file-name">{{ fileName }}</span>
+          <!-- Cambiado: Usar @if en lugar de *ngIf -->
+          @if (fileName) {
+            <span class="file-name">{{ fileName }}</span>
+          }
         </div>
 
         <div class="form-actions">
           <button mat-raised-button color="primary" type="submit" [disabled]="registroForm.invalid || loading">
-            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-            <span *ngIf="!loading">Registrar</span>
+            <!-- Cambiado: Usar @if en lugar de *ngIf -->
+            @if (loading) {
+              <mat-spinner diameter="20"></mat-spinner>
+            }
+            @if (!loading) {
+              <span>Registrar</span>
+            }
           </button>
           <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>
         </div>

@@ -20,7 +20,7 @@ import { User } from '@core/models/user.model';
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, AdminHeaderComponent],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, AdminHeaderComponent],
   templateUrl: './perfil.html',
   styleUrls: ['./perfil.css']
 })

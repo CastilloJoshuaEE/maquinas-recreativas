@@ -39,9 +39,9 @@
               <button mat-icon-button color="primary" (click)="editarRecaudacion(row)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
               <button mat-icon-button color="warn" (click)="eliminarRecaudacion(row)" matTooltip="Eliminar"><mat-icon>delete</mat-icon></button>
             </td></ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></table>
-          </table>
+<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
           <mat-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20,50,100]" (page)="onPageChange($event)"></mat-paginator>
         </div>
         <div *ngIf="dataSource.data.length === 0" class="no-results"><mat-icon>info</mat-icon><p>No se encontraron recaudaciones</p></div>

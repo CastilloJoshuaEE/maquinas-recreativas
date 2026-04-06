@@ -15,6 +15,8 @@ export class SafeHtmlPipe implements PipeTransform {
   private sanitizer = inject(DomSanitizer);
   
   transform(value: string): SafeHtml {
-    return this.sanitizer.sanitize(8, value) || '';
+    if (!value) return '';
+    // Usar bypassSecurityTrustHtml para permitir HTML seguro
+    return this.sanitizer.bypassSecurityTrustHtml(value);
   }
 }

@@ -18,9 +18,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
-import { Recaudacion, Maquina } from '@core/models/recaudacion.model';
+import { Recaudacion } from '@core/models/recaudacion.model';
 import { Subscription } from 'rxjs';
-
+import { Maquina } from '@core/models/maquina.model';
 @Component({
   selector: 'app-actualizar-recaudacion',
   standalone: true,
@@ -83,7 +83,7 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
   private cargarMaquinas(): void {
     this.contabilidadService.getMaquinasRecaudacion().subscribe({
       next: (data) => { this.maquinas = data; },
-      error: () => { this.snackBar.error('Error al cargar máquinas', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 }); }
     });
   }
   

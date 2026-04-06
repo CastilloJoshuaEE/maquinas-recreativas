@@ -4,49 +4,64 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { HttpRequest } from '@angular/common/http';
+import { HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from '@core/services/auth';
+import { Observable, of } from 'rxjs';
 
 describe('authInterceptor', () => {
   let authServiceMock: any;
 
   beforeEach(() => {
     authServiceMock = { getToken: jest.fn() };
-    TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: authServiceMock }] });
-  });
-
-  it('should add Authorization header when token exists', () => {
-    authServiceMock.getToken.mockReturnValue('test-token');
-    const req = new HttpRequest('GET', '/api/test');
-    TestBed.runInInjectionContext(() => {
-      authInterceptor(req, (handledReq) => {
-        expect(handledReq.headers.has('Authorization')).toBe(true);
-        expect(handledReq.headers.get('Authorization')).toBe('Bearer test-token');
-        return handledReq;
-      });
+    TestBed.configureTestingModule({ 
+      providers: [{ provide: AuthService, useValue: authServiceMock }] 
     });
   });
 
-  it('should not add Authorization header for login requests', () => {
+  it('should add Authorization header when token exists', (done) => {
     authServiceMock.getToken.mockReturnValue('test-token');
-    const req = new HttpRequest('POST', '/api/usuario/login');
+    const originalReq = new HttpRequest('GET', '/api/test');
+    
+    const mockHandler: HttpHandlerFn = (request: HttpRequest<unknown>) => {
+      expect(request.headers.has('Authorization')).toBe(true);
+      expect(request.headers.get('Authorization')).toBe('Bearer test-token');
+      done();
+      return of({} as HttpEvent<unknown>);
+    };
+
     TestBed.runInInjectionContext(() => {
-      authInterceptor(req, (handledReq) => {
-        expect(handledReq.headers.has('Authorization')).toBe(false);
-        return handledReq;
-      });
+      authInterceptor(originalReq, mockHandler).subscribe();
     });
   });
 
-  it('should not add Authorization header when token is missing', () => {
+  it('should not add Authorization header for login requests', (done) => {
+    authServiceMock.getToken.mockReturnValue('test-token');
+    const originalReq = new HttpRequest('POST', '/api/usuario/login', null);
+    
+    const mockHandler: HttpHandlerFn = (request: HttpRequest<unknown>) => {
+      expect(request.headers.has('Authorization')).toBe(false);
+      done();
+      return of({} as HttpEvent<unknown>);
+    };
+
+    TestBed.runInInjectionContext(() => {
+      authInterceptor(originalReq, mockHandler).subscribe();
+    });
+  });
+
+  it('should not add Authorization header when token is missing', (done) => {
     authServiceMock.getToken.mockReturnValue(null);
-    const req = new HttpRequest('GET', '/api/test');
+    const originalReq = new HttpRequest('GET', '/api/test');
+    
+    const mockHandler: HttpHandlerFn = (request: HttpRequest<unknown>) => {
+      expect(request.headers.has('Authorization')).toBe(false);
+      done();
+      return of({} as HttpEvent<unknown>);
+    };
+
     TestBed.runInInjectionContext(() => {
-      authInterceptor(req, (handledReq) => {
-        expect(handledReq.headers.has('Authorization')).toBe(false);
-        return handledReq;
-      });
+      authInterceptor(originalReq, mockHandler).subscribe();
     });
   });
 });

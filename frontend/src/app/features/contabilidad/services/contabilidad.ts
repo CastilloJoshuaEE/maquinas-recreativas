@@ -27,11 +27,10 @@ export class ContabilidadService {
       map(response => ({
         success: response.success,
         message: response.message,
-        ID_Recaudacion: response.ID_Recaudacion
+        ID_Recaudacion: response['ID_Recaudacion']
       }))
     );
   }
-
   /**
    * Obtiene todas las recaudaciones con filtros
    * @param params - Parámetros de filtrado
@@ -39,7 +38,7 @@ export class ContabilidadService {
    */
   getRecaudaciones(params?: any): Observable<Recaudacion[]> {
     return this.apiService.get<{ recaudaciones: Recaudacion[] }>(API_ENDPOINTS.RECAUDACIONES, params).pipe(
-      map(response => response.success && response.recaudaciones ? response.recaudaciones : [])
+      map(response => response.success && response['recaudaciones'] ? response['recaudaciones'] : [])
     );
   }
 
@@ -50,7 +49,7 @@ export class ContabilidadService {
    */
   getRecaudacionById(id: string): Observable<Recaudacion | null> {
     return this.apiService.get<{ recaudacion: Recaudacion }>(API_ENDPOINTS.RECAUDACION_BY_ID(id)).pipe(
-      map(response => response.success && response.recaudacion ? response.recaudacion : null)
+      map(response => response.success && response['recaudacion'] ? response['recaudacion'] : null)
     );
   }
 
@@ -75,37 +74,35 @@ export class ContabilidadService {
       map(response => ({ success: response.success, message: response.message }))
     );
   }
-
   /**
    * Obtiene resumen de recaudaciones
    * @returns Observable con resumen
    */
   getResumenRecaudaciones(): Observable<ResumenRecaudacion[]> {
     return this.apiService.get<{ resumen: ResumenRecaudacion[] }>(API_ENDPOINTS.RECAUDACION_RESUMEN).pipe(
-      map(response => response.success && response.resumen ? response.resumen : [])
+      map(response => response.success && response['resumen'] ? response['resumen'] : [])
     );
   }
-
   /**
    * Obtiene máquinas disponibles para recaudación
    * @returns Observable con lista de máquinas
    */
   getMaquinasRecaudacion(): Observable<Maquina[]> {
     return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINAS_RECAUDACION).pipe(
-      map(response => response.success && response.maquinas ? response.maquinas : [])
+      map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
     );
   }
-
   /**
    * Obtiene máquinas operativas por comercio
    * @param idComercio - ID del comercio
    * @returns Observable con lista de máquinas
    */
   getMaquinasOperativasPorComercio(idComercio: string): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINAS_OPERATIVAS_POR_COMERCIO, { ID_Comercio: idComercio }).pipe(
-      map(response => response.success && response.maquinas ? response.maquinas : [])
+    return this.apiService.get<{ maquinas: Maquina[] }>(`/maquinas/operativas/comercio/${idComercio}`, { ID_Comercio: idComercio }).pipe(
+      map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
     );
   }
+
 
   /**
    * Obtiene todos los comercios
@@ -113,7 +110,7 @@ export class ContabilidadService {
    */
   getComercios(): Observable<Comercio[]> {
     return this.apiService.get<{ comercios: Comercio[] }>(API_ENDPOINTS.COMERCIOS).pipe(
-      map(response => response.success && response.comercios ? response.comercios : [])
+      map(response => response.success && response['comercios'] ? response['comercios'] : [])
     );
   }
 
@@ -135,7 +132,7 @@ export class ContabilidadService {
    */
   getInformeByRecaudacion(idRecaudacion: string): Observable<InformeRecaudacion | null> {
     return this.apiService.get<{ informe: InformeRecaudacion }>(API_ENDPOINTS.INFORME_BY_RECAUDACION(idRecaudacion)).pipe(
-      map(response => response.success && response.informe ? response.informe : null)
+      map(response => response.success && response['informe'] ? response['informe'] : null)
     );
   }
 
@@ -144,9 +141,10 @@ export class ContabilidadService {
    * @param params - Parámetros de filtrado
    * @returns Observable con lista de informes
    */
+
   getInformesDistribucion(params?: any): Observable<any[]> {
     return this.apiService.get<{ informes: any[] }>(API_ENDPOINTS.DISTRIBUCION_INFORMES, params).pipe(
-      map(response => response.success && response.informes ? response.informes : [])
+      map(response => response.success && response['informes'] ? response['informes'] : [])
     );
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { Pipe, PipeTransform } from '@angular/core';
-import * as moment from 'moment';
+import moment from 'moment'; // Cambiado: importación por defecto
 
 @Pipe({
   name: 'fechaRelativa',

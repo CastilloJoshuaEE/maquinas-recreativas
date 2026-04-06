@@ -42,7 +42,7 @@ export class AuthService {
   login(credentials: LoginCredentials): Observable<AuthResponse> {
     return this.apiService.post<AuthResponse>(API_ENDPOINTS.LOGIN, credentials).pipe(
       tap(response => {
-        if (response.success && response.usuario) {
+if (response.success && response['usuario']) {
           this.setSession(response);
         }
       }),

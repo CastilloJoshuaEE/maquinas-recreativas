@@ -13,11 +13,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
-
+import { MatDividerModule } from '@angular/material/divider';
+import { NotificacionesListComponent } from '../notificaciones-list/notificaciones-list'; 
 @Component({
   selector: 'app-admin-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatButtonModule, MatIconModule, MatMenuModule, MatBadgeModule],
+  imports: [CommonModule, MatDividerModule,MatButtonModule, MatIconModule, MatMenuModule, MatBadgeModule, NotificacionesListComponent ],
   templateUrl: './admin-header.html',
   styleUrls: ['./admin-header.css']
 })

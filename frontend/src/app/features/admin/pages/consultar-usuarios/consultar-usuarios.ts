@@ -92,8 +92,8 @@ export class ConsultarUsuariosComponent implements OnInit {
     this.apiService.get(API_ENDPOINTS.ADMIN_USERS, params).subscribe({
       next: (response) => {
         if (response.success) {
-          this.usuarios = response.usuarios || [];
-          this.totalItems = response.total || this.usuarios.length;
+this.usuarios = response['usuarios'] || [];
+this.totalItems = response['total'] || this.usuarios.length;
         } else {
           this.error = response.message || 'Error al cargar usuarios';
         }

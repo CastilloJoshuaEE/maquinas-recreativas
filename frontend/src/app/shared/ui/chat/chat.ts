@@ -18,11 +18,12 @@ import { ReportService } from '@core/services/report';
 import { User } from '@core/models/user.model';
 import { Reporte, Comentario } from '@core/models/reporte.model';
 import { Subject } from 'rxjs';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule],
+  imports: [CommonModule,MatSelectModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule],
   templateUrl: './chat.html',
   styleUrls: ['./chat.css']
 })

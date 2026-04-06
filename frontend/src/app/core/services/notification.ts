@@ -50,13 +50,12 @@ export class NotificationService {
   getNotifications(userId: string): Observable<Notificacion[]> {
     return this.apiService.get<{ notificaciones: Notificacion[] }>(API_ENDPOINTS.NOTIFICACIONES(userId)).pipe(
       tap(response => {
-        if (response.success && response.notificaciones) {
-          const unread = response.notificaciones.filter(n => !n.leida).length;
+if (response.success && response['notificaciones']) {
+const unread = response['notificaciones'].filter((n: Notificacion) => !n.leida).length;
           this.unreadCountSignal.set(unread);
         }
       }),
-      map(response => response.success && response.notificaciones ? response.notificaciones : [])
-    );
+map(response => response.success && response['notificaciones'] ? response['notificaciones'] : [])    );
   }
 
   /**
@@ -66,8 +65,7 @@ export class NotificationService {
    */
   getMaquinaNotifications(userId: string): Observable<Notificacion[]> {
     return this.apiService.get<{ notificaciones: Notificacion[] }>(API_ENDPOINTS.NOTIFICACIONES_MAQUINA(userId)).pipe(
-      map(response => response.success && response.notificaciones ? response.notificaciones : [])
-    );
+map(response => response.success && response['notificaciones'] ? response['notificaciones'] : [])    );
   }
 
   /**
@@ -109,11 +107,11 @@ export class NotificationService {
   getUnreadCount(userId: string): Observable<number> {
     return this.apiService.get<{ total: number }>(API_ENDPOINTS.NOTIFICACIONES_NO_LEIDAS(userId)).pipe(
       tap(response => {
-        if (response.success && response.total !== undefined) {
-          this.unreadCountSignal.set(response.total);
-        }
+if (response.success && response['total'] !== undefined) {
+  this.unreadCountSignal.set(response['total']);
+}
       }),
-      map(response => response.success && response.total ? response.total : 0)
+map(response => response.success && response['total'] ? response['total'] : 0)
     );
   }
 

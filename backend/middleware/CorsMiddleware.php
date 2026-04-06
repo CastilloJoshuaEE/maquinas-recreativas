@@ -17,7 +17,7 @@ use maquinas_recreativas\Core\Response;
 class CorsMiddleware
 {
     private array $allowedOrigins = [
-        'http://localhost:5173',
+        'http://localhost:4200',
         'http://localhost:8000',
         'http://127.0.0.1',
         'http://localhost',

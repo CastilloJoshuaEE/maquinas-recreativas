@@ -24,8 +24,8 @@ export class AdminService {
   getUsuarios(params?: any): Observable<{ usuarios: User[]; total: number }> {
     return this.apiService.get<{ usuarios: User[]; total: number }>(API_ENDPOINTS.ADMIN_USERS, params).pipe(
       map(response => ({
-        usuarios: response.success && response.usuarios ? response.usuarios : [],
-        total: response.total || 0
+        usuarios: response.success && response['usuarios'] ? response['usuarios'] : [],
+        total: response['total'] || 0
       }))
     );
   }
@@ -37,7 +37,7 @@ export class AdminService {
    */
   getUsuarioById(uuid: string): Observable<User | null> {
     return this.apiService.get<{ usuario: User }>(API_ENDPOINTS.ADMIN_USER_BY_ID(uuid)).pipe(
-      map(response => response.success && response.usuario ? response.usuario : null)
+      map(response => response.success && response['usuario'] ? response['usuario'] : null)
     );
   }
 
@@ -94,7 +94,7 @@ export class AdminService {
    */
   getTecnicosByEspecialidad(especialidad: string): Observable<User[]> {
     return this.apiService.get<{ tecnicos: User[] }>(`/usuario/tecnicos/${especialidad}`).pipe(
-      map(response => response.success && response.tecnicos ? response.tecnicos : [])
+      map(response => response.success && response['tecnicos'] ? response['tecnicos'] : [])
     );
   }
 
@@ -105,7 +105,7 @@ export class AdminService {
    */
   getUsuariosByTipo(tipo: string): Observable<User[]> {
     return this.apiService.get<{ usuarios: User[] }>('/usuarios/por-tipo', { tipo }).pipe(
-      map(response => response.success && response.usuarios ? response.usuarios : [])
+      map(response => response.success && response['usuarios'] ? response['usuarios'] : [])
     );
   }
 }
