@@ -17,9 +17,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
-import { ApiService } from '@core/services/api.service';
-import { UserService } from '@core/services/user.service';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
+import { ApiService } from '@core/services/api';
+import { UserService } from '@core/services/user';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { User } from '@core/models/user.model';
 
