@@ -18,11 +18,11 @@ import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
 import { Maquina } from '@core/models/maquina.model';
 import { User } from '@core/models/user.model';
-
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-dashboard-mantenimiento',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, AdminHeaderComponent],
+  imports: [CommonModule,FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, AdminHeaderComponent],
   templateUrl: './dashboard-mantenimiento.html',
   styleUrls: ['./dashboard-mantenimiento.css']
 })

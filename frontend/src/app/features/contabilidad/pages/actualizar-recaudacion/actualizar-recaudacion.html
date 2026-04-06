@@ -21,8 +21,7 @@
           <form [formGroup]="recaudacionForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Máquina</mat-label>
-              <mat-select formControlName="ID_Maquina" disabled>
-                <mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option>
+<mat-select formControlName="ID_Maquina" [disabled]="true">                <mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option>
               </mat-select>
               <mat-icon matPrefix>videogame_asset</mat-icon>
             </mat-form-field>

@@ -81,7 +81,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
         this.administradores = usuarios.filter(u => u.tipo === 'Administrador');
         if (this.administradores.length > 0) this.nuevoReporte.destinatario = this.administradores[0].ID_Usuario;
       },
-      error: () => { this.snackBar.error('Error al cargar administradores', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar administradores', 'Cerrar', { duration: 3000 });}
     });
   }
   
@@ -89,7 +89,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
     if (!this.nuevoReporte.tipoDestinatario) { this.usuariosDisponibles = []; return; }
     this.reportesService.getUsuariosChat(this.currentUser!.ID_Usuario).subscribe({
       next: (usuarios) => { this.usuariosDisponibles = usuarios.filter(u => u.tipo === this.nuevoReporte.tipoDestinatario); },
-      error: () => { this.snackBar.error('Error al cargar usuarios', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 }); }
     });
   }
   
@@ -97,7 +97,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
     this.cargandoReportes = true;
     this.reportesService.getReportesByUser(this.currentUser!.ID_Usuario).subscribe({
       next: (reportes) => { this.reportes = reportes; this.filtrarReportes(); this.cargandoReportes = false; },
-      error: () => { this.cargandoReportes = false; this.snackBar.error('Error al cargar reportes', 'Cerrar'); }
+      error: () => { this.cargandoReportes = false; this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); }
     });
   }
   
@@ -106,7 +106,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   }
   
   onSubmit(): void {
-    if (!this.nuevoReporte.destinatario || !this.nuevoReporte.descripcion) { this.snackBar.warning('Complete todos los campos', 'Cerrar'); return; }
+    if (!this.nuevoReporte.destinatario || !this.nuevoReporte.descripcion) {this.snackBar.open('Complete todos los campos', 'Cerrar', { duration: 3000 });  }
     if (!confirm('¿Está seguro de enviar este reporte?')) return;
     this.enviando = true;
     let descripcion = this.nuevoReporte.descripcion;
@@ -120,27 +120,32 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (reporteId) => {
         if (reporteId) {
-          this.snackBar.success('Reporte enviado correctamente', 'Éxito');
+          this.snackBar.open('Reporte enviado correctamente', 'Cerrar', { duration: 3000 });
           this.nuevoReporte = { tipoDestinatario: '', destinatario: '', descripcion: '' };
           if (!this.esUsuarioInhabilitado && !this.modoAdmin) this.cargarReportes();
           else if (this.esUsuarioInhabilitado) setTimeout(() => this.router.navigate(['/']), 2000);
-        } else this.snackBar.error('Error al enviar el reporte', 'Error');
+        } else this.snackBar.open('Error al enviar el reporte', 'Cerrar', { duration: 3000 });
         this.enviando = false;
       },
-      error: () => { this.snackBar.error('Error al enviar el reporte', 'Error'); this.enviando = false; }
+      error: () => { this.snackBar.open('Error al enviar el reporte', 'Cerrar', { duration: 3000 }); this.enviando = false; }
     });
   }
-  
-  cambiarEstado(reporte: Reporte): void {
-    this.reportesService.actualizarEstado(reporte.ID_Reporte, reporte.estado).subscribe({
-      next: (success) => {
-        if (success) this.snackBar.success('Estado actualizado correctamente', 'Éxito');
-        else { this.snackBar.error('Error al actualizar estado', 'Error'); this.cargarReportes(); }
-      },
-      error: () => { this.snackBar.error('Error al actualizar estado', 'Error'); this.cargarReportes(); }
-    });
-  }
-  
+cambiarEstado(reporte: Reporte): void {
+  this.reportesService.updateReporteStatus(reporte.ID_Reporte, reporte.estado).subscribe({
+    next: (success: boolean) => {  // Tipar el parámetro success como boolean
+      if (success) {
+        this.snackBar.open('Estado actualizado correctamente', 'Cerrar', { duration: 3000 });
+      } else { 
+        this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 }); 
+        this.cargarReportes(); 
+      }
+    },
+    error: () => { 
+      this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 }); 
+      this.cargarReportes(); 
+    }
+  });
+}
   puedeCambiarEstado(reporte: Reporte): boolean {
     const esEmisor = reporte.ID_Usuario_Emisor === this.currentUser?.ID_Usuario;
     const esDestinatario = reporte.ID_Usuario_Destinatario === this.currentUser?.ID_Usuario;

@@ -106,7 +106,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
         this.usuariosFiltrados = [...this.usuarios];
         this.cargandoUsuarios = false;
       },
-      error: () => { this.cargandoUsuarios = false; this.snackBar.error('Error al cargar usuarios', 'Cerrar'); }
+      error: () => { this.cargandoUsuarios = false; this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 }); }
     });
   }
   
@@ -133,7 +133,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
         if (this.reportes.length > 0) { this.reporteSeleccionadoId = this.reportes[0].ID_Reporte; this.cargarComentarios(); }
         else this.reporteSeleccionadoId = null;
       },
-      error: () => { this.snackBar.error('Error al cargar reportes', 'Cerrar'); }
+      error: () => { this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); }
     });
   }
   
@@ -159,10 +159,10 @@ export class ChatViewComponent implements OnInit, OnDestroy {
       descripcion: `Chat con ${this.usuarioSeleccionado.nombre} ${this.usuarioSeleccionado.apellido}`
     }).subscribe({
       next: (reporteId) => {
-        if (reporteId) { this.reporteSeleccionadoId = reporteId; this.cargarReportes(); this.snackBar.success('Conversación iniciada', 'Éxito'); }
-        else this.snackBar.error('Error al crear conversación', 'Error');
+        if (reporteId) { this.reporteSeleccionadoId = reporteId; this.cargarReportes(); this.snackBar.open('Conversación iniciada', 'Éxito', { duration: 3000 }); }
+        else this.snackBar.open('Error al crear conversación', 'Cerrar', { duration: 3000 });
       },
-      error: () => { this.snackBar.error('Error al crear conversación', 'Error'); }
+      error: () => { this.snackBar.open('Error al crear conversacion', 'Cerrar', { duration: 3000 });}
     });
   }
   
@@ -172,10 +172,10 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     this.reportesService.crearComentario(this.reporteSeleccionadoId, this.currentUserId, this.nuevoMensaje).subscribe({
       next: (success) => {
         if (success) { this.cargarComentarios(); this.nuevoMensaje = ''; }
-        else this.snackBar.error('Error al enviar mensaje', 'Error');
+        else this.snackBar.open('Error al enviar mensaje', 'Cerrar', { duration: 3000 });
         this.enviando = false;
       },
-      error: () => { this.snackBar.error('Error al enviar mensaje', 'Error'); this.enviando = false; }
+      error: () => { this.snackBar.open('Error al enviar mensaje', 'Cerrar', { duration: 3000 }); this.enviando = false; }
     });
   }
   

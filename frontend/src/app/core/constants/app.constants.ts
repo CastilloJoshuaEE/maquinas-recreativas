@@ -171,7 +171,7 @@ export const API_ENDPOINTS = {
   COMPONENTES_LIBERAR: '/componentes/liberar',
   COMPONENTES_ASIGNAR_CARCASA: '/componentes/asignar-carcasa',
   COMPONENTES_EN_USO: (id: string) => `/componentes/en-uso/${id}`,
-  
+  COMPONENTES_DISPONIBLES: '/componentes/disponibles',
   // Contabilidad
   RECAUDACION_REGISTRAR: '/contabilidad/registrar-recaudacion',
   RECAUDACIONES: '/contabilidad/recaudaciones',
