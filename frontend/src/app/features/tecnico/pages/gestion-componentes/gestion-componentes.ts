@@ -60,24 +60,40 @@ export class GestionComponentesComponent implements OnInit {
   
   private cargarMquinaSeleccionada(): void {
     const storedMachine = localStorage.getItem('selectedMachine');
-    if (storedMachine) { this.selectedMachine = JSON.parse(storedMachine); }
-    else { this.snackBar.warning('No hay máquina seleccionada. Seleccione una máquina primero.', 'Cerrar'); }
+    if (storedMachine) { 
+      this.selectedMachine = JSON.parse(storedMachine); 
+    } else { 
+      this.snackBar.open('No hay máquina seleccionada. Seleccione una máquina primero.', 'Cerrar', { duration: 3000 });
+    }
   }
   
   cargarComponentesDisponibles(): void {
     this.cargandoDisponibles = true;
     const tipoParam = this.filtroTipo || undefined;
     this.tecnicoService.getComponentesDisponibles(tipoParam, this.currentPage + 1, this.pageSize).subscribe({
-      next: (response) => { this.componentesDisponibles = response.componentes; this.totalDisponibles = response.total; this.cargandoDisponibles = false; },
-      error: () => { this.cargandoDisponibles = false; this.snackBar.error('Error al cargar componentes disponibles', 'Cerrar'); }
+      next: (response) => { 
+        this.componentesDisponibles = response.componentes; 
+        this.totalDisponibles = response.total; 
+        this.cargandoDisponibles = false; 
+      },
+      error: () => { 
+        this.cargandoDisponibles = false; 
+        this.snackBar.open('Error al cargar componentes disponibles', 'Cerrar', { duration: 3000 });
+      }
     });
   }
   
   cargarComponentesEnUso(): void {
     this.cargandoEnUso = true;
     this.tecnicoService.getComponentesEnUso(this.user!.ID_Usuario, this.selectedMachine?.ID_Maquina).subscribe({
-      next: (componentes) => { this.componentesEnUso = componentes; this.cargandoEnUso = false; },
-      error: () => { this.cargandoEnUso = false; this.snackBar.error('Error al cargar componentes en uso', 'Cerrar'); }
+      next: (componentes) => { 
+        this.componentesEnUso = componentes; 
+        this.cargandoEnUso = false; 
+      },
+      error: () => { 
+        this.cargandoEnUso = false; 
+        this.snackBar.open('Error al cargar componentes en uso', 'Cerrar', { duration: 3000 });
+      }
     });
   }
   
@@ -86,19 +102,51 @@ export class GestionComponentesComponent implements OnInit {
   }
   
   usarComponente(componente: Componente): void {
-    if (!this.selectedMachine) { this.snackBar.warning('Por favor, seleccione una máquina primero', 'Cerrar'); return; }
+    if (!this.selectedMachine) { 
+      this.snackBar.open('Por favor, seleccione una máquina primero', 'Cerrar', { duration: 3000 });
+      return; 
+    }
     if (!confirm(`¿Está seguro de usar el componente ${componente.nombre} en la máquina ${this.selectedMachine.Nombre_Maquina}?`)) return;
-    this.tecnicoService.usarComponente({ ID_Componente: componente.ID_Componente, ID_Usuario: this.user!.ID_Usuario, ID_Maquina: this.selectedMachine.ID_Maquina }).subscribe({
-      next: (success) => { if (success) { this.snackBar.success('Componente usado correctamente', 'Éxito'); this.cargarComponentesDisponibles(); this.cargarComponentesEnUso(); } else { this.snackBar.error('Error al usar el componente', 'Cerrar'); } },
-      error: () => { this.snackBar.error('Error al usar el componente', 'Cerrar'); }
+    
+    this.tecnicoService.usarComponente({ 
+      ID_Componente: componente.ID_Componente, 
+      ID_Usuario: this.user!.ID_Usuario, 
+      ID_Maquina: this.selectedMachine.ID_Maquina 
+    }).subscribe({
+      next: (success) => { 
+        if (success) { 
+          this.snackBar.open('Componente usado correctamente', 'Éxito', { duration: 3000 });
+          this.cargarComponentesDisponibles(); 
+          this.cargarComponentesEnUso(); 
+        } else { 
+          this.snackBar.open('Error al usar el componente', 'Cerrar', { duration: 3000 });
+        } 
+      },
+      error: () => { 
+        this.snackBar.open('Error al usar el componente', 'Cerrar', { duration: 3000 });
+      }
     });
   }
   
   liberarComponente(componente: Componente): void {
     if (!confirm(`¿Está seguro de liberar el componente ${componente.nombre}?`)) return;
-    this.tecnicoService.liberarComponente({ ID_Componente: componente.ID_Componente, ID_Usuario: this.user!.ID_Usuario }).subscribe({
-      next: (success) => { if (success) { this.snackBar.success('Componente liberado correctamente', 'Éxito'); this.cargarComponentesDisponibles(); this.cargarComponentesEnUso(); } else { this.snackBar.error('Error al liberar el componente', 'Cerrar'); } },
-      error: () => { this.snackBar.error('Error al liberar el componente', 'Cerrar'); }
+    
+    this.tecnicoService.liberarComponente({ 
+      ID_Componente: componente.ID_Componente, 
+      ID_Usuario: this.user!.ID_Usuario 
+    }).subscribe({
+      next: (success) => { 
+        if (success) { 
+          this.snackBar.open('Componente liberado correctamente', 'Éxito', { duration: 3000 });
+          this.cargarComponentesDisponibles(); 
+          this.cargarComponentesEnUso(); 
+        } else { 
+          this.snackBar.open('Error al liberar el componente', 'Cerrar', { duration: 3000 });
+        } 
+      },
+      error: () => { 
+        this.snackBar.open('Error al liberar el componente', 'Cerrar', { duration: 3000 });
+      }
     });
   }
   
@@ -110,7 +158,10 @@ export class GestionComponentesComponent implements OnInit {
   
   regresar(): void {
     const user = this.authService.getCurrentUser();
-    if (user?.Especialidad) { this.router.navigate([`/tecnico/${user.Especialidad.toLowerCase()}`]); }
-    else { this.router.navigate(['/tecnico/ensamblador']); }
+    if (user?.Especialidad) { 
+      this.router.navigate([`/tecnico/${user.Especialidad.toLowerCase()}`]); 
+    } else { 
+      this.router.navigate(['/tecnico/ensamblador']); 
+    }
   }
 }
