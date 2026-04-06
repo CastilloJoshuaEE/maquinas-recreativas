@@ -5,8 +5,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { ActualizarPerfilComponent } from './actualizar-perfil';
-import { AuthService } from '@core/services/auth.service';
-import { UserService } from '@core/services/user.service';
+import { AuthService } from '@core/services/auth';
+import { UserService } from '@core/services/user';
 
 describe('ActualizarPerfilComponent', () => {
   let component: ActualizarPerfilComponent;

@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, BehaviorSubject } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/services/api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { Reporte, Comentario, CreateReporteData } from '@core/models/reporte.model';
 import { User } from '@core/models/user.model';

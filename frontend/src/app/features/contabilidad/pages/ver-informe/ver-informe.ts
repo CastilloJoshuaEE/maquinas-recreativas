@@ -11,7 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
 import { InformeRecaudacion, Recaudacion } from '@core/models/recaudacion.model';
 import { Componente } from '@core/models/componente.model';

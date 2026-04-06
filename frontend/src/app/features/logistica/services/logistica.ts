@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/services/api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { Maquina } from '@core/models/maquina.model';
 import { Comercio } from '@core/models/recaudacion.model';

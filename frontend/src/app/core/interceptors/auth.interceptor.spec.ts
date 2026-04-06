@@ -6,7 +6,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpRequest } from '@angular/common/http';
 import { authInterceptor } from './auth.interceptor';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 
 describe('authInterceptor', () => {
   let authServiceMock: any;

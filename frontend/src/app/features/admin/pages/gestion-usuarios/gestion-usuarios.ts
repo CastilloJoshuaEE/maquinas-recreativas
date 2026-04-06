@@ -9,8 +9,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
-import { UserService } from '@core/services/user.service';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
+import { UserService } from '@core/services/user';
 
 @Component({
   selector: 'app-gestion-usuarios',

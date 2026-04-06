@@ -16,9 +16,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ReportesService } from '../../services/reportes';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 import { User } from '@core/models/user.model';
 import { Reporte, Comentario } from '@core/models/reporte.model';
 

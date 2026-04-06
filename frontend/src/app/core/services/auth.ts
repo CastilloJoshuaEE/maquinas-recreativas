@@ -7,7 +7,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, map, of } from 'rxjs';
-import { ApiService } from './api.service';
+import { ApiService } from './api';
 import { User, LoginCredentials, RegisterData, AuthResponse } from '@core/models/user.model';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 

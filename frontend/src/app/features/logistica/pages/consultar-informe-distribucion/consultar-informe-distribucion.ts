@@ -20,7 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { LogisticaService } from '../../services/logistica';
 import { Maquina } from '@core/models/maquina.model';
 import { Comercio } from '@core/models/recaudacion.model';

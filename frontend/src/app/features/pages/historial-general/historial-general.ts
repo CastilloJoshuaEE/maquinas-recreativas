@@ -10,9 +10,9 @@ import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { HistorialMaquinaComponent } from '@features/tecnico/pages/ui/historial-maquina/historial-maquina';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 
 @Component({
   selector: 'app-historial-general',

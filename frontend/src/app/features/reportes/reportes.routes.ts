@@ -5,7 +5,7 @@
  */
 
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from '@layouts/main-layout/main-layout.component';
+import { MainLayoutComponent } from '@layouts/main-layout/main-layout';
 
 export const REPORTES_ROUTES: Routes = [
   {

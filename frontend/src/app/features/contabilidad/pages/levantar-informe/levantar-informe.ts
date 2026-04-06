@@ -12,13 +12,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
 import { Recaudacion, Comercio } from '@core/models/recaudacion.model';
 import { Maquina } from '@core/models/maquina.model';
 import { Componente } from '@core/models/componente.model';
 import { User } from '@core/models/user.model';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 
 @Component({
   selector: 'app-levantar-informe',

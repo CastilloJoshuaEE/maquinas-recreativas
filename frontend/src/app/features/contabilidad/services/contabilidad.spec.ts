@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { ContabilidadService } from './contabilidad.service';
+import { ContabilidadService } from './contabilidad';
 
 describe('ContabilidadService', () => {
   let service: ContabilidadService;

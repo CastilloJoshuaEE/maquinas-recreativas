@@ -6,7 +6,7 @@
 
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
-import { ApiService } from './api.service';
+import { ApiService } from './api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 
 /**

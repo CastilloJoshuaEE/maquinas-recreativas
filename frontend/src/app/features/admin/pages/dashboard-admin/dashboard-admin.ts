@@ -8,8 +8,8 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
-import { AuthService } from '@core/services/auth.service';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
+import { AuthService } from '@core/services/auth';
 
 @Component({
   selector: 'app-dashboard-admin',

@@ -13,10 +13,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { TecnicoService } from '../../services/tecnico';
-import { AuthService } from '@core/services/auth.service';
-import { NotificationService } from '@core/services/notification.service';
+import { AuthService } from '@core/services/auth';
+import { NotificationService } from '@core/services/notification';
 import { Maquina } from '@core/models/maquina.model';
 import { User } from '@core/models/user.model';
 

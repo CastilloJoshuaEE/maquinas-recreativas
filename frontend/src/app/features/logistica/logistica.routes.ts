@@ -5,7 +5,7 @@
  */
 
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from '@layouts/main-layout/main-layout.component';
+import { MainLayoutComponent } from '@layouts/main-layout/main-layout';
 
 export const LOGISTICA_ROUTES: Routes = [
   {
@@ -14,11 +14,11 @@ export const LOGISTICA_ROUTES: Routes = [
     children: [
       { 
         path: 'dashboard', 
-        loadComponent: () => import('./pages/dashboard-logistica/dashboard-logistica.component').then(m => m.DashboardLogisticaComponent) 
+        loadComponent: () => import('./pages/dashboard-logistica/dashboard-logistica').then(m => m.DashboardLogisticaComponent) 
       },
       { 
         path: 'consultar-informe-distribucion', 
-        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion.component').then(m => m.ConsultarInformeDistribucionLogisticaComponent) 
+        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionLogisticaComponent) 
       },
       { 
         path: '', 

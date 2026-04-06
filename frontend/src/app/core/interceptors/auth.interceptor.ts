@@ -6,7 +6,7 @@
 
 import { inject } from '@angular/core';
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
-import { AuthService } from '@core/services/auth.ts';
+import { AuthService } from '@core/services/auth';
 
 /**
  * Interceptor que añade el token de autorización a las peticiones

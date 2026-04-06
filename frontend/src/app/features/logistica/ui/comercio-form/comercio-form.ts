@@ -19,7 +19,10 @@ import { LogisticaService } from '../../services/logistica';
 @Component({
   selector: 'app-comercio-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule,
+    MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+  ],
   templateUrl: './comercio-form.html',
   styleUrls: ['./comercio-form.css']
 })

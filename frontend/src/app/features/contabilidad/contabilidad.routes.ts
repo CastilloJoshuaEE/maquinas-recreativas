@@ -5,7 +5,7 @@
  */
 
 import { Routes } from '@angular/router';
-import { MainLayoutComponent } from '@layouts/main-layout/main-layout.component';
+import { MainLayoutComponent } from '@layouts/main-layout/main-layout';
 
 export const CONTABILIDAD_ROUTES: Routes = [
   {
@@ -14,35 +14,35 @@ export const CONTABILIDAD_ROUTES: Routes = [
     children: [
       { 
         path: 'dashboard', 
-        loadComponent: () => import('./pages/dashboard-contabilidad/dashboard-contabilidad.component').then(m => m.DashboardContabilidadComponent) 
+        loadComponent: () => import('./pages/dashboard-contabilidad/dashboard-contabilidad').then(m => m.DashboardContabilidadComponent) 
       },
       { 
         path: 'gestion-recaudacion', 
-        loadComponent: () => import('./pages/gestion-recaudacion/gestion-recaudacion.component').then(m => m.GestionRecaudacionComponent) 
+        loadComponent: () => import('./pages/gestion-recaudacion/gestion-recaudacion').then(m => m.GestionRecaudacionComponent) 
       },
       { 
         path: 'registrar-recaudacion', 
-        loadComponent: () => import('./pages/registrar-recaudacion/registrar-recaudacion.component').then(m => m.RegistrarRecaudacionComponent) 
+        loadComponent: () => import('./pages/registrar-recaudacion/registrar-recaudacion').then(m => m.RegistrarRecaudacionComponent) 
       },
       { 
         path: 'consultar-recaudaciones', 
-        loadComponent: () => import('./pages/consultar-recaudaciones/consultar-recaudaciones.component').then(m => m.ConsultarRecaudacionesComponent) 
+        loadComponent: () => import('./pages/consultar-recaudaciones/consultar-recaudaciones').then(m => m.ConsultarRecaudacionesComponent) 
       },
       { 
         path: 'actualizar-recaudacion/:uuid', 
-        loadComponent: () => import('./pages/actualizar-recaudacion/actualizar-recaudacion.component').then(m => m.ActualizarRecaudacionComponent) 
+        loadComponent: () => import('./pages/actualizar-recaudacion/actualizar-recaudacion').then(m => m.ActualizarRecaudacionComponent) 
       },
       { 
         path: 'levantar-informe/:idRecaudacion', 
-        loadComponent: () => import('./pages/levantar-informe/levantar-informe.component').then(m => m.LevantarInformeComponent) 
+        loadComponent: () => import('./pages/levantar-informe/levantar-informe').then(m => m.LevantarInformeComponent) 
       },
       { 
         path: 'ver-informe/:idRecaudacion', 
-        loadComponent: () => import('./pages/ver-informe/ver-informe.component').then(m => m.VerInformeComponent) 
+        loadComponent: () => import('./pages/ver-informe/ver-informe').then(m => m.VerInformeComponent) 
       },
       { 
         path: 'consultar-informe-distribucion', 
-        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion.component').then(m => m.ConsultarInformeDistribucionComponent) 
+        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionComponent) 
       },
       { 
         path: '', 

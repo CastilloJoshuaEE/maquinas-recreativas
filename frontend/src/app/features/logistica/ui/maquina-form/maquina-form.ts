@@ -16,14 +16,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LogisticaService } from '../../services/logistica';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 import { Comercio } from '@core/models/recaudacion.model';
 import { User } from '@core/models/user.model';
 
 @Component({
   selector: 'app-maquina-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatStepperModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, MatStepperModule, MatFormFieldModule,
+    MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+  ],
   templateUrl: './maquina-form.html',
   styleUrls: ['./maquina-form.css']
 })

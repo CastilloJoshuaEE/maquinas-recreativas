@@ -5,7 +5,7 @@
  */
 
 import { Directive, Input, TemplateRef, ViewContainerRef, OnInit, inject } from '@angular/core';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth';
 
 /**
  * Directiva condicional basada en roles de usuario

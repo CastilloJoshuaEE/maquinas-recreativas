@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { ApiService } from '@core/services/api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { User } from '@core/models/user.model';
 

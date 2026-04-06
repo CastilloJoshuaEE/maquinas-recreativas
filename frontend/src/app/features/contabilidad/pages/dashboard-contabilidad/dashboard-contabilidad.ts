@@ -12,7 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Chart, registerables } from 'chart.js';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header.component';
+import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
 import { ResumenRecaudacion, Recaudacion } from '@core/models/recaudacion.model';
 

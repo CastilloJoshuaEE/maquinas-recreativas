@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
-import { UserService } from '@core/services/user.service';
+import { UserService } from '@core/services/user';
 
 @Component({
   selector: 'app-actualizar-usuario',
