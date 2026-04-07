@@ -443,7 +443,9 @@ npm cache clean --force
 
 # Instalar dependencias principales
 
-npm install @angular/animations@20.0.0 @angular/cdk@20.0.0 @angular/common@20.0.0 @angular/compiler@20.0.0 @angular/core@20.0.0 @angular/forms@20.0.0 @angular/material@20.0.0 @angular/platform-browser@20.0.0 @angular/platform-browser-dynamic@20.0.0 @angular/router@20.0.0
+npm install @angular/animations@20.3.18 --legacy-peer-deps
+
+npm install @angular/cdk@20.0.0 @angular/common@20.0.0 @angular/compiler@20.0.0 @angular/core@20.0.0 @angular/forms@20.0.0 @angular/material@20.0.0 @angular/platform-browser@20.0.0 @angular/platform-browser-dynamic@20.0.0 @angular/router@20.0.0
 
 # Instalar Bootstrap
 
@@ -456,6 +458,8 @@ npm install chart.js@4.4.0 moment@2.30.1
 # Instalar ngx-toastr
 
 npm install ngx-toastr@19.0.0 ngx-pagination@6.0.3
+
+npm install zone.js@0.15.0 --legacy-peer-deps
 
 # Instalar dependencias de desarrollo
 

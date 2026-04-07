@@ -6,59 +6,34 @@
  */
 
 // =============================================
-// CARGAR CONFIGURACIÓN
+// CARGAR CONFIGURACIÓN CON ENVMANAGER
 // =============================================
-$envPath = __DIR__ . '/../.env';
 
-if (!file_exists($envPath)) {
-    die(" Archivo .env no encontrado en: {$envPath}\n");
-}
+// Cargar el EnvManager
+require_once __DIR__ . '/../config/env.php';
 
-$env = parse_ini_file($envPath);
-if ($env === false) {
-    die(" Error al parsear el archivo .env\n");
-}
+// Cargar variables de entorno
+EnvManager::load();
 
 // =============================================
 // DETECTAR ENTORNO
 // =============================================
-$isTest = (
-    ($env['APP_ENV'] ?? '') === 'testing' ||
-    (defined('TEST_ENVIRONMENT') && TEST_ENVIRONMENT === true)
-);
+$isTest = EnvManager::isTesting();
 
 // =============================================
 // SELECCIONAR BASE DE DATOS
 // =============================================
-$dbName = $env['DB_NAME'] ?? null;
+$dbName = EnvManager::getDatabaseName();
 
 if ($isTest) {
-    $dbName = $env['DB_NAME_TEST'] ?? $dbName;
-    echo " Modo TEST: usando base de datos {$dbName}\n";
+    echo "✓ Modo TEST: usando base de datos {$dbName}\n";
 }
 
 if (!$dbName) {
     die(" No se ha definido DB_NAME en el .env\n");
 }
 
-// =============================================
-// DEFINIR CONSTANTES
-// =============================================
-define('DB_HOST', $env['DB_HOST']);
-define('DB_USER', $env['DB_USER']);
-define('DB_PASS', $env['DB_PASS']);
-define('DB_NAME', $dbName);
 
-// Definir constantes de encriptación (deben coincidir con constants.php)
-if (!defined('ENCRYPT_METHOD')) {
-    define('ENCRYPT_METHOD', 'AES-256-CBC');
-}
-if (!defined('SECRET_KEY')) {
-    define('SECRET_KEY', $env['SECRET_KEY'] ?? 'clave_super_segura_cambiar_en_produccion_2024');
-}
-if (!defined('SECRET_IV')) {
-    define('SECRET_IV', $env['SECRET_IV'] ?? 'vector_inicial_16');
-}
 
 // =============================================
 // INCLUIR DEPENDENCIAS
@@ -66,6 +41,8 @@ if (!defined('SECRET_IV')) {
 require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
 require_once __DIR__ . '/Inserter.php';
+require_once __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/../config/env.php';
 
 use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Database\Inserter;
@@ -73,7 +50,7 @@ use maquinas_recreativas\Infrastructure\Database\Inserter;
 // =============================================
 // CONEXIÓN A LA BASE DE DATOS
 // =============================================
-echo " Conectando a la base de datos...\n";
+echo "✓ Conectando a la base de datos...\n";
 
 $database = new Database();
 $connection = $database->getConnection();
@@ -82,7 +59,7 @@ if (!$connection) {
     die(" Error de conexión a la base de datos\n");
 }
 
-echo " Conexión establecida a: " . DB_NAME . "\n";
+echo "✓ Conexión establecida a: " . DB_NAME . "\n";
 
 // =============================================
 // VERIFICAR Y CREAR LOCK FILE
@@ -91,9 +68,9 @@ $lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
 
 // Verificar si ya se ejecutó
 if (file_exists($lockFile)) {
-    echo "  Los usuarios iniciales ya fueron insertados anteriormente.\n";
-    echo " Lock file: {$lockFile}\n";
-    echo " Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
+    echo "⚠ Los usuarios iniciales ya fueron insertados anteriormente.\n";
+    echo "  Lock file: {$lockFile}\n";
+    echo "  Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
     
     $confirm = readline("¿Deseas forzar la inserción de todos modos? (s/N): ");
     if (strtolower($confirm) !== 's') {
@@ -141,7 +118,7 @@ try {
 // =============================================
 // VERIFICACIÓN FINAL
 // =============================================
-echo "\n Verificando que los datos se pueden desencriptar correctamente...\n";
+echo "\n🔍 Verificando que los datos se pueden desencriptar correctamente...\n";
 echo str_repeat("-", 50) . "\n";
 
 $testUsers = ['admin1', 'euro', 'joshua', 'joel'];
@@ -156,7 +133,7 @@ foreach ($testUsers as $username) {
             if (!empty($emailDec) && !empty($ciDec)) {
                 echo " {$username}: Email={$emailDec}, CI={$ciDec}\n";
             } else {
-                echo "  {$username}: Desencriptación parcial - Email=" . ($emailDec ?: 'VACÍO') . ", CI=" . ($ciDec ?: 'VACÍO') . "\n";
+                echo "⚠ {$username}: Desencriptación parcial - Email=" . ($emailDec ?: 'VACÍO') . ", CI=" . ($ciDec ?: 'VACÍO') . "\n";
             }
         } catch (Exception $e) {
             echo " {$username}: Error al desencriptar - " . $e->getMessage() . "\n";
@@ -165,4 +142,4 @@ foreach ($testUsers as $username) {
     }
 }
 
-echo "\n Proceso completado!\n";
+echo "\n🎉 Proceso completado!\n";

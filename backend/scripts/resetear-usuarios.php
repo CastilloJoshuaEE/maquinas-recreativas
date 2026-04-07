@@ -4,22 +4,31 @@
  * 
  * Ejecutar: php backend/scripts/resetear-usuarios.php
  */
+// Cargar el EnvManager
+require_once __DIR__ . '/../config/env.php';
 
-// Cargar configuración igual que el script anterior
-$envPath = __DIR__ . '/../.env';
-if (!file_exists($envPath)) {
-    die(" Archivo .env no encontrado\n");
+// Cargar variables de entorno
+EnvManager::load();
+
+// =============================================
+// DETECTAR ENTORNO
+// =============================================
+$isTest = EnvManager::isTesting();
+
+// =============================================
+// SELECCIONAR BASE DE DATOS
+// =============================================
+$dbName = EnvManager::getDatabaseName();
+
+if ($isTest) {
+    echo "✓ Modo TEST: usando base de datos {$dbName}\n";
 }
-$env = parse_ini_file($envPath);
 
-define('DB_HOST', $env['DB_HOST']);
-define('DB_USER', $env['DB_USER']);
-define('DB_PASS', $env['DB_PASS']);
-define('DB_NAME', $env['DB_NAME']);
+if (!$dbName) {
+    die(" No se ha definido DB_NAME en el .env\n");
+}
 
-define('ENCRYPT_METHOD', 'AES-256-CBC');
-define('SECRET_KEY', $env['SECRET_KEY'] ?? 'clave_super_segura_cambiar_en_produccion_2024');
-define('SECRET_IV', $env['SECRET_IV'] ?? 'vector_inicial_16');
+
 
 require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
