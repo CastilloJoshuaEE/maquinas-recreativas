@@ -77,34 +77,48 @@ export class ConsultarUsuariosComponent implements OnInit {
       rango_fecha: ['']
     });
   }
+cargarUsuarios(): void {
+  this.loading = true;
+  this.error = '';
   
-  cargarUsuarios(): void {
-    this.loading = true;
-    this.error = '';
-    
-    const params: any = { page: this.currentPage + 1, limit: this.pageSize };
-    const filtros = this.filtrosForm.value;
-    if (filtros.ci) params.ci = filtros.ci;
-    if (filtros.estado) params.estado = filtros.estado;
-    if (filtros.tipo) params.tipo = filtros.tipo;
-    if (filtros.rango_fecha) params.rango = filtros.rango_fecha;
-    
-    this.apiService.get(API_ENDPOINTS.ADMIN_USERS, params).subscribe({
-      next: (response) => {
-        if (response.success) {
-this.usuarios = response['usuarios'] || [];
-this.totalItems = response['total'] || this.usuarios.length;
-        } else {
-          this.error = response.message || 'Error al cargar usuarios';
-        }
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err.message || 'Error de conexión';
-        this.loading = false;
+  const params: any = { page: this.currentPage + 1, limit: this.pageSize };
+  
+  this.apiService.get(API_ENDPOINTS.ADMIN_USERS, params).subscribe({
+    next: (response: any) => {
+      console.log('Respuesta completa:', response);
+      
+      if (response === null) {
+        this.error = 'Error: El servidor devolvió null. Verificar logs del backend.';
+        this.usuarios = [];
+        this.totalItems = 0;
       }
-    });
-  }
+      else if (response && response.success === true) {
+        this.usuarios = response['usuarios'] || [];
+        this.totalItems = response['total'] || this.usuarios.length;
+      }
+      else if (response && response.success === false) {
+        this.error = response.message || 'Error del servidor';
+        this.usuarios = [];
+        this.totalItems = 0;
+      }
+      else if (Array.isArray(response)) {
+        this.usuarios = response;
+        this.totalItems = response.length;
+      }
+      else {
+        this.error = 'Formato de respuesta inválido';
+        this.usuarios = [];
+        this.totalItems = 0;
+      }
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Error detallado:', err);
+      this.error = err.message || 'Error de conexión';
+      this.loading = false;
+    }
+  });
+}
   
   buscarUsuarios(): void {
     this.currentPage = 0;
