@@ -3,16 +3,13 @@
  * @description Maneja operaciones relacionadas con usuarios
  * @service UserService
  */
-
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import { User, UpdateProfileData, HistorialActividad } from '@core/models/user.model';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly apiService = inject(ApiService);
 
@@ -34,8 +31,9 @@ export class UserService {
     );
   }
 
+  // CORREGIDO: el backend espera "nuevo_usuario", no "usuario_asignado"
   recoverUsername(email: string, newUsername: string): Observable<{ success: boolean; message?: string }> {
-    return this.apiService.post(API_ENDPOINTS.RECOVER_USERNAME, { email, usuario_asignado: newUsername }).pipe(
+    return this.apiService.post(API_ENDPOINTS.RECOVER_USERNAME, { email, nuevo_usuario: newUsername }).pipe(
       map(response => ({ success: response.success, message: response.message }))
     );
   }
@@ -54,7 +52,7 @@ export class UserService {
 
   getHistorialActividades(userId: string, params?: any): Observable<HistorialActividad[]> {
     return this.apiService.get<{ historial: HistorialActividad[] }>(
-      API_ENDPOINTS.HISTORIAL_ACTIVIDADES, 
+      API_ENDPOINTS.HISTORIAL_ACTIVIDADES,
       { usuarioId: userId, ...params }
     ).pipe(
       map(response => response.success && response['historial'] ? response['historial'] : [])
@@ -68,9 +66,7 @@ export class UserService {
   }
 
   getUsersByTipo(tipo: string, emisorId?: string): Observable<User[]> {
-    // Nota: Verifica que API_ENDPOINTS.USERS_BY_TIPO exista en tus constantes
-    // Si no existe, puedes usar la URL directamente: '/usuario/tipo'
-    return this.apiService.get<{ usuarios: User[] }>('/usuario/tipo', { tipo, emisorId }).pipe(
+    return this.apiService.get<{ usuarios: User[] }>('/usuarios/por-tipo', { tipo, emisorId }).pipe(
       map(response => response.success && response['usuarios'] ? response['usuarios'] : [])
     );
   }

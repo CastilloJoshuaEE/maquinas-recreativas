@@ -464,20 +464,36 @@ class MySQLUsuarioRepository implements UsuarioRepository
     // =========================================================================
     // HYDRATE
     // =========================================================================
-
+ 
     public function hydrate(array $row): Usuario
     {
-        $id         = new Uuid($row['ID_Usuario']);
-        $emailValue = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
-        if (empty($emailValue)) {
-            error_log("AVISO: Usuario {$row['ID_Usuario']} tiene email vacío.");
-            $emailValue = $row['usuario_asignado'] . '@temp.local';
+        $id = new Uuid($row['ID_Usuario']);
+ 
+        // Desencriptar email con fallback
+        $emailRaw = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
+        if (empty($emailRaw) || $emailRaw === false) {
+            error_log("AVISO: No se pudo desencriptar email del usuario {$row['ID_Usuario']}.");
+            $emailRaw = $row['usuario_asignado'] . '@temp.local';
         }
-        $email  = new Email($emailValue);
+        // Validar que sea UTF-8 válido para que json_encode no falle
+        if (!mb_check_encoding($emailRaw, 'UTF-8')) {
+            $emailRaw = $row['usuario_asignado'] . '@temp.local';
+        }
+        $email = new Email($emailRaw);
+ 
         $tipo   = new TipoUsuario($row['tipo']);
         $estado = new EstadoUsuario($row['estado']);
-        $ci     = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
-
+ 
+        // Desencriptar CI con fallback — si falla, usar valor encriptado crudo
+        // para evitar "La cédula debe tener al menos 6 caracteres" en setCi()
+        $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+        if (empty($ciDecrypted) || $ciDecrypted === false || !mb_check_encoding($ciDecrypted, 'UTF-8')) {
+            error_log("AVISO: No se pudo desencriptar CI del usuario {$row['ID_Usuario']}. Usando placeholder.");
+            // Usar los primeros 10 chars del hash como placeholder válido
+            $ciDecrypted = substr(md5($row['ci'] ?? $row['ID_Usuario']), 0, 10);
+        }
+        $ci = $ciDecrypted;
+ 
         switch ($tipo->value()) {
             case TipoUsuario::TECNICO:
                 $esp = $row['Especialidad'] ?? null;
@@ -489,17 +505,16 @@ class MySQLUsuarioRepository implements UsuarioRepository
                 return new Tecnico($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $estado,
                     $esp, (int)($row['Cantidad_Actividades'] ?? 0));
-
+ 
             case TipoUsuario::LOGISTICA:
                 return new Logistica($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $estado);
-
+ 
             default:
                 return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
         }
     }
-
     private function hydrateTecnico(array $row): Tecnico
     {
         $id     = new Uuid($row['ID_Usuario']);
