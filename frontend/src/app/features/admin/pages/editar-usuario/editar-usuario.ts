@@ -21,7 +21,7 @@ import { ApiService } from '@core/services/api';
 import { UserService } from '@core/services/user';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { User } from '@core/models/user.model';
-
+import { AdminService } from '../../services/admin';
 @Component({
   selector: 'app-editar-usuario',
   standalone: true,
@@ -45,6 +45,7 @@ export class EditarUsuarioComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private apiService = inject(ApiService);
+  private adminService = inject(AdminService);
   private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
   
@@ -69,28 +70,27 @@ export class EditarUsuarioComponent implements OnInit {
     });
   }
   
-  private cargarUsuario(uuid: string): void {
+private cargarUsuario(uuid: string): void {
     this.loading = true;
     this.error = '';
     
-    this.apiService.get(API_ENDPOINTS.ADMIN_USER_BY_ID(uuid)).subscribe({
-      next: (response) => {
-        // Corrección: Acceder a 'usuario' con corchetes
-        if (response.success && response['usuario']) {
-          this.usuario = response['usuario'];
-          this.inicializarFormulario();
-        } else {
-          this.error = response.message || 'Usuario no encontrado';
+    // ✅ Usar AdminService en lugar de ApiService directamente
+    this.adminService.getUsuarioById(uuid).subscribe({
+        next: (usuario) => {
+            if (usuario) {
+                this.usuario = usuario;
+                this.inicializarFormulario();
+            } else {
+                this.error = 'Usuario no encontrado';
+            }
+            this.loading = false;
+        },
+        error: (err) => {
+            this.error = err.message || 'Error al cargar usuario';
+            this.loading = false;
         }
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err.message || 'Error al cargar usuario';
-        this.loading = false;
-      }
     });
-  }
-  
+}
   private inicializarFormulario(): void {
     if (!this.usuario) return;
     
@@ -106,9 +106,9 @@ export class EditarUsuarioComponent implements OnInit {
         contrasena: ['', [Validators.minLength(8)]]
       });
     } else {
-      this.usuarioForm = this.fb.group({
-        estado: ['', Validators.required]
-      });
+this.usuarioForm = this.fb.group({
+  estado: [this.usuario.estado, Validators.required]
+});
     }
   }
   

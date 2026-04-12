@@ -94,7 +94,7 @@ define('ESPECIALIDADES_TECNICO', [
  */
 define('ESTADOS_USUARIO', [
     'Activo',
-    'Inactivo',
+    'Inhabilitado',
     'Suspendido',
     'Pendiente_asignacion'
 ]);

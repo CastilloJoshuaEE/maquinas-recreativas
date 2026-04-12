@@ -13,11 +13,11 @@ namespace maquinas_recreativas\Domain\Usuario;
 final class EstadoUsuario
 {
     private const ACTIVO = 'Activo';
-    private const INACTIVO = 'Inactivo';
+    private const INHABILITADO = 'Inhabilitado';
     private const PENDIENTE_ASIGNACION = 'Pendiente_asignacion';
     private const VALID_ESTADOS = [
         self::ACTIVO,
-        self::INACTIVO,
+        self::INHABILITADO,
         self::PENDIENTE_ASIGNACION,
     ];
     private string $value;
@@ -75,12 +75,12 @@ final class EstadoUsuario
         return $this->value===self::ACTIVO;
     }    
     /**
-     * Verifica si el estado es 'Inactivo'.
+     * Verifica si el estado es 'Inhabilitado'.
      *
      * @return bool
      */
-    public function isInactivo():bool{
-        return $this->value===self::INACTIVO;
+    public function isInhabilitado():bool{
+        return $this->value===self::INHABILITADO;
     }    
     /**
      * Verifica si el estado es 'Pendiente_asignacion'.

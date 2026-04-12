@@ -439,7 +439,7 @@ class AdministradorController
             content: new OA\JsonContent(
                 required: ["estado"],
                 properties: [
-                    new OA\Property(property: "estado", type: "string", enum: ["Activo","Inactivo","Suspendido","Pendiente_asignacion"])
+                    new OA\Property(property: "estado", type: "string", enum: ["Activo","Inhabilitado","Suspendido","Pendiente_asignacion"])
                 ]
             )
         ),
@@ -459,7 +459,7 @@ class AdministradorController
             throw new DomainException('Estado requerido', 400);
         }
 
-        $estadosPermitidos = ['Activo', 'Inactivo', 'Suspendido', 'Pendiente_asignacion'];
+        $estadosPermitidos = ['Activo', 'Inhabilitado', 'Suspendido', 'Pendiente_asignacion'];
         if (!in_array($data['estado'], $estadosPermitidos, true)) {
             throw new DomainException('Estado no válido', 400);
         }

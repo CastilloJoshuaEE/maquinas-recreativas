@@ -59,7 +59,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   private refreshInterval: any;
   
   ngOnInit(): void {
-    this.currentUserId = this.currentUser?.ID_Usuario || this.authService.getCurrentUser()?.ID_Usuario || '';
+    this.currentUserId = this.currentUser?.id || this.authService.getCurrentUser()?.id || '';
     if (this.currentUserId) this.cargarUsuarios();
     this.refreshInterval = setInterval(() => { if (this.selectedUser && this.selectedReporteId) this.cargarComentarios(); }, 5000);
   }
@@ -73,11 +73,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.cargandoUsuarios = true;
     this.reportService.getUsuariosChat(this.currentUserId).subscribe({
       next: (usuarios) => {
-        this.usuarios = usuarios.filter(u => u.ID_Usuario !== this.currentUserId);
+        this.usuarios = usuarios.filter(u => u.id !== this.currentUserId);
         this.usuariosFiltrados = [...this.usuarios];
         this.cargandoUsuarios = false;
         if (this.initialUserId && !this.selectedUser) {
-          const usuarioInicial = this.usuarios.find(u => u.ID_Usuario === this.initialUserId);
+          const usuarioInicial = this.usuarios.find(u => u.id === this.initialUserId);
           if (usuarioInicial) this.seleccionarUsuario(usuarioInicial);
         }
       },
@@ -97,7 +97,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   
   cargarReportes(): void {
     if (!this.selectedUser) return;
-    this.reportService.getChat(this.currentUserId, this.selectedUser.ID_Usuario).subscribe({
+    this.reportService.getChat(this.currentUserId, this.selectedUser.id).subscribe({
       next: (data) => {
         this.reportes = data.reportes;
         if (this.initialReporteId && this.reportes.length > 0) {
@@ -124,7 +124,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (!this.nuevoMensaje.trim() || !this.selectedUser) return;
     this.enviando = true;
     const crearReporte = () => {
-      this.reportService.createReporte({ ID_Usuario_Emisor: this.currentUserId, ID_Usuario_Destinatario: this.selectedUser!.ID_Usuario, descripcion: `Chat con ${this.selectedUser!.nombre} ${this.selectedUser!.apellido}` }).subscribe({
+      this.reportService.createReporte({ ID_Usuario_Emisor: this.currentUserId, ID_Usuario_Destinatario: this.selectedUser!.id, descripcion: `Chat con ${this.selectedUser!.nombre} ${this.selectedUser!.apellido}` }).subscribe({
         next: (reporteId) => { if (reporteId) { this.selectedReporteId = reporteId; this.enviarComentario(reporteId); } else { this.enviando = false; } },
         error: () => { this.enviando = false; }
       });

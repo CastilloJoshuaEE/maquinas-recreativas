@@ -14,7 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { User } from '@core/models/user.model';
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-user-table',
   standalone: true,
@@ -26,7 +26,7 @@ import { User } from '@core/models/user.model';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatMenuModule
+    MatMenuModule,MatProgressSpinnerModule
   ],
   templateUrl: './user-table.html',
   styleUrls: ['./user-table.css']

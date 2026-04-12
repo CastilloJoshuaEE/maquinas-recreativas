@@ -34,8 +34,8 @@ export class GestionUsuariosComponent {
   
   private registrarActividad(): void {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.ID_Usuario) {
-      this.userService.registrarActividad(user.ID_Usuario, 'El usuario estuvo en la gestión de usuarios').subscribe();
+    if (user.id) {
+      this.userService.registrarActividad(user.id, 'El usuario estuvo en la gestión de usuarios').subscribe();
     }
   }
   

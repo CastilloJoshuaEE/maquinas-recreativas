@@ -59,7 +59,7 @@ export class DashboardComprobadorComponent implements OnInit {
   
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    if (this.user?.ID_Usuario) {
+    if (this.user?.id) {
       this.cargarNotificaciones();
       this.cargarMaquinas();
     }
@@ -67,7 +67,7 @@ export class DashboardComprobadorComponent implements OnInit {
   
   private cargarNotificaciones(): void {
     this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.ID_Usuario).subscribe({
+    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
       next: (notificaciones) => {
         this.notificaciones = notificaciones;
         this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
@@ -79,7 +79,7 @@ export class DashboardComprobadorComponent implements OnInit {
   
   private cargarMaquinas(): void {
     this.cargandoComprobando = true;
-    this.tecnicoService.getMaquinasComprobador(this.user!.ID_Usuario).subscribe({
+    this.tecnicoService.getMaquinasComprobador(this.user!.id).subscribe({
       next: (maquinas) => { this.maquinasComprobando = maquinas; this.cargandoComprobando = false; },
       error: () => { this.cargandoComprobando = false; }
     });
@@ -115,7 +115,7 @@ export class DashboardComprobadorComponent implements OnInit {
     this.enviando = true;
     
     if (this.accionActual === 'distribucion') {
-      this.tecnicoService.mandarADistribucion({ idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.ID_Usuario, mensaje: this.mensaje }).subscribe({
+      this.tecnicoService.mandarADistribucion({ idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.id, mensaje: this.mensaje }).subscribe({
         next: (success) => {
           if (success) { this.snackBar.open('Máquina enviada a distribución correctamente', 'Cerrar', { duration: 3000 }); this.cargarMaquinas(); this.selectedMaquina = null; this.cerrarModalMensaje(); }
           else { this.snackBar.open('Error al enviar la máquina', 'Cerrar', { duration: 3000 }); }
@@ -124,7 +124,7 @@ export class DashboardComprobadorComponent implements OnInit {
         error: () => { this.snackBar.open('Error al enviar la máquina', 'Cerrar', { duration: 3000 }); this.enviando = false; }
       });
     } else {
-      this.tecnicoService.mandarAReensamblar({ idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.ID_Usuario, mensaje: this.mensaje }).subscribe({
+      this.tecnicoService.mandarAReensamblar({ idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.id, mensaje: this.mensaje }).subscribe({
         next: (success) => {
           if (success) { this.snackBar.open('Máquina enviada a reensamblar correctamente', 'Cerrar', { duration: 3000 }); this.cargarMaquinas(); this.selectedMaquina = null; this.cerrarModalMensaje(); }
           else { this.snackBar.open('Error al enviar la máquina', 'Cerrar', { duration: 3000 }); }

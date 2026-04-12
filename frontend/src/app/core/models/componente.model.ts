@@ -21,7 +21,7 @@ export interface Componente {
   /** ID de la máquina donde está instalado */
   ID_Maquina?: string;
   /** ID del usuario que lo usa */
-  ID_Usuario?: string;
+  id?: string;
   /** Fecha de asignación */
   fecha_asignacion?: string;
   /** Nombre de la máquina (para joins) */
@@ -33,7 +33,7 @@ export interface Componente {
  */
 export interface UsarComponenteData {
   ID_Componente: string;
-  ID_Usuario: string;
+  id: string;
   ID_Maquina: string;
 }
 
@@ -42,7 +42,7 @@ export interface UsarComponenteData {
  */
 export interface LiberarComponenteData {
   ID_Componente: string;
-  ID_Usuario: string;
+  id: string;
 }
 
 /**

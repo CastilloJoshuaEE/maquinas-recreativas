@@ -54,7 +54,7 @@ export class DashboardEnsambladorComponent implements OnInit {
   
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    if (this.user?.ID_Usuario) {
+    if (this.user?.id) {
       this.cargarNotificaciones();
       this.cargarMaquinas();
     }
@@ -62,7 +62,7 @@ export class DashboardEnsambladorComponent implements OnInit {
   
   private cargarNotificaciones(): void {
     this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.ID_Usuario).subscribe({
+    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
       next: (notificaciones) => {
         this.notificaciones = notificaciones;
         this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
@@ -79,7 +79,7 @@ export class DashboardEnsambladorComponent implements OnInit {
   
   private cargarMaquinasEnsamblando(): void {
     this.cargandoEnsamblando = true;
-    this.tecnicoService.getMaquinasEnsamblador(this.user!.ID_Usuario).subscribe({
+    this.tecnicoService.getMaquinasEnsamblador(this.user!.id).subscribe({
       next: (maquinas) => { this.maquinasEnsamblando = maquinas.filter(m => m.estado === 'Ensamblandose'); this.cargandoEnsamblando = false; },
       error: () => { this.cargandoEnsamblando = false; }
     });
@@ -87,7 +87,7 @@ export class DashboardEnsambladorComponent implements OnInit {
   
   private cargarMaquinasReensamblando(): void {
     this.cargandoReensamblando = true;
-    this.tecnicoService.getMaquinasEnsamblador(this.user!.ID_Usuario).subscribe({
+    this.tecnicoService.getMaquinasEnsamblador(this.user!.id).subscribe({
       next: (maquinas) => { this.maquinasReensamblando = maquinas.filter(m => m.estado === 'Reensamblandose'); this.cargandoReensamblando = false; },
       error: () => { this.cargandoReensamblando = false; }
     });
@@ -120,7 +120,7 @@ export class DashboardEnsambladorComponent implements OnInit {
     const maquina = this.accionActual === 'comprobacion' ? this.selectedMaquina : this.selectedMaquinaReensamblar;
     if (!maquina || !this.mensaje.trim()) return;
     this.enviando = true;
-    this.tecnicoService.mandarAComprobacion({ idMaquina: maquina.ID_Maquina, idRemitente: this.user!.ID_Usuario, mensaje: this.mensaje }).subscribe({
+    this.tecnicoService.mandarAComprobacion({ idMaquina: maquina.ID_Maquina, idRemitente: this.user!.id, mensaje: this.mensaje }).subscribe({
       next: (success) => {
         if (success) { this.snackBar.open('Máquina enviada a comprobación correctamente', 'Cerrar', { duration: 3000 }); this.cargarMaquinas(); this.selectedMaquina = null; this.selectedMaquinaReensamblar = null; this.cerrarModalMensaje(); }
         else { this.snackBar.open('Error al enviar la máquina', 'Cerrar', { duration: 3000 }); }

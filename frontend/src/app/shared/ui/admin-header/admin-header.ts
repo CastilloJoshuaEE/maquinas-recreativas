@@ -40,8 +40,8 @@ export class AdminHeaderComponent {
   constructor() { this.loadUnreadCount(); }
   
   private loadUnreadCount(): void {
-    if (this.currentUser?.ID_Usuario) {
-      this.notificationService.getUnreadCount(this.currentUser.ID_Usuario).subscribe(count => this.unreadCount = count);
+    if (this.currentUser?.id) {
+      this.notificationService.getUnreadCount(this.currentUser.id).subscribe(count => this.unreadCount = count);
     }
   }
   

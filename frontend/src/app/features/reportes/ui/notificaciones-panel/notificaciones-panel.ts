@@ -46,10 +46,10 @@ export class NotificacionesPanelComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { if (this.refreshInterval) clearInterval(this.refreshInterval); }
   
   cargarNotificaciones(): void {
-    if (!this.currentUser?.ID_Usuario) return;
+    if (!this.currentUser?.id) return;
     this.cargando = true;
     this.error = '';
-    this.reportesService.getNotificaciones(this.currentUser.ID_Usuario).subscribe({
+    this.reportesService.getNotificaciones(this.currentUser.id).subscribe({
       next: (notificaciones) => { this.notificaciones = notificaciones; this.unreadCount = notificaciones.filter(n => !n.leida).length; this.cargando = false; },
       error: (err) => { this.error = err.message || 'Error al cargar notificaciones'; this.cargando = false; }
     });

@@ -250,12 +250,12 @@ class UsuarioCommandTest extends TestCase
         $userId = $registrarHandler->handle($registrarCommand);
         
         $cambiarEstadoHandler = new CambiarEstadoUsuarioHandler($this->usuarioRepository);
-        $cambiarEstadoCommand = new CambiarEstadoUsuarioCommand($userId, 'Inactivo');
+        $cambiarEstadoCommand = new CambiarEstadoUsuarioCommand($userId, 'Inhabilitado');
         $cambiarEstadoHandler->handle($cambiarEstadoCommand);
         
         $usuario = $this->usuarioRepository->findById($userId);
         $this->assertFalse($usuario->estaActivo());
-        $this->assertEquals('Inactivo', $usuario->getEstado()->value());
+        $this->assertEquals('Inhabilitado', $usuario->getEstado()->value());
     }
     
     /**

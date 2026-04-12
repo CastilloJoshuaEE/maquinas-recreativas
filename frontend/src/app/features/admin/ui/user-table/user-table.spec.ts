@@ -21,14 +21,14 @@ describe('UserTableComponent', () => {
   });
 
   it('should emit onEdit when editUser is called', () => {
-    const user = { ID_Usuario: '123', nombre: 'Test', apellido: 'User' } as any;
+    const user = { id: '123', nombre: 'Test', apellido: 'User' } as any;
     jest.spyOn(component.onEdit, 'emit');
     component.editUser(user);
     expect(component.onEdit.emit).toHaveBeenCalledWith(user);
   });
 
   it('should emit onDelete when deleteUser is called', () => {
-    const user = { ID_Usuario: '123', nombre: 'Test', apellido: 'User' } as any;
+    const user = { id: '123', nombre: 'Test', apellido: 'User' } as any;
     jest.spyOn(component.onDelete, 'emit');
     component.deleteUser(user);
     expect(component.onDelete.emit).toHaveBeenCalledWith(user);

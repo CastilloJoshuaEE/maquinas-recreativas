@@ -48,7 +48,7 @@ export class ChatUsuariosComponent implements OnInit, OnDestroy {
   private refreshInterval: any;
   
   ngOnInit(): void {
-    this.currentUserId = this.currentUser?.ID_Usuario || '';
+    this.currentUserId = this.currentUser?.id || '';
     if (this.currentUserId) this.cargarUsuarios();
     this.refreshInterval = setInterval(() => { if (this.reporteSeleccionadoId) this.cargarComentarios(); }, 5000);
   }
@@ -58,7 +58,7 @@ export class ChatUsuariosComponent implements OnInit, OnDestroy {
   cargarUsuarios(): void {
     this.cargandoUsuarios = true;
     this.reportesService.getUsuariosChat(this.currentUserId).subscribe({
-      next: (usuarios) => { this.usuarios = usuarios.filter(u => u.ID_Usuario !== this.currentUserId); this.usuariosFiltrados = [...this.usuarios]; this.cargandoUsuarios = false; },
+      next: (usuarios) => { this.usuarios = usuarios.filter(u => u.id !== this.currentUserId); this.usuariosFiltrados = [...this.usuarios]; this.cargandoUsuarios = false; },
       error: () => { this.cargandoUsuarios = false; }
     });
   }
@@ -75,7 +75,7 @@ export class ChatUsuariosComponent implements OnInit, OnDestroy {
   
   cargarReportes(): void {
     if (!this.usuarioSeleccionado) return;
-    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.ID_Usuario).subscribe({
+    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
       next: (data) => { this.reportes = data.reportes; if (this.reportes.length > 0) { this.reporteSeleccionadoId = this.reportes[0].ID_Reporte; this.cargarComentarios(); } }
     });
   }

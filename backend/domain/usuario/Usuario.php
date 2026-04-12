@@ -26,7 +26,7 @@ class Usuario
     private ?string $especialidad;
 
     public const TIPOS_PERMITIDOS = ['Tecnico', 'Logistica', 'Contabilidad', 'Administrador', 'Usuario'];
-    public const ESTADOS_PERMITIDOS = ['Activo', 'Inactivo', 'Suspendido', 'Pendiente_asignacion'];
+    public const ESTADOS_PERMITIDOS = ['Activo', 'Inhabilitado', 'Suspendido', 'Pendiente_asignacion'];
     public const ESPECIALIDADES_TECNICO = ['Ensamblador', 'Comprobador', 'Mantenimiento'];
 
     public function __construct(
@@ -207,7 +207,7 @@ class Usuario
      * Desactiva al usuario
      */
     public function desactivar(): void {
-        $this->estado = new EstadoUsuario('Inactivo');
+        $this->estado = new EstadoUsuario('Inhabilitado');
     }
 
     /**

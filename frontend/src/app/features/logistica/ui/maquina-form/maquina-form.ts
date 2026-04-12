@@ -90,11 +90,11 @@ export class MaquinaFormComponent implements OnInit {
   
   crearPlaca(): void {
     const user = this.authService.getCurrentUser();
-    if (!user?.ID_Usuario) { this.errorPlaca = 'Usuario no autenticado'; return; }
+    if (!user?.id) { this.errorPlaca = 'Usuario no autenticado'; return; }
     this.creandoPlaca = true;
     this.errorPlaca = '';
     
-    this.logisticaService.generarPlaca(user.ID_Usuario).subscribe({
+    this.logisticaService.generarPlaca(user.id).subscribe({
       next: (data) => {
         if (data) { this.placaCreada = true; this.placaId = data.id_componente; this.snackBar.open('Placa creada correctamente', 'Cerrar', { duration: 3000 }); }
         else { this.errorPlaca = 'Error al crear la placa'; }
@@ -107,11 +107,11 @@ export class MaquinaFormComponent implements OnInit {
   asignarCarcasa(): void {
     if (!this.carcasaSeleccionada) { this.errorCarcasa = 'Seleccione una carcasa'; return; }
     const user = this.authService.getCurrentUser();
-    if (!user?.ID_Usuario) { this.errorCarcasa = 'Usuario no autenticado'; return; }
+    if (!user?.id) { this.errorCarcasa = 'Usuario no autenticado'; return; }
     this.asignandoCarcasa = true;
     this.errorCarcasa = '';
     
-    this.logisticaService.asignarCarcasa(this.carcasaSeleccionada, user.ID_Usuario).subscribe({
+    this.logisticaService.asignarCarcasa(this.carcasaSeleccionada, user.id).subscribe({
       next: (success) => {
         if (success) { this.carcasaAsignada = true; this.snackBar.open('Carcasa asignada correctamente', 'Cerrar', { duration: 3000 }); }
         else { this.errorCarcasa = 'Error al asignar la carcasa'; }
@@ -134,7 +134,7 @@ export class MaquinaFormComponent implements OnInit {
     
     const maquinaData = {
       nombre: formValue.nombre, tipo: formValue.tipo, idComercio: formValue.idComercio,
-      idUsuarioLogistica: user?.ID_Usuario, idPlaca: this.placaId, idCarcasa: this.carcasaSeleccionada
+      idUsuarioLogistica: user?.id, idPlaca: this.placaId, idCarcasa: this.carcasaSeleccionada
     };
     
     this.logisticaService.registrarMaquina(maquinaData).subscribe({

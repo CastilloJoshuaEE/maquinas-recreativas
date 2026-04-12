@@ -160,7 +160,7 @@ const data = {
   Monto_Empresa: parseFloat(formValue.Monto_Empresa),
   fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
   detalle: formValue.detalle,
-  ID_Usuario: currentUser?.ID_Usuario || ''
+  id: currentUser?.id || ''
 };
     
     this.contabilidadService.registrarRecaudacion(data).subscribe({

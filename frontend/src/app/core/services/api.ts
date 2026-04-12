@@ -31,9 +31,9 @@ export class ApiService {
   
   /** URL base de la API desde variables de entorno */
   private readonly baseUrl = environment.apiUrl;
-  
-  /** Timeout por defecto para peticiones (30 segundos) */
-  private readonly defaultTimeout = 30000;
+private readonly defaultTimeout = 60000; // 60 segundos
+private readonly longTimeout = 120000;   // 120 segundos para operaciones pesadas  
+
   
   /** Número de reintentos para peticiones fallidas */
   private readonly retryCount = 1;
@@ -55,7 +55,17 @@ export class ApiService {
         catchError(this.handleError<T>)
       );
   }
-
+getLong<T = any>(endpoint: string, params?: any): Observable<ApiResponse<T>> {
+  const url = this.buildUrl(endpoint);
+  const httpParams = this.buildParams(params);
+  
+  return this.http.get<ApiResponse<T>>(url, { params: httpParams })
+    .pipe(
+      timeout(this.longTimeout),
+      retry(1),
+      catchError(this.handleError<T>)
+    );
+}
   /**
    * Realiza una petición POST
    * @param endpoint - Endpoint de la API

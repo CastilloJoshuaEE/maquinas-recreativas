@@ -52,7 +52,7 @@ export class GestionComponentesComponent implements OnInit {
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
     this.cargarMquinaSeleccionada();
-    if (this.user?.ID_Usuario) {
+    if (this.user?.id) {
       this.cargarComponentesDisponibles();
       this.cargarComponentesEnUso();
     }
@@ -85,7 +85,7 @@ export class GestionComponentesComponent implements OnInit {
   
   cargarComponentesEnUso(): void {
     this.cargandoEnUso = true;
-    this.tecnicoService.getComponentesEnUso(this.user!.ID_Usuario, this.selectedMachine?.ID_Maquina).subscribe({
+    this.tecnicoService.getComponentesEnUso(this.user!.id, this.selectedMachine?.ID_Maquina).subscribe({
       next: (componentes) => { 
         this.componentesEnUso = componentes; 
         this.cargandoEnUso = false; 
@@ -110,7 +110,7 @@ export class GestionComponentesComponent implements OnInit {
     
     this.tecnicoService.usarComponente({ 
       ID_Componente: componente.ID_Componente, 
-      ID_Usuario: this.user!.ID_Usuario, 
+      id: this.user!.id, 
       ID_Maquina: this.selectedMachine.ID_Maquina 
     }).subscribe({
       next: (success) => { 
@@ -133,7 +133,7 @@ export class GestionComponentesComponent implements OnInit {
     
     this.tecnicoService.liberarComponente({ 
       ID_Componente: componente.ID_Componente, 
-      ID_Usuario: this.user!.ID_Usuario 
+      id: this.user!.id 
     }).subscribe({
       next: (success) => { 
         if (success) { 

@@ -9,7 +9,7 @@
  */
 export interface User {
   /** ID único del usuario (UUID) */
-  ID_Usuario: string;
+  id: string;
   /** Número de cédula */
   ci: string;
   /** Nombre del usuario */

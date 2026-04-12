@@ -40,8 +40,8 @@ export class PerfilComponent implements OnInit {
     this.loading = true;
     this.error = '';
     const currentUser = this.authService.getCurrentUser();
-    if (!currentUser || !currentUser.ID_Usuario) { this.error = 'Usuario no autenticado'; this.loading = false; return; }
-    this.userService.getProfile(currentUser.ID_Usuario).subscribe({
+    if (!currentUser || !currentUser.id) { this.error = 'Usuario no autenticado'; this.loading = false; return; }
+    this.userService.getProfile(currentUser.id).subscribe({
       next: (usuario) => {
         if (usuario) { this.usuario = usuario; this.registrarActividad(); }
         else { this.error = 'No se encontró el perfil del usuario'; }
@@ -53,7 +53,7 @@ export class PerfilComponent implements OnInit {
   
   private registrarActividad(): void {
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.ID_Usuario) { this.userService.registrarActividad(currentUser.ID_Usuario, 'El usuario visualizó su perfil').subscribe(); }
+    if (currentUser?.id) { this.userService.registrarActividad(currentUser.id, 'El usuario visualizó su perfil').subscribe(); }
   }
   
   editarPerfil(): void { this.router.navigate(['/usuario/actualizar-perfil']); }

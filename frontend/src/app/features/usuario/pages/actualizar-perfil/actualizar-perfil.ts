@@ -53,12 +53,12 @@ export class ActualizarPerfilComponent implements OnInit {
     this.loading = true;
     this.error = '';
     const currentUser = this.authService.getCurrentUser();
-    if (!currentUser || !currentUser.ID_Usuario) {
+    if (!currentUser || !currentUser.id) {
       this.error = 'Usuario no autenticado';
       this.loading = false;
       return;
     }
-    this.userService.getProfile(currentUser.ID_Usuario).subscribe({
+    this.userService.getProfile(currentUser.id).subscribe({
       next: (usuario) => {
         if (usuario) { this.usuario = usuario; this.inicializarFormulario(); this.registrarActividad(); }
         else { this.error = 'No se encontró el perfil del usuario'; }
@@ -85,8 +85,8 @@ export class ActualizarPerfilComponent implements OnInit {
   
   private registrarActividad(): void {
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser?.ID_Usuario) {
-      this.userService.registrarActividad(currentUser.ID_Usuario, 'El usuario accedió a actualizar su perfil').subscribe();
+    if (currentUser?.id) {
+      this.userService.registrarActividad(currentUser.id, 'El usuario accedió a actualizar su perfil').subscribe();
     }
   }
   
@@ -101,7 +101,7 @@ export class ActualizarPerfilComponent implements OnInit {
     const formValue = this.perfilForm.getRawValue();
     const currentUser = this.authService.getCurrentUser();
     const updateData: any = {
-      id: currentUser?.ID_Usuario, nombre: formValue.nombre, apellido: formValue.apellido,
+      id: currentUser?.id, nombre: formValue.nombre, apellido: formValue.apellido,
       email: formValue.email, ci: formValue.ci, tipo: formValue.tipo,
       estado: formValue.estado, especialidad: formValue.especialidad || null
     };

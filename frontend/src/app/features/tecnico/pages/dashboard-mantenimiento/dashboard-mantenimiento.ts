@@ -49,7 +49,7 @@ export class DashboardMantenimientoComponent implements OnInit {
   
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    if (this.user?.ID_Usuario) {
+    if (this.user?.id) {
       this.cargarNotificaciones();
       this.cargarMaquinas();
     }
@@ -57,7 +57,7 @@ export class DashboardMantenimientoComponent implements OnInit {
   
   private cargarNotificaciones(): void {
     this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.ID_Usuario).subscribe({
+    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
       next: (notificaciones) => {
         this.notificaciones = notificaciones;
         this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
@@ -69,7 +69,7 @@ export class DashboardMantenimientoComponent implements OnInit {
   
   private cargarMaquinas(): void {
     this.cargandoMantenimiento = true;
-    this.tecnicoService.getMaquinasMantenimiento(this.user!.ID_Usuario).subscribe({
+    this.tecnicoService.getMaquinasMantenimiento(this.user!.id).subscribe({
       next: (maquinas) => { this.maquinasMantenimiento = maquinas; this.cargandoMantenimiento = false; },
       error: () => { this.cargandoMantenimiento = false; }
     });
@@ -95,7 +95,7 @@ export class DashboardMantenimientoComponent implements OnInit {
     if (!this.selectedMaquina || !this.mensaje.trim()) return;
     this.enviando = true;
     this.tecnicoService.finalizarMantenimiento({
-      idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.ID_Usuario,
+      idMaquina: this.selectedMaquina.ID_Maquina, idRemitente: this.user!.id,
       exito: this.exitoMantenimiento, mensaje: this.mensaje
     }).subscribe({
       next: (success) => {

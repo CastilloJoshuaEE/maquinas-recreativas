@@ -16,7 +16,7 @@ describe('ActualizarPerfilComponent', () => {
   let routerMock: any;
 
   beforeEach(async () => {
-    authServiceMock = { getCurrentUser: jest.fn().mockReturnValue({ ID_Usuario: 'test-id' }) };
+    authServiceMock = { getCurrentUser: jest.fn().mockReturnValue({ id: 'test-id' }) };
     userServiceMock = { getProfile: jest.fn().mockReturnValue({ subscribe: jest.fn() }), updateProfile: jest.fn().mockReturnValue({ subscribe: jest.fn() }), registrarActividad: jest.fn().mockReturnValue({ subscribe: jest.fn() }) };
     routerMock = { navigate: jest.fn() };
     

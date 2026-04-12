@@ -62,9 +62,9 @@
       <div *ngIf="!loading && error" class="error-message">{{ error }}</div>
       <div *ngIf="!loading && !error">
         <table mat-table [dataSource]="usuarios" class="mat-elevation-z8">
-          <ng-container matColumnDef="ID_Usuario">
+          <ng-container matColumnDef="id">
             <th mat-header-cell *matHeaderCellDef>ID</th>
-            <td mat-cell *matCellDef="let user">{{user.ID_Usuario | slice:0:8}}...</td>
+            <td mat-cell *matCellDef="let user">{{user.id | slice:0:8}}...</td>
           </ng-container>
           <ng-container matColumnDef="ci">
             <th mat-header-cell *matHeaderCellDef>Cédula</th>
@@ -109,7 +109,7 @@
               <button mat-icon-button color="primary" (click)="verHistorial(user)" matTooltip="Historial">
                 <mat-icon>history</mat-icon>
               </button>
-              <button mat-icon-button color="accent" (click)="editarUsuario(user.ID_Usuario)" matTooltip="Editar">
+              <button mat-icon-button color="accent" (click)="editarUsuario(user.id)" matTooltip="Editar">
                 <mat-icon>edit</mat-icon>
               </button>
               <button mat-icon-button color="warn" (click)="cambiarEstado(user)" matTooltip="Cambiar Estado">

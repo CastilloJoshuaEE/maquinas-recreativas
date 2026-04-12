@@ -5,7 +5,7 @@
       <div class="usuarios-search"><mat-form-field appearance="outline" class="search-field"><mat-label>Buscar usuario</mat-label><input matInput [(ngModel)]="searchTerm" (ngModelChange)="filtrarUsuarios()"><mat-icon matPrefix>search</mat-icon></mat-form-field></div>
       <div *ngIf="cargandoUsuarios" class="loading-users"><mat-spinner diameter="30"></mat-spinner></div>
       <ul class="usuarios-list" *ngIf="!cargandoUsuarios">
-        <li *ngFor="let usuario of usuariosFiltrados" class="usuario-chat-item" [class.activo]="usuarioSeleccionado?.ID_Usuario === usuario.ID_Usuario" (click)="seleccionarUsuario(usuario)">
+        <li *ngFor="let usuario of usuariosFiltrados" class="usuario-chat-item" [class.activo]="usuarioSeleccionado?.id === usuario.id" (click)="seleccionarUsuario(usuario)">
           <div class="usuario-info"><strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong><small>{{ usuario.tipo }}</small></div>
         </li>
       </ul>

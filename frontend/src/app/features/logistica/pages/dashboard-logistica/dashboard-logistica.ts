@@ -67,7 +67,7 @@ export class DashboardLogisticaComponent implements OnInit {
   
   ngOnInit(): void {
     this.user = this.authService.getCurrentUser();
-    if (this.user?.ID_Usuario) {
+    if (this.user?.id) {
       this.cargarNotificaciones();
       this.cargarMaquinas();
     }
@@ -75,7 +75,7 @@ export class DashboardLogisticaComponent implements OnInit {
   
   private cargarNotificaciones(): void {
     this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.ID_Usuario).subscribe({
+    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
       next: (notificaciones) => {
         this.notificaciones = notificaciones;
         this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
@@ -167,7 +167,7 @@ export class DashboardLogisticaComponent implements OnInit {
     this.logisticaService.solicitarMantenimiento({
       idMaquina: this.selectedMaquina.ID_Maquina,
       mensaje: this.mensajeMantenimiento,
-      idLogistica: this.user!.ID_Usuario
+      idLogistica: this.user!.id
     }).subscribe({
       next: (success) => {
         if (success) {

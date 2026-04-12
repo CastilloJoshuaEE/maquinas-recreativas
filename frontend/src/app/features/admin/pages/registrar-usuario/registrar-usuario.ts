@@ -120,9 +120,9 @@ export class RegistrarUsuarioComponent {
       next: (response) => {
         if (response.success) {
           const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-          if (currentUser.ID_Usuario) {
+          if (currentUser.id) {
             this.userService.registrarActividad(
-              currentUser.ID_Usuario,
+              currentUser.id,
               `El usuario registró un nuevo usuario: ${userData.nombre} ${userData.apellido}`
             ).subscribe();
           }

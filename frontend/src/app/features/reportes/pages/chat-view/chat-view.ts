@@ -56,7 +56,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.currentUserId = this.currentUser?.ID_Usuario || '';
+    this.currentUserId = this.currentUser?.id || '';
     if (this.currentUserId) {
       this.cargarUsuarios();
       this.inicializarDesdeParams();
@@ -92,7 +92,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
   private cargarUsuarioPorId(usuarioId: string): void {
     this.reportesService.getUsuariosChat(this.currentUserId).subscribe({
       next: (usuarios) => {
-        const usuario = usuarios.find(u => u.ID_Usuario === usuarioId);
+        const usuario = usuarios.find(u => u.id === usuarioId);
         if (usuario) { this.usuarioSeleccionado = usuario; this.cargarReportes(); }
       }
     });
@@ -102,7 +102,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     this.cargandoUsuarios = true;
     this.reportesService.getUsuariosChat(this.currentUserId).subscribe({
       next: (usuarios) => {
-        this.usuarios = usuarios.filter(u => u.ID_Usuario !== this.currentUserId);
+        this.usuarios = usuarios.filter(u => u.id !== this.currentUserId);
         this.usuariosFiltrados = [...this.usuarios];
         this.cargandoUsuarios = false;
       },
@@ -127,7 +127,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
   
   cargarReportes(): void {
     if (!this.usuarioSeleccionado) return;
-    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.ID_Usuario).subscribe({
+    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
       next: (data) => {
         this.reportes = data.reportes;
         if (this.reportes.length > 0) { this.reporteSeleccionadoId = this.reportes[0].ID_Reporte; this.cargarComentarios(); }
@@ -145,7 +145,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
         this.comentarios = comentarios;
         this.cargandoMensajes = false;
         setTimeout(() => this.scrollToBottom(), 100);
-        if (this.usuarioSeleccionado) this.mensajesNoLeidos[this.usuarioSeleccionado.ID_Usuario] = 0;
+        if (this.usuarioSeleccionado) this.mensajesNoLeidos[this.usuarioSeleccionado.id] = 0;
       },
       error: () => { this.cargandoMensajes = false; }
     });
@@ -155,7 +155,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     if (!this.usuarioSeleccionado) return;
     this.reportesService.crearReporte({
       ID_Usuario_Emisor: this.currentUserId,
-      ID_Usuario_Destinatario: this.usuarioSeleccionado.ID_Usuario,
+      ID_Usuario_Destinatario: this.usuarioSeleccionado.id,
       descripcion: `Chat con ${this.usuarioSeleccionado.nombre} ${this.usuarioSeleccionado.apellido}`
     }).subscribe({
       next: (reporteId) => {

@@ -460,16 +460,17 @@ public function logout(Request $request): Response
             new OA\Response(response: 400, description: "ID de usuario requerido")
         ]
     )]
-    public function obtenerHistorialActividades(Request $request): Response
-    {
-        $usuarioId = $request->query('usuarioId') ?? $_SESSION['ID_Usuario'] ?? null;
-        if (!$usuarioId) {
-            throw new DomainException('ID de usuario requerido', 400);
-        }
-
-        $query    = new ObtenerHistorialActividadesQuery($usuarioId);
-        $historial = $this->historialHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'historial' => $historial]);
+public function obtenerHistorialActividades(Request $request): Response
+{
+    $usuarioId = $request->query('usuarioId') ?? $_SESSION['ID_Usuario'] ?? null;
+    if (!$usuarioId) {
+        throw new DomainException('ID de usuario requerido', 400);
     }
+
+    $uuid = new Uuid($usuarioId);
+    $query = new ObtenerHistorialActividadesQuery($uuid);
+    $historial = $this->historialHandler->handle($query);
+
+    return (new Response())->json(['success' => true, 'historial' => $historial]);
+}
 }

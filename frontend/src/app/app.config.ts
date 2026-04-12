@@ -15,7 +15,8 @@ import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-
+import { APP_INITIALIZER } from '@angular/core';
+import { SessionMonitorService } from './core/services/session-monitor';
 /**
  * Configuración global de la aplicación
  * Incluye:
@@ -51,7 +52,15 @@ export const appConfig: ApplicationConfig = {
       progressBar: true,
       newestOnTop: true
     }),
-    
+     {
+      provide: APP_INITIALIZER,
+      useFactory: (sessionMonitor: SessionMonitorService) => () => {
+        // Inicializar el monitor de sesión
+        return Promise.resolve();
+      },
+      deps: [SessionMonitorService],
+      multi: true
+    },
     // Configuración de Material Form Field
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,

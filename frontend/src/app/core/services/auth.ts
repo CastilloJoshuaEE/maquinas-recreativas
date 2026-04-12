@@ -25,7 +25,8 @@ export class AuthService {
   private currentUserSignal = signal<User | null>(null);
   
   /** Señal computada para verificar si está autenticado */
-  public isAuthenticated = computed(() => this.currentUserSignal() !== null);
+  public isAuthenticated = computed(() => {return this.currentUserSignal() !== null || localStorage.getItem('user') !== null;
+});
   
   /** Señal computada para obtener el rol del usuario */
   public userRole = computed(() => this.currentUserSignal()?.tipo || null);
@@ -66,7 +67,7 @@ if (response.success && response['usuario']) {
    * @returns Observable con respuesta
    */
   logout(): Observable<AuthResponse> {
-    const userId = this.currentUserSignal()?.ID_Usuario;
+    const userId = this.currentUserSignal()?.id;
     
     return this.apiService.post<AuthResponse>(API_ENDPOINTS.LOGOUT, { ID_Usuario: userId }).pipe(
       tap(() => {
@@ -126,7 +127,7 @@ if (response.success && response['usuario']) {
   /**
    * Limpia la sesión actual
    */
-  private clearSession(): void {
+  public clearSession(): void {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     this.currentUserSignal.set(null);
@@ -135,16 +136,15 @@ if (response.success && response['usuario']) {
   /**
    * Carga el usuario desde localStorage al iniciar
    */
-  private loadUserFromStorage(): void {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        this.currentUserSignal.set(user);
-      } catch (e) {
-        console.error('Error al cargar usuario desde localStorage:', e);
-        this.clearSession();
-      }
+private loadUserFromStorage(): void {
+  const userStr = localStorage.getItem('user');
+  if (userStr && !this.currentUserSignal()) {
+    try {
+      const user = JSON.parse(userStr);
+      this.currentUserSignal.set(user);
+    } catch (e) {
+      console.error('Error al cargar usuario:', e);
     }
   }
+}
 }

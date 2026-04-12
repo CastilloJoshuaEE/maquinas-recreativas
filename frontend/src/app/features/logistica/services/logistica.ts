@@ -73,7 +73,7 @@ export class LogisticaService {
   }
 
   generarPlaca(idUsuario: string): Observable<{ id_componente: string; placa: string } | null> {
-    return this.apiService.post(API_ENDPOINTS.MAQUINA_GENERAR_PLACA, { ID_Usuario: idUsuario }).pipe(
+    return this.apiService.post(API_ENDPOINTS.MAQUINA_GENERAR_PLACA, { id: idUsuario }).pipe(
       map(response => response.success ? { 
         id_componente: response['id_componente'], 
         placa: response['placa'] 
@@ -82,7 +82,7 @@ export class LogisticaService {
   }
 
   asignarCarcasa(idComponente: string, idUsuario: string): Observable<boolean> {
-    return this.apiService.post(API_ENDPOINTS.COMPONENTES_ASIGNAR_CARCASA, { ID_Componente: idComponente, ID_Usuario: idUsuario }).pipe(
+    return this.apiService.post(API_ENDPOINTS.COMPONENTES_ASIGNAR_CARCASA, { ID_Componente: idComponente, id: idUsuario }).pipe(
       map(response => response.success)
     );
   }

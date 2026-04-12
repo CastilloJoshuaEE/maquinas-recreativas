@@ -139,7 +139,7 @@ if (response.success && response['usuario']) {
       next: (response: any) => {
         if (response.success && response.usuarios?.length > 0) {
           const admin = response.usuarios[0];
-          this.apiService.post(API_ENDPOINTS.REPORTES_CREAR, { ID_Usuario_Emisor: 'chatbot_temp', ID_Usuario_Destinatario: admin.ID_Usuario, descripcion: `Nuevo reporte desde chatbot (${this.currentFlowText}):\nNombre: ${this.userInfo.nombres} ${this.userInfo.apellidos}\nEmail: ${this.userInfo.email}\nTeléfono: ${this.userInfo.telefono}\nCI: ${this.userInfo.ci}`, estado: 'Pendiente' }).subscribe();
+          this.apiService.post(API_ENDPOINTS.REPORTES_CREAR, { ID_Usuario_Emisor: 'chatbot_temp', ID_Usuario_Destinatario: admin.id, descripcion: `Nuevo reporte desde chatbot (${this.currentFlowText}):\nNombre: ${this.userInfo.nombres} ${this.userInfo.apellidos}\nEmail: ${this.userInfo.email}\nTeléfono: ${this.userInfo.telefono}\nCI: ${this.userInfo.ci}`, estado: 'Pendiente' }).subscribe();
         }
       },
       error: () => { console.error('Error al enviar reporte al administrador'); }

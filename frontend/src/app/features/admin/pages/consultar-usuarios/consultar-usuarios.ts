@@ -51,7 +51,7 @@ export class ConsultarUsuariosComponent implements OnInit {
   
   filtrosForm!: FormGroup;
   usuarios: User[] = [];
-  displayedColumns: string[] = ['ID_Usuario', 'ci', 'nombre', 'email', 'usuario_asignado', 'estado', 'tipo', 'acciones'];
+  displayedColumns: string[] = ['id', 'ci', 'nombre', 'email', 'usuario_asignado', 'estado', 'tipo', 'acciones'];
   
   loading = false;
   error = '';
@@ -145,13 +145,13 @@ cargarUsuarios(): void {
   }
   
   cambiarEstado(usuario: User): void {
-    this.router.navigate([`/admin/editar-usuario/${usuario.ID_Usuario}`], { queryParams: { modo: 'estado' } });
+    this.router.navigate([`/admin/editar-usuario/${usuario.id}`], { queryParams: { modo: 'estado' } });
   }
   
   verHistorial(usuario: User): void {
     this.usuarioSeleccionado = usuario;
     this.modalHistorialVisible = true;
-    this.cargarHistorialUsuario(usuario.ID_Usuario);
+    this.cargarHistorialUsuario(usuario.id);
   }
   
   cargarHistorialUsuario(usuarioId: string): void {
@@ -178,7 +178,7 @@ cargarUsuarios(): void {
     if (!confirm(`¿Está seguro de eliminar al usuario ${usuario.nombre} ${usuario.apellido}?`)) return;
     
     this.loading = true;
-    this.apiService.delete(API_ENDPOINTS.ADMIN_USER_BY_ID(usuario.ID_Usuario)).subscribe({
+    this.apiService.delete(API_ENDPOINTS.ADMIN_USER_BY_ID(usuario.id)).subscribe({
       next: (response) => {
         if (response.success) {
           this.snackBar.open('Usuario eliminado correctamente', 'Cerrar', { duration: 3000 });

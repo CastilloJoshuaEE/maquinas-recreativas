@@ -32,7 +32,7 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     // Usar currentUser como fallback si user no está definido
     const activeUser = this.user ?? this.currentUser;
-    if (activeUser?.ID_Usuario) {
+    if (activeUser?.id) {
       this.cargarNotificaciones();
     }
   }
@@ -40,7 +40,7 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if ((changes['user'] || changes['currentUser']) && !this.notificaciones.length) {
       const activeUser = this.user ?? this.currentUser;
-      if (activeUser?.ID_Usuario) {
+      if (activeUser?.id) {
         this.cargarNotificaciones();
       }
     }
@@ -52,13 +52,13 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
 
   cargarNotificaciones(): void {
     const activeUser = this.getActiveUser();
-    // CORREGIDO: guard contra null antes de acceder a ID_Usuario
-    if (!activeUser?.ID_Usuario) {
+    // CORREGIDO: guard contra null antes de acceder a id
+    if (!activeUser?.id) {
       return;
     }
 
     this.cargando = true;
-    this.notificationService.getMaquinaNotifications(activeUser.ID_Usuario).subscribe({
+    this.notificationService.getMaquinaNotifications(activeUser.id).subscribe({
       next: (notifs) => {
         this.notificaciones = notifs;
         this.noLeidas = notifs.filter(n => !n.leida).length;

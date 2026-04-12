@@ -51,7 +51,7 @@ export interface RegisterRecaudacionData {
   Monto_Empresa: number;
   fecha: string;
   detalle?: string;
-  ID_Usuario: string;
+  id: string;
 }
 
 /**

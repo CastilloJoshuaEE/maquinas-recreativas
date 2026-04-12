@@ -56,7 +56,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.cargarEstadoInicial();
-    if (this.currentUser?.ID_Usuario) {
+    if (this.currentUser?.id) {
       if (!this.esUsuarioInhabilitado && !this.modoAdmin) this.cargarReportes();
       else if (this.esUsuarioInhabilitado) this.cargarAdministradores();
     }
@@ -76,10 +76,10 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   }
   
   private cargarAdministradores(): void {
-    this.reportesService.getUsuariosChat(this.currentUser?.ID_Usuario || '').subscribe({
+    this.reportesService.getUsuariosChat(this.currentUser?.id || '').subscribe({
       next: (usuarios) => {
         this.administradores = usuarios.filter(u => u.tipo === 'Administrador');
-        if (this.administradores.length > 0) this.nuevoReporte.destinatario = this.administradores[0].ID_Usuario;
+        if (this.administradores.length > 0) this.nuevoReporte.destinatario = this.administradores[0].id;
       },
       error: () => { this.snackBar.open('Error al cargar administradores', 'Cerrar', { duration: 3000 });}
     });
@@ -87,7 +87,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   
   cargarUsuariosPorTipo(): void {
     if (!this.nuevoReporte.tipoDestinatario) { this.usuariosDisponibles = []; return; }
-    this.reportesService.getUsuariosChat(this.currentUser!.ID_Usuario).subscribe({
+    this.reportesService.getUsuariosChat(this.currentUser!.id).subscribe({
       next: (usuarios) => { this.usuariosDisponibles = usuarios.filter(u => u.tipo === this.nuevoReporte.tipoDestinatario); },
       error: () => { this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 }); }
     });
@@ -95,7 +95,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   
   cargarReportes(): void {
     this.cargandoReportes = true;
-    this.reportesService.getReportesByUser(this.currentUser!.ID_Usuario).subscribe({
+    this.reportesService.getReportesByUser(this.currentUser!.id).subscribe({
       next: (reportes) => { this.reportes = reportes; this.filtrarReportes(); this.cargandoReportes = false; },
       error: () => { this.cargandoReportes = false; this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); }
     });
@@ -114,7 +114,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
     else if (this.modoAdmin) descripcion = `[USUARIO RESTRINGIDO] ${descripcion}`;
     
     this.reportesService.crearReporte({
-      ID_Usuario_Emisor: this.currentUser!.ID_Usuario,
+      ID_Usuario_Emisor: this.currentUser!.id,
       ID_Usuario_Destinatario: this.nuevoReporte.destinatario,
       descripcion
     }).subscribe({
@@ -147,8 +147,8 @@ cambiarEstado(reporte: Reporte): void {
   });
 }
   puedeCambiarEstado(reporte: Reporte): boolean {
-    const esEmisor = reporte.ID_Usuario_Emisor === this.currentUser?.ID_Usuario;
-    const esDestinatario = reporte.ID_Usuario_Destinatario === this.currentUser?.ID_Usuario;
+    const esEmisor = reporte.ID_Usuario_Emisor === this.currentUser?.id;
+    const esDestinatario = reporte.ID_Usuario_Destinatario === this.currentUser?.id;
     return esEmisor || esDestinatario;
   }
   
