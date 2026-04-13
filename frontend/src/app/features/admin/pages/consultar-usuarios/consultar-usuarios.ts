@@ -81,7 +81,27 @@ cargarUsuarios(): void {
   this.loading = true;
   this.error = '';
   
-  const params: any = { page: this.currentPage + 1, limit: this.pageSize };
+  const filtros = this.filtrosForm.value;
+  
+  const params: any = { 
+    page: this.currentPage + 1, 
+    limit: this.pageSize 
+  };
+  
+  if (filtros.ci && filtros.ci.trim() !== '') {
+    params.ci = filtros.ci.trim();
+  }
+  if (filtros.estado && filtros.estado !== '') {
+    params.estado = filtros.estado;
+  }
+  if (filtros.tipo && filtros.tipo !== '') {
+    params.tipo = filtros.tipo;
+  }
+  if (filtros.rango_fecha && filtros.rango_fecha !== '') {
+    params.rango_fecha = filtros.rango_fecha;
+  }
+  
+  console.log('Parámetros de búsqueda:', params);
   
   this.apiService.get(API_ENDPOINTS.ADMIN_USERS, params).subscribe({
     next: (response: any) => {
@@ -127,6 +147,7 @@ cargarUsuarios(): void {
   
   limpiarFiltros(): void {
     this.filtrosForm.reset({ ci: '', estado: '', tipo: '', rango_fecha: '' });
+    this.currentPage = 0;  // Reiniciar a primera página
     this.buscarUsuarios();
   }
   

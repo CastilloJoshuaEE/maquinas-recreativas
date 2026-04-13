@@ -226,7 +226,8 @@ public function logout(Request $request): Response
             throw new DomainException('ID de usuario inválido', 400);
         }
 
-        $includeSensitive = in_array($_SESSION['rol'] ?? '', ['Administrador', 'Contabilidad']);
+        $includeSensitive = in_array($_SESSION['rol'] ?? '', ['Administrador', 'Contabilidad', 'Tecnico', 'Logistico'])
+    || ($_SESSION['ID_Usuario'] ?? '') === $id;
         $query   = new ObtenerUsuarioPorIdQuery($id, $includeSensitive);
         $usuario = $this->obtenerUsuarioPorIdHandler->handle($query);
 
@@ -436,17 +437,23 @@ public function logout(Request $request): Response
             new OA\Response(response: 401, description: "No autenticado")
         ]
     )]
-    public function registrarActividad(Request $request): Response
-    {
-        $data        = $request->json();
-        $descripcion = $data['descripcion'] ?? 'Actividad no especificada';
-
-        $command = new RegistrarActividadCommand($_SESSION['ID_Usuario'], $descripcion);
-        $this->registrarActividadHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Actividad registrada']);
+public function registrarActividad(Request $request): Response
+{
+    $data = $request->json();
+    $descripcion = $data['descripcion'] ?? 'Actividad no especificada';
+    
+    // Convertir el ID de sesión a Uuid
+    $usuarioId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$usuarioId) {
+        throw new DomainException('Usuario no autenticado', 401);
     }
+    
+    $uuid = new Uuid($usuarioId);
+    $command = new RegistrarActividadCommand($uuid, $descripcion);
+    $this->registrarActividadHandler->handle($command);
 
+    return (new Response())->json(['success' => true, 'message' => 'Actividad registrada']);
+}
     #[OA\Get(
         path: "/v1/historial-actividades",
         summary: "Obtener historial de actividades del usuario",

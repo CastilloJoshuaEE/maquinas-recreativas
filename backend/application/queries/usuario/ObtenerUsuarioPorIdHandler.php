@@ -45,10 +45,10 @@ class ObtenerUsuarioPorIdHandler
         ];
         
         // Incluir email solo si está permitido
-        if ($query->shouldIncludeSensitive()) {
-            $data['email'] = CifradoHelper::desencriptar($usuario->getEmailValue());
-            $data['ci'] = CifradoHelper::desencriptar($usuario->getCi());
-        }
+if ($query->shouldIncludeSensitive()) {
+    $data['email'] = $usuario->getEmail()->value();
+    $data['ci'] = $usuario->getCi();
+}
         
         return $data;
     }

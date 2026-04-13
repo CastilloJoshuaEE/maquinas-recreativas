@@ -8,7 +8,8 @@ import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import { User, UpdateProfileData, HistorialActividad } from '@core/models/user.model';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
-
+import { catchError } from 'rxjs/operators'; 
+import { of } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly apiService = inject(ApiService);
@@ -44,11 +45,12 @@ export class UserService {
     );
   }
 
-  registrarActividad(userId: string, descripcion: string): Observable<boolean> {
-    return this.apiService.post(API_ENDPOINTS.HISTORIAL_ACTIVIDADES, { ID_Usuario: userId, descripcion }).pipe(
-      map(response => response.success)
-    );
-  }
+registrarActividad(userId: string, descripcion: string): Observable<boolean> {
+  return this.apiService.post(API_ENDPOINTS.HISTORIAL_ACTIVIDADES, { ID_Usuario: userId, descripcion }).pipe(
+    map(response => response?.success ?? false),
+    catchError(() => of(false))   
+  );
+}
 
   getHistorialActividades(userId: string, params?: any): Observable<HistorialActividad[]> {
     return this.apiService.get<{ historial: HistorialActividad[] }>(

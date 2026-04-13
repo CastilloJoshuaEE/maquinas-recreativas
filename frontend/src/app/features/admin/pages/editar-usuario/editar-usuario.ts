@@ -102,7 +102,8 @@ private cargarUsuario(uuid: string): void {
         email: [this.usuario.email, [Validators.required, Validators.email]],
         usuario_asignado: [this.usuario.usuario_asignado, [Validators.required, Validators.maxLength(15)]],
         tipo: [this.usuario.tipo, Validators.required],
-        especialidad: [this.usuario.Especialidad || ''],
+        especialidad: [(this.usuario as any).especialidad ?? this.usuario.Especialidad ?? ''],
+
         contrasena: ['', [Validators.minLength(8)]]
       });
     } else {

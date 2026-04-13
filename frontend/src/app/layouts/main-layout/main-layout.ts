@@ -7,12 +7,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, AdminHeaderComponent],
+  imports: [CommonModule, RouterOutlet],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css']
 })

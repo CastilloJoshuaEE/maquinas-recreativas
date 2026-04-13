@@ -11,7 +11,7 @@ import { catchError, throwError } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../services/auth';
 import { MatDialog } from '@angular/material/dialog';
-import { SesionExpiradaComponent } from '@app/shared/ui/sesion-expirada/sesion-expirada';
+import { SesionExpiradaComponent } from '@shared/ui/sesion-expirada/sesion-expirada';
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const toastr = inject(ToastrService);

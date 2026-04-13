@@ -435,7 +435,8 @@ class MySQLUsuarioRepository implements UsuarioRepository
         $stmt->bind_param('s', $v);
         $stmt->execute();
         $actividades = [];
-        while ($row = $stmt->get_result()->fetch_assoc()) $actividades[] = $row;
+        $result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) $actividades[] = $row;
         $stmt->close();
         return $actividades;
     }

@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { fromEvent, Subscription, timer } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
-import { SesionExpiradaComponent } from '@app/shared/ui/sesion-expirada/sesion-expirada';
+import { SesionExpiradaComponent } from '@shared/ui/sesion-expirada/sesion-expirada';
 import { AuthService } from '@core/services/auth';
 import { ToastrService } from 'ngx-toastr';
 @Injectable({
