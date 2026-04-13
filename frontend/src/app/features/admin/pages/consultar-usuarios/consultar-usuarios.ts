@@ -139,7 +139,15 @@ cargarUsuarios(): void {
     }
   });
 }
-  
+  soloNumeros(event: KeyboardEvent): boolean {
+  const charCode = event.charCode;
+  if (charCode >= 48 && charCode <= 57) {
+    return true;
+  } else {
+    event.preventDefault();
+    return false;
+  }
+}
   buscarUsuarios(): void {
     this.currentPage = 0;
     this.cargarUsuarios();

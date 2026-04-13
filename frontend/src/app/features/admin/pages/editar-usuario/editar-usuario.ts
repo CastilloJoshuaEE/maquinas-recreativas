@@ -176,7 +176,15 @@ this.usuarioForm = this.fb.group({
       }
     });
   }
-  
+  soloNumeros(event: KeyboardEvent): boolean {
+  const charCode = event.charCode;
+  if (charCode >= 48 && charCode <= 57) {
+    return true;
+  } else {
+    event.preventDefault();
+    return false;
+  }
+}
   regresar(): void {
     this.router.navigate(['/admin/consultar-usuarios']);
   }

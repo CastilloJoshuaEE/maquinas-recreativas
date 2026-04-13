@@ -11,11 +11,16 @@
 
     <div class="contenedor-filtros">
       <form [formGroup]="filtrosForm" class="filtros-form">
-        <mat-form-field appearance="outline">
-          <mat-label>Cédula</mat-label>
-          <input matInput formControlName="ci">
-          <mat-icon matPrefix>badge</mat-icon>
-        </mat-form-field>
+<mat-form-field appearance="outline">
+  <mat-label>Cédula</mat-label>
+  <input 
+    matInput 
+    formControlName="ci"
+    type="text"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    (keypress)="soloNumeros($event)">
+</mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Estado</mat-label>
           <mat-select formControlName="estado">
@@ -33,16 +38,6 @@
             <mat-option value="Logistica">Logística</mat-option>
             <mat-option value="Tecnico">Técnico</mat-option>
             <mat-option value="Administrador">Administrador</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Rango Fecha</mat-label>
-          <mat-select formControlName="rango_fecha">
-            <mat-option value="">-- Rango --</mat-option>
-            <mat-option value="hoy">Hoy</mat-option>
-            <mat-option value="ayer">Ayer</mat-option>
-            <mat-option value="15dias">15 días</mat-option>
-            <mat-option value="30dias">30 días</mat-option>
           </mat-select>
         </mat-form-field>
         <button mat-raised-button color="primary" (click)="buscarUsuarios()" [disabled]="loading">

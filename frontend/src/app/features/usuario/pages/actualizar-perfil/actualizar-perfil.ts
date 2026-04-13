@@ -123,6 +123,14 @@ export class ActualizarPerfilComponent implements OnInit {
       error: (err) => { this.snackBar.open(err.message || 'Error al actualizar perfil', 'Cerrar', { duration: 3000 }); this.submitting = false; }
     });
   }
-  
+  soloNumeros(event: KeyboardEvent): boolean {
+  const charCode = event.charCode;
+  if (charCode >= 48 && charCode <= 57) {
+    return true;
+  } else {
+    event.preventDefault();
+    return false;
+  }
+}
   regresar(): void { this.router.navigate(['/usuario/perfil']); }
 }

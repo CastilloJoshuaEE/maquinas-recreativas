@@ -322,45 +322,59 @@ class AdministradorController
             new OA\Response(response: 400, description: "Datos inválidos")
         ]
     )]
-    public function updateUser(Request $request, string $id): Response
-    {
-        if (!ValidationHelper::isValidUUID($id)) {
-            throw new DomainException('ID de usuario inválido', 400);
-        }
 
-        $data     = $request->json();
-        $required = ['nombre', 'apellido', 'email', 'ci', 'tipo', 'estado', 'usuario_asignado'];
-        foreach ($required as $field) {
-            if (!isset($data[$field])) {
-                throw new DomainException("El campo {$field} es requerido", 400);
-            }
-        }
-
-        if (!ValidationHelper::validateEmail($data['email'])) {
-            throw new DomainException('Formato de email inválido', 400);
-        }
-
-        $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
-        if (!in_array($data['tipo'], $tiposPermitidos, true)) {
-            throw new DomainException('Tipo de usuario no válido', 400);
-        }
-        if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
-            throw new DomainException('La especialidad es requerida para técnicos', 400);
-        }
-
-        $command = new ActualizarUsuarioCommand(
-            $id, $data['nombre'], $data['apellido'], $data['email'], $data['ci'],
-            $data['tipo'], $data['estado'], $data['usuario_asignado'],
-            $data['especialidad'] ?? null, $data['contrasena'] ?? null
-        );
-
-        $this->actualizarUsuarioHandler->handle($command);
-
-        // Invalidar caché
-        $this->invalidarCacheUsuario($id);
-
-        return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
+public function updateUser(Request $request, string $id): Response
+{
+    if (!ValidationHelper::isValidUUID($id)) {
+        throw new DomainException('ID de usuario inválido', 400);
     }
+
+    $data = $request->json();
+    
+    $required = ['nombre', 'apellido', 'email', 'ci', 'tipo', 'usuario_asignado'];
+    foreach ($required as $field) {
+        if (!isset($data[$field])) {
+            throw new DomainException("El campo {$field} es requerido", 400);
+        }
+    }
+
+    if (!ValidationHelper::validateEmail($data['email'])) {
+        throw new DomainException('Formato de email inválido', 400);
+    }
+
+    $tiposPermitidos = ['Administrador', 'Tecnico', 'Logistica', 'Contabilidad', 'Usuario'];
+    if (!in_array($data['tipo'], $tiposPermitidos, true)) {
+        throw new DomainException('Tipo de usuario no válido', 400);
+    }
+    if ($data['tipo'] === 'Tecnico' && empty($data['especialidad'])) {
+        throw new DomainException('La especialidad es requerida para técnicos', 400);
+    }
+
+    $queryActual = new ObtenerUsuarioPorIdQuery($id, true);
+    $usuarioActual = $this->obtenerUsuarioPorIdHandler->handle($queryActual);
+    
+    // Usar el estado actual si no se proporciona uno nuevo
+    $estado = $data['estado'] ?? $usuarioActual['estado'];
+
+    $command = new ActualizarUsuarioCommand(
+        $id, 
+        $data['nombre'], 
+        $data['apellido'], 
+        $data['email'], 
+        $data['ci'],
+        $data['tipo'], 
+        $estado,  // ← Usar estado actual o el proporcionado
+        $data['usuario_asignado'],
+        $data['especialidad'] ?? null, 
+        $data['contrasena'] ?? null
+    );
+
+    $this->actualizarUsuarioHandler->handle($command);
+
+    $this->invalidarCacheUsuario($id);
+
+    return (new Response())->json(['success' => true, 'message' => 'Usuario actualizado correctamente']);
+}
 
     #[OA\Patch(
         path: "/v1/administrador/usuarios/{uuid}",

@@ -44,7 +44,13 @@
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Cédula</mat-label>
-                <input matInput formControlName="ci">
+                <input 
+    matInput 
+    formControlName="ci"
+    type="text"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    (keypress)="soloNumeros($event)">
                 <mat-icon matPrefix>badge</mat-icon>
                 <mat-error *ngIf="usuarioForm.get('ci')?.hasError('required')">
                   Cédula requerida
