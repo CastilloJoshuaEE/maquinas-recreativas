@@ -43,58 +43,62 @@ class MySQLUsuarioRepository implements UsuarioRepository
     // =========================================================================
     // ESCRITURA
     // =========================================================================
+public function save(Usuario $usuario): void
+{
+    $conn = $this->db->getConnection();
 
-    public function save(Usuario $usuario): void
-    {
-        $conn = $this->db->getConnection();
+    $txResult = $conn->query("SELECT @@in_transaction AS in_tx");
+    $txRow    = $txResult->fetch_assoc();
+    $outerTx  = (bool)($txRow['in_tx'] ?? false);
 
-        $txResult = $conn->query("SELECT @@in_transaction AS in_tx");
-        $txRow    = $txResult->fetch_assoc();
-        $outerTx  = (bool)($txRow['in_tx'] ?? false);
+    try {
+        if (!$outerTx) $conn->begin_transaction();
 
-        try {
-            if (!$outerTx) $conn->begin_transaction();
+        $existing = $this->searchById($usuario->getId());
+        $nombre   = $usuario->getNombre();
+        $apellido = $usuario->getApellido();
+        
+        //  CORREGIDO: Encriptar la CI antes de guardar
+        $ciEncriptada = CifradoHelper::encriptar($usuario->getCi());
+        
+        $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail()->value());
+        $usuarioAsignado = $usuario->getUsuarioAsignado();
+        $contrasenaHash  = $usuario->getContrasenaHash();
+        $tipo            = $usuario->getTipo()->value();
+        $estado          = $usuario->getEstado()->value();
+        $id              = $usuario->getId()->value();
 
-            $existing        = $this->searchById($usuario->getId());
-            $nombre          = $usuario->getNombre();
-            $apellido        = $usuario->getApellido();
-            $ci              = $usuario->getCi();
-            $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail()->value());
-            $usuarioAsignado = $usuario->getUsuarioAsignado();
-            $contrasenaHash  = $usuario->getContrasenaHash();
-            $tipo            = $usuario->getTipo()->value();
-            $estado          = $usuario->getEstado()->value();
-            $id              = $usuario->getId()->value();
-
-            if ($existing) {
-                $sql  = "UPDATE usuario SET 
-                            nombre=?,apellido=?,ci=?,email=?,
-                            usuario_asignado=?,contrasena=?,tipo=?,estado=?
-                         WHERE ID_Usuario=?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param('sssssssss', $nombre, $apellido, $ci, $emailEncriptado,
-                    $usuarioAsignado, $contrasenaHash, $tipo, $estado, $id);
-            } else {
-                $sql  = "INSERT INTO usuario (ID_Usuario,nombre,apellido,ci,email,usuario_asignado,contrasena,tipo,estado)
-                         VALUES (?,?,?,?,?,?,?,?,?)";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param('sssssssss', $id, $nombre, $apellido, $ci, $emailEncriptado,
-                    $usuarioAsignado, $contrasenaHash, $tipo, $estado);
-            }
-            $stmt->execute();
-            $stmt->close();
-
-            $this->saveSpecificUserData($conn, $usuario);
-
-            if (!$outerTx) $conn->commit();
-        } catch (\Exception $e) {
-            if (!$outerTx) $conn->rollback();
-            throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
+        if ($existing) {
+            $sql = "UPDATE usuario SET 
+                        nombre=?,apellido=?,ci=?,email=?,
+                        usuario_asignado=?,contrasena=?,tipo=?,estado=?
+                    WHERE ID_Usuario=?";
+            $stmt = $conn->prepare($sql);
+            //  Usar $ciEncriptada en lugar de $ci
+            $stmt->bind_param('sssssssss', $nombre, $apellido, $ciEncriptada, $emailEncriptado,
+                $usuarioAsignado, $contrasenaHash, $tipo, $estado, $id);
+        } else {
+            $sql = "INSERT INTO usuario (ID_Usuario,nombre,apellido,ci,email,usuario_asignado,contrasena,tipo,estado)
+                    VALUES (?,?,?,?,?,?,?,?,?)";
+            $stmt = $conn->prepare($sql);
+            //  Usar $ciEncriptada en lugar de $ci
+            $stmt->bind_param('sssssssss', $id, $nombre, $apellido, $ciEncriptada, $emailEncriptado,
+                $usuarioAsignado, $contrasenaHash, $tipo, $estado);
         }
+        $stmt->execute();
+        $stmt->close();
 
-        // Invalidar caché
-        $this->invalidateUser($usuario->getId()->value(), $usuario->getUsuarioAsignado(), $usuario->getEmail()->value(), $usuario->getTipo()->value());
+        $this->saveSpecificUserData($conn, $usuario);
+
+        if (!$outerTx) $conn->commit();
+    } catch (\Exception $e) {
+        if (!$outerTx) $conn->rollback();
+        throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
     }
+
+    // Invalidar caché
+    $this->invalidateUser($usuario->getId()->value(), $usuario->getUsuarioAsignado(), $usuario->getEmail()->value(), $usuario->getTipo()->value());
+}
 
     private function saveSpecificUserData(\mysqli $conn, Usuario $usuario): void
     {
@@ -473,7 +477,6 @@ while ($row = $result->fetch_assoc()) $actividades[] = $row;
         // Desencriptar email con fallback
         $emailRaw = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
         if (empty($emailRaw) || $emailRaw === false) {
-            error_log("AVISO: No se pudo desencriptar email del usuario {$row['ID_Usuario']}.");
             $emailRaw = $row['usuario_asignado'] . '@temp.local';
         }
         // Validar que sea UTF-8 válido para que json_encode no falle
@@ -489,7 +492,6 @@ while ($row = $result->fetch_assoc()) $actividades[] = $row;
         // para evitar "La cédula debe tener al menos 6 caracteres" en setCi()
         $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
         if (empty($ciDecrypted) || $ciDecrypted === false || !mb_check_encoding($ciDecrypted, 'UTF-8')) {
-            error_log("AVISO: No se pudo desencriptar CI del usuario {$row['ID_Usuario']}. Usando placeholder.");
             // Usar los primeros 10 chars del hash como placeholder válido
             $ciDecrypted = substr(md5($row['ci'] ?? $row['ID_Usuario']), 0, 10);
         }

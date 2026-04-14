@@ -27,7 +27,7 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    public function handle(Command $command): Usuario
+   public function handle(Command $command): Usuario
 {
     if (!$command instanceof RegistrarUsuarioAdminCommand) {
         throw new InvalidArgumentException('Comando inválido para este handler');
@@ -39,9 +39,9 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
         throw new DomainException("El email '{$command->email}' ya está registrado.");
     }
 
-    // Validar si la cédula ya existe
-    $ciEncriptada = CifradoHelper::encriptar($command->ci);
-    if ($this->usuarioRepository->existsByCi($ciEncriptada)) {
+    // Validar CI pero NO encriptar aquí (solo verificar existencia)
+    $ciEncriptadaParaValidar = CifradoHelper::encriptar($command->ci);
+    if ($this->usuarioRepository->existsByCi($ciEncriptadaParaValidar)) {
         throw new DomainException("La cédula '{$command->ci}' ya está registrada");
     }
 
@@ -50,7 +50,6 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
     if (empty($usuarioAsignado)) {
         $usuarioAsignado = $this->generarUsuarioAsignado($command->nombre, $command->apellido, $command->tipo);
     } else {
-        // Validar si el nombre de usuario ya existe
         if ($this->usuarioRepository->existsByUsuarioAsignado($usuarioAsignado)) {
             throw new DomainException("El nombre de usuario '{$usuarioAsignado}' ya está en uso");
         }
@@ -61,11 +60,12 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
     $estado = new EstadoUsuario($command->estado);
     $emailVO = new Email($command->email);
 
+    // Pasar CI en texto plano (NO encriptada)
     $usuario = $this->crearUsuarioPorTipo(
         $id,
         $command->nombre,
         $command->apellido,
-        $ciEncriptada,
+        $command->ci,  // ← Texto plano
         $emailVO,
         $usuarioAsignado,
         $contrasenaHash,
@@ -74,7 +74,7 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
         $command->especialidad
     );
 
-    $this->usuarioRepository->save($usuario);
+    $this->usuarioRepository->save($usuario);  // Aquí se encriptará
     return $usuario;
 }
 

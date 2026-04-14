@@ -42,83 +42,119 @@
         </form>
       </mat-step>
 
-      <!-- Paso 2 -->
-      <mat-step [stepControl]="credencialesForm">
-        <form [formGroup]="credencialesForm">
-          <ng-template matStepLabel>Credenciales</ng-template>
-          <div class="step-content">
-            <mat-form-field appearance="outline">
-              <mat-label>Usuario Asignado</mat-label>
-              <input matInput formControlName="usuario_asignado">
-              <mat-icon matPrefix>account_circle</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Contraseña</mat-label>
-              <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
-              <mat-icon matPrefix>lock</mat-icon>
-              <mat-icon matSuffix (click)="hidePassword = !hidePassword">
-                {{hidePassword ? 'visibility_off' : 'visibility'}}
-              </mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Confirmar Contraseña</mat-label>
-              <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmar_contrasena">
-              <mat-icon matPrefix>lock</mat-icon>
-              <mat-icon matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
-                {{hideConfirmPassword ? 'visibility_off' : 'visibility'}}
-              </mat-icon>
-            </mat-form-field>
-          </div>
-          <div class="step-actions">
-            <button mat-button matStepperPrevious>Atrás</button>
-            <button mat-button matStepperNext [disabled]="credencialesForm.invalid">Siguiente</button>
-          </div>
-        </form>
-      </mat-step>
+  <!-- Paso 2 -->
+<mat-step [stepControl]="credencialesForm">
+  <form [formGroup]="credencialesForm">
+    <ng-template matStepLabel>Credenciales</ng-template>
+    <div class="step-content">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Usuario Asignado</mat-label>
+        <input matInput formControlName="usuario_asignado">
+        <mat-icon matPrefix>account_circle</mat-icon>
+        <mat-error *ngIf="credencialesForm.get('usuario_asignado')?.hasError('required') && credencialesForm.get('usuario_asignado')?.touched">
+          Usuario requerido
+        </mat-error>
+        <mat-error *ngIf="credencialesForm.get('usuario_asignado')?.hasError('maxlength')">
+          Máximo 15 caracteres
+        </mat-error>
+      </mat-form-field>
 
-      <!-- Paso 3 -->
-      <mat-step [stepControl]="rolForm">
-        <form [formGroup]="rolForm">
-          <ng-template matStepLabel>Rol y Configuración</ng-template>
-          <div class="step-content">
-            <mat-form-field appearance="outline">
-              <mat-label>Tipo de Usuario</mat-label>
-              <mat-select formControlName="tipo">
-                <mat-option value="Administrador">Administrador</mat-option>
-                <mat-option value="Contabilidad">Contabilidad</mat-option>
-                <mat-option value="Logistica">Logística</mat-option>
-                <mat-option value="Tecnico">Técnico</mat-option>
-              </mat-select>
-              <mat-icon matPrefix>work</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline" *ngIf="rolForm.get('tipo')?.value === 'Tecnico'">
-              <mat-label>Especialidad</mat-label>
-              <mat-select formControlName="especialidad">
-                <mat-option value="Ensamblador">Ensamblador</mat-option>
-                <mat-option value="Comprobador">Comprobador</mat-option>
-                <mat-option value="Mantenimiento">Mantenimiento</mat-option>
-              </mat-select>
-              <mat-icon matPrefix>build</mat-icon>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Estado</mat-label>
-              <mat-select formControlName="estado">
-                <mat-option value="Activo">Activo</mat-option>
-                <mat-option value="Inhabilitado">Inhabilitado</mat-option>
-                <mat-option value="Pendiente de asignacion">Pendiente</mat-option>
-              </mat-select>
-              <mat-icon matPrefix>toggle_on</mat-icon>
-            </mat-form-field>
-          </div>
-          <div class="step-actions">
-            <button mat-button matStepperPrevious>Atrás</button>
-            <button mat-raised-button color="primary" [disabled]="rolForm.invalid || submitting" (click)="registrarUsuario(stepper)">
-              <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
-              <span *ngIf="!submitting">Registrar Usuario</span>
-            </button>
-          </div>
-        </form>
-      </mat-step>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+        <mat-icon matPrefix>lock</mat-icon>
+        <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+          {{hidePassword ? 'visibility_off' : 'visibility'}}
+        </mat-icon>
+        <mat-error *ngIf="credencialesForm.get('contrasena')?.hasError('required') && credencialesForm.get('contrasena')?.touched">
+          Contraseña requerida
+        </mat-error>
+        <mat-error *ngIf="credencialesForm.get('contrasena')?.hasError('minlength')">
+          Mínimo 8 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirmar Contraseña</mat-label>
+        <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmar_contrasena">
+        <mat-icon matPrefix>lock</mat-icon>
+        <mat-icon matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
+          {{hideConfirmPassword ? 'visibility_off' : 'visibility'}}
+        </mat-icon>
+        <mat-error *ngIf="credencialesForm.get('confirmar_contrasena')?.hasError('required') && credencialesForm.get('confirmar_contrasena')?.touched">
+          Confirmar contraseña requerida
+        </mat-error>
+        <mat-error *ngIf="credencialesForm.hasError('passwordMismatch') && credencialesForm.get('confirmar_contrasena')?.touched">
+          Las contraseñas no coinciden
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="step-actions">
+      <button mat-button matStepperPrevious>Atrás</button>
+      <button mat-button matStepperNext 
+              [disabled]="credencialesForm.invalid"
+              (click)="credencialesForm.markAllAsTouched()">
+        Siguiente
+      </button>
+    </div>
+  </form>
+</mat-step>
+<!-- Paso 3 -->
+<mat-step [stepControl]="rolForm">
+  <form [formGroup]="rolForm">
+    <ng-template matStepLabel>Rol y Configuración</ng-template>
+    <div class="step-content">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tipo de Usuario</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option value="Administrador">Administrador</mat-option>
+          <mat-option value="Contabilidad">Contabilidad</mat-option>
+          <mat-option value="Logistica">Logística</mat-option>
+          <mat-option value="Tecnico">Técnico</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>work</mat-icon>
+        <mat-error *ngIf="rolForm.get('tipo')?.hasError('required')">
+          Tipo requerido
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="rolForm.get('tipo')?.value === 'Tecnico'">
+        <mat-label>Especialidad</mat-label>
+        <mat-select formControlName="especialidad">
+          <mat-option value="Ensamblador">Ensamblador</mat-option>
+          <mat-option value="Comprobador">Comprobador</mat-option>
+          <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>build</mat-icon>
+        <mat-error *ngIf="rolForm.get('especialidad')?.hasError('required')">
+          Especialidad requerida
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="estado">
+          <mat-option value="Activo">Activo</mat-option>
+          <mat-option value="Inhabilitado">Inhabilitado</mat-option>
+          <mat-option value="Pendiente de asignacion">Pendiente</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>toggle_on</mat-icon>
+        <mat-error *ngIf="rolForm.get('estado')?.hasError('required')">
+          Estado requerido
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <div class="step-actions">
+      <button mat-button matStepperPrevious>Atrás</button>
+      <button mat-raised-button color="primary" 
+              [disabled]="rolForm.invalid || submitting" 
+              (click)="registrarUsuario(stepper)">
+        <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+        <span *ngIf="!submitting">Registrar Usuario</span>
+      </button>
+    </div>
+  </form>
+</mat-step>
     </mat-stepper>
 
     <div *ngIf="success" class="success-message">

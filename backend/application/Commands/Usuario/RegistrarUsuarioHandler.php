@@ -24,19 +24,29 @@ class RegistrarUsuarioHandler
         $this->passwordHasher = $passwordHasher;
     }
 
+
     public function handle(RegistrarUsuarioCommand $command): Uuid
     {
-        $this->ensureEmailIsUnique($command->getEmail());
-        $this->ensureUsuarioAsignadoIsUnique($this->generarUsuarioAsignado($command));
+        //Validar email (encriptar solo para verificar existencia)
+        $emailEncriptado = CifradoHelper::encriptar($command->getEmail());
+        if ($this->usuarioRepository->searchByEmail($emailEncriptado) !== null) {
+            throw new InvalidArgumentException('El correo electrónico ya está registrado.');
+        }
+
+        $ciEncriptadaParaValidar = CifradoHelper::encriptar($command->getCi());
+        if ($this->usuarioRepository->existsByCi($ciEncriptadaParaValidar)) {
+            throw new InvalidArgumentException('La cédula ya está registrada.');
+        }
+
+        $usuarioAsignado = $this->generarUsuarioAsignado($command);
+        $this->ensureUsuarioAsignadoIsUnique($usuarioAsignado);
 
         $nuevoId         = Uuid::v4();
         $hashContrasena  = $this->passwordHasher->hash($command->getContrasenaPlana());
-        $ciEncriptada    = CifradoHelper::encriptar($command->getCi());
         $email           = new Email($command->getEmail());
-        $usuarioAsignado = $this->generarUsuarioAsignado($command);
         $estado          = new EstadoUsuario('Activo');
 
-        // ── Crear la subclase correcta según el tipo ──────────────────────
+        // ── Crear la subclase correcta según el tipo
         $tipo = $command->getTipo();
 
         if ($tipo === TipoUsuario::TECNICO) {
@@ -44,7 +54,7 @@ class RegistrarUsuarioHandler
                 $nuevoId,
                 $command->getNombre(),
                 $command->getApellido(),
-                $ciEncriptada,
+                $command->getCi(),  
                 $email,
                 $usuarioAsignado,
                 $hashContrasena,
@@ -57,7 +67,7 @@ class RegistrarUsuarioHandler
                 $nuevoId,
                 $command->getNombre(),
                 $command->getApellido(),
-                $ciEncriptada,
+                $command->getCi(),  
                 $email,
                 $usuarioAsignado,
                 $hashContrasena,
@@ -68,7 +78,7 @@ class RegistrarUsuarioHandler
                 $nuevoId,
                 $command->getNombre(),
                 $command->getApellido(),
-                $ciEncriptada,
+                $command->getCi(),  
                 $email,
                 $usuarioAsignado,
                 $hashContrasena,
@@ -82,6 +92,7 @@ class RegistrarUsuarioHandler
 
         return $nuevoId;
     }
+
 
     private function ensureEmailIsUnique(string $email): void
     {

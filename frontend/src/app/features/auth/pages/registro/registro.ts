@@ -84,7 +84,15 @@ export class RegistroComponent {
       }
     }
   }
-  
+  soloNumeros(event: KeyboardEvent): boolean {
+  const charCode = event.charCode;
+  if (charCode >= 48 && charCode <= 57) {
+    return true;
+  } else {
+    event.preventDefault();
+    return false;
+  }
+}
   onSubmit(): void {
     if (this.registroForm.invalid) return;
     

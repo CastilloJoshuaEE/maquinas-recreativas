@@ -17,7 +17,7 @@
           <div class="info-row"><span class="info-label">Estado:</span><span class="info-value"><span class="estado-badge" [ngClass]="{'estado-activo': usuario.estado === 'Activo', 'estado-inhabilitado': usuario.estado === 'Inhabilitado', 'estado-pendiente': usuario.estado === 'Pendiente de asignacion'}">{{ usuario.estado }}</span></span></div>
         </div>
       </mat-card-content>
-      <mat-card-actions><button mat-raised-button color="primary" (click)="editarPerfil()"><mat-icon>edit</mat-icon> Editar Perfil</button><button mat-raised-button color="warn" (click)="cerrarSesion()"><mat-icon>exit_to_app</mat-icon> Cerrar Sesión</button></mat-card-actions>
+      <mat-card-actions><button mat-raised-button color="primary" (click)="editarPerfil()"><mat-icon>edit</mat-icon> Editar Perfil</button></mat-card-actions>
     </mat-card>
   </div>
 </div>
