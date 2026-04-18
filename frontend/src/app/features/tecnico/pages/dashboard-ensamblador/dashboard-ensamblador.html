@@ -1,7 +1,6 @@
 <div class="dashboard-container">
   <app-admin-header></app-admin-header>
   <div class="dashboard-sections">
-    <section class="profile-section" *ngIf="user"><h2>Perfil</h2><div class="profile-info"><p><strong>Cédula:</strong> {{ user.ci }}</p><p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellido }}</p><p><strong>Especialidad:</strong> {{ user.Especialidad }}</p></div></section>
     <hr />
     <section class="notifications-section"><h2 (click)="mostrarNotificaciones = !mostrarNotificaciones">Notificaciones {{ notificacionesNoLeidas > 0 ? '(' + notificacionesNoLeidas + ')' : '' }} {{ mostrarNotificaciones ? '🔽' : '▶️' }}</h2>
       <div *ngIf="mostrarNotificaciones">

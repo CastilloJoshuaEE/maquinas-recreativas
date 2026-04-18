@@ -1,17 +1,7 @@
 <div class="dashboard-container">
   <app-admin-header></app-admin-header>
   <div class="dashboard-sections">
-    @if (user) {
-      <section class="profile-section">
-        <h2>Perfil</h2>
-        <div class="profile-info">
-          <p><strong>Cédula:</strong> {{ user.ci }}</p>
-          <p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellido }}</p>
-          <p><strong>Especialidad:</strong> {{ user.Especialidad }}</p>
-        </div>
-      </section>
-    }
-    
+
     <hr />
     
     <section class="notifications-section">
@@ -88,7 +78,7 @@
             
             @if (maquinasMantenimiento.length > 0 && selectedMaquina) {
               <div class="action-buttons">
-                <button mat-raised-button color="success" (click)="abrirModalMensaje(true)" [disabled]="!selectedMaquina">Dar de alta ✅</button>
+                <button mat-raised-button color="success" (click)="abrirModalMensaje(true)" [disabled]="!selectedMaquina">Dar de alta </button>
                 <button mat-raised-button color="warn" (click)="abrirModalMensaje(false)" [disabled]="!selectedMaquina">Dar de baja ❌</button>
               </div>
             }

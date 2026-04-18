@@ -73,28 +73,38 @@ class MySQLNotificacionRepository implements NotificacionRepository
         $data = $stmt->get_result()->fetch_assoc(); $stmt->close();
         return $data ? NotificacionReporte::fromArray($data) : null;
     }
-
-    public function findMaquinasByDestinatario(Uuid $idDestinatario): array
-    {
-        $cacheKey = "notificaciones:maquina:{$idDestinatario->value()}";
-        return $this->cache->remember($cacheKey, function () use ($idDestinatario) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT n.*,u.nombre as nombre_remitente,u.apellido as apellido_remitente,
-                            m.Nombre_Maquina,c.Nombre as NombreComercio,c.Direccion as DireccionComercio
-                     FROM NotificacionMaquinaRecreativa n
-                     LEFT JOIN usuario u ON n.ID_Remitente=u.ID_Usuario
-                     LEFT JOIN MaquinaRecreativa m ON n.ID_Maquina=m.ID_Maquina
-                     LEFT JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
-                     WHERE n.ID_Destinatario=? ORDER BY n.Fecha DESC";
-            $stmt = $conn->prepare($sql);
-            $v    = $idDestinatario->value(); $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $notificaciones = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $notificaciones[] = $row;
-            $stmt->close();
-            return $notificaciones;
-        }, $this->ttl);
-    }
+public function findMaquinasByDestinatario(Uuid $idDestinatario): array
+{
+    $cacheKey = "notificaciones:maquina:{$idDestinatario->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idDestinatario) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT n.*,u.nombre as nombre_remitente,u.apellido as apellido_remitente,
+                        m.Nombre_Maquina,c.Nombre as NombreComercio,c.Direccion as DireccionComercio
+                 FROM NotificacionMaquinaRecreativa n
+                 LEFT JOIN usuario u ON n.ID_Remitente=u.ID_Usuario
+                 LEFT JOIN MaquinaRecreativa m ON n.ID_Maquina=m.ID_Maquina
+                 LEFT JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
+                 WHERE n.ID_Destinatario=? ORDER BY n.Fecha DESC";
+        $stmt = $conn->prepare($sql);
+        $v    = $idDestinatario->value(); 
+        $stmt->bind_param('s', $v);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $notificaciones = [];
+        while ($row = $result->fetch_assoc()) {
+            $notificaciones[] = $row;
+        }
+        // Cerrar el statement y liberar el resultado
+        $stmt->close();
+        // Asegurar que no queden resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        return $notificaciones;
+    }, $this->ttl);
+}
 
     public function findReportesByUsuario(Uuid $idUsuario): array
     {

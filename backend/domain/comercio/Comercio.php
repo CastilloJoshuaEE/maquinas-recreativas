@@ -59,18 +59,19 @@ class Comercio
     }
 
     /**
-     * Reconstruye un comercio desde datos persistidos
+     *  Reconstruye un comercio desde datos persistidos
+     * Los datos de la base de datos vienen con mayúsculas: Nombre, Tipo, Direccion, Telefono
      */
     public static function fromArray(array $data): self
     {
         return new self(
             $data['ID_Comercio'],
-            $data['nombre'],
-            $data['tipo'],
-            $data['direccion'],
-            $data['telefono'],
-            (int)($data['cantidad_maquinas'] ?? 0),
-            $data['fecha_registro'] ?? null
+            $data['Nombre'] ?? $data['nombre'] ?? '',           // ← Priorizar mayúscula
+            $data['Tipo'] ?? $data['tipo'] ?? '',               // ← Priorizar mayúscula
+            $data['Direccion'] ?? $data['direccion'] ?? '',     // ← Priorizar mayúscula
+            $data['Telefono'] ?? $data['telefono'] ?? '',       // ← Priorizar mayúscula
+            (int)($data['cantidad_maquinas'] ?? $data['Cantidad_Maquinas'] ?? 0),
+            $data['fecha_registro'] ?? $data['Fecha_Registro'] ?? null
         );
     }
 

@@ -36,21 +36,36 @@ export class PerfilComponent implements OnInit {
   
   ngOnInit(): void { this.cargarPerfil(); }
   
-  cargarPerfil(): void {
-    this.loading = true;
-    this.error = '';
-    const currentUser = this.authService.getCurrentUser();
-    if (!currentUser || !currentUser.id) { this.error = 'Usuario no autenticado'; this.loading = false; return; }
-    this.userService.getProfile(currentUser.id).subscribe({
-      next: (usuario) => {
-        if (usuario) { this.usuario = usuario; this.registrarActividad(); }
-        else { this.error = 'No se encontró el perfil del usuario'; }
-        this.loading = false;
-      },
-      error: (err) => { this.error = err.message || 'Error al cargar el perfil'; this.loading = false; }
-    });
+cargarPerfil(): void {
+  this.loading = true;
+  this.error = '';
+  const currentUser = this.authService.getCurrentUser();
+  if (!currentUser || !currentUser.id) { 
+    this.error = 'Usuario no autenticado'; 
+    this.loading = false; 
+    return; 
   }
   
+  this.userService.getProfile(currentUser.id).subscribe({
+    next: (usuario) => {
+      if (usuario) { 
+        // Normalizar: asegurar que Especialidad tenga el valor correcto
+        if (usuario.especialidad && !usuario.Especialidad) {
+          usuario.Especialidad = usuario.especialidad;
+        }
+        this.usuario = usuario; 
+        this.registrarActividad(); 
+      } else { 
+        this.error = 'No se encontró el perfil del usuario'; 
+      }
+      this.loading = false;
+    },
+    error: (err) => { 
+      this.error = err.message || 'Error al cargar el perfil'; 
+      this.loading = false; 
+    }
+  });
+}
   private registrarActividad(): void {
     const currentUser = this.authService.getCurrentUser();
     if (currentUser?.id) { this.userService.registrarActividad(currentUser.id, 'El usuario visualizó su perfil').subscribe(); }
@@ -67,17 +82,33 @@ export class PerfilComponent implements OnInit {
     }
   }
   
-  regresar(): void {
-    const user = this.authService.getCurrentUser();
-    if (user) {
-      const userType = user.tipo === 'Técnico' ? 'Tecnico' : user.tipo;
-      switch (userType) {
-        case 'Logistica': this.router.navigate(['/logistica/dashboard']); break;
-        case 'Tecnico': this.router.navigate([`/tecnico/${user.Especialidad?.toLowerCase() || 'ensamblador'}`]); break;
-        case 'Contabilidad': this.router.navigate(['/contabilidad/dashboard']); break;
-        case 'Administrador': this.router.navigate(['/admin/dashboard']); break;
-        default: this.router.navigate(['/']);
-      }
-    } else { this.router.navigate(['/']); }
+regresar(): void {
+  const user = this.authService.getCurrentUser();
+  if (user) {
+    const userType = user.tipo === 'Técnico' ? 'Tecnico' : user.tipo;
+    switch (userType) {
+      case 'Logistica':
+        this.router.navigate(['/logistica/dashboard']);
+        break;
+      case 'Tecnico':
+        // Obtener especialidad normalizada
+        const especialidad = user.Especialidad || user.especialidad || '';
+        let ruta = 'ensamblador';
+        if (especialidad === 'Comprobador') ruta = 'comprobador';
+        if (especialidad === 'Mantenimiento') ruta = 'mantenimiento';
+        this.router.navigate([`/tecnico/${ruta}`]);
+        break;
+      case 'Contabilidad':
+        this.router.navigate(['/contabilidad/dashboard']);
+        break;
+      case 'Administrador':
+        this.router.navigate(['/admin/dashboard']);
+        break;
+      default:
+        this.router.navigate(['/']);
+    }
+  } else {
+    this.router.navigate(['/']);
   }
+}
 }

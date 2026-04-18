@@ -173,6 +173,10 @@ require_once __DIR__ . '/../Application/Commands/Usuario/RegistrarActividadHandl
 // =============================================
 require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioCommand.php';
 require_once __DIR__ . '/../Application/Commands/Comercio/RegistrarComercioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Comercio/ActualizarComercioCommand.php';   
+require_once __DIR__ . '/../Application/Commands/Comercio/ActualizarComercioHandler.php';
+require_once __DIR__ . '/../Application/Commands/Comercio/EliminarComercioCommand.php';
+require_once __DIR__ . '/../Application/Commands/Comercio/EliminarComercioHandler.php';
 
 // =============================================
 // APPLICATION - COMMANDS (Componente)
@@ -267,6 +271,7 @@ require_once __DIR__ . '/../Application/Queries/Usuario/ObtenerHistorialActivida
 // =============================================
 require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosQuery.php';
 require_once __DIR__ . '/../Application/Queries/Comercio/ObtenerComerciosHandler.php';
+
 
 // =============================================
 // APPLICATION - QUERIES (Componente)
@@ -402,6 +407,8 @@ use maquinas_recreativas\Application\Queries\Usuario\ObtenerHistorialActividades
 
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
 use maquinas_recreativas\Application\Queries\Comercio\ObtenerComerciosHandler;
+use maquinas_recreativas\Application\Commands\Comercio\ActualizarComercioHandler;
+use maquinas_recreativas\Application\Commands\Comercio\EliminarComercioHandler;
 
 use maquinas_recreativas\Application\Commands\Componente\UsarComponenteHandler;
 use maquinas_recreativas\Application\Commands\Componente\LiberarComponenteHandler;
@@ -673,7 +680,13 @@ Dependencies::register(RegistrarComercioHandler::class, function() {
 Dependencies::register(ObtenerComerciosHandler::class, function() {
     return new ObtenerComerciosHandler(Dependencies::get(MySQLComercioRepository::class));
 });
+Dependencies::register(ActualizarComercioHandler::class, function() {
+    return new ActualizarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+});
 
+Dependencies::register(EliminarComercioHandler::class, function() {
+    return new EliminarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+});
 // Handlers de Componente
 Dependencies::register(UsarComponenteHandler::class, function() {
     return new UsarComponenteHandler(
@@ -799,7 +812,8 @@ Dependencies::register(FinalizarMantenimientoHandler::class, function() {
 Dependencies::register(ObtenerMaquinasPorTecnicoEnsambladorHandler::class, function() {
     return new ObtenerMaquinasPorTecnicoEnsambladorHandler(
         Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(MySQLUsuarioRepository::class),
+        Dependencies::get(MySQLComercioRepository::class)
     );
 });
 
@@ -1075,7 +1089,9 @@ Dependencies::register(AdministradorController::class, function() {
 Dependencies::register(ComercioController::class, function() {
     return new ComercioController(
         Dependencies::get(ObtenerComerciosHandler::class),
-        Dependencies::get(RegistrarComercioHandler::class)
+        Dependencies::get(RegistrarComercioHandler::class),
+        Dependencies::get(ActualizarComercioHandler::class),  
+        Dependencies::get(EliminarComercioHandler::class)     
     );
 });
 

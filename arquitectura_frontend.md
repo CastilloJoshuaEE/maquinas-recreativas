@@ -497,3 +497,7 @@ npm install --save-dev jest @types/jest ts-jest
 ## Cómo generar la documentación
 
 npx compodoc -p tsconfig.json
+
+
+
+**Tu proyecto es un ERP Vertical (Software de planificación de recursos para máquinas recreativas) con arquitectura y despliegue de tipo SaaS.**

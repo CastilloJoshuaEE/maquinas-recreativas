@@ -127,27 +127,44 @@ class MySQLComponenteRepository implements ComponenteRepository
         }, 1800);
     }
 
-    public function findDisponibles(?TipoComponente $tipo = null): array
-    {
-        $tipoStr  = $tipo ? $tipo->value() : 'all';
-        $cacheKey = "componentes:disponibles:{$tipoStr}";
-        return $this->cache->remember($cacheKey, function () use ($tipo) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT c.* FROM componente c
-                       LEFT JOIN componente_usuario cu ON c.ID_Componente=cu.ID_Componente AND cu.fecha_liberacion IS NULL
-                       WHERE cu.ID_Componente IS NULL";
-            $params = []; $types = "";
-            if ($tipo) { $sql .= " AND c.tipo=?"; $params[] = $tipo->value(); $types .= "s"; }
-            $sql .= " ORDER BY c.nombre ASC";
-            $stmt = $conn->prepare($sql);
-            if (!empty($params)) $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $componentes = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $componentes[] = Componente::fromArray($row);
-            $stmt->close();
-            return $componentes;
-        }, 600);
-    }
+public function findDisponibles(?TipoComponente $tipo = null): array
+{
+    $tipoStr  = $tipo ? $tipo->value() : 'all';
+    $cacheKey = "componentes:disponibles:{$tipoStr}";
+    
+    return $this->cache->remember($cacheKey, function () use ($tipo) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT c.* FROM componente c
+                LEFT JOIN componente_usuario cu ON c.ID_Componente = cu.ID_Componente AND cu.fecha_liberacion IS NULL
+                WHERE cu.ID_Componente IS NULL";
+        $params = [];
+        $types = "";
+        
+        if ($tipo) {
+            $sql .= " AND c.tipo=?";
+            $params[] = $tipo->value();
+            $types .= "s";
+        }
+        $sql .= " ORDER BY c.nombre ASC";
+        
+        $stmt = $conn->prepare($sql);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $componentes = [];
+        while ($row = $result->fetch_assoc()) {
+            $componentes[] = Componente::fromArray($row);
+        }
+        
+        //Cerrar el statement antes de salir
+        $stmt->close();
+        
+        return $componentes;
+    }, 600);
+}
 
     public function findEnUsoPorUsuario(Uuid $idUsuario, ?Uuid $idMaquina = null): array
     {

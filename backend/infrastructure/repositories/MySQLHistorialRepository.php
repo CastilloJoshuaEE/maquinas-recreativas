@@ -62,28 +62,38 @@ class MySQLHistorialRepository implements HistorialRepository
     }
 
     // ---- lectura con caché --------------------------------------------------
-
-    public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0): array
-    {
-        $cacheKey = "historial:maquina:{$idMaquina->value()}:{$limit}:{$offset}";
-        return $this->cache->remember($cacheKey, function () use ($idMaquina, $limit, $offset) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT h.*,u.nombre as usuario_nombre,u.apellido as usuario_apellido,u.tipo as usuario_tipo,m.Nombre_Maquina
-                     FROM historial_maquinas h
-                     INNER JOIN usuario u ON h.ID_Usuario=u.ID_Usuario
-                     INNER JOIN MaquinaRecreativa m ON h.ID_Maquina=m.ID_Maquina
-                     WHERE h.ID_Maquina=? ORDER BY h.fecha_hora DESC LIMIT ? OFFSET ?";
-            $stmt = $conn->prepare($sql);
-            $v    = $idMaquina->value();
-            $stmt->bind_param('sii', $v, $limit, $offset);
-            $stmt->execute();
-            $historial = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $historial[] = HistorialMaquina::fromArray($row);
-            $stmt->close();
-            return $historial;
-        }, $this->ttl);
-    }
-
+public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0): array
+{
+    $cacheKey = "historial:maquina:{$idMaquina->value()}:{$limit}:{$offset}";
+    return $this->cache->remember($cacheKey, function () use ($idMaquina, $limit, $offset) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT h.*,u.nombre as usuario_nombre,u.apellido as usuario_apellido,u.tipo as usuario_tipo,m.Nombre_Maquina
+                 FROM historial_maquinas h
+                 INNER JOIN usuario u ON h.ID_Usuario = u.ID_Usuario
+                 INNER JOIN MaquinaRecreativa m ON h.ID_Maquina = m.ID_Maquina
+                 WHERE h.ID_Maquina = ? 
+                 ORDER BY h.fecha_hora DESC 
+                 LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($sql);
+        $v    = $idMaquina->value();
+        $stmt->bind_param('sii', $v, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $historial = [];
+        while ($row = $result->fetch_assoc()) {
+            $historial[] = HistorialMaquina::fromArray($row);
+        }
+        $result->free();  // ← Liberar el resultado
+        $stmt->close();   // ← Cerrar el statement
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        return $historial;
+    }, $this->ttl);
+}
     public function findByUsuario(Uuid $idUsuario, int $limit = 50, int $offset = 0): array
     {
         $cacheKey = "historial:usuario:{$idUsuario->value()}:{$limit}:{$offset}";
@@ -153,29 +163,36 @@ class MySQLHistorialRepository implements HistorialRepository
             return $historial;
         }, $this->ttl);
     }
-
-    public function countByFilters(
-        ?Uuid $idMaquina = null, ?Uuid $idUsuario = null,
-        ?string $tipoUsuario = null, ?string $accion = null,
-        ?string $fechaInicio = null, ?string $fechaFin = null
-    ): int {
-        $conn   = $this->db->getConnection();
-        $sql    = "SELECT COUNT(*) as total FROM historial_maquinas h WHERE 1=1";
-        $params = []; $types = "";
-        if ($idMaquina)   { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value();  $types .= "s"; }
-        if ($idUsuario)   { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value();  $types .= "s"; }
-        if ($tipoUsuario) { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario;         $types .= "s"; }
-        if ($accion)      { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%";        $types .= "s"; }
-        if ($fechaInicio) { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio;     $types .= "s"; }
-        if ($fechaFin)    { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin;        $types .= "s"; }
-        $stmt = $conn->prepare($sql);
-        if (!empty($params)) $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        return (int)$row['total'];
+public function countByFilters(
+    ?Uuid $idMaquina = null, ?Uuid $idUsuario = null,
+    ?string $tipoUsuario = null, ?string $accion = null,
+    ?string $fechaInicio = null, ?string $fechaFin = null
+): int {
+    $conn   = $this->db->getConnection();
+    $sql    = "SELECT COUNT(*) as total FROM historial_maquinas h WHERE 1=1";
+    $params = []; $types = "";
+    if ($idMaquina)   { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value();  $types .= "s"; }
+    if ($idUsuario)   { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value();  $types .= "s"; }
+    if ($tipoUsuario) { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario;         $types .= "s"; }
+    if ($accion)      { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%";        $types .= "s"; }
+    if ($fechaInicio) { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio;     $types .= "s"; }
+    if ($fechaFin)    { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin;        $types .= "s"; }
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $total = (int)$row['total'];
+    $result->free();  // ← Liberar resultado
+    $stmt->close();   // ← Cerrar statement
+    // Limpiar resultados pendientes
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($rs = $conn->store_result()) {
+            $rs->free();
+        }
     }
-
+    return $total;
+}
     public function findActividadesByUsuario(Uuid $idUsuario, int $limit = 50): array
     {
         $cacheKey = "historial:actividades:{$idUsuario->value()}";

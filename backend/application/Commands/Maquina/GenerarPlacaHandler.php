@@ -12,7 +12,6 @@ use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
-
 final class GenerarPlacaHandler implements CommandHandler
 {
     private ComponenteRepository $componenteRepository;
@@ -30,20 +29,24 @@ final class GenerarPlacaHandler implements CommandHandler
             throw new DomainException('Comando inválido');
         }
 
-        $idTecnico = new Uuid($command->idTecnico());
-        $tecnico = $this->usuarioRepository->findById($idTecnico);
+        $idUsuario = new Uuid($command->idTecnico());
+        $usuario = $this->usuarioRepository->findById($idUsuario);
         
-        if (!$tecnico) {
-            throw new DomainException('Técnico no encontrado');
+        if (!$usuario) {
+            throw new DomainException('Usuario no encontrado');
         }
         
-        if (!$tecnico->getTipo()->isTecnico()) {
-            throw new DomainException('El usuario no es un técnico válido');
+        // Permitir que logística también pueda generar placas
+        $esLogistica = $usuario->getTipo()->isLogistica();
+        $esTecnico = $usuario->getTipo()->isTecnico();
+        
+        if (!$esLogistica && !$esTecnico) {
+            throw new DomainException('El usuario no tiene permisos para generar placas');
         }
         
         $numeroPlaca = $this->componenteRepository->generarNumeroPlaca();
         $placa = Componente::generarPlaca($numeroPlaca);
-        $placa->asignarAUso($idTecnico);
+        $placa->asignarAUso($idUsuario);
         $this->componenteRepository->save($placa);
         
         return [

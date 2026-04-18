@@ -73,4 +73,5 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\UsuarioController::class, 'getByTipo'],
         'middleware' => []
     ]
+
 ];

@@ -104,6 +104,16 @@ backend/
 │   │   │   ├── CrearComentarioCommand.php
 │   │   │   └── CrearComentarioHandler.php
 │   │   ├── Comercio/
+
+│   │   │   ├── ActualizarComercioCommand.php
+│   │   │   └── ActualizarComercioHandler.php
+
+│   │   │   ├── EliminarComercioCommand.php
+│   │   │   └── EliminarComercioHandler.php
+
+
+
+
 │   │   │   ├── RegistrarComercioCommand.php
 │   │   │   └── RegistrarComercioHandler.php
 │   │   ├── Componente/

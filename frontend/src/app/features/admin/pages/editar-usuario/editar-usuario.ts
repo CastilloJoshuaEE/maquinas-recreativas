@@ -74,7 +74,7 @@ private cargarUsuario(uuid: string): void {
     this.loading = true;
     this.error = '';
     
-    // ✅ Usar AdminService en lugar de ApiService directamente
+    //  Usar AdminService en lugar de ApiService directamente
     this.adminService.getUsuarioById(uuid).subscribe({
         next: (usuario) => {
             if (usuario) {

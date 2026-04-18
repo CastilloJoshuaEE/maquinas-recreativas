@@ -26,6 +26,8 @@ export interface User {
   tipo: string;
   /** Especialidad (solo para técnicos) */
   Especialidad?: string;
+    especialidad?: string;
+
   /** ID del técnico (solo para técnicos) */
   ID_Tecnico?: string;
   /** Fecha de creación */

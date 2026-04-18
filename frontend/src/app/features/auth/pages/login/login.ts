@@ -17,6 +17,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@core/services/auth';
 import { UserService } from '@core/services/user';
+import { TECNICO_ESPECIALIDADES } from '@core/constants/app.constants';
 
 @Component({
   selector: 'app-login',
@@ -83,19 +84,38 @@ export class LoginComponent {
       case 'Logistica':
         this.router.navigate(['/logistica/dashboard']);
         break;
+        
       case 'Tecnico':
-        if (usuario.Especialidad) {
-          this.router.navigate([`/tecnico/${usuario.Especialidad.toLowerCase()}`]);
-        } else {
-          this.router.navigate(['/tecnico/ensamblador']);
+        // Obtener especialidad (puede venir como Especialidad o especialidad)
+        const especialidad = usuario.Especialidad || usuario.especialidad || '';
+        
+        // Mapear especialidad a la ruta correcta (minúsculas)
+        let rutaEspecialidad = '';
+        switch (especialidad) {
+          case TECNICO_ESPECIALIDADES.ENSAMBLADOR:
+            rutaEspecialidad = 'ensamblador';
+            break;
+          case TECNICO_ESPECIALIDADES.COMPROBADOR:
+            rutaEspecialidad = 'comprobador';
+            break;
+          case TECNICO_ESPECIALIDADES.MANTENIMIENTO:
+            rutaEspecialidad = 'mantenimiento';
+            break;
+          default:
+            rutaEspecialidad = 'ensamblador';
         }
+        
+        this.router.navigate([`/tecnico/${rutaEspecialidad}`]);
         break;
+        
       case 'Contabilidad':
         this.router.navigate(['/contabilidad/dashboard']);
         break;
+        
       case 'Administrador':
         this.router.navigate(['/admin/dashboard']);
         break;
+        
       default:
         this.router.navigate(['/']);
     }

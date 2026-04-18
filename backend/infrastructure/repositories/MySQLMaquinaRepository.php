@@ -61,29 +61,132 @@ class MySQLMaquinaRepository implements MaquinaRepository
     }
 
     public function findByTecnicoEnsamblador(Uuid $idTecnico): array
-    {
-        $cacheKey = "maquinas:ensamblador:{$idTecnico->value()}";
-
-        return $this->cache->remember($cacheKey, function () use ($idTecnico) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT * FROM MaquinaRecreativa 
-                     WHERE ID_Tecnico_Ensamblador = ? 
-                       AND (Estado = 'Ensamblandose' OR Estado = 'Reensamblandose')
-                     ORDER BY Fecha_Registro DESC";
-            $stmt = $conn->prepare($sql);
-            $v    = $idTecnico->value();
-            $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $maquinas = [];
-            while ($row = $result->fetch_assoc()) {
-                $maquinas[] = MaquinaRecreativa::fromArray($row);
-            }
-            $stmt->close();
-            return $maquinas;
-        }, $this->ttl);
+{
+    $conn = $this->db->getConnection();
+    $sql = "SELECT m.*, c.Nombre as NombreComercio, c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Ensamblador = ?
+            ORDER BY m.Fecha_Registro DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $id = $idTecnico->value();
+    $stmt->bind_param('s', $id);
+    $stmt->execute();
+    
+    $maquinas = [];
+    while ($row = $stmt->get_result()->fetch_assoc()) {
+        $maquinas[] = MaquinaRecreativa::fromArray($row);
     }
-
+    $stmt->close();
+    return $maquinas;
+}
+/**
+ * Infrastructure/Repositories/MySQLMaquinaRepository.php
+ */
+public function findByTecnicoEnsambladorWithComercio(Uuid $idTecnico): array
+{
+    $conn = $this->db->getConnection();
+    $sql = "SELECT 
+                m.ID_Maquina,
+                m.Nombre_Maquina,
+                m.Tipo,
+                m.Estado,
+                m.Etapa,
+                m.ID_Comercio,
+                m.ID_Tecnico_Ensamblador,
+                m.ID_Tecnico_Comprobador,
+                m.Fecha_Registro,
+                c.Nombre as NombreComercio,
+                c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Ensamblador = ?
+            ORDER BY m.Fecha_Registro DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $id = $idTecnico->value();
+    $stmt->bind_param('s', $id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        // Incluir TODOS los campos que espera el frontend
+        $maquinas[] = [
+            'ID_Maquina' => $row['ID_Maquina'],
+            'Nombre_Maquina' => $row['Nombre_Maquina'],
+            'Tipo' => $row['Tipo'],
+            'Estado' => $row['Estado'],           // ← IMPORTANTE para el filtro
+            'Etapa' => $row['Etapa'],
+            'ID_Comercio' => $row['ID_Comercio'],
+            'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
+            'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
+            'Fecha_Registro' => $row['Fecha_Registro'],
+            'NombreComercio' => $row['NombreComercio'] ?? '',
+            'DireccionComercio' => $row['DireccionComercio'] ?? ''
+        ];
+    }
+    $stmt->close();
+    
+    error_log("findByTecnicoEnsambladorWithComercio: " . count($maquinas) . " máquinas encontradas");
+    
+    return $maquinas;
+}
+/**
+ * Infrastructure/Repositories/MySQLMaquinaRepository.php
+ */
+public function findByTecnicoComprobadorWithComercio(Uuid $idTecnico): array
+{
+    $conn = $this->db->getConnection();
+    $sql = "SELECT 
+                m.ID_Maquina,
+                m.Nombre_Maquina,
+                m.Tipo,
+                m.Estado,
+                m.Etapa,
+                m.ID_Comercio,
+                m.ID_Tecnico_Ensamblador,
+                m.ID_Tecnico_Comprobador,
+                m.Fecha_Registro,
+                c.Nombre as NombreComercio,
+                c.Direccion as DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            WHERE m.ID_Tecnico_Comprobador = ?
+              AND m.Estado = 'Comprobandose'
+            ORDER BY m.Fecha_Registro DESC";
+    
+    $stmt = $conn->prepare($sql);
+    $id = $idTecnico->value();
+    $stmt->bind_param('s', $id);
+    $stmt->execute();
+    
+    $result = $stmt->get_result();
+    $maquinas = [];
+    
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = [
+            'ID_Maquina' => $row['ID_Maquina'],
+            'Nombre_Maquina' => $row['Nombre_Maquina'],
+            'Tipo' => $row['Tipo'],
+            'Estado' => $row['Estado'],
+            'Etapa' => $row['Etapa'],
+            'ID_Comercio' => $row['ID_Comercio'],
+            'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
+            'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
+            'Fecha_Registro' => $row['Fecha_Registro'],
+            'NombreComercio' => $row['NombreComercio'] ?? '',
+            'DireccionComercio' => $row['DireccionComercio'] ?? ''
+        ];
+    }
+    $stmt->close();
+    
+    error_log("findByTecnicoComprobadorWithComercio: " . count($maquinas) . " máquinas encontradas");
+    
+    return $maquinas;
+}
     public function findByTecnicoComprobador(Uuid $idTecnico): array
     {
         $cacheKey = "maquinas:comprobador:{$idTecnico->value()}";

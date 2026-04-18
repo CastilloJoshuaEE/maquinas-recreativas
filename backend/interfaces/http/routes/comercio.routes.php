@@ -24,5 +24,21 @@ return [
         'path' => '/comercio/all',
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComercioController::class, 'obtenerComercios'],
         'middleware' => []
+    ],
+    
+    //  Actualizar comercio
+    [
+        'method' => 'PUT',
+        'path' => '/comercio/actualizar/:uuid',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComercioController::class, 'actualizar'],
+        'middleware' => []
+    ],
+    
+    //  Eliminar comercio
+    [
+        'method' => 'DELETE',
+        'path' => '/comercio/eliminar/:uuid',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\ComercioController::class, 'eliminar'],
+        'middleware' => []
     ]
 ];

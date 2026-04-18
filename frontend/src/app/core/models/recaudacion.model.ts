@@ -64,6 +64,9 @@ export interface Comercio {
   Direccion: string;
   Telefono: string;
   fecha_registro?: string;
+  nombre?: string;          // ← minúscula (fallback)
+  tipo?: string;            // ← minúscula (fallback)
+  NombreComercio?: string;  // ← alternativa
 }
 
 /**

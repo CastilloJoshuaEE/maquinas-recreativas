@@ -10,17 +10,34 @@ import { ApiService } from '@core/services/api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { Maquina, MaquinaActionData } from '@core/models/maquina.model';
 import { Componente, UsarComponenteData, LiberarComponenteData } from '@core/models/componente.model';
-
+import {  of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 @Injectable({ providedIn: 'root' })
 export class TecnicoService {
   private apiService = inject(ApiService);
 
-  getMaquinasEnsamblador(idTecnico: string): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ENSAMBLADOR(idTecnico)).pipe(
-      map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
+getMaquinasEnsamblador(idTecnico: string): Observable<Maquina[]> {
+    return this.apiService.get<{ maquinas: any[] }>(API_ENDPOINTS.MAQUINA_BY_ENSAMBLADOR(idTecnico)).pipe(
+        map(response => {
+            if (!response.success || !response['maquinas']) return [];
+            
+            // Normalizar los datos para que el frontend los entienda
+            return response['maquinas'].map((m: any) => ({
+                ID_Maquina: m.ID_Maquina,
+                Nombre_Maquina: m.Nombre_Maquina,
+                tipo: m.Tipo || m.tipo,
+                estado: m.Estado || m.estado,
+                etapa: m.Etapa || m.etapa,
+                ID_Comercio: m.ID_Comercio,
+                NombreComercio: m.NombreComercio,
+                DireccionComercio: m.DireccionComercio,
+                ID_Tecnico_Ensamblador: m.ID_Tecnico_Ensamblador,
+                ID_Tecnico_Comprobador: m.ID_Tecnico_Comprobador,
+                Fecha_Registro: m.Fecha_Registro
+            }));
+        })
     );
-  }
-
+}
   getMaquinasComprobador(idTecnico: string): Observable<Maquina[]> {
     return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_COMPROBADOR(idTecnico)).pipe(
       map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
@@ -49,7 +66,6 @@ export class TecnicoService {
     return this.apiService.post(API_ENDPOINTS.MAQUINA_FINALIZAR_MANTENIMIENTO, data).pipe(map(response => response.success));
   }
 
-  // Corregir: Usar URL directa ya que COMPONENTES_DISPONIBLES no existe en API_ENDPOINTS
   getComponentesDisponibles(tipo?: string, page: number = 1, limit: number = 10): Observable<{ componentes: Componente[]; total: number }> {
     const params: any = { page, limit };
     if (tipo) params.tipo = tipo;
@@ -77,12 +93,31 @@ export class TecnicoService {
     );
   }
 
-  getHistorialMaquina(idMaquina: string, pagina: number = 1, porPagina: number = 20): Observable<{ historial: any[]; paginacion: any }> {
-    return this.apiService.get<{ historial: any[]; paginacion: any }>(API_ENDPOINTS.HISTORIAL_MAQUINA(idMaquina), { pagina, por_pagina: porPagina }).pipe(
-      map(response => ({ 
-        historial: response.success && response['historial'] ? response['historial'] : [], 
-        paginacion: response['paginacion'] || { pagina_actual: 1, total_paginas: 1, total: 0 } 
-      }))
+getHistorialMaquina(idMaquina: string, pagina: number = 1, porPagina: number = 20): Observable<{ historial: any[]; paginacion: any }> {
+    return this.apiService.get<any>(API_ENDPOINTS.HISTORIAL_MAQUINA(idMaquina), { pagina, por_pagina: porPagina }).pipe(
+        map(response => {
+            console.log('Respuesta historial:', response);
+            // Verificar que response no sea null
+            if (!response) {
+                return { historial: [], paginacion: { pagina_actual: 1, total_paginas: 1, total: 0 } };
+            }
+            // Si la respuesta tiene la estructura esperada
+            if (response.success && response['historial']) {
+                return { 
+                    historial: response['historial'], 
+                    paginacion: response['paginacion'] || { pagina_actual: 1, total_paginas: 1, total: 0 } 
+                };
+            }
+            // Si la respuesta es directamente un array
+            if (Array.isArray(response)) {
+                return { historial: response, paginacion: { pagina_actual: 1, total_paginas: 1, total: response.length } };
+            }
+            return { historial: [], paginacion: { pagina_actual: 1, total_paginas: 1, total: 0 } };
+        }),
+        catchError(error => {
+            console.error('Error en getHistorialMaquina:', error);
+            return of({ historial: [], paginacion: { pagina_actual: 1, total_paginas: 1, total: 0 } });
+        })
     );
-  }
+}
 }

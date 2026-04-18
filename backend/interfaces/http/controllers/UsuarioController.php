@@ -372,7 +372,6 @@ public function logout(Request $request): Response
 
         return (new Response())->json(['success' => true, 'message' => 'Nombre de usuario actualizado']);
     }
-
     #[OA\Get(
         path: "/v1/usuario/tecnicos/{especialidad}",
         summary: "Obtener técnicos filtrados por especialidad",
@@ -384,13 +383,56 @@ public function logout(Request $request): Response
             new OA\Response(response: 200, description: "Lista de técnicos por especialidad")
         ]
     )]
-    public function obtenerTecnicos(Request $request, string $especialidad): Response
-    {
-        $query    = new ObtenerTecnicosPorEspecialidadQuery($especialidad);
-        $tecnicos = $this->obtenerTecnicosHandler->handle($query);
 
-        return (new Response())->json(['success' => true, 'tecnicos' => $tecnicos]);
+public function obtenerTecnicos(Request $request, string $especialidad): Response
+{
+    error_log("=== obtenerTecnicos - especialidad: $especialidad ===");
+    
+    $tecnicos = [];
+    
+    try {
+        $query = new ObtenerTecnicosPorEspecialidadQuery($especialidad);
+        $tecnicos = $this->obtenerTecnicosHandler->handle($query);
+        
+        if (!is_array($tecnicos)) {
+            $tecnicos = [];
+        }
+        
+        error_log("Técnicos obtenidos: " . count($tecnicos));
+        
+    } catch (\Throwable $e) {
+        error_log("Error en obtenerTecnicos: " . $e->getMessage());
+        $tecnicos = [];
     }
+    
+    // Asegurar que todos los valores sean UTF-8 y sin caracteres problemáticos
+    $cleanTecnicos = [];
+    foreach ($tecnicos as $t) {
+        $clean = [];
+        foreach ($t as $k => $v) {
+            if (is_string($v)) {
+                $v = preg_replace('/[\x00-\x1F\x7F]/u', '', $v);
+                if (!mb_check_encoding($v, 'UTF-8')) {
+                    $v = mb_convert_encoding($v, 'UTF-8', 'UTF-8');
+                }
+            }
+            $clean[$k] = $v;
+        }
+        $cleanTecnicos[] = $clean;
+    }
+    
+    $payload = ['success' => true, 'tecnicos' => $cleanTecnicos];
+    
+    // Verificar que se pueda codificar antes de enviar
+    $encoded = json_encode($payload);
+    if ($encoded === false) {
+        error_log("FATAL: json_encode falló para técnicos de $especialidad. Último error: " . json_last_error_msg());
+        // Devolver array vacío como último recurso
+        $payload = ['success' => true, 'tecnicos' => []];
+    }
+    
+    return (new Response())->json($payload);
+}
 
     #[OA\Get(
         path: "/v1/usuarios/por-tipo",

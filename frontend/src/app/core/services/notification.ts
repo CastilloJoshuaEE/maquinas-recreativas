@@ -5,27 +5,49 @@
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, map, tap, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 
 /**
- * Interfaz para notificación
+ * Interfaz para notificación de máquinas (NotificacionMaquinaRecreativa)
  */
-export interface Notificacion {
-  ID_Notificaciones: string;
-  mensaje: string;
-  fecha_hora: string;
-  leida: number;
-  ID_Reporte?: string;
-  reporte_descripcion?: string;
-  emisor_nombre?: string;
-  emisor_apellido?: string;
-  Tipo?: string;
+export interface NotificacionMaquina {
+  ID_Notificacion: string;
+  ID_Remitente: string;
+  ID_Destinatario: string;
+  ID_Maquina: string;
+  Tipo: string;
+  Mensaje: string;
+  Fecha: string;
+  Estado: string;           // 'Leido' o 'No leido'
+  leida?: boolean;          // Para compatibilidad con el frontend
+  nombre_remitente?: string;
+  apellido_remitente?: string;
   Nombre_Maquina?: string;
   NombreComercio?: string;
   DireccionComercio?: string;
 }
+
+/**
+ * Interfaz para notificación de reportes
+ */
+export interface NotificacionReporte {
+  ID_Notificaciones: string;
+  mensaje: string;
+  fecha_hora: string;
+  leida: number;            // 0 = no leída, 1 = leída
+  ID_Reporte?: string;
+  reporte_descripcion?: string;
+  emisor_nombre?: string;
+  emisor_apellido?: string;
+}
+
+/**
+ * Tipo unión para cualquier notificación
+ */
+export type Notificacion = NotificacionMaquina | NotificacionReporte;
 
 /**
  * Servicio para gestión de notificaciones
@@ -43,19 +65,24 @@ export class NotificationService {
   unreadCount = this.unreadCountSignal.asReadonly();
 
   /**
-   * Obtiene notificaciones de un usuario
+   * Obtiene notificaciones de reportes de un usuario
    * @param userId - ID del usuario
-   * @returns Observable con lista de notificaciones
+   * @returns Observable con lista de notificaciones de reportes
    */
-  getNotifications(userId: string): Observable<Notificacion[]> {
-    return this.apiService.get<{ notificaciones: Notificacion[] }>(API_ENDPOINTS.NOTIFICACIONES(userId)).pipe(
+  getNotifications(userId: string): Observable<NotificacionReporte[]> {
+    return this.apiService.get<{ notificaciones: NotificacionReporte[] }>(API_ENDPOINTS.NOTIFICACIONES(userId)).pipe(
       tap(response => {
-if (response.success && response['notificaciones']) {
-const unread = response['notificaciones'].filter((n: Notificacion) => !n.leida).length;
+        if (response && response.success && response['notificaciones']) {
+          const unread = response['notificaciones'].filter((n: NotificacionReporte) => n.leida === 0).length;
           this.unreadCountSignal.set(unread);
         }
       }),
-map(response => response.success && response['notificaciones'] ? response['notificaciones'] : [])    );
+      map(response => (response && response.success && response['notificaciones']) ? response['notificaciones'] : []),
+      catchError(error => {
+        console.error('Error obteniendo notificaciones:', error);
+        return of([]);
+      })
+    );
   }
 
   /**
@@ -63,9 +90,24 @@ map(response => response.success && response['notificaciones'] ? response['notif
    * @param userId - ID del usuario
    * @returns Observable con lista de notificaciones de máquina
    */
-  getMaquinaNotifications(userId: string): Observable<Notificacion[]> {
-    return this.apiService.get<{ notificaciones: Notificacion[] }>(API_ENDPOINTS.NOTIFICACIONES_MAQUINA(userId)).pipe(
-map(response => response.success && response['notificaciones'] ? response['notificaciones'] : [])    );
+  getMaquinaNotifications(userId: string): Observable<NotificacionMaquina[]> {
+    return this.apiService.get<{ notificaciones: NotificacionMaquina[] }>(API_ENDPOINTS.NOTIFICACIONES_MAQUINA(userId)).pipe(
+      map(response => {
+        console.log('Respuesta notificaciones máquina:', response);
+        if (response && response.success && response['notificaciones']) {
+          // Normalizar: añadir propiedad 'leida' para compatibilidad
+          return response['notificaciones'].map((n: NotificacionMaquina) => ({
+            ...n,
+            leida: n.Estado === 'Leido'
+          }));
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error obteniendo notificaciones de máquina:', error);
+        return of([]);
+      })
+    );
   }
 
   /**
@@ -76,11 +118,15 @@ map(response => response.success && response['notificaciones'] ? response['notif
   markAsRead(notificacionId: string): Observable<boolean> {
     return this.apiService.post(API_ENDPOINTS.NOTIFICACIONES_MARCAR_LEIDA(notificacionId), {}).pipe(
       tap(response => {
-        if (response.success) {
+        if (response && response.success) {
           this.unreadCountSignal.update(count => Math.max(count - 1, 0));
         }
       }),
-      map(response => response.success)
+      map(response => response ? response.success : false),
+      catchError(error => {
+        console.error('Error marcando notificación como leída:', error);
+        return of(false);
+      })
     );
   }
 
@@ -91,11 +137,15 @@ map(response => response.success && response['notificaciones'] ? response['notif
   markAllAsRead(): Observable<boolean> {
     return this.apiService.post(API_ENDPOINTS.NOTIFICACIONES_MARCAR_TODAS, {}).pipe(
       tap(response => {
-        if (response.success) {
+        if (response && response.success) {
           this.unreadCountSignal.set(0);
         }
       }),
-      map(response => response.success)
+      map(response => response ? response.success : false),
+      catchError(error => {
+        console.error('Error marcando todas como leídas:', error);
+        return of(false);
+      })
     );
   }
 
@@ -107,22 +157,30 @@ map(response => response.success && response['notificaciones'] ? response['notif
   getUnreadCount(userId: string): Observable<number> {
     return this.apiService.get<{ total: number }>(API_ENDPOINTS.NOTIFICACIONES_NO_LEIDAS(userId)).pipe(
       tap(response => {
-if (response.success && response['total'] !== undefined) {
-  this.unreadCountSignal.set(response['total']);
-}
+        if (response && response.success && response['total'] !== undefined) {
+          this.unreadCountSignal.set(response['total']);
+        }
       }),
-map(response => response.success && response['total'] ? response['total'] : 0)
+      map(response => (response && response.success && response['total']) ? response['total'] : 0),
+      catchError(error => {
+        console.error('Error obteniendo conteo de no leídas:', error);
+        return of(0);
+      })
     );
   }
 
   /**
-   * Crea una notificación
+   * Crea una notificación de máquina
    * @param notificacion - Datos de la notificación
    * @returns Observable con resultado
    */
   createNotification(notificacion: any): Observable<boolean> {
     return this.apiService.post('/notificaciones/create', notificacion).pipe(
-      map(response => response.success)
+      map(response => response ? response.success : false),
+      catchError(error => {
+        console.error('Error creando notificación:', error);
+        return of(false);
+      })
     );
   }
 }

@@ -10,19 +10,29 @@ use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
+use maquinas_recreativas\Application\Commands\Comercio\ActualizarComercioCommand;
+use maquinas_recreativas\Application\Commands\Comercio\ActualizarComercioHandler;
+use maquinas_recreativas\Application\Commands\Comercio\EliminarComercioCommand;
+use maquinas_recreativas\Application\Commands\Comercio\EliminarComercioHandler;
 
 class ComercioController
 {
     private ObtenerComerciosHandler $obtenerComerciosHandler;
     private RegistrarComercioHandler $registrarComercioHandler;
+private ActualizarComercioHandler $actualizarComercioHandler;
+private EliminarComercioHandler $eliminarComercioHandler;
 
     public function __construct(
-        ObtenerComerciosHandler $obtenerComerciosHandler,
-        RegistrarComercioHandler $registrarComercioHandler
+         ObtenerComerciosHandler $obtenerComerciosHandler,
+    RegistrarComercioHandler $registrarComercioHandler,
+    ActualizarComercioHandler $actualizarComercioHandler,
+    EliminarComercioHandler $eliminarComercioHandler
     ) {
-        $this->obtenerComerciosHandler  = $obtenerComerciosHandler;
-        $this->registrarComercioHandler = $registrarComercioHandler;
-    }
+            $this->obtenerComerciosHandler  = $obtenerComerciosHandler;
+            $this->registrarComercioHandler = $registrarComercioHandler;
+            $this->actualizarComercioHandler = $actualizarComercioHandler;
+            $this->eliminarComercioHandler = $eliminarComercioHandler;
+        }
 
     #[OA\Post(
         path: "/v1/comercios",
@@ -95,35 +105,140 @@ class ComercioController
             new OA\Response(response: 400, description: "Tipo de comercio no válido")
         ]
     )]
-    public function obtenerComercios(Request $request): Response
-    {
-        $filtros = [];
-
-        if ($request->query('nombre')) {
-            $filtros['nombre'] = ValidationHelper::sanitizeInput($request->query('nombre'));
-        }
-
-        if ($request->query('tipo')) {
-            $tipo = $request->query('tipo');
-            if (!in_array($tipo, ['Minorista', 'Mayorista'])) {
-                throw new DomainException('Tipo de comercio no válido', 400);
-            }
-            $filtros['tipo'] = $tipo;
-        }
-
-        $pagina   = (int) ($request->query('pagina') ?? 1);
-        $porPagina = (int) ($request->query('por_pagina') ?? ITEMS_POR_PAGINA);
-
-        if ($porPagina > MAX_ITEMS_POR_PAGINA) {
-            $porPagina = MAX_ITEMS_POR_PAGINA;
-        }
-
-        $query = new ObtenerComerciosQuery($filtros, $pagina, $porPagina, $request->query('ordenar_por') ?? 'nombre', $request->query('direccion') ?? 'ASC');
+ public function obtenerComercios(Request $request): Response
+{
+    try {
+        $query = new ObtenerComerciosQuery();
         $result = $this->obtenerComerciosHandler->handle($query);
-
-        // : Crear la respuesta primero, luego retornarla
+        
+        //  Asegurar que la respuesta tenga el formato correcto
         $response = new Response();
-        $response->json($result);
+        
+        // Si el handler ya devuelve un array con 'data', usarlo
+        if (isset($result['success']) && isset($result['data'])) {
+            $response->json($result);
+        } else {
+            // Si el handler devuelve un array de comercios directamente
+            $response->json([
+                'success' => true,
+                'comercios' => $result,
+                'total' => count($result)
+            ]);
+        }
+        return $response;
+    } catch (\Exception $e) {
+        error_log("Error en obtenerComercios: " . $e->getMessage());
+        $response = new Response();
+        $response->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'comercios' => []
+        ], 500);
         return $response;
     }
+}
+#[OA\Put(
+    path: "/v1/comercio/actualizar/{id}",
+    summary: "Actualizar un comercio existente",
+    tags: ["Comercios"],
+    security: [["bearerAuth" => []]],
+    parameters: [
+        new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+    ],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["nombre", "tipo", "direccion"],
+            properties: [
+                new OA\Property(property: "nombre", type: "string"),
+                new OA\Property(property: "tipo", type: "string", enum: ["Minorista", "Mayorista"]),
+                new OA\Property(property: "direccion", type: "string"),
+                new OA\Property(property: "telefono", type: "string", nullable: true)
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Comercio actualizado correctamente"),
+        new OA\Response(response: 400, description: "Datos inválidos"),
+        new OA\Response(response: 404, description: "Comercio no encontrado")
+    ]
+)]
+public function actualizar(Request $request, string $id): Response
+{
+    try {
+        $data = $request->json();
+        $required = ['nombre', 'tipo', 'direccion'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                throw new DomainException("El campo {$field} es requerido", 400);
+            }
+        }
+
+        $tiposPermitidos = ['Minorista', 'Mayorista'];
+        if (!in_array($data['tipo'], $tiposPermitidos)) {
+            throw new DomainException('Tipo de comercio no válido', 400);
+        }
+
+        $command = new ActualizarComercioCommand(
+            $id,
+            $data['nombre'],
+            $data['tipo'],
+            $data['direccion'],
+            $data['telefono'] ?? ''
+        );
+
+        $this->actualizarComercioHandler->handle($command);
+
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Comercio actualizado correctamente']);
+        return $response;
+    } catch (DomainException $e) {
+        $response = new Response();
+        $response->json(['success' => false, 'message' => $e->getMessage()], 400);
+        return $response;
+    } catch (\Exception $e) {
+        error_log("Error actualizando comercio: " . $e->getMessage());
+        $response = new Response();
+        $response->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        return $response;
+    }
+}
+
+#[OA\Delete(
+    path: "/v1/comercio/eliminar/{id}",
+    summary: "Eliminar un comercio",
+    tags: ["Comercios"],
+    security: [["bearerAuth" => []]],
+    parameters: [
+        new OA\Parameter(name: "id", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "Comercio eliminado correctamente"),
+        new OA\Response(response: 400, description: "No se puede eliminar porque tiene máquinas asociadas"),
+        new OA\Response(response: 404, description: "Comercio no encontrado")
+    ]
+)]
+public function eliminar(Request $request, string $id): Response
+{
+    try {
+        $command = new EliminarComercioCommand($id);
+        $this->eliminarComercioHandler->handle($command);
+
+        $response = new Response();
+        $response->json(['success' => true, 'message' => 'Comercio eliminado correctamente']);
+        return $response;
+    } catch (DomainException $e) {
+        $response = new Response();
+        $response->json(['success' => false, 'message' => $e->getMessage()], 400);
+        return $response;
+    } catch (\Exception $e) {
+        error_log("Error eliminando comercio: " . $e->getMessage());
+        $response = new Response();
+        $response->json(['success' => false, 'message' => 'Error interno del servidor'], 500);
+        return $response;
+    }
+}
+
+
+
 }

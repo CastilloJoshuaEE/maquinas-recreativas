@@ -274,27 +274,61 @@ public function save(Usuario $usuario): void
         }, $this->ttl);
     }
 
-    public function findTecnicosByEspecialidad(string $especialidad): array
-    {
-        $cacheKey = "tecnicos:especialidad:{$especialidad}";
-
-        return $this->cache->remember($cacheKey, function () use ($especialidad) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                     FROM usuario u
-                     INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                     WHERE t.Especialidad=? AND u.tipo='Tecnico'
-                     ORDER BY u.nombre ASC";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $especialidad);
-            $stmt->execute();
-            $tecnicos = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $tecnicos[] = $this->hydrateTecnico($row);
-            $stmt->close();
-            return $tecnicos;
-        }, $this->ttl);
+public function findTecnicosByEspecialidad(string $especialidad): array
+{
+    $conn = $this->db->getConnection();
+ 
+    $sql = "SELECT
+                u.ID_Usuario        AS id,
+                u.nombre,
+                u.apellido,
+                u.usuario_asignado,
+                u.tipo,
+                u.estado,
+                t.Especialidad      AS especialidad,
+                t.Cantidad_Actividades AS cantidad_actividades
+            FROM usuario u
+            INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
+            WHERE t.Especialidad = ?
+              AND u.estado = 'Activo'
+            ORDER BY t.Cantidad_Actividades ASC, u.nombre ASC";
+ 
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("findTecnicosByEspecialidad prepare error: " . $conn->error);
+        return [];
     }
-
+ 
+    $stmt->bind_param('s', $especialidad);
+    $stmt->execute();
+ 
+    $result = $stmt->get_result();
+    $tecnicos = [];
+ 
+    while ($row = $result->fetch_assoc()) {
+        // Limpieza extrema para garantizar UTF-8 válido
+        $cleanRow = [];
+        foreach ($row as $key => $value) {
+            if ($value === null) {
+                $cleanRow[$key] = '';
+            } elseif (is_string($value)) {
+                // Eliminar caracteres de control no imprimibles
+                $clean = preg_replace('/[\x00-\x1F\x7F]/u', '', $value);
+                if (!mb_check_encoding($clean, 'UTF-8')) {
+                    $clean = mb_convert_encoding($clean, 'UTF-8', 'UTF-8');
+                }
+                $cleanRow[$key] = $clean;
+            } else {
+                $cleanRow[$key] = $value;
+            }
+        }
+        $tecnicos[] = $cleanRow;
+    }
+ 
+    $stmt->close();
+    error_log("findTecnicosByEspecialidad({$especialidad}): " . count($tecnicos) . " encontrados (limpiados)");
+    return $tecnicos;
+}
     // =========================================================================
     // EXISTS / COUNT (sin caché — consultas ligeras)
     // =========================================================================
@@ -431,19 +465,28 @@ public function save(Usuario $usuario): void
         $stmt->execute(); $stmt->close();
     }
 
-    public function obtenerHistorialActividades(Uuid $id): array
-    {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("SELECT * FROM historial_actividades WHERE ID_Usuario=? ORDER BY fecha_registro DESC LIMIT 50");
-        $v    = $id->value();
-        $stmt->bind_param('s', $v);
-        $stmt->execute();
-        $actividades = [];
-        $result = $stmt->get_result();
-while ($row = $result->fetch_assoc()) $actividades[] = $row;
-        $stmt->close();
-        return $actividades;
+public function obtenerHistorialActividades(Uuid $id): array
+{
+    $conn = $this->db->getConnection();
+    $stmt = $conn->prepare("SELECT * FROM historial_actividades WHERE ID_Usuario=? ORDER BY fecha_registro DESC LIMIT 50");
+    $v    = $id->value();
+    $stmt->bind_param('s', $v);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $actividades = [];
+    while ($row = $result->fetch_assoc()) {
+        $actividades[] = $row;
     }
+    $result->free();  // ← Liberar resultado
+    $stmt->close();   // ← Cerrar statement
+    // Limpiar resultados pendientes
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($rs = $conn->store_result()) {
+            $rs->free();
+        }
+    }
+    return $actividades;
+}
 
     // =========================================================================
     // INVALIDACIÓN HELPER
@@ -469,63 +512,92 @@ while ($row = $result->fetch_assoc()) $actividades[] = $row;
     // =========================================================================
     // HYDRATE
     // =========================================================================
+ public function hydrate(array $row): Usuario
+{
+    $id = new Uuid($row['ID_Usuario']);
  
-    public function hydrate(array $row): Usuario
-    {
-        $id = new Uuid($row['ID_Usuario']);
+    // Desencriptar email con fallback
+    $emailRaw = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
+    if (empty($emailRaw) || $emailRaw === false) {
+        $emailRaw = $row['usuario_asignado'] . '@temp.local';
+    }
+    if (!mb_check_encoding($emailRaw, 'UTF-8')) {
+        $emailRaw = $row['usuario_asignado'] . '@temp.local';
+    }
+    $email = new Email($emailRaw);
  
-        // Desencriptar email con fallback
-        $emailRaw = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
-        if (empty($emailRaw) || $emailRaw === false) {
-            $emailRaw = $row['usuario_asignado'] . '@temp.local';
-        }
-        // Validar que sea UTF-8 válido para que json_encode no falle
-        if (!mb_check_encoding($emailRaw, 'UTF-8')) {
-            $emailRaw = $row['usuario_asignado'] . '@temp.local';
-        }
-        $email = new Email($emailRaw);
+    $tipo   = new TipoUsuario($row['tipo']);
+    $estado = new EstadoUsuario($row['estado']);
  
-        $tipo   = new TipoUsuario($row['tipo']);
-        $estado = new EstadoUsuario($row['estado']);
+    // CORREGIDO: Desencriptar CI correctamente - NO usar hash como fallback
+    $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+    
+    // Si la desencriptación falla o devuelve algo que no parece una CI válida,
+    // intentar obtenerla de otra manera o usar un valor temporal que NO sea un hash
+    if (empty($ciDecrypted) || $ciDecrypted === false || strlen($ciDecrypted) < 6) {
+        // En lugar de hash, usar un valor que indique que está encriptado
+        // pero que NO se muestre como número aleatorio
+        error_log("ADVERTENCIA: No se pudo desencriptar CI para usuario {$row['ID_Usuario']}");
+        $ciDecrypted = '***ENCRIPTADO***';
+    }
+    $ci = $ciDecrypted;
  
-        // Desencriptar CI con fallback — si falla, usar valor encriptado crudo
-        // para evitar "La cédula debe tener al menos 6 caracteres" en setCi()
-        $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
-        if (empty($ciDecrypted) || $ciDecrypted === false || !mb_check_encoding($ciDecrypted, 'UTF-8')) {
-            // Usar los primeros 10 chars del hash como placeholder válido
-            $ciDecrypted = substr(md5($row['ci'] ?? $row['ID_Usuario']), 0, 10);
-        }
-        $ci = $ciDecrypted;
- 
-        switch ($tipo->value()) {
-            case TipoUsuario::TECNICO:
-                $esp = $row['Especialidad'] ?? null;
-                if (empty($esp)) {
-                    error_log("AVISO: Técnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
-                    return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
-                        $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
-                }
-                return new Tecnico($id, $row['nombre'], $row['apellido'], $ci, $email,
-                    $row['usuario_asignado'], $row['contrasena'], $estado,
-                    $esp, (int)($row['Cantidad_Actividades'] ?? 0));
- 
-            case TipoUsuario::LOGISTICA:
-                return new Logistica($id, $row['nombre'], $row['apellido'], $ci, $email,
-                    $row['usuario_asignado'], $row['contrasena'], $estado);
- 
-            default:
+    switch ($tipo->value()) {
+        case TipoUsuario::TECNICO:
+            $esp = $row['Especialidad'] ?? null;
+            if (empty($esp)) {
+                error_log("AVISO: Técnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
                 return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
-        }
+            }
+            return new Tecnico($id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $estado,
+                $esp, (int)($row['Cantidad_Actividades'] ?? 0));
+ 
+        case TipoUsuario::LOGISTICA:
+            return new Logistica($id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $estado);
+ 
+        default:
+            return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
+                $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
     }
-    private function hydrateTecnico(array $row): Tecnico
-    {
-        $id     = new Uuid($row['ID_Usuario']);
-        $email  = new Email(CifradoHelper::desencriptar($row['email']));
-        $estado = new EstadoUsuario($row['estado']);
-        $ci     = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
-        return new Tecnico($id, $row['nombre'], $row['apellido'], $ci, $email,
-            $row['usuario_asignado'], $row['contrasena'], $estado,
-            $row['Especialidad'] ?? '', (int)($row['Cantidad_Actividades'] ?? 0));
+}
+private function hydrateTecnico(array $row): Tecnico
+{
+    $id = new Uuid($row['ID_Usuario']);
+    
+    // Desencriptar email
+    $emailRaw = !empty($row['email']) ? CifradoHelper::desencriptar($row['email']) : '';
+
+    $email = new Email($emailRaw);
+    
+    $estado = new EstadoUsuario($row['estado']);
+    
+    // Desencriptar CI
+    $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
+    if (empty($ciDecrypted) || $ciDecrypted === false || !mb_check_encoding($ciDecrypted, 'UTF-8')) {
+        $ciDecrypted = substr(md5($row['ci'] ?? $row['ID_Usuario']), 0, 10);
     }
+    $ci = $ciDecrypted;
+    
+    //  Crear objeto Tecnico correctamente
+    $especialidad = $row['Especialidad'] ?? '';
+    $cantidadActividades = (int)($row['Cantidad_Actividades'] ?? 0);
+    
+    error_log("HydrateTecnico: ID={$row['ID_Usuario']}, Nombre={$row['nombre']}, Especialidad={$especialidad}");
+    
+    return new Tecnico(
+        $id,
+        $row['nombre'],
+        $row['apellido'],
+        $ci,
+        $email,
+        $row['usuario_asignado'],
+        $row['contrasena'],
+        $estado,
+        $especialidad,
+        $cantidadActividades
+    );
+}
 }

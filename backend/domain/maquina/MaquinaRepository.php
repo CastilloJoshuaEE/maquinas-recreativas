@@ -98,4 +98,6 @@ interface MaquinaRepository
      * @return array<Componente>
      */
     public function getComponentesMontaje(MaquinaRecreativa $maquina): array;
-}
+    public function findByTecnicoEnsambladorWithComercio(Uuid $idTecnico): array; // Nuevo método
+public function findByTecnicoComprobadorWithComercio(Uuid $idTecnico): array;
+    }

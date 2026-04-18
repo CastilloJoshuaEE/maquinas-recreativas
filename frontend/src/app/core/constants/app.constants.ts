@@ -147,7 +147,9 @@ export const API_ENDPOINTS = {
   // Comercio
   COMERCIOS: '/comercio/all',
   COMERCIO_REGISTER: '/comercio/register',
-  
+
+  COMERCIO_UPDATE: (id: string) => `/comercio/actualizar/${id}`,
+  COMERCIO_DELETE: (id: string) => `/comercio/eliminar/${id}`,
   // Máquina
   MAQUINA_REGISTER: '/maquina/register',
   MAQUINA_GENERAR_PLACA: '/maquina/generar-placa',

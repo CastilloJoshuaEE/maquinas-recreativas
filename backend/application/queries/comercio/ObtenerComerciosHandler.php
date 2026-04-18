@@ -1,10 +1,6 @@
 <?php
 /**
  * Manejador del query para obtener comercios
- * 
- * @package Application\Queries\Comercio
- * @author Tu Nombre
- * @version 1.0.0
  */
 
 namespace maquinas_recreativas\Application\Queries\Comercio;
@@ -28,40 +24,22 @@ class ObtenerComerciosHandler implements QueryHandler
             throw new \InvalidArgumentException('Query inválido para este handler');
         }
         
-        // Obtener comercios paginados
-        $comercios = $this->comercioRepository->findAll(
-            $query->getFiltros(),
-            $query->getOffset(),
-            $query->getPorPagina(),
-            $query->getOrdenarPor(),
-            $query->getDireccion()
-        );
+        //  Obtener todos los comercios sin paginación para el select
+        $comercios = $this->comercioRepository->obtenerTodos();
         
-        // Obtener total de registros para paginación
-        $total = $this->comercioRepository->count($query->getFiltros());
-        
-        // Formatear resultado
-        $items = array_map(function($comercio) {
-            return [
-                'id' => $comercio->getId(),
+        //  Formatear resultado como array simple
+        $items = [];
+        foreach ($comercios as $comercio) {
+            $items[] = [
+                'ID_Comercio' => $comercio->getId(),
                 'nombre' => $comercio->getNombre(),
                 'tipo' => $comercio->getTipo(),
                 'direccion' => $comercio->getDireccion(),
-                'telefono' => $comercio->getTelefono(),
-                'cantidad_maquinas' => $comercio->getCantidadMaquinas(),
-                'fecha_registro' => $comercio->getFechaRegistro()
+                'telefono' => $comercio->getTelefono()
             ];
-        }, $comercios);
+        }
         
-        return [
-            'success' => true,
-            'data' => $items,
-            'meta' => [
-                'total' => $total,
-                'pagina' => $query->getPagina(),
-                'por_pagina' => $query->getPorPagina(),
-                'total_paginas' => ceil($total / $query->getPorPagina())
-            ]
-        ];
+        //  Retornar directamente el array de comercios
+        return $items;
     }
 }

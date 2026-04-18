@@ -55,12 +55,18 @@ final class RegistrarMaquinaHandler implements CommandHandler
             }
             $idEnsamblador = new Uuid($command->idEnsamblador());
         } else {
-            $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
-            if (empty($ensambladores)) {
-                throw new DomainException('No hay técnicos ensambladores disponibles');
-            }
-            $idEnsamblador = $ensambladores[0]->getId();
-        }
+    $ensambladores = $this->usuarioRepository->findTecnicosByEspecialidad('Ensamblador');
+    if (empty($ensambladores)) {
+        throw new DomainException('No hay técnicos ensambladores disponibles');
+    }
+    //$ensambladores[0] es un array
+    $primerEnsamblador = $ensambladores[0];
+    if (is_array($primerEnsamblador)) {
+        $idEnsamblador = new Uuid($primerEnsamblador['id']);
+    } else {
+        $idEnsamblador = $primerEnsamblador->getId();
+    }
+}
 
         // Determinar comprobador
         $idComprobador = null;
@@ -70,14 +76,19 @@ final class RegistrarMaquinaHandler implements CommandHandler
                 throw new DomainException('El ID de comprobador proporcionado no es válido');
             }
             $idComprobador = new Uuid($command->idComprobador());
-        } else {
-            $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
-            if (empty($comprobadores)) {
-                throw new DomainException('No hay técnicos comprobadores disponibles');
-            }
-            $idComprobador = $comprobadores[0]->getId();
-        }
-
+} else {
+    $comprobadores = $this->usuarioRepository->findTecnicosByEspecialidad('Comprobador');
+    if (empty($comprobadores)) {
+        throw new DomainException('No hay técnicos comprobadores disponibles');
+    }
+    // $comprobadores[0] es un array
+    $primerComprobador = $comprobadores[0];
+    if (is_array($primerComprobador)) {
+        $idComprobador = new Uuid($primerComprobador['id']);
+    } else {
+        $idComprobador = $primerComprobador->getId();
+    }
+}
         error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");
 
         $maquina = MaquinaRecreativa::crear(
@@ -89,7 +100,33 @@ final class RegistrarMaquinaHandler implements CommandHandler
         );
 
         $this->maquinaRepository->save($maquina);
+$crearNotificacionCommand = new \maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaCommand(
+    $command->idUsuarioLogistica(),  // remitente (logística)
+    $idEnsamblador->value(),          // destinatario (ensamblador)
+    $maquina->id()->value(),          // id máquina
+    'Asignación',                      // tipo
+    "Se te ha asignado una nueva máquina para ensamblar: {$command->nombre()}"
+);
 
+// Obtener el handler de notificaciones desde el contenedor
+$notificacionHandler = \Dependencies::get(\maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaHandler::class);
+if ($notificacionHandler) {
+    $notificacionHandler->handle($crearNotificacionCommand);
+    error_log("Notificación creada para ensamblador: {$idEnsamblador->value()}");
+}
+// Crear notificación para el técnico comprobador
+$crearNotificacionComprobadorCommand = new \maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaCommand(
+    $command->idUsuarioLogistica(),
+    $idComprobador->value(),
+    $maquina->id()->value(),
+    'Asignación',
+    "Se te ha asignado como comprobador para la máquina: {$command->nombre()}"
+);
+
+if ($notificacionHandler) {
+    $notificacionHandler->handle($crearNotificacionComprobadorCommand);
+    error_log("Notificación creada para comprobador: {$idComprobador->value()}");
+}
         return $maquina->id()->value();
     }
 }

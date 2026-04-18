@@ -4,21 +4,69 @@
     <div class="page-header"><button mat-icon-button (click)="regresar()" class="back-button"><mat-icon>arrow_back</mat-icon></button><h2>Gestión de Componentes</h2></div>
     <div class="selected-machine-info" *ngIf="selectedMachine"><h3>Máquina: {{ selectedMachine.Nombre_Maquina }}</h3><p>Comercio: {{ selectedMachine.NombreComercio }}</p></div>
     <div class="componentes-section"><h3>Componentes Disponibles</h3>
-      <div class="filtros-componentes"><mat-form-field appearance="outline"><mat-label>Tipo de Componente</mat-label><mat-select [(ngModel)]="filtroTipo" (selectionChange)="cargarComponentesDisponibles()"><mat-option value="">Todos</mat-option><mat-option value="Placa">Placa</mat-option><mat-option value="Carcasa">Carcasa</mat-option><mat-option value="Electronico">Electrónico</mat-option><mat-option value="Mecanico">Mecánico</mat-option></mat-select></mat-form-field></div>
+      <div class="filtros-componentes">
+    <mat-form-field appearance="outline">
+        <mat-label>Tipo de Componente</mat-label>
+        <mat-select [(ngModel)]="filtroTipo" (selectionChange)="cargarComponentesDisponibles()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="Logistico">Logístico</mat-option>
+            <mat-option value="Electronico">Electrónico</mat-option>
+            <mat-option value="Estructural">Estructural</mat-option>
+            <mat-option value="Accesorio">Accesorio</mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
       <div *ngIf="cargandoDisponibles" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
       <div *ngIf="!cargandoDisponibles && componentesDisponibles.length === 0" class="no-data"><p>No hay componentes disponibles</p></div>
-      <div *ngIf="!cargandoDisponibles && componentesDisponibles.length > 0">
-        <table mat-table [dataSource]="componentesDisponibles" class="mat-elevation-z8">
-          <ng-container matColumnDef="ID_Componente"><th mat-header-cell *matHeaderCellDef>ID</th><td mat-cell *matCellDef="let comp">{{comp.ID_Componente | slice:0:8}}...<\/td><\/ng-container>
-          <ng-container matColumnDef="nombre"><th mat-header-cell *matHeaderCellDef>Nombre</th><td mat-cell *matCellDef="let comp">{{comp.nombre}}<\/td><\/ng-container>
-          <ng-container matColumnDef="tipo"><th mat-header-cell *matHeaderCellDef>Tipo</th><td mat-cell *matCellDef="let comp">{{comp.tipo}}<\/td><\/ng-container>
-          <ng-container matColumnDef="precio"><th mat-header-cell *matHeaderCellDef>Precio</th><td mat-cell *matCellDef="let comp">${{comp.precio | number:'1.2-2'}}<\/td><\/ng-container>
-          <ng-container matColumnDef="acciones"><th mat-header-cell *matHeaderCellDef>Acciones</th><td mat-cell *matCellDef="let comp"><button mat-raised-button color="primary" (click)="usarComponente(comp)" [disabled]="!selectedMachine || componenteEnUso(comp)">Usar<\/button><\/td><\/ng-container>
-          <tr mat-header-row *matHeaderRowDef="displayedColumnsDisponibles"><\/tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumnsDisponibles;"><\/tr>
-        <\/table>
-        <mat-paginator [length]="totalDisponibles" [pageSize]="pageSize" [pageSizeOptions]="[5,10,20,50]" (page)="onPageChangeDisponibles($event)"><\/mat-paginator>
-      <\/div>
+      <!-- Tabla de Componentes Disponibles -->
+<div *ngIf="!cargandoDisponibles && componentesDisponibles.length > 0">
+    <table mat-table [dataSource]="componentesDisponibles" class="mat-elevation-z8">
+        
+        <!-- ID Column -->
+        <ng-container matColumnDef="ID_Componente">
+            <th mat-header-cell *matHeaderCellDef> ID </th>
+            <td mat-cell *matCellDef="let comp"> {{ comp.ID_Componente | slice:0:8 }}... </td>
+        </ng-container>
+
+        <!-- Nombre Column -->
+        <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef> Nombre </th>
+            <td mat-cell *matCellDef="let comp"> {{ comp.nombre }} </td>
+        </ng-container>
+
+        <!-- Tipo Column -->
+        <ng-container matColumnDef="tipo">
+            <th mat-header-cell *matHeaderCellDef> Tipo </th>
+            <td mat-cell *matCellDef="let comp"> {{ comp.tipo }} </td>
+        </ng-container>
+
+        <!-- Precio Column -->
+        <ng-container matColumnDef="precio">
+            <th mat-header-cell *matHeaderCellDef> Precio </th>
+            <td mat-cell *matCellDef="let comp"> ${{ comp.precio | number:'1.2-2' }} </td>
+        </ng-container>
+
+        <!-- Acciones Column -->
+        <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef> Acciones </th>
+            <td mat-cell *matCellDef="let comp">
+                <button mat-raised-button color="primary" 
+                        (click)="usarComponente(comp)" 
+                        [disabled]="!selectedMachine || componenteEnUso(comp)">
+                    Usar
+                </button>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsDisponibles"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsDisponibles;"></tr>
+    </table>
+    <mat-paginator [length]="totalDisponibles" 
+                   [pageSize]="pageSize" 
+                   [pageSizeOptions]="[5,10,20,50]" 
+                   (page)="onPageChangeDisponibles($event)">
+    </mat-paginator>
+</div>
     <\/div>
     <div class="componentes-en-uso-section"><h3>Componentes en Uso</h3>
       <div *ngIf="cargandoEnUso" class="loading-container"><mat-spinner diameter="40"></mat-spinner><\/div>

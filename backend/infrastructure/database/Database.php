@@ -69,4 +69,12 @@ class Database {
     public function getLastInsertId() {
         return $this->connection->insert_id;
     }
+    public function clearPendingResults(\mysqli $conn): void
+{
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($result = $conn->store_result()) {
+            $result->free();
+        }
+    }
+}
 }

@@ -15,6 +15,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatInputModule } from '@angular/material/input';  // ← AÑADIR
+import { MatFormFieldModule } from '@angular/material/form-field'; // ← AÑADIR
 import { TecnicoService } from '../../../services/tecnico';
 import { Subscription } from 'rxjs';
 
@@ -28,7 +30,13 @@ interface HistorialItem {
 @Component({
   selector: 'app-historial-maquina',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatPaginatorModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule],
+  imports: [
+    CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, 
+    MatProgressSpinnerModule, MatPaginatorModule, MatSelectModule, 
+    MatDatepickerModule, MatNativeDateModule, 
+    MatInputModule,      // ← AÑADIR
+    MatFormFieldModule   // ← AÑADIR
+  ],
   templateUrl: './historial-maquina.html',
   styleUrls: ['./historial-maquina.css']
 })
@@ -53,8 +61,16 @@ export class HistorialMaquinaComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
     this.subscription = this.tecnicoService.getHistorialMaquina(this.idMaquina, this.paginacion.pagina_actual, 20).subscribe({
-      next: (response) => { this.historial = response.historial; this.paginacion = response.paginacion; this.loading = false; },
-      error: (err) => { this.error = err.message || 'Error al cargar el historial'; this.loading = false; }
+      next: (response) => { 
+        this.historial = response.historial; 
+        this.paginacion = response.paginacion; 
+        this.loading = false; 
+      },
+      error: (err) => { 
+        console.error('Error cargando historial:', err);
+        this.error = err.message || 'Error al cargar el historial'; 
+        this.loading = false; 
+      }
     });
   }
   

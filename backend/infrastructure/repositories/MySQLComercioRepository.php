@@ -34,7 +34,9 @@ class MySQLComercioRepository implements ComercioRepository
         $idValue   = $data['id'];
         $checkStmt->bind_param('s', $idValue);
         $checkStmt->execute();
-        $exists = $checkStmt->get_result()->fetch_assoc()['total'] > 0;
+        $checkResult = $checkStmt->get_result();
+        $exists = $checkResult->fetch_assoc()['total'] > 0;
+        $checkResult->free();  //  Liberar resultado
         $checkStmt->close();
 
         if ($exists) {
@@ -46,7 +48,8 @@ class MySQLComercioRepository implements ComercioRepository
             $stmt = $conn->prepare($sql);
             $stmt->bind_param('ssssss', $idValue, $data['nombre'], $data['tipo'], $data['direccion'], $data['telefono'], $data['fecha_registro']);
         }
-        $stmt->execute(); $stmt->close();
+        $stmt->execute();
+        $stmt->close();
 
         // Invalidar
         $this->cache->delete("comercio:id:{$idValue}");
@@ -62,9 +65,13 @@ class MySQLComercioRepository implements ComercioRepository
             $stmt = $conn->prepare("SELECT * FROM Comercio WHERE ID_Comercio=?");
             $stmt->bind_param('s', $id);
             $stmt->execute();
-            $data = $stmt->get_result()->fetch_assoc();
+            $result = $stmt->get_result();
+            $data = $result->fetch_assoc();
+            $result->free();  //  Liberar resultado
             $stmt->close();
+            
             if (!$data) return null;
+            
             $data['nombre']           = $data['Nombre']           ?? '';
             $data['tipo']             = $data['Tipo']             ?? '';
             $data['direccion']        = $data['Direccion']        ?? '';
@@ -83,29 +90,58 @@ class MySQLComercioRepository implements ComercioRepository
             $stmt = $conn->prepare("SELECT ID_Comercio FROM Comercio WHERE Nombre=?");
             $stmt->bind_param('s', $nombre);
             $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $result->free();  //  Liberar resultado
             $stmt->close();
             return $row ? $this->buscarPorId($row['ID_Comercio']) : null;
         }, $this->ttl);
     }
 
+    /**
+     *  CORREGIDO: Obtener todos los comercios sin GROUP BY problemático
+     */
     public function obtenerTodos(array $criterios = []): array
     {
         $cacheKey = "comercios:all:" . md5(serialize($criterios));
+        
         return $this->cache->remember($cacheKey, function () use ($criterios) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT c.*, COUNT(m.ID_Maquina) as cantidad_maquinas 
-                       FROM Comercio c LEFT JOIN MaquinaRecreativa m ON c.ID_Comercio=m.ID_Comercio WHERE 1=1";
-            $params = []; $types = "";
-            if (!empty($criterios['tipo']))   { $sql .= " AND c.Tipo=?";        $params[] = $criterios['tipo'];         $types .= "s"; }
-            if (!empty($criterios['nombre'])) { $sql .= " AND c.Nombre LIKE ?"; $params[] = "%{$criterios['nombre']}%"; $types .= "s"; }
-            $sql .= " GROUP BY c.ID_Comercio ORDER BY c.Nombre ASC";
+            $conn = $this->db->getConnection();
+            $sql = "SELECT ID_Comercio, Nombre, Tipo, Direccion, Telefono, Fecha_Registro 
+                    FROM Comercio 
+                    WHERE 1=1";
+            $params = [];
+            $types = "";
+            
+            if (!empty($criterios['tipo'])) {
+                $sql .= " AND Tipo = ?";
+                $params[] = $criterios['tipo'];
+                $types .= "s";
+            }
+            if (!empty($criterios['nombre'])) {
+                $sql .= " AND Nombre LIKE ?";
+                $params[] = "%{$criterios['nombre']}%";
+                $types .= "s";
+            }
+            
+            $sql .= " ORDER BY Nombre ASC";
+            
             $stmt = $conn->prepare($sql);
-            if (!empty($params)) $stmt->bind_param($types, ...$params);
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
+            }
             $stmt->execute();
+            $result = $stmt->get_result();
+            
             $comercios = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $comercios[] = Comercio::fromArray($row);
+            while ($row = $result->fetch_assoc()) {
+                // Añadir cantidad_maquinas por separado (opcional)
+                $row['cantidad_maquinas'] = 0;
+                $comercios[] = Comercio::fromArray($row);
+            }
+            $result->free();  //  Liberar resultado
             $stmt->close();
+            
             return $comercios;
         }, $this->ttl);
     }
@@ -115,21 +151,44 @@ class MySQLComercioRepository implements ComercioRepository
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $orderBy   = in_array($orderBy, ['nombre','tipo','fecha_registro']) ? $orderBy : 'nombre';
         $cacheKey  = "comercios:list:" . md5(serialize([$filtros,$offset,$limit,$orderBy,$direction]));
-        return $this->cache->remember($cacheKey, function () use ($filtros,$offset,$limit,$orderBy,$direction) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT c.*, COUNT(m.ID_Maquina) as cantidad_maquinas 
-                       FROM Comercio c LEFT JOIN MaquinaRecreativa m ON c.ID_Comercio=m.ID_Comercio WHERE 1=1";
-            $params = []; $types = "";
-            if (!empty($filtros['tipo']))   { $sql .= " AND c.Tipo=?";        $params[] = $filtros['tipo'];         $types .= "s"; }
-            if (!empty($filtros['nombre'])) { $sql .= " AND c.Nombre LIKE ?"; $params[] = "%{$filtros['nombre']}%"; $types .= "s"; }
-            $sql .= " GROUP BY c.ID_Comercio ORDER BY c.{$orderBy} {$direction} LIMIT ? OFFSET ?";
-            $params[] = $limit; $params[] = $offset; $types .= "ii";
+        
+        return $this->cache->remember($cacheKey, function () use ($filtros, $offset, $limit, $orderBy, $direction) {
+            $conn = $this->db->getConnection();
+            $sql = "SELECT ID_Comercio, Nombre, Tipo, Direccion, Telefono, Fecha_Registro 
+                    FROM Comercio 
+                    WHERE 1=1";
+            $params = [];
+            $types = "";
+            
+            if (!empty($filtros['tipo'])) {
+                $sql .= " AND Tipo=?";
+                $params[] = $filtros['tipo'];
+                $types .= "s";
+            }
+            if (!empty($filtros['nombre'])) {
+                $sql .= " AND Nombre LIKE ?";
+                $params[] = "%{$filtros['nombre']}%";
+                $types .= "s";
+            }
+            
+            $sql .= " ORDER BY {$orderBy} {$direction} LIMIT ? OFFSET ?";
+            $params[] = $limit;
+            $params[] = $offset;
+            $types .= "ii";
+            
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
+            $result = $stmt->get_result();
+            
             $comercios = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $comercios[] = Comercio::fromArray($row);
+            while ($row = $result->fetch_assoc()) {
+                $row['cantidad_maquinas'] = 0;
+                $comercios[] = Comercio::fromArray($row);
+            }
+            $result->free();  //  Liberar resultado
             $stmt->close();
+            
             return $comercios;
         }, $this->ttl);
     }
@@ -139,10 +198,13 @@ class MySQLComercioRepository implements ComercioRepository
         $conn = $this->db->getConnection();
         try {
             $conn->begin_transaction();
-            if ($this->tieneMaquinas($id)) throw new \RuntimeException('No se puede eliminar el comercio porque tiene máquinas asociadas');
+            if ($this->tieneMaquinas($id)) {
+                throw new \RuntimeException('No se puede eliminar el comercio porque tiene máquinas asociadas');
+            }
             $stmt = $conn->prepare("DELETE FROM Comercio WHERE ID_Comercio=?");
             $stmt->bind_param('s', $id);
-            $stmt->execute(); $stmt->close();
+            $stmt->execute();
+            $stmt->close();
             $conn->commit();
         } catch (\Exception $e) {
             $conn->rollback();
@@ -154,14 +216,21 @@ class MySQLComercioRepository implements ComercioRepository
 
     public function existePorNombre(string $nombre, ?string $excluirId = null): bool
     {
-        $conn   = $this->db->getConnection();
-        $sql    = "SELECT COUNT(*) as total FROM Comercio WHERE Nombre=?";
-        $params = [$nombre]; $types = "s";
-        if ($excluirId) { $sql .= " AND ID_Comercio!=?"; $params[] = $excluirId; $types .= "s"; }
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) as total FROM Comercio WHERE Nombre=?";
+        $params = [$nombre];
+        $types = "s";
+        if ($excluirId) {
+            $sql .= " AND ID_Comercio!=?";
+            $params[] = $excluirId;
+            $types .= "s";
+        }
         $stmt = $conn->prepare($sql);
         $stmt->bind_param($types, ...$params);
         $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $result->free();  //  Liberar resultado
         $stmt->close();
         return $row['total'] > 0;
     }
@@ -172,27 +241,47 @@ class MySQLComercioRepository implements ComercioRepository
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MaquinaRecreativa WHERE ID_Comercio=?");
         $stmt->bind_param('s', $id);
         $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $result->free();  //  Liberar resultado
         $stmt->close();
         return $row['total'] > 0;
     }
 
     public function contar(array $criterios = []): int
     {
-        $conn   = $this->db->getConnection();
-        $sql    = "SELECT COUNT(*) as total FROM Comercio WHERE 1=1";
-        $params = []; $types = "";
-        if (!empty($criterios['tipo']))   { $sql .= " AND Tipo=?";        $params[] = $criterios['tipo'];         $types .= "s"; }
-        if (!empty($criterios['nombre'])) { $sql .= " AND Nombre LIKE ?"; $params[] = "%{$criterios['nombre']}%"; $types .= "s"; }
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) as total FROM Comercio WHERE 1=1";
+        $params = [];
+        $types = "";
+        
+        if (!empty($criterios['tipo'])) {
+            $sql .= " AND Tipo=?";
+            $params[] = $criterios['tipo'];
+            $types .= "s";
+        }
+        if (!empty($criterios['nombre'])) {
+            $sql .= " AND Nombre LIKE ?";
+            $params[] = "%{$criterios['nombre']}%";
+            $types .= "s";
+        }
+        
         $stmt = $conn->prepare($sql);
-        if (!empty($params)) $stmt->bind_param($types, ...$params);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
         $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $result->free();  //  Liberar resultado
         $stmt->close();
         return (int)$row['total'];
     }
 
-    public function count(array $filtros = []): int { return $this->contar($filtros); }
+    public function count(array $filtros = []): int 
+    { 
+        return $this->contar($filtros); 
+    }
 
     private function invalidateListados(): void
     {

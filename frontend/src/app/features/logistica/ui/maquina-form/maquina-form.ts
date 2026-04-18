@@ -71,13 +71,39 @@ export class MaquinaFormComponent implements OnInit {
     });
   }
   
-  private cargarDatos(): void {
-    this.logisticaService.getComercios().subscribe({ next: (data) => { this.comercios = data; } });
-    this.logisticaService.getComponentesDisponibles('Logistico').subscribe({ next: (data) => { this.carcasasDisponibles = data.filter(c => c.nombre.includes('Carcasa')); } });
-    this.logisticaService.getTecnicosPorEspecialidad('Ensamblador').subscribe({ next: (data) => { this.ensambladores = data; } });
-    this.logisticaService.getTecnicosPorEspecialidad('Comprobador').subscribe({ next: (data) => { this.comprobadores = data; } });
-  }
-  
+private cargarDatos(): void {
+    //  Usar subscribe con manejo de errores adecuado
+    this.logisticaService.getComercios().subscribe({
+        next: (data) => { this.comercios = data; },
+        error: (err) => { console.error('Error cargando comercios:', err); }
+    });
+    
+    //  Filtrar correctamente las carcasas (tipo 'Estructural' o 'Logistico')
+    this.logisticaService.getComponentesDisponibles('Estructural').subscribe({
+        next: (data) => { 
+            this.carcasasDisponibles = data.filter(c => 
+                c.nombre?.toLowerCase().includes('carcasa') || 
+                c.tipo === 'Estructural'
+            ); 
+        },
+        error: (err) => { 
+            console.error('Error cargando carcasas:', err);
+            this.errorCarcasa = 'Error al cargar las carcasas disponibles';
+        }
+    });
+    
+    //  Cargar ensambladores disponibles
+    this.logisticaService.getTecnicosPorEspecialidad('Ensamblador').subscribe({
+        next: (data) => { this.ensambladores = data; },
+        error: (err) => { console.error('Error cargando ensambladores:', err); }
+    });
+    
+    //  Cargar comprobadores disponibles
+    this.logisticaService.getTecnicosPorEspecialidad('Comprobador').subscribe({
+        next: (data) => { this.comprobadores = data; },
+        error: (err) => { console.error('Error cargando comprobadores:', err); }
+    });
+}
   get ensambladorNombre(): string {
     if (this.ensambladores.length === 0) return 'No hay técnicos disponibles';
     return `${this.ensambladores[0].nombre} ${this.ensambladores[0].apellido}`;
@@ -103,23 +129,39 @@ export class MaquinaFormComponent implements OnInit {
       error: (err) => { this.errorPlaca = err.message || 'Error al crear la placa'; this.creandoPlaca = false; }
     });
   }
-  
-  asignarCarcasa(): void {
-    if (!this.carcasaSeleccionada) { this.errorCarcasa = 'Seleccione una carcasa'; return; }
+ asignarCarcasa(): void {
+    if (!this.carcasaSeleccionada) { 
+        this.errorCarcasa = 'Seleccione una carcasa'; 
+        return; 
+    }
     const user = this.authService.getCurrentUser();
-    if (!user?.id) { this.errorCarcasa = 'Usuario no autenticado'; return; }
+    if (!user?.id) { 
+        this.errorCarcasa = 'Usuario no autenticado'; 
+        return; 
+    }
     this.asignandoCarcasa = true;
     this.errorCarcasa = '';
     
+    console.log('Enviando asignar carcasa - ID:', this.carcasaSeleccionada, 'Usuario:', user.id);
+    
     this.logisticaService.asignarCarcasa(this.carcasaSeleccionada, user.id).subscribe({
-      next: (success) => {
-        if (success) { this.carcasaAsignada = true; this.snackBar.open('Carcasa asignada correctamente', 'Cerrar', { duration: 3000 }); }
-        else { this.errorCarcasa = 'Error al asignar la carcasa'; }
-        this.asignandoCarcasa = false;
-      },
-      error: (err) => { this.errorCarcasa = err.message || 'Error al asignar la carcasa'; this.asignandoCarcasa = false; }
+        next: (success) => {
+            console.log('Respuesta asignar carcasa:', success);
+            if (success) { 
+                this.carcasaAsignada = true; 
+                this.snackBar.open('Carcasa asignada correctamente', 'Cerrar', { duration: 3000 }); 
+            } else { 
+                this.errorCarcasa = 'Error al asignar la carcasa'; 
+            }
+            this.asignandoCarcasa = false;
+        },
+        error: (err) => { 
+            console.error('Error asignando carcasa:', err);
+            this.errorCarcasa = err.message || 'Error al asignar la carcasa'; 
+            this.asignandoCarcasa = false; 
+        }
     });
-  }
+}
   
   registrarMaquina(stepper: any): void {
     if (this.maquinaForm.invalid) { this.snackBar.open('Complete todos los campos', 'Cerrar', { duration: 3000 }); return; }

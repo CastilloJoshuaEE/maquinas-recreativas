@@ -1,7 +1,6 @@
 /**
  * @fileoverview Componente de Actualización de Perfil
- * @description Permite al usuario actualizar su información personal
- * @component ActualizarPerfilComponent
+ * @description Permite al usuario actualizar su información personal (solo campos editables según rol)
  */
 
 import { Component, OnInit, inject } from '@angular/core';
@@ -20,6 +19,7 @@ import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { AuthService } from '@core/services/auth';
 import { UserService } from '@core/services/user';
 import { User } from '@core/models/user.model';
+import { VALIDATION_PATTERNS } from '@core/constants/app.constants';
 
 @Component({
   selector: 'app-actualizar-perfil',
@@ -47,6 +47,10 @@ export class ActualizarPerfilComponent implements OnInit {
   error = '';
   hidePassword = true;
   
+  // Determinar si el usuario es técnico
+  esTecnico = false;
+  especialidad = '';
+  
   ngOnInit(): void { this.cargarPerfil(); }
   
   private cargarPerfil(): void {
@@ -58,28 +62,46 @@ export class ActualizarPerfilComponent implements OnInit {
       this.loading = false;
       return;
     }
+    
     this.userService.getProfile(currentUser.id).subscribe({
       next: (usuario) => {
-        if (usuario) { this.usuario = usuario; this.inicializarFormulario(); this.registrarActividad(); }
-        else { this.error = 'No se encontró el perfil del usuario'; }
+        if (usuario) { 
+          this.usuario = usuario; 
+          this.esTecnico = usuario.tipo === 'Tecnico';
+          
+          // Normalizar especialidad: puede venir como Especialidad o especialidad
+          this.especialidad = usuario.Especialidad || usuario.especialidad || '';
+          
+          this.inicializarFormulario(); 
+          this.registrarActividad(); 
+        } else { 
+          this.error = 'No se encontró el perfil del usuario'; 
+        }
         this.loading = false;
       },
-      error: (err) => { this.error = err.message || 'Error al cargar el perfil'; this.loading = false; }
+      error: (err) => { 
+        this.error = err.message || 'Error al cargar el perfil'; 
+        this.loading = false; 
+      }
     });
   }
   
   private inicializarFormulario(): void {
     if (!this.usuario) return;
+    
+    // Campos deshabilitados (solo lectura - información del sistema)
     this.perfilForm = this.fb.group({
-      ci: [{ value: this.usuario.ci, disabled: true }],
-      nombre: [this.usuario.nombre, Validators.required],
-      apellido: [this.usuario.apellido, Validators.required],
-      email: [this.usuario.email, [Validators.required, Validators.email]],
       usuario_asignado: [{ value: this.usuario.usuario_asignado, disabled: true }],
-      contrasena: ['', [Validators.minLength(8)]],
       tipo: [{ value: this.usuario.tipo, disabled: true }],
-      especialidad: [{ value: this.usuario.Especialidad || '', disabled: true }],
-      estado: [{ value: this.usuario.estado, disabled: true }]
+      estado: [{ value: this.usuario.estado, disabled: true }],
+      especialidad: [{ value: this.especialidad, disabled: true }], // Solo lectura para técnicos
+      
+      // Campos editables por el usuario
+      nombre: [this.usuario.nombre, [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellido: [this.usuario.apellido, [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      ci: [this.usuario.ci, [Validators.required, Validators.pattern(VALIDATION_PATTERNS.CI)]],
+      email: [this.usuario.email, [Validators.required, Validators.email]],
+      contrasena: ['', [Validators.minLength(8)]]
     });
   }
   
@@ -100,37 +122,64 @@ export class ActualizarPerfilComponent implements OnInit {
     this.submitting = true;
     const formValue = this.perfilForm.getRawValue();
     const currentUser = this.authService.getCurrentUser();
+    
     const updateData: any = {
-      id: currentUser?.id, nombre: formValue.nombre, apellido: formValue.apellido,
-      email: formValue.email, ci: formValue.ci, tipo: formValue.tipo,
-      estado: formValue.estado, especialidad: formValue.especialidad || null
+      id: currentUser?.id,
+      nombre: formValue.nombre,
+      apellido: formValue.apellido,
+      email: formValue.email,
+      ci: formValue.ci,
+      tipo: formValue.tipo,
+      estado: formValue.estado,
+      especialidad: this.especialidad || null  // Mantener la especialidad original
     };
-    if (formValue.contrasena && formValue.contrasena.trim() !== '') { updateData.contrasena = formValue.contrasena; }
+    
+    if (formValue.contrasena && formValue.contrasena.trim() !== '') {
+      updateData.contrasena = formValue.contrasena;
+    }
     
     this.userService.updateProfile(updateData).subscribe({
       next: (response) => {
         if (response.success) {
           this.success = true;
           this.snackBar.open('Perfil actualizado correctamente', 'Cerrar', { duration: 3000 });
+          
+          // Actualizar localStorage con los nuevos datos
           if (currentUser) {
-            const updatedUser = { ...currentUser, nombre: updateData.nombre, apellido: updateData.apellido, email: updateData.email };
+            const updatedUser = { 
+              ...currentUser, 
+              nombre: updateData.nombre, 
+              apellido: updateData.apellido, 
+              email: updateData.email,
+              ci: updateData.ci
+            };
             localStorage.setItem('user', JSON.stringify(updatedUser));
           }
+          
           setTimeout(() => this.router.navigate(['/usuario/perfil']), 2000);
-        } else { this.snackBar.open(response.message || 'Error al actualizar perfil', 'Cerrar', { duration: 3000 }); }
+        } else { 
+          this.snackBar.open(response.message || 'Error al actualizar perfil', 'Cerrar', { duration: 3000 }); 
+        }
         this.submitting = false;
       },
-      error: (err) => { this.snackBar.open(err.message || 'Error al actualizar perfil', 'Cerrar', { duration: 3000 }); this.submitting = false; }
+      error: (err) => { 
+        this.snackBar.open(err.message || 'Error al actualizar perfil', 'Cerrar', { duration: 3000 }); 
+        this.submitting = false; 
+      }
     });
   }
+  
   soloNumeros(event: KeyboardEvent): boolean {
-  const charCode = event.charCode;
-  if (charCode >= 48 && charCode <= 57) {
-    return true;
-  } else {
-    event.preventDefault();
-    return false;
+    const charCode = event.charCode;
+    if (charCode >= 48 && charCode <= 57) {
+      return true;
+    } else {
+      event.preventDefault();
+      return false;
+    }
   }
-}
-  regresar(): void { this.router.navigate(['/usuario/perfil']); }
+  
+  regresar(): void { 
+    this.router.navigate(['/usuario/perfil']); 
+  }
 }

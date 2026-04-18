@@ -497,10 +497,14 @@ $command = new RegistrarMaquinaCommand(
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-  public function obtenerPorTecnicoEnsamblador(Request $request, string $idTecnico): Response
+public function obtenerPorTecnicoEnsamblador(Request $request, string $idTecnico): Response
 {
+    error_log("=== obtenerPorTecnicoEnsamblador - ID: $idTecnico ===");
+    
     $query = new ObtenerMaquinasPorTecnicoEnsambladorQuery($idTecnico);
     $resultado = $this->obtenerPorTecnicoEnsambladorHandler->handle($query);
+    
+    error_log("Resultado: " . json_encode($resultado));
     
     $response = new Response();
     if (isset($resultado['success']) && $resultado['success'] === false) {

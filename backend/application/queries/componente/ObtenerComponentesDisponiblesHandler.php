@@ -1,10 +1,6 @@
 <?php
 /**
  * application/queries/componente/ObtenerComponentesDisponiblesHandler.php
- *
- * Manejador del query ObtenerComponentesDisponibles.
- *
- * @package maquinas_recreativas\Application\Queries\Componente
  */
 
 namespace maquinas_recreativas\Application\Queries\Componente;
@@ -12,9 +8,6 @@ namespace maquinas_recreativas\Application\Queries\Componente;
 use maquinas_recreativas\Domain\Componente\ComponenteRepository;
 use maquinas_recreativas\Domain\Componente\TipoComponente;
 
-/**
- * Class ObtenerComponentesDisponiblesHandler
- */
 final class ObtenerComponentesDisponiblesHandler
 {
     private ComponenteRepository $componenteRepository;
@@ -24,25 +17,23 @@ final class ObtenerComponentesDisponiblesHandler
         $this->componenteRepository = $componenteRepository;
     }
 
-    /**
-     * Maneja el query de obtener componentes disponibles.
-     *
-     * @param ObtenerComponentesDisponiblesQuery $query
-     * @return array
-     */
     public function handle(ObtenerComponentesDisponiblesQuery $query): array
     {
         $tipo = $query->getTipo() !== null ? TipoComponente::fromString($query->getTipo()) : null;
-
         $componentes = $this->componenteRepository->findDisponibles($tipo);
 
-        return array_map(function ($componente) {
-            return [
+        // Asegurar que siempre retorne un array
+        $resultado = [];
+        foreach ($componentes as $componente) {
+            $resultado[] = [
                 'id' => $componente->id()->value(),
+                'ID_Componente' => $componente->id()->value(), // Para compatibilidad
                 'tipo' => $componente->tipo()->value(),
                 'nombre' => $componente->nombre(),
                 'precio' => $componente->precio()
             ];
-        }, $componentes);
+        }
+        
+        return $resultado;
     }
 }

@@ -65,17 +65,22 @@ export class DashboardComprobadorComponent implements OnInit {
     }
   }
   
-  private cargarNotificaciones(): void {
+private cargarNotificaciones(): void {
     this.cargandoNotificaciones = true;
     this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
-      next: (notificaciones) => {
-        this.notificaciones = notificaciones;
-        this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-        this.cargandoNotificaciones = false;
-      },
-      error: () => { this.cargandoNotificaciones = false; }
+        next: (notificaciones) => {
+            console.log('Notificaciones recibidas:', notificaciones);
+            this.notificaciones = notificaciones;
+            // Usar la propiedad 'leida' que añadimos en el servicio
+            this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
+            this.cargandoNotificaciones = false;
+        },
+        error: (err) => { 
+            console.error('Error cargando notificaciones:', err);
+            this.cargandoNotificaciones = false; 
+        }
     });
-  }
+}
   
   private cargarMaquinas(): void {
     this.cargandoComprobando = true;
@@ -146,11 +151,16 @@ export class DashboardComprobadorComponent implements OnInit {
     this.historialMaquinaId = '';
     this.historialMaquinaNombre = '';
   }
-  
-  marcarNotificacionLeida(idNotificacion: string): void {
+marcarNotificacionLeida(idNotificacion: string): void {
     this.notificationService.markAsRead(idNotificacion).subscribe({
-      next: () => { this.cargarNotificaciones(); },
-      error: () => {}
+        next: (success) => { 
+            if (success) {
+                this.cargarNotificaciones(); 
+            }
+        },
+        error: (err) => { 
+            console.error('Error marcando como leída:', err);
+        }
     });
-  }
+}
 }
