@@ -262,12 +262,8 @@ frontend/
         │   │       │   ├── ver-informe.html
         │   │       │   ├── ver-informe.css
         │   │       │   └── ver-informe.spec.ts
-        │   │       └── consultar-informe-distribucion/
-        │   │           ├── consultar-informe-distribucion.ts
-        │   │           ├── consultar-informe-distribucion.html
-        │   │           ├── consultar-informe-distribucion.css
-        │   │           └── consultar-informe-distribucion.spec.ts
-        │   │
+
+    │   │
         │   ├── logistica/
         │   │   ├── logistica.routes.ts
         │   │   ├── services/
@@ -335,6 +331,14 @@ frontend/
         │   │   │   ├── reportes.ts
         │   │   │   └── reportes.spec.ts
         │   │   ├── ui/
+
+
+
+│   │   │   ├── consulta-informe-distribucion/
+        │   │   │   │   ├── consulta-informe-distribucion.ts
+        │   │   │   │   ├── consulta-informe-distribucion.html
+        │   │   │   │   ├── consulta-informe-distribucion.css
+        │   │   │   │   └── consulta-informe-distribucion.spec.ts
         │   │   │   ├── chat-usuarios/
         │   │   │   │   ├── chat-usuarios.ts
         │   │   │   │   ├── chat-usuarios.html
@@ -497,7 +501,5 @@ npm install --save-dev jest @types/jest ts-jest
 ## Cómo generar la documentación
 
 npx compodoc -p tsconfig.json
-
-
 
 **Tu proyecto es un ERP Vertical (Software de planificación de recursos para máquinas recreativas) con arquitectura y despliegue de tipo SaaS.**

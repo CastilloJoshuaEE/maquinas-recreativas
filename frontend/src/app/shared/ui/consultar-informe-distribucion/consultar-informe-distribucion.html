@@ -11,7 +11,17 @@
         <mat-form-field appearance="outline"><mat-label>Fecha Inicio</mat-label><input matInput [matDatepicker]="pickerInicio" formControlName="fecha_inicio"><mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle><mat-datepicker #pickerInicio></mat-datepicker><mat-icon matPrefix>calendar_today</mat-icon></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Fecha Fin</mat-label><input matInput [matDatepicker]="pickerFin" formControlName="fecha_fin"><mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle><mat-datepicker #pickerFin></mat-datepicker><mat-icon matPrefix>calendar_today</mat-icon></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Máquina</mat-label><mat-select formControlName="ID_Maquina"><mat-option value="">Todas</mat-option><mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option></mat-select><mat-icon matPrefix>videogame_asset</mat-icon></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Comercio</mat-label><mat-select formControlName="ID_Comercio"><mat-option value="">Todos</mat-option><mat-option *ngFor="let comercio of comercios" [value]="comercio.ID_Comercio">{{ comercio.Nombre }}</mat-option></mat-select><mat-icon matPrefix>store</mat-icon></mat-form-field>
+        
+        <mat-form-field appearance="outline">
+    <mat-label>Comercio</mat-label>
+    <mat-select formControlName="ID_Comercio">
+        <mat-option value="">Todos</mat-option>
+        <mat-option *ngFor="let comercio of comercios" [value]="comercio.ID_Comercio">
+            {{ comercio.nombre || comercio.Nombre || 'Sin nombre' }}
+        </mat-option>
+    </mat-select>
+    <mat-icon matPrefix>store</mat-icon>
+</mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select formControlName="estado"><mat-option value="">Todos</mat-option><mat-option value="Operativa">Operativa</mat-option><mat-option value="Retirada">Retirada</mat-option><mat-option value="No operativa">No operativa</mat-option><mat-option value="Distribuyendose">Distribuyéndose</mat-option></mat-select><mat-icon matPrefix>info</mat-icon></mat-form-field>
         <div class="filter-actions"><button mat-raised-button color="primary" (click)="buscarInformes()" [disabled]="loading"><mat-icon>search</mat-icon> Buscar</button><button mat-raised-button (click)="limpiarFiltros()" [disabled]="loading"><mat-icon>clear</mat-icon> Limpiar</button></div>
       </form>
@@ -26,7 +36,7 @@
           <table mat-table [dataSource]="dataSource" matSort>
             <ng-container matColumnDef="ID_Distribucion"><th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th><td mat-cell *matCellDef="let row">{{row.ID_Distribucion | slice:0:8}}...</td></ng-container>
             <ng-container matColumnDef="Nombre_Maquina"><th mat-header-cell *matHeaderCellDef mat-sort-header>Máquina</th><td mat-cell *matCellDef="let row">{{row.Nombre_Maquina}}</td></ng-container>
-            <ng-container matColumnDef="Nombre_Tecnico"><th mat-header-cell *matHeaderCellDef mat-sort-header>Técnico</th><td mat-cell *matCellDef="let row">{{row.Nombre_Tecnico || 'No asignado'}}</td></ng-container>
+            <ng-container matColumnDef="Nombre_Tecnico"><th mat-header-cell *matHeaderCellDef mat-sort-header>Técnico comprobador</th><td mat-cell *matCellDef="let row">{{row.Nombre_Tecnico || 'No asignado'}}</td></ng-container>
             <ng-container matColumnDef="Nombre_Comercio"><th mat-header-cell *matHeaderCellDef mat-sort-header>Comercio</th><td mat-cell *matCellDef="let row">{{row.Nombre_Comercio || 'Desconocido'}}</td></ng-container>
             <ng-container matColumnDef="fecha_alta"><th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Alta</th><td mat-cell *matCellDef="let row">{{row.fecha_alta | date:'dd/MM/yyyy HH:mm'}}</td></ng-container>
             <ng-container matColumnDef="fecha_baja"><th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Baja</th><td mat-cell *matCellDef="let row"><span *ngIf="row.fecha_baja; else noBaja">{{row.fecha_baja | date:'dd/MM/yyyy HH:mm'}}</span><ng-template #noBaja><span class="text-muted">No se ha dado de baja</span></ng-template></td></ng-container>

@@ -7,11 +7,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-
+import { ChatbotFloatingComponent } from '@shared/ui/chatbot-floating/chatbot-floating';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, ChatbotFloatingComponent],
   templateUrl: './main-layout.html',
   styleUrls: ['./main-layout.css']
 })

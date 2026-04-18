@@ -25,26 +25,64 @@ export class LogisticaService {
     );
   }
 
-  getMaquinasPorEtapa(etapa: string): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ETAPA(etapa)).pipe(
-      map(response => response && response.success && response['maquinas'] ? response['maquinas'] : []),
-      catchError(() => of([]))
+getMaquinasPorEtapa(etapa: string): Observable<Maquina[]> {
+    return this.apiService.get<{ maquinas: any[] }>(API_ENDPOINTS.MAQUINA_BY_ETAPA(etapa)).pipe(
+        map(response => {
+            console.log(`Respuesta máquinas por etapa ${etapa}:`, response);
+            if (!response || !response.success || !response['maquinas']) return [];
+            
+            // Normalizar datos
+            return response['maquinas'].map((m: any) => ({
+                ID_Maquina: m.ID_Maquina,
+                Nombre_Maquina: m.Nombre_Maquina,
+                tipo: m.Tipo || m.tipo,
+                estado: m.Estado || m.estado,
+                etapa: m.Etapa || m.etapa,
+                ID_Comercio: m.ID_Comercio,
+                NombreComercio: m.NombreComercio,
+                DireccionComercio: m.DireccionComercio,
+                ID_Tecnico_Ensamblador: m.ID_Tecnico_Ensamblador,
+                ID_Tecnico_Comprobador: m.ID_Tecnico_Comprobador,
+                Fecha_Registro: m.Fecha_Registro
+            }));
+        }),
+        catchError(error => {
+            console.error(`Error en getMaquinasPorEtapa(${etapa}):`, error);
+            return of([]);
+        })
     );
-  }
+}
+getMaquinasDistribucion(): Observable<Maquina[]> {
+    return this.getMaquinasPorEtapa('Distribucion');
+}
 
-  getMaquinasDistribucion(): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ETAPA('Distribucion')).pipe(
-      map(response => response && response.success && response['maquinas'] ? response['maquinas'] : []),
-      catchError(() => of([]))
+getMaquinasOperativas(): Observable<Maquina[]> {
+    return this.apiService.get<{ maquinas: any[] }>(API_ENDPOINTS.MAQUINA_BY_ESTADO('Operativa')).pipe(
+        map(response => {
+            console.log('Respuesta máquinas operativas:', response);
+            if (!response || !response.success || !response['maquinas']) return [];
+            
+            // Normalizar datos
+            return response['maquinas'].map((m: any) => ({
+                ID_Maquina: m.ID_Maquina,
+                Nombre_Maquina: m.Nombre_Maquina,
+                tipo: m.Tipo || m.tipo,
+                estado: m.Estado || m.estado,
+                etapa: m.Etapa || m.etapa,
+                ID_Comercio: m.ID_Comercio,
+                NombreComercio: m.NombreComercio,
+                DireccionComercio: m.DireccionComercio,
+                ID_Tecnico_Ensamblador: m.ID_Tecnico_Ensamblador,
+                ID_Tecnico_Comprobador: m.ID_Tecnico_Comprobador,
+                Fecha_Registro: m.Fecha_Registro
+            }));
+        }),
+        catchError(error => {
+            console.error('Error en getMaquinasOperativas:', error);
+            return of([]);
+        })
     );
-  }
-
-  getMaquinasOperativas(): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ESTADO('Operativa')).pipe(
-      map(response => response && response.success && response['maquinas'] ? response['maquinas'] : []),
-      catchError(() => of([]))
-    );
-  }
+}
 
   getMaquinasRetiradas(): Observable<Maquina[]> {
     return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ESTADO('Retirada')).pipe(
@@ -141,14 +179,20 @@ getComercios(): Observable<any[]> {
     return this.apiService.get<{ comercios: any[] }>(API_ENDPOINTS.COMERCIOS).pipe(
         map(response => {
             console.log('Respuesta getComercios:', response);
+            let comercios: any[] = [];
             if (response && response.success && response['comercios']) {
-                return response['comercios'];
+                comercios = response['comercios'];
+            } else if (Array.isArray(response)) {
+                comercios = response;
             }
-            // Si la respuesta es directamente un array
-            if (Array.isArray(response)) {
-                return response;
-            }
-            return [];
+            // Normalizar cada comercio
+            return comercios.map(c => ({
+                ID_Comercio: c.ID_Comercio,
+                nombre: c.nombre || c.Nombre || 'Sin nombre',
+                tipo: c.tipo || c.Tipo || 'Minorista',
+                direccion: c.direccion || c.Direccion || '',
+                telefono: c.telefono || c.Telefono || ''
+            }));
         }),
         catchError(error => {
             console.error('Error en getComercios:', error);
@@ -202,13 +246,35 @@ getTecnicosPorEspecialidad(especialidad: string): Observable<User[]> {
       })
     );
   }
-
-  getInformesDistribucion(params?: any): Observable<any[]> {
-    return this.apiService.get<{ informes: any[] }>(API_ENDPOINTS.DISTRIBUCION_INFORMES, params).pipe(
-      map(response => response && response.success && response['informes'] ? response['informes'] : []),
-      catchError(() => of([]))
+getInformesDistribucion(params?: any): Observable<any[]> {
+    // Limpiar parámetros vacíos
+    const cleanParams: any = {};
+    if (params) {
+        Object.keys(params).forEach(key => {
+            if (params[key] && params[key] !== '') {
+                cleanParams[key] = params[key];
+            }
+        });
+    }
+    console.log('Enviando parámetros a API:', cleanParams);
+    
+    return this.apiService.get<{ informes: any[] }>(API_ENDPOINTS.DISTRIBUCION_INFORMES, cleanParams).pipe(
+        map(response => {
+            console.log('Respuesta informes distribución:', response);
+            if (response && response.success && response['informes']) {
+                return response['informes'];
+            }
+            if (Array.isArray(response)) {
+                return response;
+            }
+            return [];
+        }),
+        catchError(error => {
+            console.error('Error en getInformesDistribucion:', error);
+            return of([]);
+        })
     );
-  }
+}
 
   registrarMontaje(data: { idMaquina: string; idEnsamblador: string }): Observable<boolean> {
     return this.apiService.post(API_ENDPOINTS.MAQUINA_MONTAR, data).pipe(

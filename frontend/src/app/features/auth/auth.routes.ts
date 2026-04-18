@@ -16,6 +16,11 @@ export const AUTH_ROUTES: Routes = [
       { path: 'recuperar-contrasena', loadComponent: () => import('./pages/recuperar-contrasena/recuperar-contrasena').then(m => m.RecuperarContrasenaComponent) },
       { path: 'recuperar-usuario', loadComponent: () => import('./pages/recuperar-usuario/recuperar-usuario').then(m => m.RecuperarUsuarioComponent) },
       { path: 'actualizar-usuario', loadComponent: () => import('./pages/actualizar-usuario/actualizar-usuario').then(m => m.ActualizarUsuarioComponent) },
+      { 
+    path: 'auth/chatbot', 
+    loadComponent: () => import('@shared/ui/chatbot/chatbot').then(m => m.ChatbotComponent)
+},
+
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]
   }

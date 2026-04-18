@@ -60,7 +60,6 @@ final class DarMantenimientoHandler implements CommandHandler
         $idLogistica = new Uuid($command->idLogistica());
         $logistica = $this->usuarioRepository->findById($idLogistica);
 
-        // Usar getTipo() en lugar de esLogistica() y tipo()
         if (!$logistica || $logistica->getTipo()->value() !== 'Logistica') {
             throw new DomainException('Usuario logística no válido');
         }
@@ -71,10 +70,24 @@ final class DarMantenimientoHandler implements CommandHandler
             throw new DomainException('No hay técnicos de mantenimiento disponibles');
         }
 
-        $tecnico = $tecnicosMantenimiento[0];
+        // CORREGIDO: $tecnicosMantenimiento[0] es un array, no un objeto
+        $primerTecnico = $tecnicosMantenimiento[0];
+        
+        if (is_array($primerTecnico)) {
+            // Es un array, obtener el ID de la clave 'id'
+            $tecnicoId = new Uuid($primerTecnico['id']);
+            $tecnicoNombre = $primerTecnico['nombre'] ?? '';
+            $tecnicoApellido = $primerTecnico['apellido'] ?? '';
+        } else {
+            // Es un objeto, usar métodos del objeto
+            $tecnicoId = $primerTecnico->getId();
+            $tecnicoNombre = $primerTecnico->getNombre();
+            $tecnicoApellido = $primerTecnico->getApellido();
+        }
+
         $comercio = $this->comercioRepository->buscarPorId($maquina->idComercio()->value());
 
-        $maquina->solicitarMantenimiento($tecnico->getId());
+        $maquina->solicitarMantenimiento($tecnicoId);
         $this->maquinaRepository->save($maquina);
 
         // Registrar historial
@@ -83,13 +96,13 @@ final class DarMantenimientoHandler implements CommandHandler
             $idLogistica,
             $logistica->getTipo()->value(),
             'Solicitud de mantenimiento',
-            "Máquina enviada a mantenimiento. Técnico asignado: {$tecnico->getNombre()} {$tecnico->getApellido()}. Motivo: {$command->mensaje()}",
+            "Máquina enviada a mantenimiento. Técnico asignado: {$tecnicoNombre} {$tecnicoApellido}. Motivo: {$command->mensaje()}",
             'Operativa',
             'No operativa',
             'Recaudacion',
             'Montaje',
             $_SERVER['REMOTE_ADDR'] ?? null,
-            ['tecnico_asignado' => $tecnico->getNombre(), 'motivo' => $command->mensaje()]
+            ['tecnico_asignado' => $tecnicoNombre, 'motivo' => $command->mensaje()]
         );
         $this->historialRepository->save($historial);
 
@@ -99,7 +112,7 @@ final class DarMantenimientoHandler implements CommandHandler
 
         $notificacion = NotificacionMaquina::crear(
             $idLogistica,
-            $tecnico->getId(),
+            $tecnicoId,
             $idMaquina,
             'Dar mantenimiento a máquina recreativa',
             $mensajeCompleto

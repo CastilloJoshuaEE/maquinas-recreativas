@@ -41,9 +41,10 @@ export const CONTABILIDAD_ROUTES: Routes = [
         loadComponent: () => import('./pages/ver-informe/ver-informe').then(m => m.VerInformeComponent) 
       },
       { 
-        path: 'consultar-informe-distribucion', 
-        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionComponent) 
-      },
+ // Usar el componente compartido
+    path: 'consultar-informe-distribucion',
+    loadComponent: () => import('@shared/ui/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionComponent)
+  },
       { 
         path: '', 
         redirectTo: 'dashboard', 

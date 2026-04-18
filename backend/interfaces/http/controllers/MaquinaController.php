@@ -545,33 +545,39 @@ public function obtenerPorTecnicoComprobador(Request $request, string $idTecnico
     }
     return $response;
 }
-    #[OA\Get(
-        path: "/v1/maquina/mantenimiento/{uuid}",
-        summary: "Obtener máquinas asignadas a un técnico de mantenimiento",
-        tags: ["Máquinas"],
-        security: [["bearerAuth" => []]],
-        parameters: [
-            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
-        ],
-        responses: [
-            new OA\Response(response: 200, description: "Lista de máquinas"),
-            new OA\Response(response: 400, description: "UUID inválido"),
-            new OA\Response(response: 401, description: "No autorizado")
-        ]
-    )]
-    public function obtenerPorTecnicoMantenimiento(Request $request, string $idTecnico): Response
-    {
-        if (!ValidationHelper::isValidUUID($idTecnico)) {
-            throw new DomainException('ID de técnico inválido', 400);
-        }
-
-        $query   = new ObtenerMaquinasPorTecnicoMantenimientoQuery($idTecnico);
-        $maquinas = $this->obtenerPorTecnicoMantenimientoHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+#[OA\Get(
+    path: "/v1/maquina/mantenimiento/{uuid}",
+    summary: "Obtener máquinas asignadas a un técnico de mantenimiento",
+    tags: ["Máquinas"],
+    security: [["bearerAuth" => []]],
+    parameters: [
+        new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "Lista de máquinas"),
+        new OA\Response(response: 400, description: "UUID inválido"),
+        new OA\Response(response: 401, description: "No autorizado")
+    ]
+)]
+public function obtenerPorTecnicoMantenimiento(Request $request, string $idTecnico): Response
+{
+    if (!ValidationHelper::isValidUUID($idTecnico)) {
+        throw new DomainException('ID de técnico inválido', 400);
     }
+
+    $query   = new ObtenerMaquinasPorTecnicoMantenimientoQuery($idTecnico);
+    $resultado = $this->obtenerPorTecnicoMantenimientoHandler->handle($query);
+
+    $response = new Response();
+    
+    if (isset($resultado['success']) && isset($resultado['maquinas'])) {
+        $response->json($resultado);
+    } else {
+        // Es un array simple de máquinas
+        $response->json(['success' => true, 'maquinas' => $resultado]);
+    }
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/maquina/estado/{estado}",

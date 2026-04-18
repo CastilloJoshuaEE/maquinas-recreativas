@@ -17,9 +17,9 @@ export const LOGISTICA_ROUTES: Routes = [
         loadComponent: () => import('./pages/dashboard-logistica/dashboard-logistica').then(m => m.DashboardLogisticaComponent) 
       },
       { 
-        path: 'consultar-informe-distribucion', 
-        loadComponent: () => import('./pages/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionLogisticaComponent) 
-      },
+        path: 'consultar-informe-distribucion',
+    loadComponent: () => import('@shared/ui/consultar-informe-distribucion/consultar-informe-distribucion').then(m => m.ConsultarInformeDistribucionComponent)
+  },
       { 
         path: '', 
         redirectTo: 'dashboard', 

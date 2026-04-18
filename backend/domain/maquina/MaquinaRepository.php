@@ -100,4 +100,6 @@ interface MaquinaRepository
     public function getComponentesMontaje(MaquinaRecreativa $maquina): array;
     public function findByTecnicoEnsambladorWithComercio(Uuid $idTecnico): array; // Nuevo método
 public function findByTecnicoComprobadorWithComercio(Uuid $idTecnico): array;
+    public function findByEtapaWithComercio(EtapaMaquina $etapa): array;
+public function findByTecnicoMantenimientoWithComercio(Uuid $idTecnico): array;
     }

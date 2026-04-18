@@ -245,34 +245,40 @@ public function save(Usuario $usuario): void
         }, $this->ttl);
     }
 
-    public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
-    {
-        $excluirStr = $excluirId ? $excluirId->value() : 'none';
-        $cacheKey   = "usuarios:tipo:{$tipo}:excluir:{$excluirStr}";
+public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
+{
+    $excluirStr = $excluirId ? $excluirId->value() : 'none';
+    $cacheKey   = "usuarios:tipo:{$tipo}:excluir:{$excluirStr}";
 
-        return $this->cache->remember($cacheKey, function () use ($tipo, $excluirId) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                       FROM usuario u 
-                       LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                       WHERE u.tipo=?";
-            $params = [$tipo];
-            $types  = "s";
-            if ($excluirId) {
-                $sql .= " AND u.ID_Usuario!=?";
-                $params[] = $excluirId->value();
-                $types  .= "s";
-            }
-            $sql .= " ORDER BY u.nombre ASC";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $usuarios = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $usuarios[] = $this->hydrate($row);
-            $stmt->close();
-            return $usuarios;
-        }, $this->ttl);
-    }
+    return $this->cache->remember($cacheKey, function () use ($tipo, $excluirId) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                 FROM usuario u 
+                 LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                 WHERE u.tipo = ? AND u.estado = 'Activo'";
+        $params = [$tipo];
+        $types  = "s";
+        if ($excluirId) {
+            $sql .= " AND u.ID_Usuario != ?";
+            $params[] = $excluirId->value();
+            $types  .= "s";
+        }
+        $sql .= " ORDER BY u.nombre ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $usuarios = [];
+        while ($row = $result->fetch_assoc()) {
+            $usuarios[] = $this->hydrate($row);
+        }
+        $result->free();  // ← Liberar resultado
+        $stmt->close();   // ← Cerrar statement
+        // Limpiar resultados pendientes
+        $this->db->clearPendingResults($conn);
+        return $usuarios;
+    }, $this->ttl);
+}
 
 public function findTecnicosByEspecialidad(string $especialidad): array
 {

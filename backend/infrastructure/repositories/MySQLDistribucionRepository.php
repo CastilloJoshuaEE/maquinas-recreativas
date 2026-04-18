@@ -67,38 +67,88 @@ class MySQLDistribucionRepository implements DistribucionRepository
             return $data ? InformeDistribucion::fromArray($data) : null;
         }, 1800);
     }
-
-    public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
-    {
-        $cacheKey = "distribuciones:all:" . md5(serialize([$filters,$limit,$offset]));
-        return $this->cache->remember($cacheKey, function () use ($filters, $limit, $offset) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT id.*,m.Nombre_Maquina,CONCAT(u.nombre,' ',u.apellido) as Nombre_Tecnico,
-                              c.Nombre as Nombre_Comercio,c.Direccion as Direccion_Comercio,
-                              c.Telefono as Telefono_Comercio,c.Tipo as Tipo_Comercio
-                       FROM informe_distribucion id
-                       INNER JOIN MaquinaRecreativa m ON id.ID_Maquina=m.ID_Maquina
-                       INNER JOIN usuario u ON id.ID_Usuario_Comprobador=u.ID_Usuario
-                       INNER JOIN Comercio c ON id.ID_Comercio=c.ID_Comercio
-                       WHERE 1=1";
-            $params = []; $types = "";
-            if (!empty($filters['estado']))     { $sql .= " AND id.estado=?";        $params[] = $filters['estado'];     $types .= "s"; }
-            if (!empty($filters['ID_Comercio'])) { $sql .= " AND id.ID_Comercio=?";  $params[] = $filters['ID_Comercio']; $types .= "s"; }
-            if (!empty($filters['ID_Maquina']))  { $sql .= " AND id.ID_Maquina=?";   $params[] = $filters['ID_Maquina'];  $types .= "s"; }
-            if (!empty($filters['fecha_inicio'])) { $sql .= " AND DATE(id.fecha_alta)>=?"; $params[] = $filters['fecha_inicio']; $types .= "s"; }
-            if (!empty($filters['fecha_fin']))    { $sql .= " AND DATE(id.fecha_alta)<=?"; $params[] = $filters['fecha_fin'];    $types .= "s"; }
-            $sql .= " ORDER BY id.fecha_alta DESC LIMIT ? OFFSET ?";
-            $params[] = $limit; $params[] = $offset; $types .= "ii";
-            $stmt = $conn->prepare($sql);
+public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
+{
+    $cacheKey = "distribuciones:all:" . md5(serialize([$filters,$limit,$offset]));
+    return $this->cache->remember($cacheKey, function () use ($filters, $limit, $offset) {
+        $conn   = $this->db->getConnection();
+        
+        // Subconsulta para obtener el informe más reciente por máquina
+        $sql = "SELECT id.*, m.Nombre_Maquina, 
+                       CONCAT(u.nombre, ' ', u.apellido) as Nombre_Tecnico,
+                       c.Nombre as Nombre_Comercio, c.Direccion as Direccion_Comercio,
+                       c.Telefono as Telefono_Comercio, c.Tipo as Tipo_Comercio
+                FROM informe_distribucion id
+                INNER JOIN MaquinaRecreativa m ON id.ID_Maquina = m.ID_Maquina
+                INNER JOIN usuario u ON id.ID_Usuario_Comprobador = u.ID_Usuario
+                INNER JOIN Comercio c ON id.ID_Comercio = c.ID_Comercio
+                WHERE id.fecha_alta = (
+                    SELECT MAX(id2.fecha_alta) 
+                    FROM informe_distribucion id2 
+                    WHERE id2.ID_Maquina = id.ID_Maquina
+                )";
+        
+        $params = []; 
+        $types = "";
+        
+        if (!empty($filters['estado'])) { 
+            $sql .= " AND id.estado = ?";        
+            $params[] = $filters['estado'];     
+            $types .= "s"; 
+        }
+        if (!empty($filters['ID_Comercio'])) { 
+            $sql .= " AND id.ID_Comercio = ?";  
+            $params[] = $filters['ID_Comercio']; 
+            $types .= "s"; 
+        }
+        if (!empty($filters['ID_Maquina'])) {  
+            $sql .= " AND id.ID_Maquina = ?";   
+            $params[] = $filters['ID_Maquina'];  
+            $types .= "s"; 
+        }
+        if (!empty($filters['fecha_inicio'])) { 
+            $sql .= " AND DATE(id.fecha_alta) >= ?"; 
+            $params[] = $filters['fecha_inicio']; 
+            $types .= "s"; 
+        }
+        if (!empty($filters['fecha_fin'])) {    
+            $sql .= " AND DATE(id.fecha_alta) <= ?"; 
+            $params[] = $filters['fecha_fin'];    
+            $types .= "s"; 
+        }
+        
+        $sql .= " ORDER BY id.fecha_alta DESC LIMIT ? OFFSET ?";
+        $params[] = $limit; 
+        $params[] = $offset; 
+        $types .= "ii";
+        
+        error_log("SQL Distribucion: " . $sql);
+        error_log("Params: " . json_encode($params));
+        
+        $stmt = $conn->prepare($sql);
+        if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $informes = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $informes[] = $row;
-            $stmt->close();
-            return $informes;
-        }, 600);
-    }
-
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $informes = [];
+        while ($row = $result->fetch_assoc()) {
+            $informes[] = $row;
+        }
+        $result->free();
+        $stmt->close();
+        
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        
+        error_log("Informes encontrados (únicos por máquina): " . count($informes));
+        return $informes;
+    }, 600);
+}
     public function updateEstado(Uuid $idMaquina, string $estado): bool
     {
         $permitidos = ['Operativa','Retirada','No operativa','Distribuyendose'];

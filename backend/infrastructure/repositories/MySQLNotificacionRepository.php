@@ -25,20 +25,27 @@ class MySQLNotificacionRepository implements NotificacionRepository
         $this->cache = $cache ?? CacheFactory::create();
     }
 
-    public function saveMaquina(NotificacionMaquina $notificacion): void
-    {
-        $conn = $this->db->getConnection();
-        $data = $notificacion->toArray();
-        $sql  = "INSERT INTO NotificacionMaquinaRecreativa (ID_Notificacion,ID_Remitente,ID_Destinatario,ID_Maquina,Tipo,Mensaje,Fecha,Estado)
-                 VALUES (?,?,?,?,?,?,?,?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ssssssss',
-            $data['ID_Notificacion'],$data['ID_Remitente'],$data['ID_Destinatario'],
-            $data['ID_Maquina'],$data['Tipo'],$data['Mensaje'],$data['Fecha'],$data['Estado']);
-        $stmt->execute(); $stmt->close();
-        $this->cache->delete("notificaciones:maquina:{$data['ID_Destinatario']}");
-        $this->cache->delete("notificaciones:no_leidas:{$data['ID_Destinatario']}");
+public function saveMaquina(NotificacionMaquina $notificacion): void
+{
+    $conn = $this->db->getConnection();
+    $data = $notificacion->toArray();
+    $sql  = "INSERT INTO NotificacionMaquinaRecreativa (ID_Notificacion,ID_Remitente,ID_Destinatario,ID_Maquina,Tipo,Mensaje,Fecha,Estado)
+             VALUES (?,?,?,?,?,?,?,?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ssssssss',
+        $data['ID_Notificacion'],$data['ID_Remitente'],$data['ID_Destinatario'],
+        $data['ID_Maquina'],$data['Tipo'],$data['Mensaje'],$data['Fecha'],$data['Estado']);
+    $stmt->execute();
+    $stmt->close();  // ← Cerrar statement
+    // Limpiar resultados pendientes
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($rs = $conn->store_result()) {
+            $rs->free();
+        }
     }
+    $this->cache->delete("notificaciones:maquina:{$data['ID_Destinatario']}");
+    $this->cache->delete("notificaciones:no_leidas:{$data['ID_Destinatario']}");
+}
 
     public function saveReporte(NotificacionReporte $notificacion): void
     {

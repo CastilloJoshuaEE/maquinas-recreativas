@@ -12,6 +12,7 @@ use maquinas_recreativas\Domain\Maquina\MaquinaRepository;
 use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Notificacion\NotificacionMaquina;
 use maquinas_recreativas\Domain\Notificacion\NotificacionRepository;
+use maquinas_recreativas\Domain\Distribucion\DistribucionRepository; // AÑADIR
 use maquinas_recreativas\Domain\Historial\HistorialMaquina;
 use maquinas_recreativas\Domain\Historial\HistorialRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -23,17 +24,20 @@ final class FinalizarMantenimientoHandler implements CommandHandler
     private UsuarioRepository $usuarioRepository;
     private NotificacionRepository $notificacionRepository;
     private HistorialRepository $historialRepository;
+    private DistribucionRepository $distribucionRepository; // AÑADIR
 
     public function __construct(
         MaquinaRepository $maquinaRepository,
         UsuarioRepository $usuarioRepository,
         NotificacionRepository $notificacionRepository,
-        HistorialRepository $historialRepository
+        HistorialRepository $historialRepository,
+        DistribucionRepository $distribucionRepository // AÑADIR
     ) {
         $this->maquinaRepository = $maquinaRepository;
         $this->usuarioRepository = $usuarioRepository;
         $this->notificacionRepository = $notificacionRepository;
         $this->historialRepository = $historialRepository;
+        $this->distribucionRepository = $distribucionRepository; // AÑADIR
     }
 
     public function handle(Command $command): void
@@ -58,6 +62,10 @@ final class FinalizarMantenimientoHandler implements CommandHandler
 
         $maquina->finalizarMantenimiento($command->exito());
         $this->maquinaRepository->save($maquina);
+
+        // ACTUALIZAR EL INFORME DE DISTRIBUCIÓN
+        $nuevoEstadoInforme = $command->exito() ? 'Operativa' : 'Retirada';
+        $this->distribucionRepository->updateEstado($idMaquina, $nuevoEstadoInforme);
 
         // Registrar historial
         $estadoNuevo = $command->exito() ? 'Operativa' : 'Retirada';

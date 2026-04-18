@@ -804,7 +804,8 @@ Dependencies::register(FinalizarMantenimientoHandler::class, function() {
         Dependencies::get(MySQLMaquinaRepository::class),
         Dependencies::get(MySQLUsuarioRepository::class),
         Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(MySQLHistorialRepository::class),
+        Dependencies::get(MySQLDistribucionRepository::class) 
     );
 });
 

@@ -1,10 +1,6 @@
 <?php
 /**
  * application/queries/maquina/ObtenerMaquinasPorTecnicoMantenimientoHandler.php
- *
- * Manejador del query ObtenerMaquinasPorTecnicoMantenimiento.
- *
- * @package maquinas_recreativas\Application\Queries\Maquina
  */
 
 namespace maquinas_recreativas\Application\Queries\Maquina;
@@ -14,9 +10,6 @@ use maquinas_recreativas\Domain\Usuario\UsuarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class ObtenerMaquinasPorTecnicoMantenimientoHandler
- */
 final class ObtenerMaquinasPorTecnicoMantenimientoHandler
 {
     private MaquinaRepository $maquinaRepository;
@@ -30,13 +23,6 @@ final class ObtenerMaquinasPorTecnicoMantenimientoHandler
         $this->usuarioRepository = $usuarioRepository;
     }
 
-    /**
-     * Maneja el query de obtener máquinas por técnico de mantenimiento.
-     *
-     * @param ObtenerMaquinasPorTecnicoMantenimientoQuery $query
-     * @return array
-     * @throws DomainException
-     */
     public function handle(ObtenerMaquinasPorTecnicoMantenimientoQuery $query): array
     {
         $idTecnico = new Uuid($query->getIdTecnico());
@@ -46,18 +32,14 @@ final class ObtenerMaquinasPorTecnicoMantenimientoHandler
             throw new DomainException('Técnico no encontrado o no válido.');
         }
 
-        $maquinas = $this->maquinaRepository->findByTecnicoMantenimiento($idTecnico);
-
-        return array_map(function ($maquina) {
-            return [
-                'id' => $maquina->id()->value(),
-                'nombre' => $maquina->nombre(),
-                'tipo' => $maquina->tipo(),
-                'estado' => $maquina->estado()->value(),
-                'etapa' => $maquina->etapa()->value(),
-                'fecha_registro' => $maquina->fechaRegistro()->format('Y-m-d H:i:s'),
-                'id_comercio' => $maquina->idComercio()->value()
-            ];
-        }, $maquinas);
+        // Usar el método que incluye datos del comercio
+        $maquinasData = $this->maquinaRepository->findByTecnicoMantenimientoWithComercio($idTecnico);
+        
+        // Asegurar que $maquinasData sea un array
+        if (!is_array($maquinasData)) {
+            $maquinasData = [];
+        }
+        
+        return ['success' => true, 'maquinas' => $maquinasData];
     }
 }

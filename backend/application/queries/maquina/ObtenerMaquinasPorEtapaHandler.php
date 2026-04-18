@@ -21,20 +21,10 @@ final class ObtenerMaquinasPorEtapaHandler
     public function handle(ObtenerMaquinasPorEtapaQuery $query): array
     {
         $etapa = EtapaMaquina::fromString($query->getEtapa());
-        $maquinas = $this->maquinaRepository->findByEtapa($etapa);
-
-        return array_map(function ($maquina) {
-            // CORREGIDO: usar toArray() en lugar de fechaRegistro()
-            $data = $maquina->toArray();
-            return [
-                'id' => $maquina->id()->value(),
-                'nombre' => $maquina->nombre(),
-                'tipo' => $maquina->tipo(),
-                'estado' => $maquina->estado()->value(),
-                'etapa' => $maquina->etapa()->value(),
-                'fecha_registro' => $data['Fecha_Registro'] ?? date('Y-m-d'),
-                'id_comercio' => $maquina->idComercio()->value()
-            ];
-        }, $maquinas);
+        
+        // Crear un método en el repositorio que incluya datos del comercio
+        $maquinas = $this->maquinaRepository->findByEtapaWithComercio($etapa);
+        
+        return ['success' => true, 'maquinas' => $maquinas];
     }
 }

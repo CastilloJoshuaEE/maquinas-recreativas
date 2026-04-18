@@ -70,23 +70,35 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
         }, $this->ttl);
     }
 
-    public function findMaquinasRecaudacion(): array
-    {
-        $cacheKey = "recaudacion:maquinas_operativas";
-        return $this->cache->remember($cacheKey, function () {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT m.*,c.Nombre as NombreComercio,c.Direccion as DireccionComercio,
-                            c.Telefono as TelefonoComercio,c.Tipo as TipoComercio
-                     FROM MaquinaRecreativa m LEFT JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
-                     WHERE m.Etapa='Recaudacion' AND m.Estado='Operativa' ORDER BY m.Fecha_Registro DESC";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute();
-            $maquinas = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $maquinas[] = $row;
-            $stmt->close();
-            return $maquinas;
-        }, 600);
-    }
+public function findMaquinasRecaudacion(): array
+{
+    $cacheKey = "recaudacion:maquinas_operativas";
+    return $this->cache->remember($cacheKey, function () {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT m.*,c.Nombre as NombreComercio,c.Direccion as DireccionComercio,
+                        c.Telefono as TelefonoComercio,c.Tipo as TipoComercio
+                 FROM MaquinaRecreativa m 
+                 LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                 WHERE m.Etapa = 'Recaudacion' AND m.Estado = 'Operativa' 
+                 ORDER BY m.Fecha_Registro DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $maquinas = [];
+        while ($row = $result->fetch_assoc()) {
+            $maquinas[] = $row;
+        }
+        $result->free();  // ← Liberar resultado
+        $stmt->close();   // ← Cerrar statement
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        return $maquinas;
+    }, 600);
+}
 
     public function save(Recaudacion $recaudacion): void
     {
@@ -161,71 +173,147 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
         $this->invalidateListados();
         return $result;
     }
-
-    public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
-    {
-        $cacheKey = "recaudaciones:all:" . md5(serialize([$filters,$limit,$offset]));
-        return $this->cache->remember($cacheKey, function () use ($filters,$limit,$offset) {
-            $conn   = $this->db->getConnection();
-            $sql    = "SELECT r.*,c.Nombre as Nombre_Comercio,m.Nombre_Maquina,
-                              u.nombre as nombre_usuario,u.apellido as apellido_usuario
-                       FROM recaudaciones r
-                       INNER JOIN MaquinaRecreativa m ON r.ID_Maquina=m.ID_Maquina
-                       INNER JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
-                       INNER JOIN usuario u ON r.ID_Usuario=u.ID_Usuario
-                       WHERE 1=1";
-            $params = []; $types = "";
-            if (!empty($filters['fecha_inicio'])) { $sql .= " AND DATE(r.fecha)>=?"; $params[] = $filters['fecha_inicio']; $types .= "s"; }
-            if (!empty($filters['fecha_fin']))    { $sql .= " AND DATE(r.fecha)<=?"; $params[] = $filters['fecha_fin'];    $types .= "s"; }
-            if (!empty($filters['ID_Maquina']))   { $sql .= " AND r.ID_Maquina=?";  $params[] = $filters['ID_Maquina'];   $types .= "s"; }
-            if (!empty($filters['Tipo_Comercio'])) { $sql .= " AND r.Tipo_Comercio=?"; $params[] = $filters['Tipo_Comercio']; $types .= "s"; }
-            $sql .= " ORDER BY r.fecha DESC LIMIT ? OFFSET ?";
-            $params[] = $limit; $params[] = $offset; $types .= "ii";
-            $stmt = $conn->prepare($sql);
+public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
+{
+    $cacheKey = "recaudaciones:all:" . md5(serialize([$filters,$limit,$offset]));
+    return $this->cache->remember($cacheKey, function () use ($filters,$limit,$offset) {
+        $conn   = $this->db->getConnection();
+        $sql    = "SELECT r.*,c.Nombre as Nombre_Comercio,m.Nombre_Maquina,
+                          u.nombre as nombre_usuario,u.apellido as apellido_usuario
+                   FROM recaudaciones r
+                   INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+                   INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                   INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+                   WHERE 1=1";
+        $params = []; 
+        $types = "";
+        
+        if (!empty($filters['fecha_inicio'])) { 
+            $sql .= " AND DATE(r.fecha) >= ?"; 
+            $params[] = $filters['fecha_inicio']; 
+            $types .= "s"; 
+        }
+        if (!empty($filters['fecha_fin'])) {    
+            $sql .= " AND DATE(r.fecha) <= ?"; 
+            $params[] = $filters['fecha_fin'];    
+            $types .= "s"; 
+        }
+        if (!empty($filters['ID_Maquina'])) {   
+            $sql .= " AND r.ID_Maquina = ?";  
+            $params[] = $filters['ID_Maquina'];   
+            $types .= "s"; 
+        }
+        if (!empty($filters['Tipo_Comercio'])) { 
+            $sql .= " AND r.Tipo_Comercio = ?"; 
+            $params[] = $filters['Tipo_Comercio']; 
+            $types .= "s"; 
+        }
+        
+        $sql .= " ORDER BY r.fecha DESC LIMIT ? OFFSET ?";
+        $params[] = $limit; 
+        $params[] = $offset; 
+        $types .= "ii";
+        
+        $stmt = $conn->prepare($sql);
+        if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $recaudaciones = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $recaudaciones[] = $row;
-            $stmt->close();
-            return $recaudaciones;
-        }, $this->ttl);
-    }
-
-    public function findResumenByTipoComercio(?int $limit = null): array
-    {
-        $cacheKey = "recaudaciones:resumen:" . ($limit ?? 'all');
-        return $this->cache->remember($cacheKey, function () use ($limit) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT Tipo_Comercio,COUNT(*) as TotalRecaudaciones,SUM(Monto_Total) as TotalRecaudado,
-                            SUM(Monto_Empresa) as TotalEmpresa,SUM(Monto_Comercio) as TotalComercio
-                     FROM recaudaciones GROUP BY Tipo_Comercio ORDER BY TotalRecaudado DESC";
-            if ($limit !== null) { $sql .= " LIMIT ?"; $stmt = $conn->prepare($sql); $stmt->bind_param('i', $limit); }
-            else { $stmt = $conn->prepare($sql); }
-            $stmt->execute();
-            $resumen = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $resumen[] = $row;
-            $stmt->close();
-            if (empty($resumen)) $resumen[] = ['Tipo_Comercio'=>'Sin datos','TotalRecaudaciones'=>0,'TotalRecaudado'=>0,'TotalEmpresa'=>0,'TotalComercio'=>0];
-            return $resumen;
-        }, $this->ttl);
-    }
-
-    public function findMaquinasOperativasPorComercio(Comercio $comercio): array
-    {
-        $cid      = $comercio->getId();
-        $cacheKey = "recaudacion:maquinas_comercio:{$cid}";
-        return $this->cache->remember($cacheKey, function () use ($cid) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT m.* FROM MaquinaRecreativa m WHERE m.ID_Comercio=? AND m.Estado='Operativa' AND m.Etapa='Recaudacion' ORDER BY m.Nombre_Maquina ASC";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $cid);
-            $stmt->execute();
-            $maquinas = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $maquinas[] = $row;
-            $stmt->close();
-            return $maquinas;
-        }, 600);
-    }
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $recaudaciones = [];
+        while ($row = $result->fetch_assoc()) {
+            $recaudaciones[] = $row;
+        }
+        $result->free();  // ← Liberar resultado
+        $stmt->close();   // ← Cerrar statement
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        return $recaudaciones;
+    }, $this->ttl);
+}
+public function findResumenByTipoComercio(?int $limit = null): array
+{
+    $cacheKey = "recaudaciones:resumen:" . ($limit ?? 'all');
+    return $this->cache->remember($cacheKey, function () use ($limit) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT Tipo_Comercio,
+                        COUNT(*) as TotalRecaudaciones,
+                        SUM(Monto_Total) as TotalRecaudado,
+                        SUM(Monto_Empresa) as TotalEmpresa,
+                        SUM(Monto_Comercio) as TotalComercio
+                 FROM recaudaciones 
+                 GROUP BY Tipo_Comercio 
+                 ORDER BY TotalRecaudado DESC";
+        
+        if ($limit !== null) { 
+            $sql .= " LIMIT ?"; 
+            $stmt = $conn->prepare($sql); 
+            $stmt->bind_param('i', $limit); 
+        } else { 
+            $stmt = $conn->prepare($sql); 
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $resumen = [];
+        while ($row = $result->fetch_assoc()) {
+            $resumen[] = $row;
+        }
+        $result->free();  // ← Liberar resultado
+        $stmt->close();   // ← Cerrar statement
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        
+        if (empty($resumen)) {
+            $resumen[] = [
+                'Tipo_Comercio' => 'Sin datos',
+                'TotalRecaudaciones' => 0,
+                'TotalRecaudado' => 0,
+                'TotalEmpresa' => 0,
+                'TotalComercio' => 0
+            ];
+        }
+        return $resumen;
+    }, $this->ttl);
+}
+public function findMaquinasOperativasPorComercio(Comercio $comercio): array
+{
+    $cid      = $comercio->getId();
+    $cacheKey = "recaudacion:maquinas_comercio:{$cid}";
+    return $this->cache->remember($cacheKey, function () use ($cid) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT m.* FROM MaquinaRecreativa m 
+                 WHERE m.ID_Comercio = ? 
+                   AND m.Estado = 'Operativa' 
+                   AND m.Etapa = 'Recaudacion' 
+                 ORDER BY m.Nombre_Maquina ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('s', $cid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $maquinas = [];
+        while ($row = $result->fetch_assoc()) {
+            $maquinas[] = $row;
+        }
+        $result->free();  // ← Liberar resultado
+        $stmt->close();   // ← Cerrar statement
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        return $maquinas;
+    }, 600);
+}
 
     private function invalidateListados(): void
     {

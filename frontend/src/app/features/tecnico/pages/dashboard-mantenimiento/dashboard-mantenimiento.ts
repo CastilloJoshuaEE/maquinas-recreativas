@@ -119,5 +119,4 @@ export class DashboardMantenimientoComponent implements OnInit {
     });
   }
   
-  irAInformesDistribucion(): void { this.router.navigate(['/logistica/consultar-informe-distribucion']); }
 }

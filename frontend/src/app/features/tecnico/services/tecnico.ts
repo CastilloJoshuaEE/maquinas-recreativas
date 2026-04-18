@@ -43,12 +43,64 @@ getMaquinasEnsamblador(idTecnico: string): Observable<Maquina[]> {
       map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
     );
   }
-
-  getMaquinasMantenimiento(idTecnico: string): Observable<Maquina[]> {
-    return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_MANTENIMIENTO(idTecnico)).pipe(
-      map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
+getMaquinasMantenimiento(idTecnico: string): Observable<Maquina[]> {
+    return this.apiService.get<{ maquinas: any[] }>(API_ENDPOINTS.MAQUINA_BY_MANTENIMIENTO(idTecnico)).pipe(
+        map(response => {
+            console.log('Respuesta máquinas mantenimiento (raw):', response);
+            
+            // Verificar estructura de la respuesta
+            if (!response) {
+                console.log('Respuesta es null o undefined');
+                return [];
+            }
+            
+            if (!response.success) {
+                console.log('Respuesta success es false');
+                return [];
+            }
+            
+            // Obtener las máquinas - puede estar en response.maquinas o response['maquinas']
+            let maquinasData = response['maquinas'];
+            
+            if (!maquinasData) {
+                console.log('No hay propiedad maquinas en la respuesta');
+                return [];
+            }
+            
+            // Verificar si es array
+            if (!Array.isArray(maquinasData)) {
+                console.log('maquinasData no es un array, es:', typeof maquinasData);
+                // Si es un objeto, convertirlo a array
+                if (typeof maquinasData === 'object' && maquinasData !== null) {
+                    maquinasData = [maquinasData];
+                } else {
+                    return [];
+                }
+            }
+            
+            console.log('Máquinas a procesar:', maquinasData.length);
+            
+            // Normalizar datos
+            return maquinasData.map((m: any) => ({
+                ID_Maquina: m.ID_Maquina,
+                Nombre_Maquina: m.Nombre_Maquina,
+                tipo: m.Tipo || m.tipo,
+                estado: m.Estado || m.estado,
+                etapa: m.Etapa || m.etapa,
+                ID_Comercio: m.ID_Comercio,
+                NombreComercio: m.NombreComercio,
+                DireccionComercio: m.DireccionComercio,
+                ID_Tecnico_Ensamblador: m.ID_Tecnico_Ensamblador,
+                ID_Tecnico_Comprobador: m.ID_Tecnico_Comprobador,
+                Fecha_Registro: m.Fecha_Registro
+            }));
+        }),
+        catchError(error => {
+            console.error('Error en getMaquinasMantenimiento:', error);
+            return of([]);
+        })
     );
-  }
+}
 
   mandarAComprobacion(data: MaquinaActionData): Observable<boolean> {
     return this.apiService.post(API_ENDPOINTS.MAQUINA_COMPROBACION, data).pipe(map(response => response.success));

@@ -17,29 +17,14 @@ final class ObtenerMaquinasPorEstadoHandler
     {
         $this->maquinaRepository = $maquinaRepository;
     }
-public function handle(ObtenerMaquinasPorEstadoQuery $query): array
-{
-    try {
+
+    public function handle(ObtenerMaquinasPorEstadoQuery $query): array
+    {
         $estado = EstadoMaquina::fromString($query->getEstado());
-        $maquinas = $this->maquinaRepository->findByEstado($estado);
         
-        $resultado = [];
-        foreach ($maquinas as $maquina) {
-            $data = $maquina->toArray();
-            $resultado[] = [
-                'id' => $data['ID_Maquina'],
-                'nombre' => $data['Nombre_Maquina'],
-                'tipo' => $data['Tipo'],
-                'estado' => $data['Estado'],
-                'etapa' => $data['Etapa'],
-                'fecha_registro' => $data['Fecha_Registro'],
-                'id_comercio' => $data['ID_Comercio']
-            ];
-        }
-        return ['success' => true, 'maquinas' => $resultado];
-    } catch (\Exception $e) {
-        error_log("Error en ObtenerMaquinasPorEstadoHandler: " . $e->getMessage());
-        return ['success' => false, 'maquinas' => [], 'error' => $e->getMessage()];
+        // Usar el método que incluye datos del comercio
+        $maquinas = $this->maquinaRepository->findByEstadoWithComercio($estado);
+        
+        return ['success' => true, 'maquinas' => $maquinas];
     }
-}
 }
