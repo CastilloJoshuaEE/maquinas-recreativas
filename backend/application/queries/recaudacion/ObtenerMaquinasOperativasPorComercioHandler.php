@@ -1,10 +1,6 @@
 <?php
 /**
  * application/queries/recaudacion/ObtenerMaquinasOperativasPorComercioHandler.php
- *
- * Manejador del query ObtenerMaquinasOperativasPorComercio.
- *
- * @package maquinas_recreativas\Application\Queries\Recaudacion
  */
 
 namespace maquinas_recreativas\Application\Queries\Recaudacion;
@@ -14,9 +10,6 @@ use maquinas_recreativas\Domain\Comercio\ComercioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class ObtenerMaquinasOperativasPorComercioHandler
- */
 final class ObtenerMaquinasOperativasPorComercioHandler
 {
     private RecaudacionRepository $recaudacionRepository;
@@ -30,24 +23,39 @@ final class ObtenerMaquinasOperativasPorComercioHandler
         $this->comercioRepository = $comercioRepository;
     }
 
-    /**
-     * Maneja el query de obtener máquinas operativas por comercio.
-     *
-     * @param ObtenerMaquinasOperativasPorComercioQuery $query
-     * @return array
-     * @throws DomainException
-     */
     public function handle(ObtenerMaquinasOperativasPorComercioQuery $query): array
     {
         $idComercio = new Uuid($query->getIdComercio());
-
-        $comercio = $this->comercioRepository->buscarPorId($idComercio);
+        
+        $comercio = $this->comercioRepository->buscarPorId($idComercio->value());
         if (!$comercio) {
-            throw new DomainException('Comercio no encontrado.');
+            throw new DomainException('Comercio no encontrado');
         }
-
+        
         $maquinas = $this->recaudacionRepository->findMaquinasOperativasPorComercio($comercio);
-
-        return $maquinas;
+        
+        error_log("ObtenerMaquinasOperativasPorComercio: comercio={$comercio->getNombre()}, máquinas=" . count($maquinas));
+        
+        //  Devolver el array directamente, no un objeto con 'maquinas'
+        $resultado = [];
+        foreach ($maquinas as $maquina) {
+            if (is_array($maquina)) {
+                $resultado[] = [
+                    'ID_Maquina' => $maquina['ID_Maquina'],
+                    'Nombre_Maquina' => $maquina['Nombre_Maquina'],
+                    'Tipo' => $maquina['Tipo'] ?? '',
+                    'NombreComercio' => $comercio->getNombre()
+                ];
+            } else {
+                $resultado[] = [
+                    'ID_Maquina' => $maquina->id()->value(),
+                    'Nombre_Maquina' => $maquina->nombre(),
+                    'Tipo' => $maquina->tipo(),
+                    'NombreComercio' => $comercio->getNombre()
+                ];
+            }
+        }
+        
+        return $resultado; //  Devolver solo el array, no un objeto envuelto
     }
 }

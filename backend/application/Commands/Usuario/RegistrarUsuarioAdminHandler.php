@@ -65,7 +65,7 @@ final class RegistrarUsuarioAdminHandler implements CommandHandler
         $id,
         $command->nombre,
         $command->apellido,
-        $command->ci,  // ← Texto plano
+        $command->ci,  //  Texto plano
         $emailVO,
         $usuarioAsignado,
         $contrasenaHash,

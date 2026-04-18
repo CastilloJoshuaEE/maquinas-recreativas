@@ -70,7 +70,7 @@ final class DarMantenimientoHandler implements CommandHandler
             throw new DomainException('No hay técnicos de mantenimiento disponibles');
         }
 
-        // CORREGIDO: $tecnicosMantenimiento[0] es un array, no un objeto
+        //  $tecnicosMantenimiento[0] es un array, no un objeto
         $primerTecnico = $tecnicosMantenimiento[0];
         
         if (is_array($primerTecnico)) {

@@ -83,8 +83,8 @@ public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0)
         while ($row = $result->fetch_assoc()) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
-        $result->free();  // ← Liberar el resultado
-        $stmt->close();   // ← Cerrar el statement
+        $result->free();  //  Liberar el resultado
+        $stmt->close();   //  Cerrar el statement
         // Limpiar resultados pendientes
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
@@ -183,8 +183,8 @@ public function countByFilters(
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $total = (int)$row['total'];
-    $result->free();  // ← Liberar resultado
-    $stmt->close();   // ← Cerrar statement
+    $result->free();  //  Liberar resultado
+    $stmt->close();   //  Cerrar statement
     // Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {

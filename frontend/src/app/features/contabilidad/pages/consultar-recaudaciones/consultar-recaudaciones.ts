@@ -82,29 +82,39 @@ export class ConsultarRecaudacionesComponent implements OnInit, AfterViewInit {
       }
     });
   }
-  
-  cargarRecaudaciones(): void {
+ cargarRecaudaciones(): void {
     this.loading = true;
     this.error = '';
     const params: any = { limit: this.pageSize, offset: this.currentPage * this.pageSize };
     const filtros = this.filtrosForm.value;
-    if (filtros.fecha_inicio) params.fecha_inicio = filtros.fecha_inicio;
-    if (filtros.fecha_fin) params.fecha_fin = filtros.fecha_fin;
-    if (filtros.ID_Maquina) params.ID_Maquina = filtros.ID_Maquina;
-    if (filtros.Tipo_Comercio) params.Tipo_Comercio = filtros.Tipo_Comercio;
+    
+    //  Convertir fechas al formato YYYY-MM-DD
+    if (filtros.fecha_inicio) {
+        const fechaInicio = new Date(filtros.fecha_inicio);
+        params.fechaInicio = `${fechaInicio.getFullYear()}-${(fechaInicio.getMonth() + 1).toString().padStart(2, '0')}-${fechaInicio.getDate().toString().padStart(2, '0')}`;
+    }
+    if (filtros.fecha_fin) {
+        const fechaFin = new Date(filtros.fecha_fin);
+        params.fechaFin = `${fechaFin.getFullYear()}-${(fechaFin.getMonth() + 1).toString().padStart(2, '0')}-${fechaFin.getDate().toString().padStart(2, '0')}`;
+    }
+    if (filtros.ID_Maquina) params.idMaquina = filtros.ID_Maquina;
+    if (filtros.Tipo_Comercio) params.tipoComercio = filtros.Tipo_Comercio;
+    
+    console.log('Parámetros de búsqueda:', params);
     
     this.contabilidadService.getRecaudaciones(params).subscribe({
-      next: (data) => {
-        this.dataSource.data = data.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-        this.totalItems = this.dataSource.data.length;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err.message || 'Error al cargar recaudaciones';
-        this.loading = false;
-      }
+        next: (data) => {
+            this.dataSource.data = data.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+            this.totalItems = this.dataSource.data.length;
+            this.loading = false;
+        },
+        error: (err) => {
+            console.error('Error cargando recaudaciones:', err);
+            this.error = err.message || 'Error al cargar recaudaciones';
+            this.loading = false;
+        }
     });
-  }
+}
   
   buscarRecaudaciones(): void {
     this.currentPage = 0;

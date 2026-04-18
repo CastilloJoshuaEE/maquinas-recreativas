@@ -99,7 +99,7 @@ class MySQLComercioRepository implements ComercioRepository
     }
 
     /**
-     *  CORREGIDO: Obtener todos los comercios sin GROUP BY problemático
+     *   Obtener todos los comercios sin GROUP BY problemático
      */
     public function obtenerTodos(array $criterios = []): array
     {

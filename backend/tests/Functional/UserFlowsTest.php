@@ -238,8 +238,8 @@ class UserFlowsTest extends HttpTestCase {
         'idComercio' => $this->comercioId,
         'idPlaca' => $this->placaId,
         'idCarcasa' => $this->carcasaId,
-        'idEnsamblador' => $this->ensambladorId,   // ← agregar
-        'idComprobador' => $this->comprobadorId    // ← agregar
+        'idEnsamblador' => $this->ensambladorId,   //  agregar
+        'idComprobador' => $this->comprobadorId    //  agregar
     ];
     
         

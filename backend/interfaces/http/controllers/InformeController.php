@@ -139,24 +139,30 @@ class InformeController
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerRecaudaciones(Request $request): Response
-    {
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
 
-        $query  = new ObtenerRecaudacionesQuery(
-            $request->query('fechaInicio'), $request->query('fechaFin'),
-            $request->query('idMaquina'), $request->query('tipoComercio'),
-            (int) ($request->query('limit') ?? 100), (int) ($request->query('offset') ?? 0)
-        );
-        $result = $this->obtenerRecaudacionesHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'recaudaciones' => $result['recaudaciones'], 'total' => $result['total']]);
-        return $response;
+public function obtenerRecaudaciones(Request $request): Response
+{
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
     }
+
+    //  Usar los nombres correctos de los parámetros
+    $query = new ObtenerRecaudacionesQuery(
+        $request->query('fechaInicio'),   //  Cambiado
+        $request->query('fechaFin'),      //  Cambiado
+        $request->query('idMaquina'),     //  Cambiado
+        $request->query('tipoComercio'),  //  Cambiado
+        (int) ($request->query('limit') ?? 100),
+        (int) ($request->query('offset') ?? 0)
+    );
+    
+    $result = $this->obtenerRecaudacionesHandler->handle($query);
+
+    $response = new Response();
+    $response->json(['success' => true, 'recaudaciones' => $result['recaudaciones'], 'total' => $result['total']]);
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/contabilidad/recaudaciones/{uuid}",
@@ -338,43 +344,46 @@ class InformeController
         return $response;
     }
 
-    #[OA\Get(
-        path: "/v1/contabilidad/maquinas-operativas-por-comercio",
-        summary: "Obtener máquinas operativas filtradas por comercio",
-        tags: ["Contabilidad"],
-        security: [["bearerAuth" => []]],
-        parameters: [
-            new OA\Parameter(name: "idComercio", in: "query", required: true, schema: new OA\Schema(type: "string"))
-        ],
-        responses: [
-            new OA\Response(response: 200, description: "Lista de máquinas operativas"),
-            new OA\Response(response: 400, description: "ID de comercio requerido o inválido"),
-            new OA\Response(response: 401, description: "No autorizado")
-        ]
-    )]
-    public function obtenerMaquinasOperativasPorComercio(Request $request): Response
-    {
-        $idComercio = $request->query('idComercio');
-        if (!$idComercio) {
-            throw new DomainException('ID de comercio requerido', 400);
-        }
-
-        if (!ValidationHelper::isValidUUID($idComercio)) {
-            throw new DomainException('ID de comercio inválido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $query   = new ObtenerMaquinasOperativasPorComercioQuery($idComercio);
-        $maquinas = $this->obtenerMaquinasOperativasPorComercioHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'maquinas' => $maquinas]);
-        return $response;
+#[OA\Get(
+    path: "/v1/contabilidad/maquinas-operativas-por-comercio",
+    summary: "Obtener máquinas operativas filtradas por comercio",
+    tags: ["Contabilidad"],
+    security: [["bearerAuth" => []]],
+    parameters: [
+        new OA\Parameter(name: "idComercio", in: "query", required: true, schema: new OA\Schema(type: "string"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "Lista de máquinas operativas"),
+        new OA\Response(response: 400, description: "ID de comercio requerido o inválido"),
+        new OA\Response(response: 401, description: "No autorizado")
+    ]
+)]
+public function obtenerMaquinasOperativasPorComercio(Request $request): Response
+{
+    $idComercio = $request->query('idComercio');
+    if (!$idComercio) {
+        throw new DomainException('ID de comercio requerido', 400);
     }
+
+    if (!ValidationHelper::isValidUUID($idComercio)) {
+        throw new DomainException('ID de comercio inválido', 400);
+    }
+
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    $query   = new ObtenerMaquinasOperativasPorComercioQuery($idComercio);
+    $maquinas = $this->obtenerMaquinasOperativasPorComercioHandler->handle($query);
+
+    error_log("obtenerMaquinasOperativasPorComercio: comercio=$idComercio, máquinas=" . count($maquinas));
+
+    $response = new Response();
+    // Enviar directamente el array, no envuelto en otro objeto
+    $response->json(['success' => true, 'maquinas' => $maquinas]);
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/contabilidad/comercio-recaudacion/{uuid}",

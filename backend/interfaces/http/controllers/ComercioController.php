@@ -105,26 +105,21 @@ private EliminarComercioHandler $eliminarComercioHandler;
             new OA\Response(response: 400, description: "Tipo de comercio no válido")
         ]
     )]
- public function obtenerComercios(Request $request): Response
+public function obtenerComercios(Request $request): Response
 {
     try {
         $query = new ObtenerComerciosQuery();
-        $result = $this->obtenerComerciosHandler->handle($query);
+        $comercios = $this->obtenerComerciosHandler->handle($query);
         
-        //  Asegurar que la respuesta tenga el formato correcto
+        error_log("obtenerComercios: " . count($comercios) . " comercios encontrados");
+        
         $response = new Response();
-        
-        // Si el handler ya devuelve un array con 'data', usarlo
-        if (isset($result['success']) && isset($result['data'])) {
-            $response->json($result);
-        } else {
-            // Si el handler devuelve un array de comercios directamente
-            $response->json([
-                'success' => true,
-                'comercios' => $result,
-                'total' => count($result)
-            ]);
-        }
+        // Devolver estructura clara y consistente
+        $response->json([
+            'success' => true,
+            'comercios' => $comercios,
+            'total' => count($comercios)
+        ]);
         return $response;
     } catch (\Exception $e) {
         error_log("Error en obtenerComercios: " . $e->getMessage());

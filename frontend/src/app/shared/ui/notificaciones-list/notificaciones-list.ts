@@ -52,7 +52,7 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
 
   cargarNotificaciones(): void {
     const activeUser = this.getActiveUser();
-    // CORREGIDO: guard contra null antes de acceder a id
+    //  guard contra null antes de acceder a id
     if (!activeUser?.id) {
       return;
     }

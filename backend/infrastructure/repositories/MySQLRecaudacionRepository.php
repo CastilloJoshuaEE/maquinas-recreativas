@@ -88,8 +88,8 @@ public function findMaquinasRecaudacion(): array
         while ($row = $result->fetch_assoc()) {
             $maquinas[] = $row;
         }
-        $result->free();  // ← Liberar resultado
-        $stmt->close();   // ← Cerrar statement
+        $result->free();  //  Liberar resultado
+        $stmt->close();   //  Cerrar statement
         // Limpiar resultados pendientes
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
@@ -173,6 +173,7 @@ public function findMaquinasRecaudacion(): array
         $this->invalidateListados();
         return $result;
     }
+
 public function findAll(array $filters = [], int $limit = 100, int $offset = 0): array
 {
     $cacheKey = "recaudaciones:all:" . md5(serialize([$filters,$limit,$offset]));
@@ -188,24 +189,25 @@ public function findAll(array $filters = [], int $limit = 100, int $offset = 0):
         $params = []; 
         $types = "";
         
-        if (!empty($filters['fecha_inicio'])) { 
+        //  Usar los nombres correctos de los filtros
+        if (!empty($filters['fechaInicio'])) { 
             $sql .= " AND DATE(r.fecha) >= ?"; 
-            $params[] = $filters['fecha_inicio']; 
+            $params[] = $filters['fechaInicio']; 
             $types .= "s"; 
         }
-        if (!empty($filters['fecha_fin'])) {    
+        if (!empty($filters['fechaFin'])) {    
             $sql .= " AND DATE(r.fecha) <= ?"; 
-            $params[] = $filters['fecha_fin'];    
+            $params[] = $filters['fechaFin'];    
             $types .= "s"; 
         }
-        if (!empty($filters['ID_Maquina'])) {   
+        if (!empty($filters['idMaquina'])) {   
             $sql .= " AND r.ID_Maquina = ?";  
-            $params[] = $filters['ID_Maquina'];   
+            $params[] = $filters['idMaquina'];   
             $types .= "s"; 
         }
-        if (!empty($filters['Tipo_Comercio'])) { 
+        if (!empty($filters['tipoComercio'])) { 
             $sql .= " AND r.Tipo_Comercio = ?"; 
-            $params[] = $filters['Tipo_Comercio']; 
+            $params[] = $filters['tipoComercio']; 
             $types .= "s"; 
         }
         
@@ -213,6 +215,9 @@ public function findAll(array $filters = [], int $limit = 100, int $offset = 0):
         $params[] = $limit; 
         $params[] = $offset; 
         $types .= "ii";
+        
+        error_log("SQL Recaudaciones: " . $sql);
+        error_log("Params: " . json_encode($params));
         
         $stmt = $conn->prepare($sql);
         if (!empty($params)) {
@@ -224,14 +229,16 @@ public function findAll(array $filters = [], int $limit = 100, int $offset = 0):
         while ($row = $result->fetch_assoc()) {
             $recaudaciones[] = $row;
         }
-        $result->free();  // ← Liberar resultado
-        $stmt->close();   // ← Cerrar statement
-        // Limpiar resultados pendientes
+        $result->free();
+        $stmt->close();
+        
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
                 $rs->free();
             }
         }
+        
+        error_log("Recaudaciones encontradas: " . count($recaudaciones));
         return $recaudaciones;
     }, $this->ttl);
 }
@@ -263,8 +270,8 @@ public function findResumenByTipoComercio(?int $limit = null): array
         while ($row = $result->fetch_assoc()) {
             $resumen[] = $row;
         }
-        $result->free();  // ← Liberar resultado
-        $stmt->close();   // ← Cerrar statement
+        $result->free();  //  Liberar resultado
+        $stmt->close();   //  Cerrar statement
         // Limpiar resultados pendientes
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
@@ -301,20 +308,16 @@ public function findMaquinasOperativasPorComercio(Comercio $comercio): array
         $result = $stmt->get_result();
         $maquinas = [];
         while ($row = $result->fetch_assoc()) {
-            $maquinas[] = $row;
+            $maquinas[] = $row;  //  array asociativo
         }
-        $result->free();  // ← Liberar resultado
-        $stmt->close();   // ← Cerrar statement
-        // Limpiar resultados pendientes
-        while ($conn->more_results() && $conn->next_result()) {
-            if ($rs = $conn->store_result()) {
-                $rs->free();
-            }
-        }
+        $result->free();
+        $stmt->close();
+        $this->db->clearPendingResults($conn);
+        
+        error_log("findMaquinasOperativasPorComercio: comercio=$cid, máquinas=" . count($maquinas));
         return $maquinas;
     }, 600);
 }
-
     private function invalidateListados(): void
     {
         $this->cache->delete("recaudaciones:resumen:all");

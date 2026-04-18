@@ -36,7 +36,7 @@ public function saveMaquina(NotificacionMaquina $notificacion): void
         $data['ID_Notificacion'],$data['ID_Remitente'],$data['ID_Destinatario'],
         $data['ID_Maquina'],$data['Tipo'],$data['Mensaje'],$data['Fecha'],$data['Estado']);
     $stmt->execute();
-    $stmt->close();  // ← Cerrar statement
+    $stmt->close();  //  Cerrar statement
     // Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {

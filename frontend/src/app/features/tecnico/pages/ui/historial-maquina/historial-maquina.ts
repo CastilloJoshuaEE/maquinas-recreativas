@@ -15,8 +15,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatInputModule } from '@angular/material/input';  // ← AÑADIR
-import { MatFormFieldModule } from '@angular/material/form-field'; // ← AÑADIR
+import { MatInputModule } from '@angular/material/input';  //  AÑADIR
+import { MatFormFieldModule } from '@angular/material/form-field'; //  AÑADIR
 import { TecnicoService } from '../../../services/tecnico';
 import { Subscription } from 'rxjs';
 
@@ -34,8 +34,8 @@ interface HistorialItem {
     CommonModule, FormsModule, MatCardModule, MatButtonModule, MatIconModule, 
     MatProgressSpinnerModule, MatPaginatorModule, MatSelectModule, 
     MatDatepickerModule, MatNativeDateModule, 
-    MatInputModule,      // ← AÑADIR
-    MatFormFieldModule   // ← AÑADIR
+    MatInputModule,      //  AÑADIR
+    MatFormFieldModule   //  AÑADIR
   ],
   templateUrl: './historial-maquina.html',
   styleUrls: ['./historial-maquina.css']

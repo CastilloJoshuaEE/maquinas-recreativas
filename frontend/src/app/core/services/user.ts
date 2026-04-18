@@ -32,7 +32,7 @@ export class UserService {
     );
   }
 
-  // CORREGIDO: el backend espera "nuevo_usuario", no "usuario_asignado"
+  //  el backend espera "nuevo_usuario", no "usuario_asignado"
   recoverUsername(email: string, newUsername: string): Observable<{ success: boolean; message?: string }> {
     return this.apiService.post(API_ENDPOINTS.RECOVER_USERNAME, { email, nuevo_usuario: newUsername }).pipe(
       map(response => ({ success: response.success, message: response.message }))

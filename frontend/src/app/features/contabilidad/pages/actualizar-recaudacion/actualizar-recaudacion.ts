@@ -86,41 +86,47 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
       error: () => { this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 }); }
     });
   }
-  
   private cargarRecaudacion(): void {
     const uuid = this.route.snapshot.params['uuid'];
     if (!uuid) {
-      this.error = 'ID de recaudación no válido';
-      this.loading = false;
-      return;
+        this.error = 'ID de recaudación no válido';
+        this.loading = false;
+        return;
     }
     
     this.contabilidadService.getRecaudacionById(uuid).subscribe({
-      next: (data) => {
-        if (data) {
-          this.recaudacion = data;
-          this.recaudacionForm.patchValue({
-            ID_Recaudacion: data.ID_Recaudacion,
-            ID_Maquina: data.ID_Maquina,
-            Tipo_Comercio: data.Tipo_Comercio,
-            Porcentaje_Comercio: data.Porcentaje_Comercio || 20,
-            Monto_Total: data.Monto_Total,
-            Monto_Comercio: data.Monto_Comercio,
-            Monto_Empresa: data.Monto_Empresa,
-            fecha: new Date(data.fecha).toISOString().slice(0, 16),
-            detalle: data.detalle || ''
-          });
-        } else {
-          this.error = 'Recaudación no encontrada';
+        next: (data) => {
+            if (data) {
+                this.recaudacion = data;
+                
+                // CORREGIDO: Asegurar que todos los campos se carguen correctamente
+                const fechaFormateada = data.fecha ? new Date(data.fecha).toISOString().slice(0, 16) : '';
+                
+                this.recaudacionForm.patchValue({
+                    ID_Recaudacion: data.ID_Recaudacion,
+                    ID_Maquina: data.ID_Maquina,
+                    Tipo_Comercio: data.Tipo_Comercio,
+                    Porcentaje_Comercio: data.Porcentaje_Comercio || 20,
+                    Monto_Total: data.Monto_Total,
+                    Monto_Comercio: data.Monto_Comercio,
+                    Monto_Empresa: data.Monto_Empresa,
+                    fecha: fechaFormateada,
+                    detalle: data.detalle || ''
+                });
+                
+                console.log('Recaudación cargada:', this.recaudacionForm.value);
+            } else {
+                this.error = 'Recaudación no encontrada';
+            }
+            this.loading = false;
+        },
+        error: (err) => {
+            console.error('Error cargando recaudación:', err);
+            this.error = err.message || 'Error al cargar recaudación';
+            this.loading = false;
         }
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err.message || 'Error al cargar recaudación';
-        this.loading = false;
-      }
     });
-  }
+}
   
   private setupCalculosAutomaticos(): void {
     const montoTotalSub = this.recaudacionForm.get('Monto_Total')?.valueChanges.subscribe(() => this.calcularMontos());
@@ -148,46 +154,46 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
       }, { emitEvent: false });
     }
   }
-  
   onSubmit(): void {
-    if (this.recaudacionForm.invalid) {
-      this.snackBar.open('Complete todos los campos correctamente', 'Cerrar', { duration: 3000 });
-      return;
-    }
-    if (!confirm('¿Está seguro de guardar los cambios?')) return;
-    
-    this.submitting = true;
-    const formValue = this.recaudacionForm.getRawValue();
-    const data = {
-      ID_Recaudacion: formValue.ID_Recaudacion,
-      ID_Maquina: formValue.ID_Maquina,
-      Tipo_Comercio: formValue.Tipo_Comercio,
-      Porcentaje_Comercio: formValue.Tipo_Comercio === 'Mayorista' ? formValue.Porcentaje_Comercio : 0,
-      Monto_Total: parseFloat(formValue.Monto_Total),
-      Monto_Comercio: parseFloat(formValue.Monto_Comercio),
-      Monto_Empresa: parseFloat(formValue.Monto_Empresa),
-      fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
-      detalle: formValue.detalle
-    };
-    
-    this.contabilidadService.actualizarRecaudacion(data).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.success = true;
-          this.snackBar.open('Recaudación actualizada correctamente', 'Cerrar', { duration: 3000 });
-          setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
-        } else {
-          this.snackBar.open(response.message || 'Error al actualizar recaudación', 'Cerrar', { duration: 3000 });
-        }
-        this.submitting = false;
-      },
-      error: (err) => {
-        this.snackBar.open(err.message || 'Error al actualizar recaudación', 'Cerrar', { duration: 3000 });
-        this.submitting = false;
-      }
-    });
+  if (this.recaudacionForm.invalid) {
+    this.snackBar.open('Complete todos los campos correctamente', 'Cerrar', { duration: 3000 });
+    return;
   }
+  if (!confirm('¿Está seguro de guardar los cambios?')) return;
   
+  this.submitting = true;
+  const formValue = this.recaudacionForm.getRawValue();
+  
+  // ✅ CORREGIDO: Usar los nombres que espera el backend (camelCase)
+  const data = {
+    idRecaudacion: formValue.ID_Recaudacion,      // Cambiado
+    idMaquina: formValue.ID_Maquina,              // Cambiado
+    tipoComercio: formValue.Tipo_Comercio,        // Cambiado
+    porcentajeComercio: formValue.Tipo_Comercio === 'Mayorista' ? formValue.Porcentaje_Comercio : 0,  // Cambiado
+    montoTotal: parseFloat(formValue.Monto_Total),  // Cambiado
+    fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
+    detalle: formValue.detalle || ''
+  };
+  
+  console.log('Enviando al backend:', data); // Para debug
+  
+  this.contabilidadService.actualizarRecaudacion(data).subscribe({
+    next: (response) => {
+      if (response.success) {
+        this.success = true;
+        this.snackBar.open('Recaudación actualizada correctamente', 'Cerrar', { duration: 3000 });
+        setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
+      } else {
+        this.snackBar.open(response.message || 'Error al actualizar recaudación', 'Cerrar', { duration: 3000 });
+      }
+      this.submitting = false;
+    },
+    error: (err) => {
+      this.snackBar.open(err.message || 'Error al actualizar recaudación', 'Cerrar', { duration: 3000 });
+      this.submitting = false;
+    }
+  });
+}
   regresar(): void {
     this.router.navigate(['/contabilidad/consultar-recaudaciones']);
   }

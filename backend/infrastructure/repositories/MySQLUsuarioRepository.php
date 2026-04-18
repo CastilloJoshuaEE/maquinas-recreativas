@@ -58,7 +58,7 @@ public function save(Usuario $usuario): void
         $nombre   = $usuario->getNombre();
         $apellido = $usuario->getApellido();
         
-        //  CORREGIDO: Encriptar la CI antes de guardar
+        //   Encriptar la CI antes de guardar
         $ciEncriptada = CifradoHelper::encriptar($usuario->getCi());
         
         $emailEncriptado = CifradoHelper::encriptar($usuario->getEmail()->value());
@@ -272,8 +272,8 @@ public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
         while ($row = $result->fetch_assoc()) {
             $usuarios[] = $this->hydrate($row);
         }
-        $result->free();  // ← Liberar resultado
-        $stmt->close();   // ← Cerrar statement
+        $result->free();  //  Liberar resultado
+        $stmt->close();   //  Cerrar statement
         // Limpiar resultados pendientes
         $this->db->clearPendingResults($conn);
         return $usuarios;
@@ -483,8 +483,8 @@ public function obtenerHistorialActividades(Uuid $id): array
     while ($row = $result->fetch_assoc()) {
         $actividades[] = $row;
     }
-    $result->free();  // ← Liberar resultado
-    $stmt->close();   // ← Cerrar statement
+    $result->free();  //  Liberar resultado
+    $stmt->close();   //  Cerrar statement
     // Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {
@@ -535,7 +535,7 @@ public function obtenerHistorialActividades(Uuid $id): array
     $tipo   = new TipoUsuario($row['tipo']);
     $estado = new EstadoUsuario($row['estado']);
  
-    // CORREGIDO: Desencriptar CI correctamente - NO usar hash como fallback
+    //  Desencriptar CI correctamente - NO usar hash como fallback
     $ciDecrypted = !empty($row['ci']) ? CifradoHelper::desencriptar($row['ci']) : '';
     
     // Si la desencriptación falla o devuelve algo que no parece una CI válida,

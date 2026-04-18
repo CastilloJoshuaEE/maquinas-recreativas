@@ -95,7 +95,7 @@ class ComentarioController
         $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
         $comentarios = $this->obtenerComentariosHandler->handle($query);
 
-        // CORREGIDO: json() retorna void, no se puede usar return
+        //  json() retorna void, no se puede usar return
         $response = new Response();
         $response->json(['success' => true, 'comentarios' => $comentarios]);
         return $response;

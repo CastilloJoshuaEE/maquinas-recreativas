@@ -158,7 +158,7 @@ getMaquinasOperativas(): Observable<Maquina[]> {
 
 asignarCarcasa(idComponente: string, idUsuario: string): Observable<boolean> {
     const body = { 
-        idComponente: idComponente,  // ← Cambiado de ID_Componente a idComponente
+        idComponente: idComponente,  //  Cambiado de ID_Componente a idComponente
         id: idUsuario
     };
     console.log('Enviando asignar carcasa:', body);

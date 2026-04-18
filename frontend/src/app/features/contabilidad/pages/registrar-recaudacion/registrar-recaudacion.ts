@@ -1,14 +1,8 @@
-/**
- * @fileoverview Registro de Recaudación
- * @description Formulario para registrar nuevas recaudaciones de máquinas
- * @component RegistrarRecaudacionComponent
- */
-
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatStepperModule } from '@angular/material/stepper';
+import { MatStepperModule, MatStepper } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -41,7 +35,12 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   
-  recaudacionForm!: FormGroup;
+  @ViewChild('stepper') stepper!: MatStepper;
+  
+  // Formularios separados por paso
+  paso1Form!: FormGroup;
+  paso2Form!: FormGroup;
+  
   comercios: Comercio[] = [];
   maquinas: Maquina[] = [];
   cargandoMaquinas = false;
@@ -50,7 +49,7 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   
   ngOnInit(): void {
-    this.initForm();
+    this.initForms();
     this.cargarComercios();
     this.setupCalculosAutomaticos();
   }
@@ -59,11 +58,14 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
   
-  private initForm(): void {
-    this.recaudacionForm = this.fb.group({
+  private initForms(): void {
+    this.paso1Form = this.fb.group({
       ID_Comercio: ['', Validators.required],
       ID_Maquina: ['', Validators.required],
-      Tipo_Comercio: [{ value: '', disabled: true }],
+      Tipo_Comercio: [{ value: '', disabled: true }]
+    });
+    
+    this.paso2Form = this.fb.group({
       Porcentaje_Comercio: [20, [Validators.min(0), Validators.max(100)]],
       Monto_Total: ['', [Validators.required, Validators.min(0.01)]],
       Monto_Comercio: [{ value: '0.00', disabled: true }],
@@ -86,100 +88,126 @@ export class RegistrarRecaudacionComponent implements OnInit, OnDestroy {
     });
   }
   
-  onComercioChange(): void {
-    const idComercio = this.recaudacionForm.get('ID_Comercio')?.value;
+onComercioChange(): void {
+    const idComercio = this.paso1Form.get('ID_Comercio')?.value;
     const comercio = this.comercios.find(c => c.ID_Comercio === idComercio);
     if (comercio) {
-      this.recaudacionForm.patchValue({ Tipo_Comercio: comercio.Tipo });
-      this.cargarMaquinasPorComercio(idComercio);
+        // Asegurar que Tipo_Comercio tenga un valor válido
+        const tipoComercio = comercio.Tipo || comercio.tipo || 'Minorista';
+        this.paso1Form.patchValue({ Tipo_Comercio: tipoComercio });
+        console.log('Tipo de comercio asignado:', tipoComercio);
+        this.cargarMaquinasPorComercio(idComercio);
     }
-  }
+}
   
   private cargarMaquinasPorComercio(idComercio: string): void {
     this.cargandoMaquinas = true;
-    this.recaudacionForm.patchValue({ ID_Maquina: '' });
+    this.paso1Form.patchValue({ ID_Maquina: '' });
+    
     this.contabilidadService.getMaquinasOperativasPorComercio(idComercio).subscribe({
-      next: (data) => {
-        this.maquinas = data;
-        this.cargandoMaquinas = false;
-        if (data.length === 0) this.snackBar.open('No hay máquinas operativas para este comercio', 'Cerrar', { duration: 3000 });
-      },
-      error: () => {
-        this.maquinas = [];
-        this.cargandoMaquinas = false;
-        this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 });
-      }
+        next: (data) => {
+            console.log('Máquinas cargadas:', data);
+            this.maquinas = data;
+            this.cargandoMaquinas = false;
+            
+            if (data.length === 0) {
+                this.snackBar.open('No hay máquinas operativas para este comercio', 'Cerrar', { duration: 3000 });
+            }
+        },
+        error: (err) => {
+            console.error('Error cargando máquinas:', err);
+            this.maquinas = [];
+            this.cargandoMaquinas = false;
+            this.snackBar.open('Error al cargar máquinas', 'Cerrar', { duration: 3000 });
+        }
     });
   }
   
-  onMaquinaChange(): void {}
+  onMaquinaChange(): void {
+    const idMaquina = this.paso1Form.get('ID_Maquina')?.value;
+    console.log('Máquina seleccionada:', idMaquina);
+  }
+  
+  isStep1Valid(): boolean {
+    const tieneComercio = !!this.paso1Form.get('ID_Comercio')?.value;
+    const tieneMaquina = !!this.paso1Form.get('ID_Maquina')?.value;
+    return tieneComercio && tieneMaquina;
+  }
   
   private setupCalculosAutomaticos(): void {
-    const montoTotalSub = this.recaudacionForm.get('Monto_Total')?.valueChanges.subscribe(() => this.calcularMontos());
-    const porcentajeSub = this.recaudacionForm.get('Porcentaje_Comercio')?.valueChanges.subscribe(() => this.calcularMontos());
+    const montoTotalSub = this.paso2Form.get('Monto_Total')?.valueChanges.subscribe(() => this.calcularMontos());
+    const porcentajeSub = this.paso2Form.get('Porcentaje_Comercio')?.valueChanges.subscribe(() => this.calcularMontos());
     if (montoTotalSub) this.subscriptions.push(montoTotalSub);
     if (porcentajeSub) this.subscriptions.push(porcentajeSub);
   }
   
   private calcularMontos(): void {
-    const tipo = this.recaudacionForm.get('Tipo_Comercio')?.value;
-    const montoTotal = parseFloat(this.recaudacionForm.get('Monto_Total')?.value) || 0;
+    const tipo = this.paso1Form.get('Tipo_Comercio')?.value;
+    const montoTotal = parseFloat(this.paso2Form.get('Monto_Total')?.value) || 0;
     if (tipo === 'Mayorista') {
-      const porcentaje = parseFloat(this.recaudacionForm.get('Porcentaje_Comercio')?.value) || 0;
+      const porcentaje = parseFloat(this.paso2Form.get('Porcentaje_Comercio')?.value) || 0;
       const montoComercio = montoTotal * (porcentaje / 100);
       const montoEmpresa = montoTotal - montoComercio;
-      this.recaudacionForm.patchValue({
+      this.paso2Form.patchValue({
         Monto_Comercio: montoComercio.toFixed(2),
         Monto_Empresa: montoEmpresa.toFixed(2)
       }, { emitEvent: false });
     } else {
-      this.recaudacionForm.patchValue({
+      this.paso2Form.patchValue({
         Monto_Comercio: '0.00',
         Monto_Empresa: montoTotal.toFixed(2)
       }, { emitEvent: false });
     }
   }
-  
-  registrarRecaudacion(stepper: any): void {
-    if (this.recaudacionForm.invalid) {
-      this.snackBar.open('Complete todos los campos correctamente', 'Cerrar', { duration: 3000 });
-      return;
+registrarRecaudacion(): void {
+    if (this.paso2Form.invalid) {
+        this.snackBar.open('Complete todos los campos correctamente', 'Cerrar', { duration: 3000 });
+        return;
     }
     if (!confirm('¿Está seguro de registrar esta recaudación?')) return;
     
     this.submitting = true;
     const currentUser = this.authService.getCurrentUser();
-    const formValue = this.recaudacionForm.getRawValue();
-const data = {
-  ID_Comercio: formValue.ID_Comercio,
-  ID_Maquina: formValue.ID_Maquina,
-  Tipo_Comercio: formValue.Tipo_Comercio,
-  Porcentaje_Comercio: formValue.Tipo_Comercio === 'Mayorista' ? formValue.Porcentaje_Comercio : 0,
-  Monto_Total: parseFloat(formValue.Monto_Total),
-  Monto_Comercio: parseFloat(formValue.Monto_Comercio),
-  Monto_Empresa: parseFloat(formValue.Monto_Empresa),
-  fecha: new Date(formValue.fecha).toISOString().slice(0, 19).replace('T', ' '),
-  detalle: formValue.detalle,
-  id: currentUser?.id || ''
-};
+    const paso1Value = this.paso1Form.getRawValue();
+    const paso2Value = this.paso2Form.getRawValue();
+    
+    // Obtener tipoComercio de forma segura
+    let tipoComercio = paso1Value.Tipo_Comercio;
+    if (!tipoComercio || tipoComercio === '') {
+        // Buscar el comercio seleccionado para obtener su tipo
+        const comercioSeleccionado = this.comercios.find(c => c.ID_Comercio === paso1Value.ID_Comercio);
+        tipoComercio = comercioSeleccionado?.Tipo || comercioSeleccionado?.tipo || 'Minorista';
+        console.log('Tipo de comercio obtenido del comercio:', tipoComercio);
+    }
+    
+    const data = {
+        idMaquina: paso1Value.ID_Maquina,
+        tipoComercio: tipoComercio,  // Ahora con valor asegurado
+        montoTotal: parseFloat(paso2Value.Monto_Total),
+        porcentajeComercio: tipoComercio === 'Mayorista' ? paso2Value.Porcentaje_Comercio : 0,
+        detalle: paso2Value.detalle || ''
+    };
+    
+    console.log('Enviando datos al backend:', data);
     
     this.contabilidadService.registrarRecaudacion(data).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.success = true;
-          this.snackBar.open('Recaudación registrada correctamente', 'Cerrar', { duration: 3000 });
-          setTimeout(() => this.router.navigate(['/contabilidad/gestion-recaudacion']), 2000);
-        } else {
-          this.snackBar.open(response.message || 'Error al registrar recaudación', 'Cerrar', { duration: 3000 });
+        next: (response) => {
+            if (response.success) {
+                this.success = true;
+                this.snackBar.open('Recaudación registrada correctamente', 'Cerrar', { duration: 3000 });
+                setTimeout(() => this.router.navigate(['/contabilidad/gestion-recaudacion']), 2000);
+            } else {
+                this.snackBar.open(response.message || 'Error al registrar recaudación', 'Cerrar', { duration: 3000 });
+            }
+            this.submitting = false;
+        },
+        error: (err) => {
+            console.error('Error al registrar recaudación:', err);
+            this.snackBar.open(err.message || 'Error al registrar recaudación', 'Cerrar', { duration: 3000 });
+            this.submitting = false;
         }
-        this.submitting = false;
-      },
-      error: (err) => {
-        this.snackBar.open(err.message || 'Error al registrar recaudación', 'Cerrar', { duration: 3000 });
-        this.submitting = false;
-      }
     });
-  }
+}
   
   regresar(): void {
     this.router.navigate(['/contabilidad/gestion-recaudacion']);

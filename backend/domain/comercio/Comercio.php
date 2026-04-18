@@ -66,10 +66,10 @@ class Comercio
     {
         return new self(
             $data['ID_Comercio'],
-            $data['Nombre'] ?? $data['nombre'] ?? '',           // ← Priorizar mayúscula
-            $data['Tipo'] ?? $data['tipo'] ?? '',               // ← Priorizar mayúscula
-            $data['Direccion'] ?? $data['direccion'] ?? '',     // ← Priorizar mayúscula
-            $data['Telefono'] ?? $data['telefono'] ?? '',       // ← Priorizar mayúscula
+            $data['Nombre'] ?? $data['nombre'] ?? '',           //  Priorizar mayúscula
+            $data['Tipo'] ?? $data['tipo'] ?? '',               //  Priorizar mayúscula
+            $data['Direccion'] ?? $data['direccion'] ?? '',     //  Priorizar mayúscula
+            $data['Telefono'] ?? $data['telefono'] ?? '',       //  Priorizar mayúscula
             (int)($data['cantidad_maquinas'] ?? $data['Cantidad_Maquinas'] ?? 0),
             $data['fecha_registro'] ?? $data['Fecha_Registro'] ?? null
         );

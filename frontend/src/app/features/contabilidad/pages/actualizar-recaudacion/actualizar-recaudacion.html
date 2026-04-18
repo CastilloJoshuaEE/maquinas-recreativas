@@ -19,18 +19,19 @@
 
         <div *ngIf="!loading && recaudacion">
           <form [formGroup]="recaudacionForm" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Máquina</mat-label>
-<mat-select formControlName="ID_Maquina" [disabled]="true">                <mat-option *ngFor="let maquina of maquinas" [value]="maquina.ID_Maquina">{{ maquina.Nombre_Maquina }}</mat-option>
-              </mat-select>
-              <mat-icon matPrefix>videogame_asset</mat-icon>
-            </mat-form-field>
+            
+<!--  CORRECTO - Dentro del *ngIf, recaudacion no es null -->
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>Máquina</mat-label>
+  <input matInput [value]="recaudacion.Nombre_Maquina || 'Cargando...'" readonly>
+  <mat-icon matPrefix>videogame_asset</mat-icon>
+</mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Tipo de Comercio</mat-label>
-              <input matInput formControlName="Tipo_Comercio" readonly>
-              <mat-icon matPrefix>store</mat-icon>
-            </mat-form-field>
+<mat-form-field appearance="outline" class="full-width">
+  <mat-label>Tipo de Comercio</mat-label>
+  <input matInput [value]="recaudacion.Tipo_Comercio || 'Minorista'" readonly>
+  <mat-icon matPrefix>store</mat-icon>
+</mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Monto Total</mat-label>
@@ -40,7 +41,7 @@
               <mat-error *ngIf="recaudacionForm.get('Monto_Total')?.hasError('min')">Monto debe ser mayor a 0</mat-error>
             </mat-form-field>
 
-            <div *ngIf="recaudacionForm.get('Tipo_Comercio')?.value === 'Mayorista'">
+            <div *ngIf="recaudacion.Tipo_Comercio === 'Mayorista'">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Porcentaje para Comercio (%)</mat-label>
                 <input matInput type="number" step="0.01" formControlName="Porcentaje_Comercio">

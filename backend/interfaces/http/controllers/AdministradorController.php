@@ -363,7 +363,7 @@ public function updateUser(Request $request, string $id): Response
         $data['email'], 
         $data['ci'],
         $data['tipo'], 
-        $estado,  // ← Usar estado actual o el proporcionado
+        $estado,  //  Usar estado actual o el proporcionado
         $data['usuario_asignado'],
         $data['especialidad'] ?? null, 
         $data['contrasena'] ?? null

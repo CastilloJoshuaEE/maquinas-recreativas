@@ -126,7 +126,7 @@ public function run(): void
     }
 
     $params = $route['params'] ?? [];
-    $result = $controller->$method($request, ...$params);  // ← aquí se pasan los parámetros
+    $result = $controller->$method($request, ...$params);  //  aquí se pasan los parámetros
 
     if ($result instanceof Response) {
         $result->send();

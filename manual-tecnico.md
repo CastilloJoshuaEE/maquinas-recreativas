@@ -661,8 +661,8 @@ $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     // procesar
 }
-$result->free();  // ← Liberar resultado
-$stmt->close();   // ← Cerrar statement
+$result->free();  //  Liberar resultado
+$stmt->close();   //  Cerrar statement
 
 
 ### **Error: `Cannot read properties of null (reading 'success')`**
