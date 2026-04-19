@@ -147,7 +147,7 @@ class SmokeTestCase extends TestCase
                 $updateStmt->execute();
                 $updateStmt->close();
                 
-                error_log("Corregido email vacío para usuario {$this->testUserId} -> {$emailOriginal}");
+                error_log(" email vacío para usuario {$this->testUserId} -> {$emailOriginal}");
             }
         }
         // --- FIN VERIFICACIÓN ---

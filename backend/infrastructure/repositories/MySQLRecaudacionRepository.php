@@ -69,14 +69,26 @@ class MySQLRecaudacionRepository implements RecaudacionRepository
             return $detalles;
         }, $this->ttl);
     }
-
 public function findMaquinasRecaudacion(): array
 {
     $cacheKey = "recaudacion:maquinas_operativas";
     return $this->cache->remember($cacheKey, function () {
         $conn = $this->db->getConnection();
-        $sql  = "SELECT m.*,c.Nombre as NombreComercio,c.Direccion as DireccionComercio,
-                        c.Telefono as TelefonoComercio,c.Tipo as TipoComercio
+        $sql  = "SELECT 
+                    m.ID_Maquina,
+                    m.Nombre_Maquina,
+                    m.Tipo,
+                    m.Estado,
+                    m.Etapa,
+                    m.ID_Comercio,
+                    m.ID_Tecnico_Ensamblador,   
+                    m.ID_Tecnico_Comprobador,   
+                    m.ID_Tecnico_Mantenimiento, 
+                    m.Fecha_Registro,
+                    c.Nombre as NombreComercio,
+                    c.Direccion as DireccionComercio,
+                    c.Telefono as TelefonoComercio,
+                    c.Tipo as TipoComercio
                  FROM MaquinaRecreativa m 
                  LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
                  WHERE m.Etapa = 'Recaudacion' AND m.Estado = 'Operativa' 
@@ -88,8 +100,8 @@ public function findMaquinasRecaudacion(): array
         while ($row = $result->fetch_assoc()) {
             $maquinas[] = $row;
         }
-        $result->free();  //  Liberar resultado
-        $stmt->close();   //  Cerrar statement
+        $result->free();
+        $stmt->close();
         // Limpiar resultados pendientes
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
@@ -104,74 +116,83 @@ public function save(Recaudacion $recaudacion): void
     $conn = $this->db->getConnection();
     $data = $recaudacion->toArray();
 
-    // ✅ Asegurar que la fecha tenga formato MySQL válido
+    // Asegurar formato de fecha
     if (!empty($data['fecha'])) {
         $timestamp = strtotime($data['fecha']);
-        if ($timestamp === false) {
-            error_log("Fecha inválida recibida: " . $data['fecha']);
-            $data['fecha'] = date('Y-m-d H:i:s'); // fallback a ahora
-        } else {
-            $data['fecha'] = date('Y-m-d H:i:s', $timestamp);
-        }
+        $data['fecha'] = $timestamp === false ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', $timestamp);
     } else {
         $data['fecha'] = date('Y-m-d H:i:s');
     }
 
+    $data['detalle'] = (string)($data['detalle'] ?? '');
     $id = $data['ID_Recaudacion'];
+    $count = 0;
+
     $checkStmt = $conn->prepare("SELECT COUNT(*) FROM recaudaciones WHERE ID_Recaudacion = ?");
-    $checkStmt->bind_param('s', $id);
-    $checkStmt->execute();
-    $checkStmt->bind_result($count);
-    $checkStmt->fetch();
-    $checkStmt->close();
-if ($count > 0) {
-    // UPDATE explícito con tipos correctos
-    $sql = "UPDATE recaudaciones SET 
-                Tipo_Comercio = ?,
-                ID_Maquina = ?,
-                ID_Usuario = ?,
-                Monto_Total = ?,
-                Monto_Empresa = ?,
-                Monto_Comercio = ?,
-                fecha = ?,
-                detalle = ?,
-                Porcentaje_Comercio = ?
-            WHERE ID_Recaudacion = ?";
-    $stmt = $conn->prepare($sql);
-    // Cadena de tipos: sss (3 strings) + ddd (3 doubles) + ss (2 strings) + d (1 double) + s (1 string) = 10
-    $stmt->bind_param(
-        'sssdddssds',
-        $data['Tipo_Comercio'],
-        $data['ID_Maquina'],
-        $data['ID_Usuario'],
-        $data['Monto_Total'],
-        $data['Monto_Empresa'],
-        $data['Monto_Comercio'],
-        $data['fecha'],
-        $data['detalle'],
-        $data['Porcentaje_Comercio'],
-        $id
-    );
-}else {
-        // INSERT
+    if ($checkStmt) {
+        $checkStmt->bind_param('s', $id);
+        $checkStmt->execute();
+        $checkStmt->bind_result($count);
+        $checkStmt->fetch();
+        $checkStmt->close();
+    }
+
+    if ($count > 0) {
+        // UPDATE
+        $sql = "UPDATE recaudaciones SET 
+                    Tipo_Comercio = ?,
+                    ID_Maquina = ?,
+                    ID_Usuario = ?,
+                    Monto_Total = ?,
+                    Monto_Empresa = ?,
+                    Monto_Comercio = ?,
+                    fecha = ?,
+                    detalle = ?,
+                    Porcentaje_Comercio = ?
+                WHERE ID_Recaudacion = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'sssdddssds',
+            $data['Tipo_Comercio'],
+            $data['ID_Maquina'],
+            $data['ID_Usuario'],
+            $data['Monto_Total'],
+            $data['Monto_Empresa'],
+            $data['Monto_Comercio'],
+            $data['fecha'],
+            $data['detalle'],
+            $data['Porcentaje_Comercio'],
+            $id
+        );
+    } else {
+        // INSERT (CORREGIDO)
         $sql = "INSERT INTO recaudaciones (ID_Recaudacion,Tipo_Comercio,ID_Maquina,ID_Usuario,Monto_Total,Monto_Empresa,Monto_Comercio,fecha,detalle,Porcentaje_Comercio)
                 VALUES (?,?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ssssdddsds',
-            $data['ID_Recaudacion'],$data['Tipo_Comercio'],$data['ID_Maquina'],$data['ID_Usuario'],
-            $data['Monto_Total'],$data['Monto_Empresa'],$data['Monto_Comercio'],
-            $data['fecha'],$data['detalle'],$data['Porcentaje_Comercio']
+        $stmt->bind_param('ssssdddssd',
+            $data['ID_Recaudacion'],
+            $data['Tipo_Comercio'],
+            $data['ID_Maquina'],
+            $data['ID_Usuario'],
+            $data['Monto_Total'],
+            $data['Monto_Empresa'],
+            $data['Monto_Comercio'],
+            $data['fecha'],
+            $data['detalle'],
+            $data['Porcentaje_Comercio']
         );
     }
-    
+
     error_log("SQL: " . $sql);
     error_log("Params: " . json_encode($data));
-    
+
     if (!$stmt->execute()) {
         error_log("Error en execute: " . $stmt->error);
+    } else {
+        error_log("Filas afectadas: " . $stmt->affected_rows);
     }
     $stmt->close();
-    
+
     // Invalidar caché
     $this->cache->delete("recaudacion:id:{$data['ID_Recaudacion']}");
     $this->cache->delete("recaudacion:nombre_maquina:{$data['ID_Maquina']}");
@@ -236,13 +257,26 @@ public function findAll(array $filters = [], int $limit = 100, int $offset = 0):
     $cacheKey = "recaudaciones:all:" . md5(serialize([$filters,$limit,$offset]));
     return $this->cache->remember($cacheKey, function () use ($filters,$limit,$offset) {
         $conn   = $this->db->getConnection();
-        $sql    = "SELECT r.*,c.Nombre as Nombre_Comercio,m.Nombre_Maquina,
-                          u.nombre as nombre_usuario,u.apellido as apellido_usuario
-                   FROM recaudaciones r
-                   INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
-                   INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-                   INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
-                   WHERE 1=1";
+       $sql = "SELECT 
+                    r.ID_Recaudacion,
+                    r.Tipo_Comercio,
+                    r.ID_Maquina,
+                    r.ID_Usuario,
+                    r.Monto_Total,
+                    r.Monto_Empresa,
+                    r.Monto_Comercio,
+                    r.Porcentaje_Comercio,
+                    r.fecha,
+                    r.detalle,                           
+                    c.Nombre as Nombre_Comercio,
+                    m.Nombre_Maquina,
+                    u.nombre as nombre_usuario,
+                    u.apellido as apellido_usuario
+                FROM recaudaciones r
+                INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+                INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+                WHERE 1=1";
         $params = []; 
         $types = "";
         

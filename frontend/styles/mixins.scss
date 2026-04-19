@@ -153,7 +153,7 @@ $z-index-modal: 1050;
   }
 }
 
-// Mixin para media query responsiva - CORREGIDO
+// Mixin para media query responsiva - 
 @mixin respond-to($breakpoint) {
   @if $breakpoint == sm {
     @media (min-width: $breakpoint-sm) { @content; }

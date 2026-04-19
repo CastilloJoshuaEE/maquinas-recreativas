@@ -23,6 +23,7 @@ import { Componente } from '@core/models/componente.model';
 import { User } from '@core/models/user.model';
 import { AuthService } from '@core/services/auth';
 import { ApiService } from '@core/services/api';
+import { UserService } from '@app/core/services/user';
 
 @Component({
   selector: 'app-levantar-informe',
@@ -38,8 +39,7 @@ export class LevantarInformeComponent implements OnInit {
   private authService = inject(AuthService);
   private apiService = inject(ApiService);
   private snackBar = inject(MatSnackBar);
-
-  // ── Estado ────────────────────────────────────────────────────────────────
+  private userService = inject(UserService);
   recaudacion: any = null;   // any para manejar claves minúsculas del backend
   maquina: any = null;
   comercio: any = null;
@@ -123,15 +123,14 @@ export class LevantarInformeComponent implements OnInit {
         this.recaudacion = rec;
         this.cargandoRecaudacion = false;
 
-        // Obtener ID de la máquina (maneja ambas convenciones de nombre)
         const idMaq = (rec as any).ID_Maquina || (rec as any).id_maquina || '';
         if (idMaq) {
-          this.cargarMaquina(idMaq);
+          this.cargarMaquinaCompleta(idMaq);
           this.cargarComponentes(idMaq);
         } else {
-          this.cargandoMaquina     = false;
-          this.cargandoComercio    = false;
-          this.cargandoTecnicos    = false;
+          this.cargandoMaquina = false;
+          this.cargandoComercio = false;
+          this.cargandoTecnicos = false;
           this.cargandoComponentes = false;
         }
       },
@@ -142,85 +141,122 @@ export class LevantarInformeComponent implements OnInit {
     });
   }
 
-  /** Carga la máquina directamente por ID usando el endpoint de componentes/estado. */
-  private cargarMaquina(idMaquina: string): void {
-    // Intentar obtener la máquina directamente usando el endpoint de estado Operativa
-    this.contabilidadService.getMaquinasRecaudacion().subscribe({
-      next: (maquinas: any[]) => {
-        const encontrada = maquinas.find(m =>
-          (m.ID_Maquina || m.id_maquina) === idMaquina
-        );
-
+  /**
+   * Obtiene la máquina por ID desde cualquier fuente disponible.
+   * Prioriza: 1) listado de máquinas operativas, 2) listado de máquinas en recaudación, 3) objeto mínimo.
+   */
+  private cargarMaquinaCompleta(idMaquina: string): void {
+    // 1. Intentar obtener la máquina desde el endpoint de máquinas operativas (sin filtro de etapa)
+    this.apiService.get('/maquina/estado/Operativa').subscribe({
+      next: (resp: any) => {
+        const todas = resp?.maquinas || [];
+        const encontrada = todas.find((m: any) => (m.ID_Maquina || m.id_maquina) === idMaquina);
         if (encontrada) {
           this.maquina = encontrada;
           this.cargandoMaquina = false;
-
           const idCom = encontrada.ID_Comercio || encontrada.id_comercio || '';
-          if (idCom) {
-            this.cargarComercio(idCom);
-          } else {
-            this.cargandoComercio = false;
-          }
-
+          if (idCom) this.cargarComercio(idCom);
+          else this.cargandoComercio = false;
           this.cargarTecnicos(encontrada);
         } else {
-          // Máquina no está en recaudación activa; crear objeto mínimo
-          this.maquina = {
-            ID_Maquina: idMaquina,
-            Nombre_Maquina: (this.recaudacion as any)?.nombre_maquina || (this.recaudacion as any)?.Nombre_Maquina || 'Máquina'
-          };
-          this.cargandoMaquina  = false;
-          this.cargandoComercio = false;
-          this.cargandoTecnicos = false;
+          // 2. No se encontró en operativas, intentar en recaudación
+          this.contabilidadService.getMaquinasRecaudacion().subscribe({
+            next: (maquinas: any[]) => {
+              const encontrada2 = maquinas.find(m => (m.ID_Maquina || m.id_maquina) === idMaquina);
+              if (encontrada2) {
+                this.maquina = encontrada2;
+                this.cargandoMaquina = false;
+                const idCom = encontrada2.ID_Comercio || encontrada2.id_comercio || '';
+                if (idCom) this.cargarComercio(idCom);
+                else this.cargandoComercio = false;
+                this.cargarTecnicos(encontrada2);
+              } else {
+                // 3. Último recurso: crear objeto mínimo
+                this.maquina = {
+                  ID_Maquina: idMaquina,
+                  Nombre_Maquina: (this.recaudacion as any)?.nombre_maquina || (this.recaudacion as any)?.Nombre_Maquina || 'Máquina'
+                };
+                this.cargandoMaquina = false;
+                this.cargandoComercio = false;
+                this.cargandoTecnicos = false;
+              }
+            },
+            error: () => {
+              this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
+              this.cargandoMaquina = false;
+              this.cargandoComercio = false;
+              this.cargandoTecnicos = false;
+            }
+          });
         }
       },
       error: () => {
-        this.cargandoMaquina  = false;
-        this.cargandoComercio = false;
-        this.cargandoTecnicos = false;
+        // Fallback: intentar en recaudación
+        this.contabilidadService.getMaquinasRecaudacion().subscribe({
+          next: (maquinas: any[]) => {
+            const encontrada = maquinas.find(m => (m.ID_Maquina || m.id_maquina) === idMaquina);
+            if (encontrada) {
+              this.maquina = encontrada;
+              this.cargandoMaquina = false;
+              const idCom = encontrada.ID_Comercio || encontrada.id_comercio || '';
+              if (idCom) this.cargarComercio(idCom);
+              else this.cargandoComercio = false;
+              this.cargarTecnicos(encontrada);
+            } else {
+              this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
+              this.cargandoMaquina = false;
+              this.cargandoComercio = false;
+              this.cargandoTecnicos = false;
+            }
+          },
+          error: () => {
+            this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
+            this.cargandoMaquina = false;
+            this.cargandoComercio = false;
+            this.cargandoTecnicos = false;
+          }
+        });
       }
     });
   }
 
   private cargarComercio(idComercio: string): void {
+    if (!idComercio) {
+      this.cargandoComercio = false;
+      return;
+    }
     this.contabilidadService.getComercios().subscribe({
       next: (comercios: any[]) => {
-        this.comercio = comercios.find(c =>
-          (c.ID_Comercio || c.id_comercio) === idComercio
-        ) || null;
+        this.comercio = comercios.find(c => (c.ID_Comercio || c.id_comercio) === idComercio) || null;
         this.cargandoComercio = false;
       },
       error: () => { this.cargandoComercio = false; }
     });
   }
+private cargarTecnicos(maquina: any): void {
+  const ids = {
+    ensamblador: maquina.ID_Tecnico_Ensamblador || maquina.id_tecnico_ensamblador || null,
+    comprobador: maquina.ID_Tecnico_Comprobador || maquina.id_tecnico_comprobador || null,
+    mantenimiento: maquina.ID_Tecnico_Mantenimiento || maquina.id_tecnico_mantenimiento || null,
+  };
 
-  private cargarTecnicos(maquina: any): void {
-    const ids = {
-      ensamblador:  maquina.ID_Tecnico_Ensamblador  || maquina.id_tecnico_ensamblador  || null,
-      comprobador:  maquina.ID_Tecnico_Comprobador  || maquina.id_tecnico_comprobador  || null,
-      mantenimiento: maquina.ID_Tecnico_Mantenimiento || maquina.id_tecnico_mantenimiento || null,
+  // Obtener listas completas de técnicos por especialidad
+  Promise.all([
+    this.userService.getTecnicosByEspecialidad('Ensamblador').toPromise(),
+    this.userService.getTecnicosByEspecialidad('Comprobador').toPromise(),
+    this.userService.getTecnicosByEspecialidad('Mantenimiento').toPromise()
+  ]).then(([ensambladores, comprobadores, mantenedores]) => {
+    this.tecnicos = {
+      ensamblador: ensambladores?.find(t => t.id === ids.ensamblador) || null,
+      comprobador: comprobadores?.find(t => t.id === ids.comprobador) || null,
+      mantenimiento: mantenedores?.find(t => t.id === ids.mantenimiento) || null
     };
-
-    const cargarUno = (id: string | null): Promise<User | null> => {
-      if (!id) return Promise.resolve(null);
-      return new Promise((resolve) => {
-        this.apiService.get(`/usuario/perfil/${id}`).subscribe({
-          next: (response: any) => resolve(response?.success && response?.usuario ? response.usuario : null),
-          error: () => resolve(null)
-        });
-      });
-    };
-
-    Promise.all([
-      cargarUno(ids.ensamblador),
-      cargarUno(ids.comprobador),
-      cargarUno(ids.mantenimiento)
-    ]).then(([ensamblador, comprobador, mantenimiento]) => {
-      this.tecnicos = { ensamblador, comprobador, mantenimiento };
-      this.cargandoTecnicos = false;
-    }).catch(() => { this.cargandoTecnicos = false; });
-  }
-
+    this.cargandoTecnicos = false;
+  }).catch(err => {
+    console.error('Error cargando técnicos:', err);
+    this.cargandoTecnicos = false;
+  });
+}
   private cargarComponentes(idMaquina: string): void {
     this.apiService.get(`/maquina/componentes/${idMaquina}`).subscribe({
       next: (response: any) => {
@@ -244,44 +280,81 @@ export class LevantarInformeComponent implements OnInit {
 
   // ── Acciones ──────────────────────────────────────────────────────────────
   imprimirInforme(): void { setTimeout(() => window.print(), 300); }
-
-  guardarInforme(): void {
-    if (!this.recaudacion) return;
-    this.guardando = true;
-    const currentUser = this.authService.getCurrentUser();
-
-    const informeData = {
-      idRecaudacion:     this.idRecaudacion,
-      idComercio:        this.idComercio,
-      ciUsuario:         currentUser?.ci || '',
-      nombreMaquina:     this.maquinaNombre,
-      nombreComercio:    this.comercioNombre,
-      direccionComercio: this.comercioDireccion,
-      telefonoComercio:  this.comercioTelefono,
-      pagoEnsamblador:   this.tecnicos.ensamblador  ? 400 : 0,
-      pagoComprobador:   this.tecnicos.comprobador  ? 400 : 0,
-      pagoMantenimiento: this.tecnicos.mantenimiento ? 400 : 0,
-      componentes:       this.componentes.map(c => ({ ID_Componente: c.ID_Componente })),
-      montoTotal:        this.montoTotal
-    };
-
-    this.contabilidadService.guardarInforme(informeData).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.success = true;
-          this.snackBar.open('Informe guardado correctamente', 'Cerrar', { duration: 3000 });
-          setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
-        } else {
-          this.snackBar.open(response.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+guardarInforme(): void {
+  if (!this.recaudacion) return;
+  this.guardando = true;
+  
+  // Obtener el usuario actual completo
+  const currentUser = this.authService.getCurrentUser();
+  
+  // Intentar obtener CI de múltiples fuentes
+  let ciUsuario = '';
+  
+  if (currentUser) {
+    // Prioridad 1: CI directa
+    ciUsuario = currentUser.ci || '';
+    
+    // Prioridad 2: Si la CI parece encriptada o es muy larga, obtenerla del backend
+    if (!ciUsuario || ciUsuario.length > 20 || ciUsuario.includes('***')) {
+      console.warn('CI no válida en currentUser, obteniendo del backend...');
+      
+      // Obtener el perfil completo del backend (que debería desencriptar la CI)
+      this.userService.getProfile(currentUser.id || currentUser.id).subscribe({
+        next: (user) => {
+          if (user && user.ci) {
+            this.guardarInformeConCI(user.ci);
+          } else {
+            // Fallback: usar ID de usuario como identificador
+            this.guardarInformeConCI(currentUser.id || currentUser.id || 'SISTEMA');
+          }
+        },
+        error: () => {
+          this.guardarInformeConCI(currentUser.id || currentUser.id || 'SISTEMA');
         }
-        this.guardando = false;
-      },
-      error: (err) => {
-        this.snackBar.open(err.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
-        this.guardando = false;
-      }
-    });
+      });
+      return;
+    }
+  } else {
+    // Si no hay usuario, usar ID de sesión
+    ciUsuario = sessionStorage.getItem('userId') || 'SISTEMA';
   }
+  
+  this.guardarInformeConCI(ciUsuario);
+}
+
+private guardarInformeConCI(ciUsuario: string): void {
+  const informeData = {
+    idRecaudacion:     this.idRecaudacion,
+    idComercio:        this.idComercio,
+    ciUsuario:         ciUsuario,  // Usar el valor obtenido
+    nombreMaquina:     this.maquinaNombre,
+    nombreComercio:    this.comercioNombre,
+    direccionComercio: this.comercioDireccion,
+    telefonoComercio:  this.comercioTelefono,
+    pagoEnsamblador:   this.tecnicos.ensamblador  ? 400 : 0,
+    pagoComprobador:   this.tecnicos.comprobador  ? 400 : 0,
+    pagoMantenimiento: this.tecnicos.mantenimiento ? 400 : 0,
+    componentes:       this.componentes.map(c => ({ ID_Componente: c.ID_Componente })),
+    montoTotal:        this.montoTotal
+  };
+
+  this.contabilidadService.guardarInforme(informeData).subscribe({
+    next: (response) => {
+      if (response.success) {
+        this.success = true;
+        this.snackBar.open('Informe guardado correctamente', 'Cerrar', { duration: 3000 });
+        setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
+      } else {
+        this.snackBar.open(response.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+      }
+      this.guardando = false;
+    },
+    error: (err) => {
+      this.snackBar.open(err.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+      this.guardando = false;
+    }
+  });
+}
 
   regresar(): void { this.router.navigate(['/contabilidad/consultar-recaudaciones']); }
 }

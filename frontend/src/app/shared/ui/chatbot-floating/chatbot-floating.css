@@ -1,0 +1,40 @@
+.chatbot-floating {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #4f6bed, #3d55c3);
+  color: white;
+  border-radius: 50px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1100;
+  transition: transform 0.2s;
+  user-select: none;
+}
+
+.chatbot-floating:hover {
+  transform: scale(1.05);
+}
+
+.chatbot-floating mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+/* Desplazar el chatbot widget un poco arriba del botón */
+:host ::ng-deep .chatbot-container {
+  bottom: 80px;
+  right: 20px;
+}
+
+/* Ocultar en impresión */
+@media print {
+  .chatbot-floating {
+    display: none !important;
+  }
+}

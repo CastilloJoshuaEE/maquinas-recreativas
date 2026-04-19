@@ -172,7 +172,7 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
   this.submitting = true;
   const formValue = this.recaudacionForm.getRawValue();
   
-  // ✅ CORREGIDO: Usar los nombres que espera el backend (camelCase)
+  //  Usar los nombres que espera el backend (camelCase)
   const data = {
     idRecaudacion: formValue.ID_Recaudacion,      // Cambiado
     idMaquina: formValue.ID_Maquina,              // Cambiado

@@ -130,6 +130,7 @@ getRecaudacionById(id: string): Observable<Recaudacion | null> {
   getMaquinasRecaudacion(): Observable<Maquina[]> {
     return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINAS_RECAUDACION).pipe(
       map(response => response.success && response['maquinas'] ? response['maquinas'] : [])
+    
     );
   }
   /**

@@ -182,7 +182,7 @@ public function run(): void
     {
         // Intentar obtener del contenedor Dependencies
         try {
-            // CORREGIDO: Usar class_exists correctamente
+            //  Usar class_exists correctamente
             if (class_exists('\\Dependencies')) {
                 $instance = \Dependencies::get($class);
                 if ($instance !== null) {
@@ -208,7 +208,7 @@ public function run(): void
                 
                 foreach ($params as $param) {
                     $paramType = $param->getType();
-                    // CORREGIDO: Verificar métodos correctamente
+                    //  Verificar métodos correctamente
                     if ($paramType) {
     // Verificar si es un tipo de clase (no built-in)
     $isBuiltin = false;
