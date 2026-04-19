@@ -167,7 +167,41 @@ class Recaudacion
         $this->montoComercio = $montoTotal * ($porcentajeComercio / 100);
         $this->montoEmpresa = $montoTotal - $this->montoComercio;
     }
+/**
+ * Actualiza todos los campos de la recaudación
+ * 
+ * @param string $tipoComercio
+ * @param float $montoTotal
+ * @param float $porcentajeComercio
+ * @param string $detalle
+ * @param DateTimeImmutable $fecha
+ * @throws \InvalidArgumentException
+ */
+public function actualizar(
+    string $tipoComercio,
+    float $montoTotal,
+    float $porcentajeComercio,
+    string $detalle,
+    DateTimeImmutable $fecha
+): void {
+    if ($montoTotal <= 0) {
+        throw new \InvalidArgumentException('El monto total debe ser mayor a 0');
+    }
 
+    if ($porcentajeComercio < 0 || $porcentajeComercio > 100) {
+        throw new \InvalidArgumentException('El porcentaje del comercio debe estar entre 0 y 100');
+    }
+
+    $this->tipoComercio = $tipoComercio;
+    $this->montoTotal = $montoTotal;
+    $this->porcentajeComercio = $porcentajeComercio;
+    $this->detalle = $detalle;
+    $this->fecha = $fecha;
+    
+    // Recalcular montos
+    $this->montoComercio = $montoTotal * ($porcentajeComercio / 100);
+    $this->montoEmpresa = $montoTotal - $this->montoComercio;
+}
     // --- Getters ---
     public function id(): Uuid { return $this->id; }
     public function idMaquina(): Uuid { return $this->idMaquina; }

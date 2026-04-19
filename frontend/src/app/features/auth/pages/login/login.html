@@ -1,3 +1,6 @@
+<!-- login.html — quitar el enlace que navigaba a /auth/chatbot (ruta inexistente) -->
+<!-- El chatbot se agrega como widget flotante en el auth-layout -->
+
 <div class="login-page">
   <header>
     <h1>Bienvenido a Recrea Sys</h1>
@@ -18,7 +21,7 @@
       <div class="contenedor_login_register">
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="formulario_login">
           <h2>Iniciar Sesión</h2>
-          
+
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Usuario asignado</mat-label>
             <input matInput formControlName="usuario_asignado" placeholder="Ingrese su usuario">
@@ -35,7 +38,7 @@
             <mat-label>Contraseña</mat-label>
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
             <mat-icon matPrefix>lock</mat-icon>
-            <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+            <mat-icon matSuffix (click)="hidePassword = !hidePassword" style="cursor:pointer">
               {{hidePassword ? 'visibility_off' : 'visibility'}}
             </mat-icon>
             <mat-error *ngIf="loginForm.get('contrasena')?.hasError('required')">
@@ -46,11 +49,14 @@
           <div class="enlaces_recuperacion">
             <a routerLink="/auth/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
             <a routerLink="/auth/recuperar-usuario">¿Olvidaste tu usuario?</a>
-            <a routerLink="/auth/chatbot">¿Tienes dudas? Habla con nuestro chatbot</a>
-
+            <!--
+              ELIMINADO: el enlace a /auth/chatbot causaba redirección a /auth/login.
+              El chatbot ahora aparece como botón flotante en la esquina inferior derecha.
+            -->
           </div>
 
-          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || loading" class="full-width">
+          <button mat-raised-button color="primary" type="submit"
+                  [disabled]="loginForm.invalid || loading" class="full-width">
             <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
             <span *ngIf="!loading">Entrar</span>
           </button>

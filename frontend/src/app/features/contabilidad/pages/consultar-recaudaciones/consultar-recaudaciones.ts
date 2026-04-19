@@ -85,7 +85,7 @@ export class ConsultarRecaudacionesComponent implements OnInit, AfterViewInit {
  cargarRecaudaciones(): void {
     this.loading = true;
     this.error = '';
-    const params: any = { limit: this.pageSize, offset: this.currentPage * this.pageSize };
+    const params: any = { limit: this.pageSize, offset: this.currentPage * this.pageSize, _t: new Date().getTime() };
     const filtros = this.filtrosForm.value;
     
     //  Convertir fechas al formato YYYY-MM-DD

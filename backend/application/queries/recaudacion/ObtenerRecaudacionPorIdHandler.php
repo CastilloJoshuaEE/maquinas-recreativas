@@ -25,13 +25,6 @@ final class ObtenerRecaudacionPorIdHandler
         $this->recaudacionRepository = $recaudacionRepository;
     }
 
-    /**
-     * Maneja el query de obtener recaudación por ID.
-     *
-     * @param ObtenerRecaudacionPorIdQuery $query
-     * @return array
-     * @throws DomainException
-     */
     public function handle(ObtenerRecaudacionPorIdQuery $query): array
     {
         $idRecaudacion = new Uuid($query->getIdRecaudacion());
@@ -41,10 +34,14 @@ final class ObtenerRecaudacionPorIdHandler
             throw new DomainException('Recaudación no encontrada.');
         }
 
+        // ✅ Obtener el nombre de la máquina desde el repositorio
+        $nombreMaquina = $this->recaudacionRepository->findNombreMaquinaById($recaudacion->idMaquina());
+
         return [
             'recaudacion' => [
                 'id' => $recaudacion->id()->value(),
                 'id_maquina' => $recaudacion->idMaquina()->value(),
+                'nombre_maquina' => $nombreMaquina, // ✅ AGREGAR ESTO
                 'id_usuario' => $recaudacion->idUsuario()->value(),
                 'tipo_comercio' => $recaudacion->tipoComercio(),
                 'monto_total' => $recaudacion->montoTotal(),

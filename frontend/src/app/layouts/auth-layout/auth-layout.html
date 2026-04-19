@@ -1,5 +1,11 @@
+<!-- auth-layout.html -->
+<!-- FIX: agregar el ChatbotFloatingComponent aquí para que el chatbot
+     esté disponible en todas las páginas públicas (login, registro, etc.)
+     sin requerir autenticación ni navegar a ninguna ruta. -->
+
 <div class="auth-layout">
-  <div class="auth-container">
-    <router-outlet></router-outlet>
-  </div>
+  <router-outlet></router-outlet>
+
+  <!-- Chatbot flotante disponible en páginas de autenticación -->
+  <app-chatbot-floating></app-chatbot-floating>
 </div>

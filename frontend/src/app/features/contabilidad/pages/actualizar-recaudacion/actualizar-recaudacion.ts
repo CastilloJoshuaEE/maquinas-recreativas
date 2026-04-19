@@ -87,45 +87,53 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
     });
   }
   private cargarRecaudacion(): void {
-    const uuid = this.route.snapshot.params['uuid'];
-    if (!uuid) {
-        this.error = 'ID de recaudación no válido';
-        this.loading = false;
-        return;
-    }
-    
-    this.contabilidadService.getRecaudacionById(uuid).subscribe({
-        next: (data) => {
-            if (data) {
-                this.recaudacion = data;
-                
-                // CORREGIDO: Asegurar que todos los campos se carguen correctamente
-                const fechaFormateada = data.fecha ? new Date(data.fecha).toISOString().slice(0, 16) : '';
-                
-                this.recaudacionForm.patchValue({
-                    ID_Recaudacion: data.ID_Recaudacion,
-                    ID_Maquina: data.ID_Maquina,
-                    Tipo_Comercio: data.Tipo_Comercio,
-                    Porcentaje_Comercio: data.Porcentaje_Comercio || 20,
-                    Monto_Total: data.Monto_Total,
-                    Monto_Comercio: data.Monto_Comercio,
-                    Monto_Empresa: data.Monto_Empresa,
-                    fecha: fechaFormateada,
-                    detalle: data.detalle || ''
-                });
-                
-                console.log('Recaudación cargada:', this.recaudacionForm.value);
-            } else {
-                this.error = 'Recaudación no encontrada';
+  const uuid = this.route.snapshot.params['uuid'];
+  if (!uuid) {
+    this.error = 'ID de recaudación no válido';
+    this.loading = false;
+    return;
+  }
+  
+  this.contabilidadService.getRecaudacionById(uuid).subscribe({
+    next: (data) => {
+      if (data) {
+        // 🔧 Si no tiene nombre, buscarlo
+        if (!data.Nombre_Maquina && data.ID_Maquina) {
+          this.contabilidadService.getMaquinasRecaudacion().subscribe({
+            next: (maquinas) => {
+              const maquina = maquinas.find(m => m.ID_Maquina === data!.ID_Maquina);
+              if (maquina && this.recaudacion) {
+                this.recaudacion.Nombre_Maquina = maquina.Nombre_Maquina;
+              }
             }
-            this.loading = false;
-        },
-        error: (err) => {
-            console.error('Error cargando recaudación:', err);
-            this.error = err.message || 'Error al cargar recaudación';
-            this.loading = false;
+          });
         }
-    });
+        
+        this.recaudacion = data;
+        const fechaFormateada = data.fecha ? new Date(data.fecha).toISOString().slice(0, 16) : '';
+        
+        this.recaudacionForm.patchValue({
+          ID_Recaudacion: data.ID_Recaudacion,
+          ID_Maquina: data.ID_Maquina,
+          Tipo_Comercio: data.Tipo_Comercio,
+          Porcentaje_Comercio: data.Porcentaje_Comercio || 20,
+          Monto_Total: data.Monto_Total,
+          Monto_Comercio: data.Monto_Comercio,
+          Monto_Empresa: data.Monto_Empresa,
+          fecha: fechaFormateada,
+          detalle: data.detalle || ''
+        });
+      } else {
+        this.error = 'Recaudación no encontrada';
+      }
+      this.loading = false;
+    },
+    error: (err) => {
+      console.error('Error cargando recaudación:', err);
+      this.error = err.message || 'Error al cargar recaudación';
+      this.loading = false;
+    }
+  });
 }
   
   private setupCalculosAutomaticos(): void {

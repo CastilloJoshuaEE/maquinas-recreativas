@@ -99,27 +99,84 @@ public function findMaquinasRecaudacion(): array
         return $maquinas;
     }, 600);
 }
+public function save(Recaudacion $recaudacion): void
+{
+    $conn = $this->db->getConnection();
+    $data = $recaudacion->toArray();
 
-    public function save(Recaudacion $recaudacion): void
-    {
-        $conn = $this->db->getConnection();
-        $data = $recaudacion->toArray();
-        $sql  = "INSERT INTO recaudaciones (ID_Recaudacion,Tipo_Comercio,ID_Maquina,ID_Usuario,Monto_Total,Monto_Empresa,Monto_Comercio,fecha,detalle,Porcentaje_Comercio)
-                 VALUES (?,?,?,?,?,?,?,?,?,?)
-                 ON DUPLICATE KEY UPDATE Tipo_Comercio=VALUES(Tipo_Comercio),Monto_Total=VALUES(Monto_Total),
-                     Monto_Empresa=VALUES(Monto_Empresa),Monto_Comercio=VALUES(Monto_Comercio),
-                     detalle=VALUES(detalle),Porcentaje_Comercio=VALUES(Porcentaje_Comercio)";
+    // ✅ Asegurar que la fecha tenga formato MySQL válido
+    if (!empty($data['fecha'])) {
+        $timestamp = strtotime($data['fecha']);
+        if ($timestamp === false) {
+            error_log("Fecha inválida recibida: " . $data['fecha']);
+            $data['fecha'] = date('Y-m-d H:i:s'); // fallback a ahora
+        } else {
+            $data['fecha'] = date('Y-m-d H:i:s', $timestamp);
+        }
+    } else {
+        $data['fecha'] = date('Y-m-d H:i:s');
+    }
+
+    $id = $data['ID_Recaudacion'];
+    $checkStmt = $conn->prepare("SELECT COUNT(*) FROM recaudaciones WHERE ID_Recaudacion = ?");
+    $checkStmt->bind_param('s', $id);
+    $checkStmt->execute();
+    $checkStmt->bind_result($count);
+    $checkStmt->fetch();
+    $checkStmt->close();
+if ($count > 0) {
+    // UPDATE explícito con tipos correctos
+    $sql = "UPDATE recaudaciones SET 
+                Tipo_Comercio = ?,
+                ID_Maquina = ?,
+                ID_Usuario = ?,
+                Monto_Total = ?,
+                Monto_Empresa = ?,
+                Monto_Comercio = ?,
+                fecha = ?,
+                detalle = ?,
+                Porcentaje_Comercio = ?
+            WHERE ID_Recaudacion = ?";
+    $stmt = $conn->prepare($sql);
+    // Cadena de tipos: sss (3 strings) + ddd (3 doubles) + ss (2 strings) + d (1 double) + s (1 string) = 10
+    $stmt->bind_param(
+        'sssdddssds',
+        $data['Tipo_Comercio'],
+        $data['ID_Maquina'],
+        $data['ID_Usuario'],
+        $data['Monto_Total'],
+        $data['Monto_Empresa'],
+        $data['Monto_Comercio'],
+        $data['fecha'],
+        $data['detalle'],
+        $data['Porcentaje_Comercio'],
+        $id
+    );
+}else {
+        // INSERT
+        $sql = "INSERT INTO recaudaciones (ID_Recaudacion,Tipo_Comercio,ID_Maquina,ID_Usuario,Monto_Total,Monto_Empresa,Monto_Comercio,fecha,detalle,Porcentaje_Comercio)
+                VALUES (?,?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param('ssssdddsds',
             $data['ID_Recaudacion'],$data['Tipo_Comercio'],$data['ID_Maquina'],$data['ID_Usuario'],
             $data['Monto_Total'],$data['Monto_Empresa'],$data['Monto_Comercio'],
-            $data['fecha'],$data['detalle'],$data['Porcentaje_Comercio']);
-        $stmt->execute(); $stmt->close();
-
-        $this->cache->delete("recaudacion:id:{$data['ID_Recaudacion']}");
-        $this->invalidateListados();
+            $data['fecha'],$data['detalle'],$data['Porcentaje_Comercio']
+        );
     }
-
+    
+    error_log("SQL: " . $sql);
+    error_log("Params: " . json_encode($data));
+    
+    if (!$stmt->execute()) {
+        error_log("Error en execute: " . $stmt->error);
+    }
+    $stmt->close();
+    
+    // Invalidar caché
+    $this->cache->delete("recaudacion:id:{$data['ID_Recaudacion']}");
+    $this->cache->delete("recaudacion:nombre_maquina:{$data['ID_Maquina']}");
+    $this->invalidateListados();
+}
     public function saveInforme(InformeRecaudacion $informe): void
     {
         $conn = $this->db->getConnection();
@@ -318,14 +375,40 @@ public function findMaquinasOperativasPorComercio(Comercio $comercio): array
         return $maquinas;
     }, 600);
 }
-    private function invalidateListados(): void
-    {
-        $this->cache->delete("recaudaciones:resumen:all");
-        $this->cache->delete("recaudacion:maquinas_operativas");
-        if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("recaudaciones:all:*");
-            $this->cache->deleteByPattern("recaudaciones:resumen:*");
-            $this->cache->deleteByPattern("recaudacion:maquinas_comercio:*");
-        }
+/**
+ * Obtiene el nombre de una máquina por su ID
+ * @param Uuid $idMaquina
+ * @return string|null
+ */
+public function findNombreMaquinaById(Uuid $idMaquina): ?string
+{
+    $cacheKey = "recaudacion:nombre_maquina:{$idMaquina->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idMaquina) {
+        $conn = $this->db->getConnection();
+        $stmt = $conn->prepare("SELECT Nombre_Maquina FROM MaquinaRecreativa WHERE ID_Maquina = ?");
+        $v = $idMaquina->value();
+        $stmt->bind_param('s', $v);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        return $row ? $row['Nombre_Maquina'] : null;
+    }, $this->ttl);
+}
+private function invalidateListados(): void
+{
+    // Eliminar claves específicas
+    $this->cache->delete("recaudaciones:resumen:all");
+    $this->cache->delete("recaudacion:maquinas_operativas");
+    
+    // Si es Redis, eliminar por patrón
+    if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
+        $this->cache->deleteByPattern("recaudaciones:all:*");
+        $this->cache->deleteByPattern("recaudaciones:resumen:*");
+        $this->cache->deleteByPattern("recaudacion:maquinas_comercio:*");
+        $this->cache->deleteByPattern("recaudacion:nombre_maquina:*");
+    } else {
+        // Para NullCache (sin Redis), no hay problema
     }
+}
 }
