@@ -2,77 +2,73 @@
   <div class="logo-section">
     <h1 class="titulo-header">Recrea Sys</h1>
   </div>
-  
+
   <div class="header-controls">
     <!-- Botón Reportes -->
-    <button mat-raised-button 
+    <button mat-raised-button
             *appHasRole="['Administrador', 'Contabilidad', 'Logistica', 'Tecnico']"
-            (click)="irAReportes()" 
+            (click)="irAReportes()"
             class="action-button">
       <mat-icon>assignment</mat-icon>
       <span>Reportes</span>
     </button>
-    
+
     <!-- Botón Chat -->
-    <button mat-raised-button 
-            (click)="abrirChat()" 
+    <button mat-raised-button
+            (click)="abrirChat()"
             class="action-button">
       <mat-icon>chat</mat-icon>
       <span>Chat</span>
     </button>
-    
+
     <!-- Botón Notificaciones -->
-    <button mat-raised-button 
+    <button mat-raised-button
             *ngIf="showNotificacionesButton"
-            (click)="verNotificaciones()" 
-            class="action-button" 
-            [matBadge]="unreadCount" 
-            matBadgeColor="warn" 
+            (click)="verNotificaciones()"
+            class="action-button"
+            [matBadge]="unreadCount > 0 ? unreadCount : null"
+            matBadgeColor="warn"
             matBadgeOverlap="false">
       <mat-icon>notifications</mat-icon>
       <span>Notificaciones</span>
     </button>
-    
+
     <!-- Menú de Perfil -->
-    <button mat-raised-button 
-            [matMenuTriggerFor]="menu" 
-            class="profile-button">
+    <button mat-raised-button [matMenuTriggerFor]="menu" class="profile-button">
       <mat-icon>account_circle</mat-icon>
       <span>{{ currentUser?.nombre || 'Usuario' }}</span>
       <mat-icon class="profile-arrow">arrow_drop_down</mat-icon>
     </button>
     <mat-menu #menu="matMenu">
       <button mat-menu-item (click)="verPerfil()">
-        <mat-icon>person</mat-icon>
-        <span>Mi Perfil</span>
+        <mat-icon>person</mat-icon><span>Mi Perfil</span>
       </button>
       <button mat-menu-item (click)="editarPerfil()">
-        <mat-icon>edit</mat-icon>
-        <span>Editar Perfil</span>
+        <mat-icon>edit</mat-icon><span>Editar Perfil</span>
       </button>
       <mat-divider></mat-divider>
       <button mat-menu-item (click)="cerrarSesion()" class="logout-button">
-        <mat-icon>exit_to_app</mat-icon>
-        <span>Cerrar Sesión</span>
+        <mat-icon>exit_to_app</mat-icon><span>Cerrar Sesión</span>
       </button>
     </mat-menu>
   </div>
 </header>
 
-<!-- Modal de Notificaciones -->
+<!-- Overlay + Modal de Notificaciones -->
+<!-- FIX: usa app-notificaciones-panel (máquinas + reportes) en lugar de app-notificaciones-list -->
 <div class="modal-overlay" *ngIf="showNotifications" (click)="cerrarNotificaciones()"></div>
 <div class="modal-panel" *ngIf="showNotifications">
-  <app-notificaciones-list 
+  <app-notificaciones-panel
     [currentUser]="currentUser"
     (onClose)="cerrarNotificaciones()">
-  </app-notificaciones-list>
+  </app-notificaciones-panel>
 </div>
 
-<!-- Modal de Chat -->
+<!-- Overlay + Modal de Chat -->
 <div class="modal-overlay" *ngIf="showChatModal" (click)="cerrarChatModal()"></div>
 <div class="modal-panel chat-modal" *ngIf="showChatModal">
-  <app-chat 
-    [currentUser]="currentUser" 
+  <app-chat
+    [currentUser]="currentUser"
     [asPanel]="true"
     [showUserList]="true"
     [showSearch]="true"

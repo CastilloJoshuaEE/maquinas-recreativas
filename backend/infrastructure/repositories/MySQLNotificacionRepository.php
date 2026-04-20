@@ -85,78 +85,143 @@ public function findMaquinasByDestinatario(Uuid $idDestinatario): array
     $cacheKey = "notificaciones:maquina:{$idDestinatario->value()}";
     return $this->cache->remember($cacheKey, function () use ($idDestinatario) {
         $conn = $this->db->getConnection();
-        $sql  = "SELECT n.*,u.nombre as nombre_remitente,u.apellido as apellido_remitente,
-                        m.Nombre_Maquina,c.Nombre as NombreComercio,c.Direccion as DireccionComercio
+        $sql  = "SELECT n.*, u.nombre as nombre_remitente, u.apellido as apellido_remitente,
+                        m.Nombre_Maquina, c.Nombre as NombreComercio, c.Direccion as DireccionComercio
                  FROM NotificacionMaquinaRecreativa n
-                 LEFT JOIN usuario u ON n.ID_Remitente=u.ID_Usuario
-                 LEFT JOIN MaquinaRecreativa m ON n.ID_Maquina=m.ID_Maquina
-                 LEFT JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
-                 WHERE n.ID_Destinatario=? ORDER BY n.Fecha DESC";
+                 LEFT JOIN usuario u ON n.ID_Remitente = u.ID_Usuario
+                 LEFT JOIN MaquinaRecreativa m ON n.ID_Maquina = m.ID_Maquina
+                 LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                 WHERE n.ID_Destinatario = ? 
+                 ORDER BY n.Fecha DESC";
+        
         $stmt = $conn->prepare($sql);
-        $v    = $idDestinatario->value(); 
+        $v = $idDestinatario->value(); 
         $stmt->bind_param('s', $v);
         $stmt->execute();
+        
+        //  Obtener resultado una sola vez
         $result = $stmt->get_result();
         $notificaciones = [];
+        
         while ($row = $result->fetch_assoc()) {
             $notificaciones[] = $row;
         }
-        // Cerrar el statement y liberar el resultado
+        
+        //  Liberar recursos
+        $result->free();
         $stmt->close();
-        // Asegurar que no queden resultados pendientes
+        
+        // Limpiar resultados pendientes
         while ($conn->more_results() && $conn->next_result()) {
             if ($rs = $conn->store_result()) {
                 $rs->free();
             }
         }
+        
         return $notificaciones;
     }, $this->ttl);
 }
 
     public function findReportesByUsuario(Uuid $idUsuario): array
-    {
-        $cacheKey = "notificaciones:reporte:{$idUsuario->value()}";
-        return $this->cache->remember($cacheKey, function () use ($idUsuario) {
-            $conn = $this->db->getConnection();
-            $sql  = "SELECT n.*,r.descripcion as reporte_descripcion FROM notificaciones n
-                     LEFT JOIN reporte r ON n.ID_Reporte=r.ID_Reporte
-                     WHERE n.ID_Usuario=? ORDER BY n.fecha_hora DESC";
-            $stmt = $conn->prepare($sql);
-            $v    = $idUsuario->value(); $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $notificaciones = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $notificaciones[] = $row;
-            $stmt->close();
-            return $notificaciones;
-        }, $this->ttl);
-    }
-
-    public function findNoLeidasMaquina(Uuid $idDestinatario): int
-    {
-        $cacheKey = "notificaciones:no_leidas_maquina:{$idDestinatario->value()}";
-        return $this->cache->remember($cacheKey, function () use ($idDestinatario) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("SELECT COUNT(*) as total FROM NotificacionMaquinaRecreativa WHERE ID_Destinatario=? AND Estado='No leido'");
-            $v    = $idDestinatario->value(); $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $row  = $stmt->get_result()->fetch_assoc(); $stmt->close();
-            return (int)$row['total'];
-        }, $this->ttl);
-    }
-
-    public function findNoLeidasReporte(Uuid $idUsuario): int
-    {
-        $cacheKey = "notificaciones:no_leidas_reporte:{$idUsuario->value()}";
-        return $this->cache->remember($cacheKey, function () use ($idUsuario) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("SELECT COUNT(*) as cantidad FROM notificaciones WHERE ID_Usuario=? AND leida=0");
-            $v    = $idUsuario->value(); $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $row  = $stmt->get_result()->fetch_assoc(); $stmt->close();
-            return (int)$row['cantidad'];
-        }, $this->ttl);
-    }
-
+{
+    $cacheKey = "notificaciones:reporte:{$idUsuario->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idUsuario) {
+        $conn = $this->db->getConnection();
+        $sql  = "SELECT n.*, r.descripcion as reporte_descripcion 
+                 FROM notificaciones n
+                 LEFT JOIN reporte r ON n.ID_Reporte = r.ID_Reporte
+                 WHERE n.ID_Usuario = ? 
+                 ORDER BY n.fecha_hora DESC";
+        
+        $stmt = $conn->prepare($sql);
+        $v = $idUsuario->value(); 
+        $stmt->bind_param('s', $v);
+        $stmt->execute();
+        
+        //   Obtener el resultado UNA SOLA VEZ
+        $result = $stmt->get_result();
+        $notificaciones = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            $notificaciones[] = $row;
+        }
+        
+        //  Liberar recursos correctamente
+        $result->free();
+        $stmt->close();
+        
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        
+        return $notificaciones;
+    }, $this->ttl);
+}
+public function findNoLeidasMaquina(Uuid $idDestinatario): int
+{
+    $cacheKey = "notificaciones:no_leidas_maquina:{$idDestinatario->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idDestinatario) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) as total 
+                FROM NotificacionMaquinaRecreativa 
+                WHERE ID_Destinatario = ? AND Estado = 'No leido'";
+        
+        $stmt = $conn->prepare($sql);
+        $v = $idDestinatario->value(); 
+        $stmt->bind_param('s', $v);
+        $stmt->execute();
+        
+        //  Obtener resultado una sola vez
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        
+        $result->free();
+        $stmt->close();
+        
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        
+        return (int)($row['total'] ?? 0);
+    }, $this->ttl);
+}
+public function findNoLeidasReporte(Uuid $idUsuario): int
+{
+    $cacheKey = "notificaciones:no_leidas_reporte:{$idUsuario->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idUsuario) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT COUNT(*) as cantidad 
+                FROM notificaciones 
+                WHERE ID_Usuario = ? AND leida = 0";
+        
+        $stmt = $conn->prepare($sql);
+        $v = $idUsuario->value(); 
+        $stmt->bind_param('s', $v);
+        $stmt->execute();
+        
+        //  Obtener resultado una sola vez
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        
+        $result->free();
+        $stmt->close();
+        
+        // Limpiar resultados pendientes
+        while ($conn->more_results() && $conn->next_result()) {
+            if ($rs = $conn->store_result()) {
+                $rs->free();
+            }
+        }
+        
+        return (int)($row['cantidad'] ?? 0);
+    }, $this->ttl);
+}
     public function marcarLeidaMaquina(Uuid $id): bool
     {
         $conn = $this->db->getConnection();
@@ -171,25 +236,54 @@ public function findMaquinasByDestinatario(Uuid $idDestinatario): array
         return $result;
     }
 
-    public function marcarLeidaReporte(Uuid $id, Uuid $idUsuario): bool
-    {
-        $conn = $this->db->getConnection();
-        $idV  = $id->value(); $uV = $idUsuario->value();
-        $check = $conn->prepare("SELECT ID_Notificaciones,leida FROM notificaciones WHERE ID_Notificaciones=? AND ID_Usuario=?");
-        $check->bind_param('ss', $idV, $uV);
-        $check->execute();
-        $result = $check->get_result();
-        if ($result->num_rows === 0) { $check->close(); return false; }
-        $row = $result->fetch_assoc(); $check->close();
-        if ($row['leida'] == 1) return true;
-        $stmt = $conn->prepare("UPDATE notificaciones SET leida=1 WHERE ID_Notificaciones=? AND ID_Usuario=?");
-        $stmt->bind_param('ss', $idV, $uV);
-        $res  = $stmt->execute(); $stmt->close();
-        $this->cache->delete("notificaciones:reporte:{$uV}");
-        $this->cache->delete("notificaciones:no_leidas:{$uV}");
-        $this->cache->delete("notificaciones:no_leidas_reporte:{$uV}");
-        return $res;
+public function marcarLeidaReporte(Uuid $id, Uuid $idUsuario): bool
+{
+    $conn = $this->db->getConnection();
+    $idV = $id->value(); 
+    $uV = $idUsuario->value();
+    
+    // Verificar si existe y no está leída
+    $check = $conn->prepare("SELECT ID_Notificaciones, leida FROM notificaciones WHERE ID_Notificaciones = ? AND ID_Usuario = ?");
+    $check->bind_param('ss', $idV, $uV);
+    $check->execute();
+    
+    //  Obtener resultado una sola vez
+    $result = $check->get_result();
+    
+    if ($result->num_rows === 0) { 
+        $result->free();
+        $check->close(); 
+        return false; 
     }
+    
+    $row = $result->fetch_assoc();
+    $result->free();
+    $check->close();
+    
+    if ($row['leida'] == 1) {
+        return true;
+    }
+    
+    // Actualizar a leída
+    $stmt = $conn->prepare("UPDATE notificaciones SET leida = 1 WHERE ID_Notificaciones = ? AND ID_Usuario = ?");
+    $stmt->bind_param('ss', $idV, $uV);
+    $res = $stmt->execute(); 
+    $stmt->close();
+    
+    // Limpiar resultados pendientes
+    while ($conn->more_results() && $conn->next_result()) {
+        if ($rs = $conn->store_result()) {
+            $rs->free();
+        }
+    }
+    
+    // Invalidar caché
+    $this->cache->delete("notificaciones:reporte:{$uV}");
+    $this->cache->delete("notificaciones:no_leidas:{$uV}");
+    $this->cache->delete("notificaciones:no_leidas_reporte:{$uV}");
+    
+    return $res;
+}
 
     public function marcarTodasLeidasReporte(Uuid $idUsuario): bool
     {
