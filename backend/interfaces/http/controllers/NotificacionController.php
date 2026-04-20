@@ -40,7 +40,8 @@ class NotificacionController
         CrearNotificacionMaquinaHandler $crearNotificacionMaquinaHandler,
         MarcarComoLeidaHandler $marcarComoLeidaHandler,
         MarcarTodasComoLeidasHandler $marcarTodasComoLeidasHandler
-    ) {
+
+        ) {
         $this->obtenerNotificacionesMaquinaHandler = $obtenerNotificacionesMaquinaHandler;
         $this->obtenerNotificacionesReporteHandler = $obtenerNotificacionesReporteHandler;
         $this->obtenerCantidadNoLeidasHandler      = $obtenerCantidadNoLeidasHandler;
@@ -277,4 +278,6 @@ public function obtenerNoLeidas(Request $request, string $idUsuario): Response
     $response->json(['success' => true, 'cantidad' => $result['cantidad']]);
     return $response;
 }
+
+
 }

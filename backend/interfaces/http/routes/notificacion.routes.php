@@ -33,6 +33,12 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'marcarComoLeidaNotificacion'],
         'middleware' => []
     ],
+    [
+    'method' => 'POST',
+    'path' => '/notificaciones_maquina/:uuid/marcar-leida',
+    'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\NotificacionController::class, 'marcarComoLeidaMaquina'],
+    'middleware' => []
+],
     
     // Marcar todas como leídas
     [

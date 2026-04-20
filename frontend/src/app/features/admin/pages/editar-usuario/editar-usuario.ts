@@ -22,6 +22,8 @@ import { UserService } from '@core/services/user';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { User } from '@core/models/user.model';
 import { AdminService } from '../../services/admin';
+import { AuthService } from '@core/services/auth';
+
 @Component({
   selector: 'app-editar-usuario',
   standalone: true,
@@ -48,7 +50,9 @@ export class EditarUsuarioComponent implements OnInit {
   private adminService = inject(AdminService);
   private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
-  
+    private authService = inject(AuthService);
+  currentUser: User | null = null;
+
   usuarioForm!: FormGroup;
   usuario: User | null = null;
   modo: 'actualizar' | 'estado' = 'actualizar';
@@ -59,8 +63,15 @@ export class EditarUsuarioComponent implements OnInit {
   hidePassword = true;
   
   ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
     this.route.params.subscribe(params => {
       const uuid = params['uuid'];
+      // Verificar antes de cargar
+      if (uuid === this.currentUser?.id) {
+        this.snackBar.open('No puedes editar tu propio perfil aquí', 'Cerrar', { duration: 3000 });
+        this.router.navigate(['/admin/consultar-usuarios']);
+        return;
+      }
       this.route.queryParams.subscribe(queryParams => {
         this.modo = queryParams['modo'] === 'estado' ? 'estado' : 'actualizar';
         if (uuid) {
@@ -69,28 +80,33 @@ export class EditarUsuarioComponent implements OnInit {
       });
     });
   }
-  
-private cargarUsuario(uuid: string): void {
+  private cargarUsuario(uuid: string): void {
     this.loading = true;
     this.error = '';
     
-    //  Usar AdminService en lugar de ApiService directamente
     this.adminService.getUsuarioById(uuid).subscribe({
-        next: (usuario) => {
-            if (usuario) {
-                this.usuario = usuario;
-                this.inicializarFormulario();
-            } else {
-                this.error = 'Usuario no encontrado';
-            }
+      next: (usuario) => {
+        if (usuario) {
+          // Verificar que no sea administrador
+          if (usuario.tipo === 'Administrador') {
+            this.error = 'No puedes modificar a otro administrador';
             this.loading = false;
-        },
-        error: (err) => {
-            this.error = err.message || 'Error al cargar usuario';
-            this.loading = false;
+            return;
+          }
+          
+          this.usuario = usuario;
+          this.inicializarFormulario();
+        } else {
+          this.error = 'Usuario no encontrado';
         }
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err.message || 'Error al cargar usuario';
+        this.loading = false;
+      }
     });
-}
+  }
   private inicializarFormulario(): void {
     if (!this.usuario) return;
     

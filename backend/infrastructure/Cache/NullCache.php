@@ -10,6 +10,8 @@ namespace maquinas_recreativas\Infrastructure\Cache;
 
 class NullCache implements CacheInterface
 {
+        private array $cache = [];
+
     public function get(string $key, $default = null)
     {
         return $default;
@@ -66,5 +68,19 @@ class NullCache implements CacheInterface
     public function isAvailable(): bool
     {
         return false;
+    }
+    public function deleteByPattern(string $pattern): int
+    {
+        $count = 0;
+        $pattern = str_replace('*', '.*', $pattern);
+        
+        foreach (array_keys($this->cache) as $key) {
+            if (preg_match('/^' . $pattern . '$/', $key)) {
+                unset($this->cache[$key]);
+                $count++;
+            }
+        }
+        
+        return $count;
     }
 }

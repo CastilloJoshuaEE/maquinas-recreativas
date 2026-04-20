@@ -25,6 +25,7 @@ import { Comercio } from '@core/models/recaudacion.model';
 import { User } from '@core/models/user.model';
 import { ComercioFormComponent } from '../../ui/comercio-form/comercio-form';
 import { MaquinaFormComponent } from '../../ui/maquina-form/maquina-form';
+import { NotificacionMaquinaService } from '@core/services/notification-maquina';
 
 @Component({
   selector: 'app-dashboard-logistica',
@@ -43,6 +44,7 @@ export class DashboardLogisticaComponent implements OnInit {
   private logisticaService = inject(LogisticaService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private notificacionMaquinaService = inject(NotificacionMaquinaService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
 
@@ -108,22 +110,23 @@ export class DashboardLogisticaComponent implements OnInit {
     }
   }
 
-  // ── Notificaciones ────────────────────────────────────────────────────────
-  private cargarNotificaciones(): void {
-    this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
-      next: (n) => {
-        this.notificaciones = n;
-        this.notificacionesNoLeidas = n.filter(x => !x.leida).length;
-        this.cargandoNotificaciones = false;
-      },
-      error: () => { this.cargandoNotificaciones = false; }
-    });
-  }
+private cargarNotificaciones(): void {
+  this.cargandoNotificaciones = true;
+  this.notificacionMaquinaService.getNotificacionesMaquina(this.user!.id).subscribe({
+    next: (notificaciones) => {
+      this.notificaciones = notificaciones;
+      this.notificacionesNoLeidas = notificaciones.filter(n => n.Estado !== 'Leido').length;
+      this.cargandoNotificaciones = false;
+    },
+    error: () => { this.cargandoNotificaciones = false; }
+  });
+}
 
-  marcarNotificacionLeida(id: string): void {
-    this.notificationService.markAsRead(id).subscribe({ next: () => this.cargarNotificaciones() });
-  }
+marcarNotificacionLeida(id: string): void {
+  this.notificacionMaquinaService.marcarComoLeida(id).subscribe({ 
+    next: () => this.cargarNotificaciones() 
+  });
+}
 
   // ── Máquinas ──────────────────────────────────────────────────────────────
   private cargarMaquinas(): void {

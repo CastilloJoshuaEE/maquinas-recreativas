@@ -72,13 +72,21 @@ export class ChatUsuariosComponent implements OnInit, OnDestroy {
   }
   
   seleccionarUsuario(usuario: User): void { this.usuarioSeleccionado = usuario; this.cargarReportes(); }
-  
-  cargarReportes(): void {
-    if (!this.usuarioSeleccionado) return;
-    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
-      next: (data) => { this.reportes = data.reportes; if (this.reportes.length > 0) { this.reporteSeleccionadoId = this.reportes[0].ID_Reporte; this.cargarComentarios(); } }
-    });
-  }
+  getReporteId(reporte: Reporte): string {
+  return (reporte as any).id || reporte.ID_Reporte || '';
+}
+cargarReportes(): void {
+  if (!this.usuarioSeleccionado) return;
+  this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
+    next: (data) => {
+      this.reportes = data.reportes;
+      if (this.reportes.length > 0) { 
+        this.reporteSeleccionadoId = this.getReporteId(this.reportes[0]); 
+        this.cargarComentarios(); 
+      }
+    }
+  });
+}
   
   cargarComentarios(): void {
     if (!this.reporteSeleccionadoId) return;

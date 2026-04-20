@@ -12,14 +12,8 @@ export const REPORTES_ROUTES: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      { 
-        path: 'gestion', 
-        loadComponent: () => import('./pages/gestion-reportes/gestion-reportes').then(m => m.GestionReportesComponent) 
-      },
-      { 
-        path: 'chat', 
-        loadComponent: () => import('./pages/chat-view/chat-view').then(m => m.ChatViewComponent) 
-      },
+{ path: 'gestion-reportes', loadComponent: () => import('./pages/gestion-reportes/gestion-reportes').then(m => m.GestionReportesComponent) },
+      { path: 'chat-view', loadComponent: () => import('./pages/chat-view/chat-view').then(m => m.ChatViewComponent) },
       { 
         path: 'chat/:reporteId', 
         loadComponent: () => import('./pages/chat-view/chat-view').then(m => m.ChatViewComponent) 

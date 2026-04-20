@@ -22,6 +22,7 @@ import { ApiService } from '@core/services/api';
 import { UserService } from '@core/services/user';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { User } from '@core/models/user.model';
+import { AuthService } from '@core/services/auth';
 
 @Component({
   selector: 'app-consultar-usuarios',
@@ -48,7 +49,9 @@ export class ConsultarUsuariosComponent implements OnInit {
   private apiService = inject(ApiService);
   private userService = inject(UserService);
   private snackBar = inject(MatSnackBar);
-  
+    private authService = inject(AuthService);
+  currentUser: User | null = null;
+
   filtrosForm!: FormGroup;
   usuarios: User[] = [];
   displayedColumns: string[] = ['id', 'ci', 'nombre', 'email', 'usuario_asignado', 'estado', 'tipo', 'acciones'];
@@ -65,6 +68,8 @@ export class ConsultarUsuariosComponent implements OnInit {
   cargandoHistorial = false;
   
   ngOnInit(): void {
+        this.currentUser = this.authService.getCurrentUser();
+
     this.initForm();
     this.cargarUsuarios();
   }
@@ -139,6 +144,36 @@ cargarUsuarios(): void {
     }
   });
 }
+ /**
+   * Verifica si el usuario actual puede editar/eliminar/cambiar estado al usuario de la fila
+   */
+  puedeModificarUsuario(usuario: User): boolean {
+    // No puede modificarse a sí mismo
+    if (this.currentUser?.id === usuario.id) {
+      return false;
+    }
+    
+    // No puede modificar a otro administrador
+    if (usuario.tipo === 'Administrador') {
+      return false;
+    }
+    
+    return true;
+  }
+   /**
+   * Verifica si puede eliminar al usuario
+   */
+  puedeEliminarUsuario(usuario: User): boolean {
+    return this.puedeModificarUsuario(usuario);
+  }
+  
+  /**
+   * Verifica si puede cambiar el estado del usuario
+   */
+  puedeCambiarEstado(usuario: User): boolean {
+    return this.puedeModificarUsuario(usuario);
+  }
+
   soloNumeros(event: KeyboardEvent): boolean {
   const charCode = event.charCode;
   if (charCode >= 48 && charCode <= 57) {
@@ -169,11 +204,19 @@ cargarUsuarios(): void {
     this.router.navigate(['/admin/gestion-usuarios']);
   }
   
-  editarUsuario(uuid: string): void {
-    this.router.navigate([`/admin/editar-usuario/${uuid}`]);
+  editarUsuario(usuario: User): void {
+    if (!this.puedeModificarUsuario(usuario)) {
+      this.snackBar.open('No puedes editar este usuario', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    this.router.navigate([`/admin/editar-usuario/${usuario.id}`]);
   }
   
-  cambiarEstado(usuario: User): void {
+cambiarEstado(usuario: User): void {
+    if (!this.puedeCambiarEstado(usuario)) {
+      this.snackBar.open('No puedes cambiar el estado de este usuario', 'Cerrar', { duration: 3000 });
+      return;
+    }
     this.router.navigate([`/admin/editar-usuario/${usuario.id}`], { queryParams: { modo: 'estado' } });
   }
   
@@ -204,6 +247,11 @@ cargarUsuarios(): void {
   }
   
   eliminarUsuario(usuario: User): void {
+    if (!this.puedeEliminarUsuario(usuario)) {
+      this.snackBar.open('No puedes eliminar este usuario', 'Cerrar', { duration: 3000 });
+      return;
+    }
+    
     if (!confirm(`¿Está seguro de eliminar al usuario ${usuario.nombre} ${usuario.apellido}?`)) return;
     
     this.loading = true;

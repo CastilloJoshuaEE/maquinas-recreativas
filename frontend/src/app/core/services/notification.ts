@@ -10,25 +10,6 @@ import { catchError } from 'rxjs/operators';
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 
-/**
- * Interfaz para notificación de máquinas (NotificacionMaquinaRecreativa)
- */
-export interface NotificacionMaquina {
-  ID_Notificacion: string;
-  ID_Remitente: string;
-  ID_Destinatario: string;
-  ID_Maquina: string;
-  Tipo: string;
-  Mensaje: string;
-  Fecha: string;
-  Estado: string;           // 'Leido' o 'No leido'
-  leida?: boolean;          // Para compatibilidad con el frontend
-  nombre_remitente?: string;
-  apellido_remitente?: string;
-  Nombre_Maquina?: string;
-  NombreComercio?: string;
-  DireccionComercio?: string;
-}
 
 /**
  * Interfaz para notificación de reportes
@@ -43,11 +24,6 @@ export interface NotificacionReporte {
   emisor_nombre?: string;
   emisor_apellido?: string;
 }
-
-/**
- * Tipo unión para cualquier notificación
- */
-export type Notificacion = NotificacionMaquina | NotificacionReporte;
 
 /**
  * Servicio para gestión de notificaciones
@@ -80,31 +56,6 @@ export class NotificationService {
       map(response => (response && response.success && response['notificaciones']) ? response['notificaciones'] : []),
       catchError(error => {
         console.error('Error obteniendo notificaciones:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Obtiene notificaciones de máquina por usuario
-   * @param userId - ID del usuario
-   * @returns Observable con lista de notificaciones de máquina
-   */
-  getMaquinaNotifications(userId: string): Observable<NotificacionMaquina[]> {
-    return this.apiService.get<{ notificaciones: NotificacionMaquina[] }>(API_ENDPOINTS.NOTIFICACIONES_MAQUINA(userId)).pipe(
-      map(response => {
-        console.log('Respuesta notificaciones máquina:', response);
-        if (response && response.success && response['notificaciones']) {
-          // Normalizar: añadir propiedad 'leida' para compatibilidad
-          return response['notificaciones'].map((n: NotificacionMaquina) => ({
-            ...n,
-            leida: n.Estado === 'Leido'
-          }));
-        }
-        return [];
-      }),
-      catchError(error => {
-        console.error('Error obteniendo notificaciones de máquina:', error);
         return of([]);
       })
     );

@@ -9,7 +9,7 @@ use maquinas_recreativas\Domain\Usuario\TipoUsuario;
 use maquinas_recreativas\Application\Queries\QueryHandler;
 use InvalidArgumentException;
 use maquinas_recreativas\Application\Queries\Query;
-
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 /**
  * Manejador para la query de obtener usuarios por tipo.
@@ -35,21 +35,19 @@ final class ObtenerUsuariosPorTipoHandler implements QueryHandler
      * @return array
      * @throws InvalidArgumentException
      */
-    public function handle(Query $query):array{
-        // Validar que el tipo sea válido
-        $tiposValidos = TipoUsuario::validValues();
-        if(!in_array($query->tipo, $tiposValidos, true)){
-            throw new InvalidArgumentException("Tipo de usuario '{$query->tipo}' no válido. Valores permitidos:"
-                .implode(',', $tiposValidos)
-            );
-
-        }
-        // Obtener usuarios del repositorio
-        $usuarios = $this->usuarioRepository->findByTipo($query->tipo, $query->excluirId);
-
-        // Convertir entidades a arrays
-        return array_map(fn($usuario) => $usuario->toArray(), $usuarios);
-            
-    }    
+public function handle(Query $query): array
+{
+    $tiposValidos = TipoUsuario::validValues();
+    if (!in_array($query->tipo, $tiposValidos, true)) {
+        throw new InvalidArgumentException("Tipo de usuario '{$query->tipo}' no válido");
+    }
+    
+    // Convertir string a Uuid solo si existe
+    $excluirUuid = $query->excluirId ? new Uuid($query->excluirId) : null;
+    
+    $usuarios = $this->usuarioRepository->findByTipo($query->tipo, $excluirUuid);
+    
+    return array_map(fn($usuario) => $usuario->toArray(), $usuarios);
+}  
 
 }

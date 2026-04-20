@@ -16,16 +16,16 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 final class ObtenerUsuariosPorTipoQuery implements Query
 {
     public string $tipo;
-    public ?Uuid $excluirId;
+     public ?string $excluirId; 
      /**
      * Constructor de la query.
      *
      * @param string $tipo
      * @param Uuid|null $excluirId
      */
-    public function __construct(string $tipo, ?Uuid $excluirId = null)
+    public function __construct(string $tipo, ?string $excluirId = null)
     {
         $this->tipo = $tipo;
         $this->excluirId = $excluirId;
-    }       
+    }            
 }

@@ -94,22 +94,32 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
   
   seleccionarUsuario(usuario: User): void { this.selectedUser = usuario; this.cargarReportes(); }
-  
-  cargarReportes(): void {
-    if (!this.selectedUser) return;
-    this.reportService.getChat(this.currentUserId, this.selectedUser.id).subscribe({
-      next: (data) => {
-        this.reportes = data.reportes;
-        if (this.initialReporteId && this.reportes.length > 0) {
-          const reporteInicial = this.reportes.find(r => r.ID_Reporte === this.initialReporteId);
-          if (reporteInicial) { this.selectedReporteId = reporteInicial.ID_Reporte; this.cargarComentarios(); }
-          else if (this.reportes.length > 0) { this.selectedReporteId = this.reportes[0].ID_Reporte; this.cargarComentarios(); }
-        } else if (this.reportes.length > 0) { this.selectedReporteId = this.reportes[0].ID_Reporte; this.cargarComentarios(); }
-        else { this.comentarios = []; }
-      },
-      error: () => { this.comentarios = []; }
-    });
-  }
+cargarReportes(): void {
+  if (!this.selectedUser) return;
+  this.reportService.getChat(this.currentUserId, this.selectedUser.id).subscribe({
+    next: (data) => {
+      this.reportes = data.reportes;
+      if (this.initialReporteId && this.reportes.length > 0) {
+        const reporteInicial = this.reportes.find(r => 
+          (r.ID_Reporte || r.id) === this.initialReporteId
+        );
+        if (reporteInicial) { 
+          this.selectedReporteId = reporteInicial.ID_Reporte || reporteInicial.id || null; 
+          this.cargarComentarios(); 
+        } else if (this.reportes.length > 0) { 
+          this.selectedReporteId = this.reportes[0].ID_Reporte || this.reportes[0].id || null; 
+          this.cargarComentarios(); 
+        }
+      } else if (this.reportes.length > 0) { 
+        this.selectedReporteId = this.reportes[0].ID_Reporte || this.reportes[0].id || null; 
+        this.cargarComentarios(); 
+      } else { 
+        this.comentarios = []; 
+      }
+    },
+    error: () => { this.comentarios = []; }
+  });
+}
   
   cargarComentarios(): void {
     if (!this.selectedReporteId) return;

@@ -1,17 +1,73 @@
+<!-- notificaciones-panel.html -->
 <div class="notificaciones-panel">
-  <div class="panel-header"><h2><mat-icon>notifications</mat-icon> Notificaciones<span class="unread-count" *ngIf="unreadCount > 0">{{ unreadCount }}</span></h2><button mat-button *ngIf="unreadCount > 0" (click)="marcarTodasLeidas()">Marcar todas como leídas</button></div>
-  <div *ngIf="cargando" class="loading-container"><mat-spinner diameter="40"></mat-spinner><p>Cargando notificaciones...</p></div>
-  <div *ngIf="!cargando && error" class="error-message">{{ error }}<button mat-button (click)="cargarNotificaciones()">Reintentar</button></div>
-  <div *ngIf="!cargando && !error && notificaciones.length === 0" class="no-notificaciones"><mat-icon>notifications_off</mat-icon><p>No tienes notificaciones</p></div>
+  <div class="panel-header">
+    <h2>
+      <mat-icon>notifications</mat-icon> 
+      Notificaciones
+      <span class="unread-count" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </h2>
+    <button mat-button *ngIf="unreadCount > 0" (click)="marcarTodasLeidas()">
+      Marcar todas como leídas
+    </button>
+  </div>
+  
+  <div *ngIf="cargando" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando notificaciones...</p>
+  </div>
+  
+  <div *ngIf="!cargando && error" class="error-message">
+    {{ error }}
+    <button mat-button (click)="cargarNotificaciones()">Reintentar</button>
+  </div>
+  
+  <div *ngIf="!cargando && !error && notificaciones.length === 0" class="no-notificaciones">
+    <mat-icon>notifications_off</mat-icon>
+    <p>No tienes notificaciones</p>
+  </div>
+  
   <div *ngIf="!cargando && !error && notificaciones.length > 0" class="notificaciones-list">
-    <div *ngFor="let notif of notificaciones" class="notificacion-item" [class.no-leida]="!notif.leida" (click)="marcarComoLeida(notif)">
-      <div class="notificacion-icon"><mat-icon [ngClass]="getIconoClass(notif.Tipo)">{{ getIcono(notif.Tipo) }}</mat-icon></div>
-      <div class="notificacion-content">
-        <div class="notificacion-mensaje"><strong *ngIf="notif.emisor_nombre">{{ notif.emisor_nombre }} {{ notif.emisor_apellido }}:</strong> {{ notif.mensaje }}</div>
-        <div class="notificacion-detalles" *ngIf="notif.Nombre_Maquina"><span class="detalle"><mat-icon>videogame_asset</mat-icon> {{ notif.Nombre_Maquina }}</span><span class="detalle" *ngIf="notif.NombreComercio"><mat-icon>store</mat-icon> {{ notif.NombreComercio }}</span></div>
-        <div class="notificacion-footer"><span class="fecha">{{ notif.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</span><button mat-button *ngIf="notif.ID_Reporte" (click)="verReporte(notif.ID_Reporte); $event.stopPropagation()">Ver chat relacionado</button></div>
+    <div *ngFor="let notif of notificaciones" 
+         class="notificacion-item" 
+         [class.no-leida]="!notif.leida" 
+         (click)="marcarComoLeida(notif)">
+      
+      <div class="notificacion-icon">
+        <mat-icon [ngClass]="getIconoClass(notif)">{{ getIcono(notif) }}</mat-icon>
       </div>
-      <button class="marcar-leida" *ngIf="!notif.leida" (click)="marcarComoLeida(notif); $event.stopPropagation()"><mat-icon>done</mat-icon></button>
+      
+      <div class="notificacion-content">
+        <div class="notificacion-mensaje">
+          <strong *ngIf="notif.tipo === 'reporte' && notif.emisorNombre">
+            {{ notif.emisorNombre }} {{ notif.emisorApellido }}:
+          </strong>
+          {{ notif.mensaje }}
+        </div>
+        
+        <div class="notificacion-detalles" *ngIf="notif.nombreMaquina">
+          <span class="detalle">
+            <mat-icon>videogame_asset</mat-icon> {{ notif.nombreMaquina }}
+          </span>
+          <span class="detalle" *ngIf="notif.nombreComercio">
+            <mat-icon>store</mat-icon> {{ notif.nombreComercio }}
+          </span>
+        </div>
+        
+        <div class="notificacion-footer">
+          <span class="fecha">{{ notif.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+          <button mat-button 
+                  *ngIf="notif.reporteId" 
+                  (click)="verReporte(notif.reporteId); $event.stopPropagation()">
+            Ver chat
+          </button>
+        </div>
+      </div>
+      
+      <button class="marcar-leida" 
+              *ngIf="!notif.leida" 
+              (click)="marcarComoLeida(notif); $event.stopPropagation()">
+        <mat-icon>done</mat-icon>
+      </button>
     </div>
   </div>
 </div>

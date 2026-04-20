@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NotificationService } from '@core/services/notification';
 import { User } from '@core/models/user.model';
+import { NotificacionMaquinaService } from '@core/services/notification-maquina';
 
 @Component({
   selector: 'app-notificaciones-list',
@@ -23,6 +24,7 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
 
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+private notificacionMaquinaService = inject(NotificacionMaquinaService);
 
   notificaciones: any[] = [];
   noLeidas: number = 0;
@@ -50,25 +52,26 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
     return this.user ?? this.currentUser ?? null;
   }
 
-  cargarNotificaciones(): void {
-    const activeUser = this.getActiveUser();
-    //  guard contra null antes de acceder a id
-    if (!activeUser?.id) {
-      return;
-    }
+cargarNotificaciones(): void {
+  const activeUser = this.getActiveUser();
+  if (!activeUser?.id) return;
 
-    this.cargando = true;
-    this.notificationService.getMaquinaNotifications(activeUser.id).subscribe({
-      next: (notifs) => {
-        this.notificaciones = notifs;
-        this.noLeidas = notifs.filter(n => !n.leida).length;
-        this.cargando = false;
-      },
-      error: () => {
-        this.cargando = false;
-      }
-    });
-  }
+  console.log('🔍 NotificacionesList: Cargando para usuario:', activeUser.id);
+  this.cargando = true;
+  
+  this.notificacionMaquinaService.getNotificacionesMaquina(activeUser.id).subscribe({
+    next: (notifs) => {
+      console.log('📬 NotificacionesList - recibidas:', notifs);
+      this.notificaciones = notifs;
+      this.noLeidas = notifs.filter(n => n.Estado !== 'Leido').length;
+      this.cargando = false;
+    },
+    error: (err) => { 
+      console.error('❌ Error cargando notificaciones:', err);
+      this.cargando = false; 
+    }
+  });
+}
 
   toggleMostrar(): void {
     this.mostrarNotificaciones = !this.mostrarNotificaciones;
@@ -76,20 +79,30 @@ export class NotificacionesListComponent implements OnInit, OnChanges {
       this.cargarNotificaciones();
     }
   }
-
-  marcarComoLeida(id: string): void {
-    this.notificationService.markAsRead(id).subscribe({
-      next: () => {
-        const notif = this.notificaciones.find(n => n.ID_Notificaciones === id);
-        if (notif && !notif.leida) {
-          notif.leida = 1;
+marcarComoLeida(id: string): void {
+  console.log('📌 NotificacionesList.marcarComoLeida - ID:', id);
+  
+  if (!id) {
+    console.error('❌ ID es undefined o vacío');
+    return;
+  }
+  
+  this.notificacionMaquinaService.marcarComoLeida(id).subscribe({
+    next: (success) => {
+      console.log('📨 Respuesta marcarComoLeida:', success);
+      if (success) {
+        const notif = this.notificaciones.find(n => n.ID_Notificacion === id);
+        if (notif && notif.Estado !== 'Leido') {
+          notif.Estado = 'Leido';
           this.noLeidas = Math.max(this.noLeidas - 1, 0);
         }
-      },
-      error: () => {}
-    });
-  }
-
+      }
+    },
+    error: (err) => {
+      console.error('❌ Error al marcar como leída:', err);
+    }
+  });
+}
   verReporte(reporteId: string): void {
     if (!reporteId) return;
     this.router.navigate(['/reportes/chat', reporteId]);

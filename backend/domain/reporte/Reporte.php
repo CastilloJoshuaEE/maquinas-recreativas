@@ -91,17 +91,21 @@ class Reporte
      *
      * @return array
      */
-    public function toArray(): array
-    {
-        return [
-            'ID_Reporte' => $this->id->value(),
-            'ID_Usuario_Emisor' => $this->idUsuarioEmisor->value(),
-            'ID_Usuario_Destinatario' => $this->idUsuarioDestinatario?->value(),
-            'descripcion' => $this->descripcion,
-            'fecha_hora' => $this->fechaHora->format('Y-m-d H:i:s'),
-            'estado' => $this->estado->value()
-        ];
-    }
+public function toArray(): array
+{
+    return [
+        'ID_Reporte' => $this->id->value(),
+        'ID_Usuario_Emisor' => $this->idUsuarioEmisor->value(),
+        'ID_Usuario_Destinatario' => $this->idUsuarioDestinatario?->value(),
+        'descripcion' => $this->descripcion,
+        'estado' => $this->estado->value(),
+        'fecha_hora' => $this->fechaHora->format('Y-m-d H:i:s'),
+        'emisor_nombre' => $this->emisorNombre ?? '',
+        'emisor_apellido' => $this->emisorApellido ?? '',
+        'destinatario_nombre' => $this->destinatarioNombre ?? '',
+        'destinatario_apellido' => $this->destinatarioApellido ?? '',
+    ];
+}
 
     /**
      * Actualiza el estado del reporte.

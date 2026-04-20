@@ -67,9 +67,9 @@ registrarActividad(userId: string, descripcion: string): Observable<boolean> {
     );
   }
 
-  getUsersByTipo(tipo: string, emisorId?: string): Observable<User[]> {
-    return this.apiService.get<{ usuarios: User[] }>('/usuarios/por-tipo', { tipo, emisorId }).pipe(
-      map(response => response.success && response['usuarios'] ? response['usuarios'] : [])
-    );
-  }
+getUsersByTipo(tipo: string, excluirId?: string): Observable<User[]> {
+  return this.apiService.get<{ usuarios: User[] }>('/usuarios/por-tipo', { tipo, excluirId }).pipe(
+    map(response => response.success && response['usuarios'] ? response['usuarios'] : [])
+  );
+}
 }

@@ -37,7 +37,7 @@ final class ObtenerReportesPorUsuarioHandler
      * @return array
      * @throws DomainException
      */
-    public function handle(ObtenerReportesPorUsuarioQuery $query): array
+ public function handle(ObtenerReportesPorUsuarioQuery $query): array
     {
         $idUsuario = new Uuid($query->getIdUsuario());
 
@@ -49,6 +49,15 @@ final class ObtenerReportesPorUsuarioHandler
         $reportes = $this->reporteRepository->findByUsuario($idUsuario);
 
         return array_map(function ($reporte) {
+            // Obtener datos del emisor
+            $emisor = $this->usuarioRepository->findById($reporte->idUsuarioEmisor());
+            
+            // Obtener datos del destinatario (si existe)
+            $destinatario = null;
+            if ($reporte->idUsuarioDestinatario()) {
+                $destinatario = $this->usuarioRepository->findById($reporte->idUsuarioDestinatario());
+            }
+
             return [
                 'id' => $reporte->id()->value(),
                 'id_emisor' => $reporte->idUsuarioEmisor()->value(),
@@ -56,7 +65,11 @@ final class ObtenerReportesPorUsuarioHandler
                 'descripcion' => $reporte->descripcion(),
                 'fecha_hora' => $reporte->fechaHora()->format('Y-m-d H:i:s'),
                 'estado' => $reporte->estado()->value(),
-                'es_chat' => $reporte->esChat()
+                'es_chat' => $reporte->esChat(),
+                'emisor_nombre' => $emisor ? $emisor->getNombre() : 'Usuario',
+                'emisor_apellido' => $emisor ? $emisor->getApellido() : '',
+                'destinatario_nombre' => $destinatario ? $destinatario->getNombre() : '',
+                'destinatario_apellido' => $destinatario ? $destinatario->getApellido() : '',
             ];
         }, $reportes);
     }

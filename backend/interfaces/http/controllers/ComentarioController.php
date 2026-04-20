@@ -81,23 +81,30 @@ class ComentarioController
             new OA\Response(response: 401, description: "Usuario no autenticado")
         ]
     )]
-    public function getByReporte(Request $request, string $idReporte): Response
-    {
-        if (!ValidationHelper::isValidUUID($idReporte)) {
-            throw new DomainException('ID de reporte inválido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
-        $comentarios = $this->obtenerComentariosHandler->handle($query);
-
-        //  json() retorna void, no se puede usar return
-        $response = new Response();
-        $response->json(['success' => true, 'comentarios' => $comentarios]);
-        return $response;
+public function getByReporte(Request $request, string $idReporte): Response
+{
+    if (!ValidationHelper::isValidUUID($idReporte)) {
+        throw new DomainException('ID de reporte inválido', 400);
     }
+
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    $query = new ObtenerComentariosPorReporteQuery($idReporte, $userId);
+    $comentarios = $this->obtenerComentariosHandler->handle($query);
+
+    error_log("Comentarios encontrados: " . count($comentarios));
+    error_log("Comentarios data: " . json_encode($comentarios));
+
+    $response = new Response();
+    // ✅ Asegurar que la respuesta tenga el formato esperado por el frontend
+    $response->json([
+        'success' => true, 
+        'data' => $comentarios,      // El frontend espera 'data'
+        'comentarios' => $comentarios // También por si acaso
+    ]);
+    return $response;
+}
 }

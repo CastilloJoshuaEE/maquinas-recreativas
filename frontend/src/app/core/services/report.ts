@@ -51,15 +51,14 @@ export class ReportService {
     );
   }
 
-  createComentario(reporteId: string, usuarioId: string, comentario: string): Observable<boolean> {
-    return this.apiService.post(API_ENDPOINTS.COMENTARIOS, {
-      ID_Reporte: reporteId,
-      ID_Usuario_Emisor: usuarioId,
-      comentario
-    }).pipe(
-      map(response => response.success)
-    );
-  }
+createComentario(reporteId: string, usuarioId: string, comentario: string): Observable<boolean> {
+  return this.apiService.post(API_ENDPOINTS.COMENTARIOS, {
+    idReporte: reporteId,     // ✅ camelCase
+    comentario: comentario    // ✅ camelCase
+  }).pipe(
+    map(response => response.success)
+  );
+}
 
   getComentariosByReporte(reporteId: string): Observable<Comentario[]> {
     return this.apiService.get<any>(API_ENDPOINTS.COMENTARIOS_BY_REPORTE(reporteId)).pipe(

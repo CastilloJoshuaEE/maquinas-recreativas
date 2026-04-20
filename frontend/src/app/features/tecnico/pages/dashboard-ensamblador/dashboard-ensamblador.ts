@@ -19,6 +19,7 @@ import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
 import { Maquina } from '@core/models/maquina.model';
 import { User } from '@core/models/user.model';
+import { NotificacionMaquinaService } from '@core/services/notification-maquina';
 
 @Component({
   selector: 'app-dashboard-ensamblador',
@@ -33,7 +34,8 @@ export class DashboardEnsambladorComponent implements OnInit {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private snackBar = inject(MatSnackBar);
-  
+  private notificacionMaquinaService = inject(NotificacionMaquinaService);
+
   user: User | null = null;
   notificaciones: any[] = [];
   notificacionesNoLeidas = 0;
@@ -60,17 +62,17 @@ export class DashboardEnsambladorComponent implements OnInit {
     }
   }
   
-  private cargarNotificaciones(): void {
-    this.cargandoNotificaciones = true;
-    this.notificationService.getMaquinaNotifications(this.user!.id).subscribe({
-      next: (notificaciones) => {
-        this.notificaciones = notificaciones;
-        this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-        this.cargandoNotificaciones = false;
-      },
-      error: () => { this.cargandoNotificaciones = false; }
-    });
-  }
+private cargarNotificaciones(): void {
+  this.cargandoNotificaciones = true;
+  this.notificacionMaquinaService.getNotificacionesMaquina(this.user!.id).subscribe({
+    next: (notificaciones) => {
+      this.notificaciones = notificaciones;
+      this.notificacionesNoLeidas = notificaciones.filter(n => n.Estado !== 'Leido').length;
+      this.cargandoNotificaciones = false;
+    },
+    error: () => { this.cargandoNotificaciones = false; }
+  });
+}
   
   private cargarMaquinas(): void {
     this.cargarMaquinasEnsamblando();
@@ -130,12 +132,12 @@ export class DashboardEnsambladorComponent implements OnInit {
     });
   }
   
-  marcarNotificacionLeida(idNotificacion: string): void {
-    this.notificationService.markAsRead(idNotificacion).subscribe({
-      next: () => { this.cargarNotificaciones(); },
-      error: () => {}
-    });
-  }
+marcarNotificacionLeida(idNotificacion: string): void {
+  this.notificacionMaquinaService.marcarComoLeida(idNotificacion).subscribe({
+    next: () => this.cargarNotificaciones(),
+    error: () => {}
+  });
+}
   
   irAGestionComponentes(): void { this.router.navigate(['/tecnico/gestion-componentes']); }
 }

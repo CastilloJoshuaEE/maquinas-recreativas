@@ -201,16 +201,20 @@ class RedisCache implements CacheInterface
      * Elimina múltiples claves por patrón (útil para invalidar listados).
      * Usa KEYS — no usar en producción con millones de claves.
      */
-    public function deleteByPattern(string $pattern): void
+    public function deleteByPattern(string $pattern): int
     {
-        if (!$this->isAvailable()) return;
-        try {
-            $keys = $this->redis->keys($this->prefix . $pattern);
-            if (!empty($keys)) {
-                $this->redis->del($keys);
+try {
+            $fullPattern = $this->prefix . $pattern;
+            $keys = $this->redis->keys($fullPattern);
+            
+            if (empty($keys)) {
+                return 0;
             }
-        } catch (\Throwable $e) {
-            error_log("[RedisCache] deleteByPattern error: " . $e->getMessage());
+            
+            return $this->redis->del($keys);
+        } catch (\Exception $e) {
+            error_log("[RedisCache] Error en deleteByPattern: " . $e->getMessage());
+            return 0;
         }
     }
 }

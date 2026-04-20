@@ -9,27 +9,30 @@ import { User } from './user.model';
 /**
  * Interfaz que representa un reporte
  */
+// reporte.model.ts
 export interface Reporte {
-  /** ID único del reporte */
-  ID_Reporte: string;
-  /** ID del usuario emisor */
-  ID_Usuario_Emisor: string;
-  /** ID del usuario destinatario */
-  ID_Usuario_Destinatario: string;
-  /** Descripción del reporte */
+  // Campos del backend (minúsculas)
+  id?: string;
+  id_emisor?: string;
+  id_destinatario?: string;
+  
+  // Campos alternativos (PascalCase)
+  ID_Reporte?: string;
+  ID_Usuario_Emisor?: string;
+  ID_Usuario_Destinatario?: string;
+  
+  // Campos comunes
   descripcion: string;
-  /** Estado del reporte */
   estado: string;
-  /** Fecha y hora de creación */
   fecha_hora: string;
-  /** Nombre del emisor */
+  
+  // Nombres (pueden venir o no)
   emisor_nombre?: string;
-  /** Apellido del emisor */
   emisor_apellido?: string;
-  /** Nombre del destinatario */
+  nombre_emisor?: string;
   destinatario_nombre?: string;
-  /** Apellido del destinatario */
   destinatario_apellido?: string;
+  nombre_destinatario?: string;
 }
 
 /**

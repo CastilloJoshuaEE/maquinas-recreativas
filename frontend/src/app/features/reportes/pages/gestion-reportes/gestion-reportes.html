@@ -11,7 +11,7 @@
           <mat-form-field appearance="outline" class="full-width" *ngIf="!esUsuarioInhabilitado && !modoAdmin"><mat-label>Destinatario</mat-label><mat-select [(ngModel)]="nuevoReporte.destinatario" name="destinatario" required [disabled]="!nuevoReporte.tipoDestinatario"><mat-option value="">Seleccionar destinatario</mat-option><mat-option *ngFor="let user of usuariosDisponibles" [value]="user.id">{{ user.nombre }} {{ user.apellido }} ({{ user.email }})</mat-option></mat-select><mat-icon matPrefix>person</mat-icon></mat-form-field>
           <mat-form-field appearance="outline" class="full-width" *ngIf="esUsuarioInhabilitado"><mat-label>Administrador</mat-label><mat-select [(ngModel)]="nuevoReporte.destinatario" name="destinatario" required><mat-option value="">Seleccionar administrador</mat-option><mat-option *ngFor="let admin of administradores" [value]="admin.id">{{ admin.nombre }} {{ admin.apellido }} ({{ admin.email }})</mat-option></mat-select><mat-icon matPrefix>admin_panel_settings</mat-icon></mat-form-field>
           <mat-form-field appearance="outline" class="full-width"><mat-label>{{ esUsuarioInhabilitado ? 'Explicación para reactivación' : 'Descripción' }}</mat-label><textarea matInput [(ngModel)]="nuevoReporte.descripcion" name="descripcion" rows="4" [placeholder]="esUsuarioInhabilitado ? 'Por favor explique por qué desea reactivar su cuenta...' : 'Describe tu situación...'" required></textarea><mat-icon matPrefix>description</mat-icon></mat-form-field>
-          <div class="form-actions"><button mat-raised-button color="primary" type="submit" [disabled]="enviando"><mat-spinner diameter="20" *ngIf="enviando"></mat-spinner><span *ngIf="!enviando">{{ esUsuarioInhabilitado ? 'Enviar Solicitud' : 'Enviar Reporte' }}</span></button><button mat-button type="button" (click)="regresar()" *ngIf="!modoAdmin">Volver al inicio</button></div>
+          <div class="form-actions"><button mat-raised-button color="primary" type="submit" [disabled]="enviando"><mat-spinner diameter="20" *ngIf="enviando"></mat-spinner><span *ngIf="!enviando">{{ esUsuarioInhabilitado ? 'Enviar Solicitud' : 'Enviar Reporte' }}</span></button></div>
         </form>
       </mat-card-content>
     </mat-card>
@@ -20,22 +20,53 @@
       <mat-card-content>
         <div *ngIf="cargandoReportes" class="loading-container"><mat-spinner diameter="40"></mat-spinner></div>
         <div *ngIf="!cargandoReportes && reportesFiltrados.length === 0" class="no-data"><mat-icon>inbox</mat-icon><p>No hay reportes</p></div>
-        <div *ngIf="!cargandoReportes && reportesFiltrados.length > 0" class="reportes-table">
-          <table class="tabla-reportes">
-            <thead><tr><th>ID</th><th>Fecha</th><th>Descripción</th><th>Estado</th><th>Emisor</th><th>Destinatario</th><th>Acciones</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let reporte of reportesFiltrados">
-                <td>{{ reporte.ID_Reporte | slice:0:8 }}...</td>
-                <td>{{ reporte.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td class="descripcion-cell">{{ reporte.descripcion }}</td>
-                <td><span class="estado-badge" [ngClass]="{'estado-pendiente': reporte.estado === 'Pendiente', 'estado-proceso': reporte.estado === 'En proceso', 'estado-resuelto': reporte.estado === 'Resuelto'}">{{ reporte.estado }}</span></td>
-                <td>{{ reporte.emisor_nombre }} {{ reporte.emisor_apellido }}</td>
-                <td>{{ reporte.destinatario_nombre }} {{ reporte.destinatario_apellido }}</td>
-                <td><button mat-icon-button color="primary" (click)="verChat(reporte)" matTooltip="Ver Chat"><mat-icon>chat</mat-icon></button><mat-select *ngIf="puedeCambiarEstado(reporte)" [(ngModel)]="reporte.estado" (selectionChange)="cambiarEstado(reporte)" class="estado-select"><mat-option value="Pendiente">Pendiente</mat-option><mat-option value="En proceso">En proceso</mat-option><mat-option value="Resuelto">Resuelto</mat-option></mat-select></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+<!-- gestion-reportes.html -->
+<div *ngIf="!cargandoReportes && reportesFiltrados.length > 0" class="reportes-table">
+  <table class="tabla-reportes">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Estado</th>
+        <th>Emisor</th>
+        <th>Destinatario</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let reporte of reportesFiltrados">
+        <!-- ✅ Usar $any() para evitar errores de TypeScript -->
+        <td>{{ ($any(reporte).id || $any(reporte).ID_Reporte || '') | slice:0:8 }}...</td>
+        <td>{{ reporte.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td class="descripcion-cell">{{ reporte.descripcion }}</td>
+        <td>
+          <span class="estado-badge" [ngClass]="{
+            'estado-pendiente': reporte.estado === 'Pendiente', 
+            'estado-proceso': reporte.estado === 'En proceso', 
+            'estado-resuelto': reporte.estado === 'Resuelto'
+          }">{{ reporte.estado }}</span>
+        </td>
+        <!-- ✅ Usar $any() para acceder a propiedades dinámicas -->
+        <td>{{ $any(reporte).emisor_nombre || $any(reporte).nombre_emisor || '—' }}</td>
+        <td>{{ $any(reporte).destinatario_nombre || $any(reporte).nombre_destinatario || '—' }}</td>
+        <td>
+          <button mat-icon-button color="primary" (click)="verChat(reporte)" matTooltip="Ver Chat">
+            <mat-icon>chat</mat-icon>
+          </button>
+          <mat-select *ngIf="puedeCambiarEstado(reporte)" 
+                      [(ngModel)]="reporte.estado" 
+                      (selectionChange)="cambiarEstado(reporte)" 
+                      class="estado-select">
+            <mat-option value="Pendiente">Pendiente</mat-option>
+            <mat-option value="En proceso">En proceso</mat-option>
+            <mat-option value="Resuelto">Resuelto</mat-option>
+          </mat-select>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
       </mat-card-content>
     </mat-card>
   </div>

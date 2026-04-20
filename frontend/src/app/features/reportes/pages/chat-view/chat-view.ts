@@ -89,14 +89,23 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     });
   }
   
-  private cargarUsuarioPorId(usuarioId: string): void {
-    this.reportesService.getUsuariosChat(this.currentUserId).subscribe({
-      next: (usuarios) => {
-        const usuario = usuarios.find(u => u.id === usuarioId);
-        if (usuario) { this.usuarioSeleccionado = usuario; this.cargarReportes(); }
-      }
-    });
+private cargarUsuarioPorId(usuarioId: string | undefined): void {
+  if (!usuarioId) {
+    console.warn('No se proporcionó ID de usuario');
+    return;
   }
+  
+  this.reportesService.getUsuariosChat(this.currentUserId).subscribe({
+    next: (usuarios) => {
+      const usuario = usuarios.find(u => u.id === usuarioId);
+      if (usuario) { 
+        this.usuarioSeleccionado = usuario; 
+        this.cargarReportes(); 
+      }
+    }
+  });
+}
+
   
   cargarUsuarios(): void {
     this.cargandoUsuarios = true;
@@ -124,18 +133,30 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     this.comentarios = [];
     this.cargarReportes();
   }
-  
-  cargarReportes(): void {
-    if (!this.usuarioSeleccionado) return;
-    this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
-      next: (data) => {
-        this.reportes = data.reportes;
-        if (this.reportes.length > 0) { this.reporteSeleccionadoId = this.reportes[0].ID_Reporte; this.cargarComentarios(); }
-        else this.reporteSeleccionadoId = null;
-      },
-      error: () => { this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); }
-    });
-  }
+  getReporteId(reporte: Reporte): string {
+  return (reporte as any).id || reporte.ID_Reporte || '';
+}
+cargarReportes(): void {
+  if (!this.usuarioSeleccionado) return;
+  this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
+    next: (data) => {
+      this.reportes = data.reportes;
+      console.log('📊 Reportes del chat:', this.reportes);
+      
+      if (this.reportes.length > 0) { 
+        // ✅ Usar el helper para obtener el ID
+        const primerId = this.getReporteId(this.reportes[0]);
+        this.reporteSeleccionadoId = primerId; 
+        this.cargarComentarios(); 
+      } else {
+        this.reporteSeleccionadoId = null;
+      }
+    },
+    error: () => { 
+      this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); 
+    }
+  });
+}
   
   cargarComentarios(): void {
     if (!this.reporteSeleccionadoId || this.reporteSeleccionadoId === 'nuevo') return;

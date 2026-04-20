@@ -1,9 +1,4 @@
-/**
- * @fileoverview Panel de Notificaciones
- * @description Componente para mostrar y gestionar notificaciones del usuario
- * @component NotificacionesPanelComponent
- */
-
+// notificaciones-panel.ts
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -13,12 +8,24 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ReportesService } from '../../services/reportes';
+import { NotificacionMaquinaService } from '@core/services/notification-maquina';
 import { User } from '@core/models/user.model';
+import { forkJoin } from 'rxjs';
 
-interface Notificacion {
-  ID_Notificaciones: string; mensaje: string; fecha_hora: string; leida: number;
-  ID_Reporte?: string; reporte_descripcion?: string; emisor_nombre?: string;
-  emisor_apellido?: string; Tipo?: string; Nombre_Maquina?: string; NombreComercio?: string;
+// Interfaz unificada para mostrar
+interface NotificacionUnificada {
+  id: string;
+  tipo: 'reporte' | 'maquina';
+  mensaje: string;
+  fecha: string;
+  leida: boolean;
+  reporteId?: string;
+  tipoMaquina?: string;
+  nombreMaquina?: string;
+  nombreComercio?: string;
+  emisorNombre?: string;
+  emisorApellido?: string;
+  datosOriginales: any;
 }
 
 @Component({
@@ -34,54 +41,205 @@ export class NotificacionesPanelComponent implements OnInit, OnDestroy {
   
   private router = inject(Router);
   private reportesService = inject(ReportesService);
+  private notificacionMaquinaService = inject(NotificacionMaquinaService);
   private snackBar = inject(MatSnackBar);
   
-  notificaciones: Notificacion[] = [];
+  notificaciones: NotificacionUnificada[] = [];
   unreadCount = 0;
   cargando = false;
   error = '';
   private refreshInterval: any;
   
-  ngOnInit(): void { this.cargarNotificaciones(); this.refreshInterval = setInterval(() => this.cargarNotificaciones(), 30000); }
-  ngOnDestroy(): void { if (this.refreshInterval) clearInterval(this.refreshInterval); }
-  
-  cargarNotificaciones(): void {
-    if (!this.currentUser?.id) return;
-    this.cargando = true;
-    this.error = '';
-    this.reportesService.getNotificaciones(this.currentUser.id).subscribe({
-      next: (notificaciones) => { this.notificaciones = notificaciones; this.unreadCount = notificaciones.filter(n => !n.leida).length; this.cargando = false; },
-      error: (err) => { this.error = err.message || 'Error al cargar notificaciones'; this.cargando = false; }
-    });
+  ngOnInit(): void { 
+    this.cargarNotificaciones(); 
+    this.refreshInterval = setInterval(() => this.cargarNotificaciones(), 30000); 
   }
   
-  marcarComoLeida(notificacion: Notificacion): void {
-    if (notificacion.leida) return;
-    this.reportesService.marcarNotificacionLeida(notificacion.ID_Notificaciones).subscribe({
-      next: (success) => { if (success) { notificacion.leida = 1; this.unreadCount = Math.max(this.unreadCount - 1, 0); } },
-      error: () => { this.snackBar.error('Error al marcar notificación', 'Cerrar'); }
-    });
+  ngOnDestroy(): void { 
+    if (this.refreshInterval) clearInterval(this.refreshInterval); 
+  }
+  // notificaciones-panel.ts
+cargarNotificaciones(): void {
+  if (!this.currentUser?.id) return;
+  this.cargando = true;
+  this.error = '';
+  
+  console.log('🔍 Cargando notificaciones para usuario:', this.currentUser.id);
+  
+  forkJoin({
+    reportes: this.reportesService.getNotificaciones(this.currentUser.id),
+    maquinas: this.notificacionMaquinaService.getNotificacionesMaquina(this.currentUser.id)
+  }).subscribe({
+    next: ({ reportes, maquinas }) => {
+      console.log('📬 Notificaciones reportes (crudas):', JSON.stringify(reportes, null, 2));
+      console.log('🔧 Notificaciones máquinas (crudas):', JSON.stringify(maquinas, null, 2));
+      
+      const notificacionesUnificadas: NotificacionUnificada[] = [];
+      
+      // Procesar notificaciones de reportes
+      if (reportes && reportes.length > 0) {
+        reportes.forEach((n: any) => {
+          console.log('  Procesando reporte:', n);
+          notificacionesUnificadas.push({
+            id: n.ID_Notificaciones,
+            tipo: 'reporte',
+            mensaje: n.mensaje || '',
+            fecha: n.fecha_hora || new Date().toISOString(),
+            leida: n.leida === 1 || n.leida === true,
+            reporteId: n.ID_Reporte,
+            emisorNombre: n.emisor_nombre,
+            emisorApellido: n.emisor_apellido,
+            datosOriginales: n
+          });
+        });
+      }
+      
+      // Procesar notificaciones de máquina
+      if (maquinas && maquinas.length > 0) {
+        maquinas.forEach((n: any) => {
+          console.log('  Procesando máquina:', n);
+          console.log('    ID_Notificacion:', n.ID_Notificacion);
+          console.log('    Mensaje:', n.Mensaje);
+          console.log('    Estado:', n.Estado);
+          
+          notificacionesUnificadas.push({
+            id: n.ID_Notificacion,
+            tipo: 'maquina',
+            mensaje: n.Mensaje || n.mensaje || '',
+            fecha: n.Fecha || n.fecha || new Date().toISOString(),
+            leida: n.Estado === 'Leido' || n.leida === true,
+            tipoMaquina: n.Tipo,
+            nombreMaquina: n.Nombre_Maquina || n.NombreMaquina,
+            nombreComercio: n.NombreComercio,
+            datosOriginales: n
+          });
+        });
+      }
+      
+      console.log('✅ Notificaciones unificadas:', notificacionesUnificadas);
+      
+      // Ordenar por fecha
+      notificacionesUnificadas.sort((a, b) => 
+        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+      );
+      
+      this.notificaciones = notificacionesUnificadas;
+      this.unreadCount = this.notificaciones.filter(n => !n.leida).length;
+      this.cargando = false;
+    },
+    error: (err) => {
+      console.error('❌ Error en forkJoin:', err);
+      this.error = err.message || 'Error al cargar notificaciones';
+      this.cargando = false;
+    }
+  });
+}
+marcarComoLeida(notificacion: NotificacionUnificada): void {
+  console.log('📌 marcarComoLeida llamado con:', notificacion);
+  console.log('  - leida actual:', notificacion.leida);
+  console.log('  - id:', notificacion.id);
+  console.log('  - tipo:', notificacion.tipo);
+  
+  if (notificacion.leida) {
+    console.log('⏭️ Ya está leída, ignorando');
+    return;
   }
   
+  if (!notificacion.id) {
+    console.error('❌ ID de notificación es undefined o vacío');
+    console.error('  Datos originales:', notificacion.datosOriginales);
+    this.snackBar.open('Error: No se pudo identificar la notificación', 'Cerrar', { duration: 3000 });
+    return;
+  }
+  
+  console.log('✅ Marcando notificación con ID:', notificacion.id, 'tipo:', notificacion.tipo);
+  
+  const request$ = notificacion.tipo === 'reporte'
+    ? this.reportesService.marcarNotificacionLeida(notificacion.id)
+    : this.notificacionMaquinaService.marcarComoLeida(notificacion.id);
+  
+  request$.subscribe({
+    next: (success: boolean) => {
+      console.log('📨 Respuesta de marcar como leída:', success);
+      if (success) {
+        notificacion.leida = true;
+        this.unreadCount = Math.max(this.unreadCount - 1, 0);
+        this.snackBar.open('Notificación marcada como leída', 'Cerrar', { duration: 2000 });
+      } else {
+        this.snackBar.open('No se pudo marcar como leída', 'Cerrar', { duration: 3000 });
+      }
+    },
+    error: (err) => {
+      console.error('❌ Error al marcar como leída:', err);
+      this.snackBar.open('Error al marcar notificación', 'Cerrar', { duration: 3000 });
+    }
+  });
+}
+
   marcarTodasLeidas(): void {
-    this.reportesService.marcarTodasNotificacionesLeidas().subscribe({
-      next: (success) => {
-        if (success) { this.notificaciones.forEach(n => n.leida = 1); this.unreadCount = 0; this.snackBar.success('Todas las notificaciones marcadas como leídas', 'Éxito'); }
-        else this.snackBar.error('Error al marcar notificaciones', 'Cerrar');
-      },
-      error: () => { this.snackBar.error('Error al marcar notificaciones', 'Cerrar'); }
+    // Marcar todas como leídas (solo las no leídas)
+    const noLeidas = this.notificaciones.filter(n => !n.leida);
+    
+    if (noLeidas.length === 0) return;
+    
+    let completadas = 0;
+    const total = noLeidas.length;
+    
+    noLeidas.forEach(notificacion => {
+      const request$ = notificacion.tipo === 'reporte'
+        ? this.reportesService.marcarNotificacionLeida(notificacion.id)
+        : this.notificacionMaquinaService.marcarComoLeida(notificacion.id);
+      
+      request$.subscribe({
+        next: () => {
+          completadas++;
+          if (completadas === total) {
+            this.notificaciones.forEach(n => n.leida = true);
+            this.unreadCount = 0;
+            this.snackBar.open('Todas las notificaciones marcadas como leídas', 'Cerrar', { duration: 3000 });
+          }
+        },
+        error: () => {
+          completadas++;
+        }
+      });
     });
   }
   
-  verReporte(reporteId: string): void { this.router.navigate(['/reportes/chat', reporteId]); }
-  
-  getIcono(tipo: string): string {
-    const iconos: { [key: string]: string } = { 'Reporte': 'report_problem', 'Mensaje': 'chat', 'Mantenimiento': 'build', 'Distribucion': 'local_shipping', 'Recaudacion': 'attach_money' };
-    return iconos[tipo || ''] || 'notifications';
+  verReporte(reporteId: string): void { 
+    if (reporteId) {
+      this.router.navigate(['/reportes/chat', reporteId]);
+      this.onClose.emit();
+    }
   }
   
-  getIconoClass(tipo: string): string {
-    const clases: { [key: string]: string } = { 'Reporte': 'icon-reporte', 'Mensaje': 'icon-mensaje', 'Mantenimiento': 'icon-mantenimiento', 'Distribucion': 'icon-distribucion', 'Recaudacion': 'icon-recaudacion' };
-    return clases[tipo || ''] || '';
+  getIcono(notificacion: NotificacionUnificada): string {
+    if (notificacion.tipo === 'reporte') return 'report_problem';
+    
+    const iconos: { [key: string]: string } = {
+      'Mantenimiento': 'build',
+      'Distribucion': 'local_shipping',
+      'Recaudacion': 'attach_money',
+      'Nuevo montaje': 'precision_manufacturing',
+      'Comprobar maquina recreativa': 'verified',
+      'Reensamblar maquina recreativa': 'handyman'
+    };
+    return iconos[notificacion.tipoMaquina || ''] || 'notifications';
+  }
+  
+  getIconoClass(notificacion: NotificacionUnificada): string {
+    if (notificacion.tipo === 'reporte') return 'icon-reporte';
+    return 'icon-maquina';
+  }
+  
+  // Helper para obtener mensaje formateado
+  getMensajeFormateado(notificacion: NotificacionUnificada): string {
+    if (notificacion.tipo === 'reporte') {
+      const nombre = notificacion.emisorNombre 
+        ? `${notificacion.emisorNombre} ${notificacion.emisorApellido || ''}: `
+        : '';
+      return nombre + notificacion.mensaje;
+    }
+    return notificacion.mensaje;
   }
 }

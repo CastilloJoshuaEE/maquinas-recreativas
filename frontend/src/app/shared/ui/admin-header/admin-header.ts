@@ -11,14 +11,27 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '@core/services/auth';
 import { NotificationService } from '@core/services/notification';
-import { MatDividerModule } from '@angular/material/divider';
-import { NotificacionesListComponent } from '../notificaciones-list/notificaciones-list'; 
+import { HasRoleDirective } from '@shared/directives/has-role.directive';
+import { NotificacionesListComponent } from '@shared/ui/notificaciones-list/notificaciones-list';
+import { ChatComponent } from '@shared/ui/chat/chat';
+
 @Component({
   selector: 'app-admin-header',
   standalone: true,
-  imports: [CommonModule, MatDividerModule,MatButtonModule, MatIconModule, MatMenuModule, MatBadgeModule, NotificacionesListComponent ],
+  imports: [
+    CommonModule, 
+    MatDividerModule,
+    MatButtonModule, 
+    MatIconModule, 
+    MatMenuModule, 
+    MatBadgeModule, 
+    HasRoleDirective,
+    NotificacionesListComponent,
+    ChatComponent
+  ],
   templateUrl: './admin-header.html',
   styleUrls: ['./admin-header.css']
 })
@@ -36,8 +49,11 @@ export class AdminHeaderComponent {
   currentUser = this.authService.getCurrentUser();
   unreadCount = 0;
   showNotifications = false;
+  showChatModal = false;
   
-  constructor() { this.loadUnreadCount(); }
+  constructor() { 
+    this.loadUnreadCount(); 
+  }
   
   private loadUnreadCount(): void {
     if (this.currentUser?.id) {
@@ -45,11 +61,41 @@ export class AdminHeaderComponent {
     }
   }
   
-  verPerfil(): void { this.router.navigate(['/usuario/perfil']); }
-  editarPerfil(): void { this.router.navigate(['/usuario/actualizar-perfil']); }
-  verNotificaciones(): void { this.showNotifications = true; }
+  // Navegar a la página de reportes
+  irAReportes(): void {
+    this.router.navigate(['/reportes/gestion-reportes']);
+  }
+  
+  // Abrir modal de chat
+  abrirChat(): void {
+    this.showChatModal = true;
+    this.showChat.emit(true);
+  }
+  
+  cerrarChatModal(): void {
+    this.showChatModal = false;
+    this.showChat.emit(false);
+  }
+  
+  verPerfil(): void { 
+    this.router.navigate(['/usuario/perfil']); 
+  }
+  
+  editarPerfil(): void { 
+    this.router.navigate(['/usuario/actualizar-perfil']); 
+  }
+  
+  verNotificaciones(): void { 
+    this.showNotifications = true; 
+  }
+  
+  cerrarNotificaciones(): void {
+    this.showNotifications = false;
+  }
   
   cerrarSesion(): void {
-    if (confirm('¿Está seguro de cerrar sesión?')) { this.authService.logout().subscribe(); }
+    if (confirm('¿Está seguro de cerrar sesión?')) { 
+      this.authService.logout().subscribe(); 
+    }
   }
 }

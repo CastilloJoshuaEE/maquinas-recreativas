@@ -22,21 +22,23 @@
     <ul *ngIf="!cargando && notificaciones.length > 0" class="notificaciones-ul">
       <li *ngFor="let notif of notificaciones" 
           class="notificacion-item"
-          [class.no-leida]="!notif.leida">
-        <div class="notificacion-content" (click)="verReporte(notif.ID_Reporte)">
+          [class.no-leida]="notif.Estado !== 'Leido'">
+        <div class="notificacion-content">
           <div class="notificacion-mensaje">
-            <strong>{{ notif.Tipo }}</strong> - {{ notif.mensaje }}
+            <strong>{{ notif.Tipo }}</strong> - {{ notif.Mensaje }}
           </div>
           <div class="notificacion-fecha">
-            {{ notif.fecha_hora | date:'dd/MM/yyyy HH:mm' }}
+            {{ notif.Fecha | date:'dd/MM/yyyy HH:mm' }}
           </div>
           <div class="notificacion-detalles" *ngIf="notif.Nombre_Maquina">
             <span><mat-icon>videogame_asset</mat-icon> {{ notif.Nombre_Maquina }}</span>
+            <span *ngIf="notif.NombreComercio"><mat-icon>store</mat-icon> {{ notif.NombreComercio }}</span>
           </div>
         </div>
+        <!-- ✅ CORRECCIÓN: Usar ID_Notificacion y Estado -->
         <button mat-icon-button class="mark-read-btn" 
-                *ngIf="!notif.leida"
-                (click)="marcarComoLeida(notif.ID_Notificaciones); $event.stopPropagation()"
+                *ngIf="notif.Estado !== 'Leido'"
+                (click)="marcarComoLeida(notif.ID_Notificacion); $event.stopPropagation()"
                 matTooltip="Marcar como leída">
           <mat-icon>done</mat-icon>
         </button>

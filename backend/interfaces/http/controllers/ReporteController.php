@@ -71,25 +71,40 @@ class ReporteController
             new OA\Response(response: 401, description: "No autenticado")
         ]
     )]
-    public function create(Request $request): Response
-    {
-        $data = $request->json();
-        if (!isset($data['descripcion'])) {
-            throw new DomainException('La descripción es requerida', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $command = new CrearReporteCommand($userId, $data['idUsuarioDestinatario'] ?? null, $data['descripcion']);
-        $idReporte = $this->crearReporteHandler->handle($command);
-
-        $response = new Response();
-        $response->json(['success' => true, 'message' => 'Reporte creado exitosamente', 'id' => $idReporte], 201);
-        return $response;
+public function create(Request $request): Response
+{
+    $data = $request->json();
+    
+    if (!isset($data['descripcion'])) {
+        throw new DomainException('La descripción es requerida', 400);
     }
+
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    //  Usar el nombre de campo que envía el frontend
+    $destinatarioId = $data['ID_Usuario_Destinatario'] 
+                      ?? $data['idUsuarioDestinatario'] 
+                      ?? null;
+    
+    // Validar que el destinatario exista
+    if (empty($destinatarioId)) {
+        throw new DomainException('El destinatario es requerido', 400);
+    }
+
+    $command = new CrearReporteCommand($userId, $destinatarioId, $data['descripcion']);
+    $idReporte = $this->crearReporteHandler->handle($command);
+
+    $response = new Response();
+    $response->json([
+        'success' => true, 
+        'message' => 'Reporte creado exitosamente', 
+        'id' => $idReporte
+    ], 201);
+    return $response;
+}
 
     #[OA\Get(
         path: "/v1/reportes/usuario/{uuid}",

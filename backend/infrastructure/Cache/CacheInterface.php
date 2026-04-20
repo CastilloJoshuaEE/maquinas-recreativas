@@ -17,4 +17,7 @@ interface CacheInterface
     public function checkRateLimit(string $key, int $limit, int $window): bool;
     public function getRemaining(string $key, int $limit, int $window): int;
     public function isAvailable(): bool;
+        public function deleteByPattern(string $pattern): int;
+
+
 }

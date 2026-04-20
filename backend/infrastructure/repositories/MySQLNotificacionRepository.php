@@ -202,4 +202,5 @@ public function findMaquinasByDestinatario(Uuid $idDestinatario): array
         $this->cache->delete("notificaciones:no_leidas_reporte:{$v}");
         return $res;
     }
+
 }

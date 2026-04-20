@@ -21,6 +21,7 @@ import { ReportesService } from '../../services/reportes';
 import { AuthService } from '@core/services/auth';
 import { User } from '@core/models/user.model';
 import { Reporte } from '@core/models/reporte.model';
+import { UserService } from '@app/core/services/user';
 
 @Component({
   selector: 'app-gestion-reportes',
@@ -34,7 +35,7 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
   private reportesService = inject(ReportesService);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
-  
+  private userService = inject(UserService);
   currentUser: User | null = null;
   modoAdmin = false;
   esUsuarioInhabilitado = false;
@@ -84,54 +85,100 @@ export class GestionReportesComponent implements OnInit, OnDestroy {
       error: () => { this.snackBar.open('Error al cargar administradores', 'Cerrar', { duration: 3000 });}
     });
   }
-  
-  cargarUsuariosPorTipo(): void {
-    if (!this.nuevoReporte.tipoDestinatario) { this.usuariosDisponibles = []; return; }
-    this.reportesService.getUsuariosChat(this.currentUser!.id).subscribe({
-      next: (usuarios) => { this.usuariosDisponibles = usuarios.filter(u => u.tipo === this.nuevoReporte.tipoDestinatario); },
-      error: () => { this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 }); }
-    });
+cargarUsuariosPorTipo(): void {
+  if (!this.nuevoReporte.tipoDestinatario) { 
+    this.usuariosDisponibles = []; 
+    return; 
   }
+  this.userService.getUsersByTipo(this.nuevoReporte.tipoDestinatario, this.currentUser!.id).subscribe({
+    next: (usuarios) => { 
+      this.usuariosDisponibles = usuarios.filter(u => u.id !== this.currentUser!.id);
+      console.log('Usuarios cargados:', this.usuariosDisponibles);
+    },
+    error: (err) => { 
+      console.error('Error al cargar usuarios:', err);
+      this.snackBar.open('Error al cargar usuarios', 'Cerrar', { duration: 3000 }); 
+    }
+  });
+}
   
-  cargarReportes(): void {
-    this.cargandoReportes = true;
-    this.reportesService.getReportesByUser(this.currentUser!.id).subscribe({
-      next: (reportes) => { this.reportes = reportes; this.filtrarReportes(); this.cargandoReportes = false; },
-      error: () => { this.cargandoReportes = false; this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); }
-    });
-  }
+cargarReportes(): void {
+  this.cargandoReportes = true;
+  this.reportesService.getReportesByUser(this.currentUser!.id).subscribe({
+    next: (reportes) => { 
+      console.log(' Reportes recibidos:', reportes);  // ← Agregar log
+      this.reportes = reportes; 
+      this.filtrarReportes(); 
+      this.cargandoReportes = false; 
+    },
+    error: (err) => { 
+      console.error(' Error cargando reportes:', err);
+      this.cargandoReportes = false; 
+      this.snackBar.open('Error al cargar reportes', 'Cerrar', { duration: 3000 }); 
+    }
+  });
+}
   
   filtrarReportes(): void {
     this.reportesFiltrados = this.filtroEstado === 'todos' ? [...this.reportes] : this.reportes.filter(r => r.estado === this.filtroEstado);
   }
-  
-  onSubmit(): void {
-    if (!this.nuevoReporte.destinatario || !this.nuevoReporte.descripcion) {this.snackBar.open('Complete todos los campos', 'Cerrar', { duration: 3000 });  }
+ onSubmit(): void {
+    if (!this.nuevoReporte.destinatario || !this.nuevoReporte.descripcion) {
+        this.snackBar.open('Complete todos los campos', 'Cerrar', { duration: 3000 });
+        return;
+    }
+    if (this.nuevoReporte.destinatario === '') {
+        this.snackBar.open('Seleccione un destinatario válido', 'Cerrar', { duration: 3000 });
+        return;
+    }
+    
+    if (this.nuevoReporte.destinatario === this.currentUser?.id) {
+        this.snackBar.open('No puede enviar un reporte a sí mismo', 'Cerrar', { duration: 3000 });
+        return;
+    }
+    
     if (!confirm('¿Está seguro de enviar este reporte?')) return;
+    
     this.enviando = true;
     let descripcion = this.nuevoReporte.descripcion;
     if (this.esUsuarioInhabilitado) descripcion = `[SOLICITUD DE REACTIVACIÓN] ${descripcion}`;
     else if (this.modoAdmin) descripcion = `[USUARIO RESTRINGIDO] ${descripcion}`;
     
-    this.reportesService.crearReporte({
-      ID_Usuario_Emisor: this.currentUser!.id,
-      ID_Usuario_Destinatario: this.nuevoReporte.destinatario,
-      descripcion
-    }).subscribe({
-      next: (reporteId) => {
-        if (reporteId) {
-          this.snackBar.open('Reporte enviado correctamente', 'Cerrar', { duration: 3000 });
-          this.nuevoReporte = { tipoDestinatario: '', destinatario: '', descripcion: '' };
-          if (!this.esUsuarioInhabilitado && !this.modoAdmin) this.cargarReportes();
-          else if (this.esUsuarioInhabilitado) setTimeout(() => this.router.navigate(['/']), 2000);
-        } else this.snackBar.open('Error al enviar el reporte', 'Cerrar', { duration: 3000 });
-        this.enviando = false;
-      },
-      error: () => { this.snackBar.open('Error al enviar el reporte', 'Cerrar', { duration: 3000 }); this.enviando = false; }
+    const reporteData = {
+        ID_Usuario_Emisor: this.currentUser!.id,
+        ID_Usuario_Destinatario: this.nuevoReporte.destinatario,
+        descripcion: descripcion
+    };
+    
+    console.log('Enviando reporte:', reporteData);
+    
+    this.reportesService.crearReporte(reporteData).subscribe({
+        next: (reporteId) => {
+            console.log('ReporteId recibido:', reporteId);
+            if (reporteId) {
+                this.snackBar.open('Reporte enviado correctamente', 'Cerrar', { duration: 3000 });
+                this.nuevoReporte = { tipoDestinatario: '', destinatario: '', descripcion: '' };
+                if (!this.esUsuarioInhabilitado && !this.modoAdmin) {
+                    this.cargarReportes();
+                } else if (this.esUsuarioInhabilitado) {
+                    setTimeout(() => this.router.navigate(['/']), 2000);
+                }
+            } else {
+                this.snackBar.open('Error al enviar el reporte. El destinatario podría no existir.', 'Cerrar', { duration: 5000 });
+            }
+            this.enviando = false;
+        },
+        error: (err) => { 
+            console.error('Error detallado:', err);
+            this.snackBar.open('Error al enviar el reporte. Verifique que el destinatario exista.', 'Cerrar', { duration: 5000 }); 
+            this.enviando = false; 
+        }
     });
-  }
+}
 cambiarEstado(reporte: Reporte): void {
-  this.reportesService.updateReporteStatus(reporte.ID_Reporte, reporte.estado).subscribe({
+  // ✅ Usar 'id' o 'ID_Reporte'
+  const reporteId = (reporte as any).id || reporte.ID_Reporte;
+  this.reportesService.updateReporteStatus(reporteId, reporte.estado).subscribe({
     next: (success: boolean) => {  // Tipar el parámetro success como boolean
       if (success) {
         this.snackBar.open('Estado actualizado correctamente', 'Cerrar', { duration: 3000 });
@@ -146,12 +193,24 @@ cambiarEstado(reporte: Reporte): void {
     }
   });
 }
-  puedeCambiarEstado(reporte: Reporte): boolean {
-    const esEmisor = reporte.ID_Usuario_Emisor === this.currentUser?.id;
-    const esDestinatario = reporte.ID_Usuario_Destinatario === this.currentUser?.id;
-    return esEmisor || esDestinatario;
-  }
+puedeCambiarEstado(reporte: Reporte): boolean {
+  // ✅ Usar 'id_emisor' o 'ID_Usuario_Emisor'
+  const idEmisor = (reporte as any).id_emisor || reporte.ID_Usuario_Emisor;
+  const idDestinatario = (reporte as any).id_destinatario || reporte.ID_Usuario_Destinatario;
   
-  verChat(reporte: Reporte): void { this.router.navigate(['/reportes/chat', reporte.ID_Reporte]); }
+  const esEmisor = idEmisor === this.currentUser?.id;
+  const esDestinatario = idDestinatario === this.currentUser?.id;
+  return esEmisor || esDestinatario;
+}
+  
+verChat(reporte: Reporte): void { 
+  // ✅ Usar 'id' o 'ID_Reporte'
+  const reporteId = (reporte as any).id || reporte.ID_Reporte;
+  if (reporteId) {
+    this.router.navigate(['/reportes/chat', reporteId]); 
+  } else {
+    console.warn('No se pudo obtener ID del reporte');
+  }
+}
   regresar(): void { this.router.navigate(['/']); }
 }
