@@ -189,7 +189,8 @@ require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCa
 require_once __DIR__ . '/../Application/Commands/Componente/LiberarComponentesCancelacionHandler.php';
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteCommand.php';
 require_once __DIR__ . '/../Application/Commands/Componente/UsarComponenteHandler.php';
-
+require_once __DIR__ . '/../Application/Commands/Email/EnviarEmailCommand.php';
+require_once __DIR__ . '/../Application/Commands/Email/EnviarEmailHandler.php';
 // =============================================
 // APPLICATION - COMMANDS (Maquina)
 // =============================================
@@ -368,6 +369,7 @@ require_once __DIR__ . '/../Application/Queries/Reporte/ObtenerUsuariosChatHandl
 // =============================================
 require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteQuery.php';
 require_once __DIR__ . '/../Application/Queries/Comentario/ObtenerComentariosPorReporteHandler.php';
+require_once __DIR__ . '/../Infrastructure/Services/Email/BrevoEmailService.php';
 
 // =============================================
 // USE STATEMENTS PARA CLASES COMUNES
@@ -397,6 +399,7 @@ use maquinas_recreativas\Application\Commands\Usuario\RecuperarContrasenaHandler
 use maquinas_recreativas\Application\Commands\Usuario\ActualizarUsuarioAsignadoHandler;
 use maquinas_recreativas\Application\Commands\Usuario\LogoutHandler;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarActividadHandler;
+use maquinas_recreativas\Application\Commands\Email\EnviarEmailHandler;
 
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdHandler;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerTodosUsuariosHandler;
@@ -489,7 +492,9 @@ use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoEnsambladorControlle
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoComprobadorController;
 use maquinas_recreativas\Interfaces\Http\Controllers\TecnicoMantenimientoController;
 use maquinas_recreativas\Interfaces\Http\Controllers\LogisticoController;
+use maquinas_recreativas\Interfaces\Http\Controllers\EmailController;
 use maquinas_recreativas\Infrastructure\Cache\RedisCache;
+use maquinas_recreativas\Infrastructure\Services\Email\BrevoEmailService;
 
 /**
  * Clase contenedor de dependencias (Service Container)
@@ -1054,6 +1059,15 @@ Dependencies::register(ObtenerInformesDistribucionHandler::class, function() {
     return new ObtenerInformesDistribucionHandler(Dependencies::get(MySQLDistribucionRepository::class));
 });
 
+Dependencies::register(BrevoEmailService::class, function () {
+    return new BrevoEmailService();
+});
+ 
+Dependencies::register(EnviarEmailHandler::class, function () {
+    return new EnviarEmailHandler(
+        Dependencies::get(BrevoEmailService::class)
+    );
+});
 // =============================================
 // CONTROLLERS
 // =============================================
@@ -1221,3 +1235,10 @@ Dependencies::register(LogisticoController::class, function() {
         Dependencies::get(DarMantenimientoHandler::class)
     );
 });
+Dependencies::register(EmailController::class, function () {
+    return new EmailController(
+        Dependencies::get(EnviarEmailHandler::class),
+        Dependencies::get(BrevoEmailService::class)
+    );
+});
+ 

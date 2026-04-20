@@ -16,6 +16,11 @@ export const ADMIN_ROUTES: Routes = [
       { path: 'consultar-usuarios', loadComponent: () => import('./pages/consultar-usuarios/consultar-usuarios').then(m => m.ConsultarUsuariosComponent) },
       { path: 'registrar-usuario', loadComponent: () => import('./pages/registrar-usuario/registrar-usuario').then(m => m.RegistrarUsuarioComponent) },
       { path: 'editar-usuario/:uuid', loadComponent: () => import('./pages/editar-usuario/editar-usuario').then(m => m.EditarUsuarioComponent) },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  {
+        path: 'enviar-email',
+        loadComponent: () => import('./pages/enviar-email/enviar-email').then(m => m.EnviarEmailComponent)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

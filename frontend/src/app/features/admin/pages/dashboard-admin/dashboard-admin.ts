@@ -1,7 +1,5 @@
 /**
- * @fileoverview Dashboard de Administrador
- * @description Panel principal del administrador
- * @component DashboardAdminComponent
+ * @fileoverview Dashboard de Administrador — con botón de Enviar Email
  */
 
 import { Component, inject } from '@angular/core';
@@ -19,27 +17,13 @@ import { AuthService } from '@core/services/auth';
   styleUrls: ['./dashboard-admin.css']
 })
 export class DashboardAdminComponent {
-  private router = inject(Router);
+  private router      = inject(Router);
   private authService = inject(AuthService);
-  
+
   currentUser = this.authService.getCurrentUser();
-  showReportes = false;
-  showNotificaciones = false;
-  showChat = false;
-  
-  irAGestionUsuarios(): void {
-    this.router.navigate(['/admin/gestion-usuarios']);
-  }
-  
-  irARegistrarUsuario(): void {
-    this.router.navigate(['/admin/registrar-usuario']);
-  }
-  
-  irAConsultarUsuarios(): void {
-    this.router.navigate(['/admin/consultar-usuarios']);
-  }
-  
-  regresar(): void {
-    this.router.navigate(['/']);
-  }
+
+  irAGestionUsuarios():  void { this.router.navigate(['/admin/gestion-usuarios']); }
+  irARegistrarUsuario(): void { this.router.navigate(['/admin/registrar-usuario']); }
+  irAConsultarUsuarios():void { this.router.navigate(['/admin/consultar-usuarios']); }
+  irAEnviarEmail():      void { this.router.navigate(['/admin/enviar-email']); }
 }

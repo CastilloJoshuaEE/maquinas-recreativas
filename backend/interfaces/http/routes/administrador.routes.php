@@ -56,5 +56,21 @@ return [
         'path' => '/administrador/usuarios/:uuid',
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\AdministradorController::class, 'deleteUser'],
         'middleware' => ['role:Administrador']
-    ]
+    ],
+ // Enviar email (solo Administrador)
+    [
+        'method' => 'POST',
+        'path' => '/administrador/enviar-email',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\EmailController::class, 'enviarEmail'],
+        'middleware' => ['role:Administrador']
+    ],
+ 
+    // Verificar estado del servicio de email
+    [
+        'method' => 'GET',
+        'path' => '/administrador/email/estado',
+        'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\EmailController::class, 'estadoServicio'],
+        'middleware' => ['role:Administrador']
+    ],
+
 ];

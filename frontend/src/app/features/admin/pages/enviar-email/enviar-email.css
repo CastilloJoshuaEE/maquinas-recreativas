@@ -1,0 +1,138 @@
+.enviar-email-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%);
+}
+
+.content-wrapper {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ── Header ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn { color: white; background: rgba(255,255,255,.15); }
+
+.page-header h2 {
+  color: white;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.title-icon { font-size: 1.6rem; width: auto; height: auto; }
+
+.subtitle { color: rgba(255,255,255,.75); margin: 0.25rem 0 0; font-size: 0.9rem; }
+
+/* ── Banners ── */
+.success-banner,
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.success-banner {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.error-banner {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* ── Card ── */
+.email-card {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.email-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+/* ── Formulario ── */
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
+.full-width { width: 100%; }
+
+/* ── Textarea taller ── */
+.email-form textarea { min-height: 160px; resize: vertical; }
+
+/* ── Acciones ── */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.send-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  height: 44px;
+}
+
+.send-btn mat-spinner { display: inline-block; }
+
+.clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 44px;
+}
+
+/* ── Nota ── */
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255,255,255,.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,.8);
+  font-size: 0.85rem;
+}
+
+.info-note mat-icon { color: rgba(255,255,255,.6); margin-top: 1px; flex-shrink: 0; }
+.info-note code {
+  background: rgba(255,255,255,.15);
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .content-wrapper { padding: 1rem; }
+  .form-actions { flex-direction: column; }
+  .send-btn, .clear-btn { width: 100%; justify-content: center; }
+}
