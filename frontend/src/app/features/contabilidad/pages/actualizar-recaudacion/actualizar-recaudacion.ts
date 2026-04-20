@@ -97,7 +97,7 @@ export class ActualizarRecaudacionComponent implements OnInit, OnDestroy {
   this.contabilidadService.getRecaudacionById(uuid).subscribe({
     next: (data) => {
       if (data) {
-        // 🔧 Si no tiene nombre, buscarlo
+        //  Si no tiene nombre, buscarlo
         if (!data.Nombre_Maquina && data.ID_Maquina) {
           this.contabilidadService.getMaquinasRecaudacion().subscribe({
             next: (maquinas) => {

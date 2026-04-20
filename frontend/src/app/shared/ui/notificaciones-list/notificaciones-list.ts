@@ -56,18 +56,18 @@ cargarNotificaciones(): void {
   const activeUser = this.getActiveUser();
   if (!activeUser?.id) return;
 
-  console.log('🔍 NotificacionesList: Cargando para usuario:', activeUser.id);
+  console.log(' NotificacionesList: Cargando para usuario:', activeUser.id);
   this.cargando = true;
   
   this.notificacionMaquinaService.getNotificacionesMaquina(activeUser.id).subscribe({
     next: (notifs) => {
-      console.log('📬 NotificacionesList - recibidas:', notifs);
+      console.log(' NotificacionesList - recibidas:', notifs);
       this.notificaciones = notifs;
       this.noLeidas = notifs.filter(n => n.Estado !== 'Leido').length;
       this.cargando = false;
     },
     error: (err) => { 
-      console.error('❌ Error cargando notificaciones:', err);
+      console.error(' Error cargando notificaciones:', err);
       this.cargando = false; 
     }
   });
@@ -80,16 +80,16 @@ cargarNotificaciones(): void {
     }
   }
 marcarComoLeida(id: string): void {
-  console.log('📌 NotificacionesList.marcarComoLeida - ID:', id);
+  console.log(' NotificacionesList.marcarComoLeida - ID:', id);
   
   if (!id) {
-    console.error('❌ ID es undefined o vacío');
+    console.error(' ID es undefined o vacío');
     return;
   }
   
   this.notificacionMaquinaService.marcarComoLeida(id).subscribe({
     next: (success) => {
-      console.log('📨 Respuesta marcarComoLeida:', success);
+      console.log(' Respuesta marcarComoLeida:', success);
       if (success) {
         const notif = this.notificaciones.find(n => n.ID_Notificacion === id);
         if (notif && notif.Estado !== 'Leido') {
@@ -99,7 +99,7 @@ marcarComoLeida(id: string): void {
       }
     },
     error: (err) => {
-      console.error('❌ Error al marcar como leída:', err);
+      console.error(' Error al marcar como leída:', err);
     }
   });
 }

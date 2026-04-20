@@ -64,15 +64,15 @@ cargarNotificaciones(): void {
   this.cargando = true;
   this.error = '';
   
-  console.log('🔍 Cargando notificaciones para usuario:', this.currentUser.id);
+  console.log(' Cargando notificaciones para usuario:', this.currentUser.id);
   
   forkJoin({
     reportes: this.reportesService.getNotificaciones(this.currentUser.id),
     maquinas: this.notificacionMaquinaService.getNotificacionesMaquina(this.currentUser.id)
   }).subscribe({
     next: ({ reportes, maquinas }) => {
-      console.log('📬 Notificaciones reportes (crudas):', JSON.stringify(reportes, null, 2));
-      console.log('🔧 Notificaciones máquinas (crudas):', JSON.stringify(maquinas, null, 2));
+      console.log(' Notificaciones reportes (crudas):', JSON.stringify(reportes, null, 2));
+      console.log(' Notificaciones máquinas (crudas):', JSON.stringify(maquinas, null, 2));
       
       const notificacionesUnificadas: NotificacionUnificada[] = [];
       
@@ -116,7 +116,7 @@ cargarNotificaciones(): void {
         });
       }
       
-      console.log('✅ Notificaciones unificadas:', notificacionesUnificadas);
+      console.log(' Notificaciones unificadas:', notificacionesUnificadas);
       
       // Ordenar por fecha
       notificacionesUnificadas.sort((a, b) => 
@@ -128,14 +128,14 @@ cargarNotificaciones(): void {
       this.cargando = false;
     },
     error: (err) => {
-      console.error('❌ Error en forkJoin:', err);
+      console.error(' Error en forkJoin:', err);
       this.error = err.message || 'Error al cargar notificaciones';
       this.cargando = false;
     }
   });
 }
 marcarComoLeida(notificacion: NotificacionUnificada): void {
-  console.log('📌 marcarComoLeida llamado con:', notificacion);
+  console.log(' marcarComoLeida llamado con:', notificacion);
   console.log('  - leida actual:', notificacion.leida);
   console.log('  - id:', notificacion.id);
   console.log('  - tipo:', notificacion.tipo);
@@ -146,13 +146,13 @@ marcarComoLeida(notificacion: NotificacionUnificada): void {
   }
   
   if (!notificacion.id) {
-    console.error('❌ ID de notificación es undefined o vacío');
+    console.error(' ID de notificación es undefined o vacío');
     console.error('  Datos originales:', notificacion.datosOriginales);
     this.snackBar.open('Error: No se pudo identificar la notificación', 'Cerrar', { duration: 3000 });
     return;
   }
   
-  console.log('✅ Marcando notificación con ID:', notificacion.id, 'tipo:', notificacion.tipo);
+  console.log(' Marcando notificación con ID:', notificacion.id, 'tipo:', notificacion.tipo);
   
   const request$ = notificacion.tipo === 'reporte'
     ? this.reportesService.marcarNotificacionLeida(notificacion.id)
@@ -160,7 +160,7 @@ marcarComoLeida(notificacion: NotificacionUnificada): void {
   
   request$.subscribe({
     next: (success: boolean) => {
-      console.log('📨 Respuesta de marcar como leída:', success);
+      console.log(' Respuesta de marcar como leída:', success);
       if (success) {
         notificacion.leida = true;
         this.unreadCount = Math.max(this.unreadCount - 1, 0);
@@ -170,7 +170,7 @@ marcarComoLeida(notificacion: NotificacionUnificada): void {
       }
     },
     error: (err) => {
-      console.error('❌ Error al marcar como leída:', err);
+      console.error(' Error al marcar como leída:', err);
       this.snackBar.open('Error al marcar notificación', 'Cerrar', { duration: 3000 });
     }
   });

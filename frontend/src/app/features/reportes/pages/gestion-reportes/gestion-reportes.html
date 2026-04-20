@@ -36,7 +36,7 @@
     </thead>
     <tbody>
       <tr *ngFor="let reporte of reportesFiltrados">
-        <!-- ✅ Usar $any() para evitar errores de TypeScript -->
+        <!--  Usar $any() para evitar errores de TypeScript -->
         <td>{{ ($any(reporte).id || $any(reporte).ID_Reporte || '') | slice:0:8 }}...</td>
         <td>{{ reporte.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</td>
         <td class="descripcion-cell">{{ reporte.descripcion }}</td>
@@ -47,7 +47,7 @@
             'estado-resuelto': reporte.estado === 'Resuelto'
           }">{{ reporte.estado }}</span>
         </td>
-        <!-- ✅ Usar $any() para acceder a propiedades dinámicas -->
+        <!--  Usar $any() para acceder a propiedades dinámicas -->
         <td>{{ $any(reporte).emisor_nombre || $any(reporte).nombre_emisor || '—' }}</td>
         <td>{{ $any(reporte).destinatario_nombre || $any(reporte).nombre_destinatario || '—' }}</td>
         <td>

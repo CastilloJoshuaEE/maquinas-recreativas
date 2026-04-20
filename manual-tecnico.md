@@ -5,7 +5,7 @@ Arquitectura Hexagonal + DDD + CQRS
 
 ---
 
-## 📌 Tabla de Contenidos
+##  Tabla de Contenidos
 
 1. Arquitectura del Sistema
 2. Estructura de Directorios

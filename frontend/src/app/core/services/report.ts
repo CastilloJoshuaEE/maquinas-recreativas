@@ -53,8 +53,8 @@ export class ReportService {
 
 createComentario(reporteId: string, usuarioId: string, comentario: string): Observable<boolean> {
   return this.apiService.post(API_ENDPOINTS.COMENTARIOS, {
-    idReporte: reporteId,     // ✅ camelCase
-    comentario: comentario    // ✅ camelCase
+    idReporte: reporteId,     //  camelCase
+    comentario: comentario    //  camelCase
   }).pipe(
     map(response => response.success)
   );

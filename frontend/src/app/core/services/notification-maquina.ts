@@ -29,14 +29,14 @@ export class NotificacionMaquinaService {
   }
 // notification-maquina.service.ts
 marcarComoLeida(notificacionId: string): Observable<boolean> {
-  console.log('🔧 NotificacionMaquinaService.marcarComoLeida:', notificacionId);
+  console.log(' NotificacionMaquinaService.marcarComoLeida:', notificacionId);
   
   if (!notificacionId) {
-    console.error('❌ ID de notificación es undefined');
+    console.error(' ID de notificación es undefined');
     return of(false);
   }
   
-  // ✅ Usar el endpoint de notificaciones general (que ya existe)
+  //  Usar el endpoint de notificaciones general (que ya existe)
   const url = `/notificaciones/${notificacionId}/marcarla-leida`;
   console.log('  URL:', url);
   

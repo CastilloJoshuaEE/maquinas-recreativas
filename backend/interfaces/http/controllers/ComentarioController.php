@@ -99,7 +99,7 @@ public function getByReporte(Request $request, string $idReporte): Response
     error_log("Comentarios data: " . json_encode($comentarios));
 
     $response = new Response();
-    // ✅ Asegurar que la respuesta tenga el formato esperado por el frontend
+    //  Asegurar que la respuesta tenga el formato esperado por el frontend
     $response->json([
         'success' => true, 
         'data' => $comentarios,      // El frontend espera 'data'

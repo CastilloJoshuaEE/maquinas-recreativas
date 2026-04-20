@@ -176,7 +176,7 @@ cargarReportes(): void {
     });
 }
 cambiarEstado(reporte: Reporte): void {
-  // ✅ Usar 'id' o 'ID_Reporte'
+  //  Usar 'id' o 'ID_Reporte'
   const reporteId = (reporte as any).id || reporte.ID_Reporte;
   this.reportesService.updateReporteStatus(reporteId, reporte.estado).subscribe({
     next: (success: boolean) => {  // Tipar el parámetro success como boolean
@@ -194,7 +194,7 @@ cambiarEstado(reporte: Reporte): void {
   });
 }
 puedeCambiarEstado(reporte: Reporte): boolean {
-  // ✅ Usar 'id_emisor' o 'ID_Usuario_Emisor'
+  //  Usar 'id_emisor' o 'ID_Usuario_Emisor'
   const idEmisor = (reporte as any).id_emisor || reporte.ID_Usuario_Emisor;
   const idDestinatario = (reporte as any).id_destinatario || reporte.ID_Usuario_Destinatario;
   
@@ -204,7 +204,7 @@ puedeCambiarEstado(reporte: Reporte): boolean {
 }
   
 verChat(reporte: Reporte): void { 
-  // ✅ Usar 'id' o 'ID_Reporte'
+  //  Usar 'id' o 'ID_Reporte'
   const reporteId = (reporte as any).id || reporte.ID_Reporte;
   if (reporteId) {
     this.router.navigate(['/reportes/chat', reporteId]); 

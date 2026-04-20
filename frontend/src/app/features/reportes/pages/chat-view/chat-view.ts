@@ -144,7 +144,7 @@ cargarReportes(): void {
       console.log('📊 Reportes del chat:', this.reportes);
       
       if (this.reportes.length > 0) { 
-        // ✅ Usar el helper para obtener el ID
+        //  Usar el helper para obtener el ID
         const primerId = this.getReporteId(this.reportes[0]);
         this.reporteSeleccionadoId = primerId; 
         this.cargarComentarios(); 

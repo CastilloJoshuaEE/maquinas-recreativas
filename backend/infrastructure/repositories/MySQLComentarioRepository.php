@@ -43,7 +43,7 @@ public function save(Comentario $comentario): void
     $stmt->execute();
     $stmt->close();
     
-    // ✅ Limpiar resultados pendientes
+    //  Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {
             $rs->free();
@@ -64,7 +64,7 @@ public function findById(Uuid $id): ?Comentario
     $stmt->bind_param('s', $v);
     $stmt->execute();
     
-    // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+    //   Obtener el resultado UNA SOLA VEZ
     $result = $stmt->get_result();
     $data = $result->fetch_assoc();
     
@@ -98,7 +98,7 @@ public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array
         $stmt->bind_param('ss', $uv, $rv);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $comentarios = [];
         
@@ -109,7 +109,7 @@ public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array
             $comentarios[] = $row;
         }
         
-        // ✅ Liberar recursos correctamente
+        //  Liberar recursos correctamente
         $result->free();
         $stmt->close();
         
@@ -143,7 +143,7 @@ public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array
         $stmt->bind_param('ssss', $ev, $dv, $dv, $ev);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $comentarios = [];
         
@@ -154,7 +154,7 @@ public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array
             $comentarios[] = $row;
         }
         
-        // ✅ Liberar recursos correctamente
+        //  Liberar recursos correctamente
         $result->free();
         $stmt->close();
         
@@ -177,7 +177,7 @@ public function deleteByReporte(Uuid $idReporte): bool
     $result = $stmt->execute();
     $stmt->close();
     
-    // ✅ Limpiar resultados pendientes
+    //  Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {
             $rs->free();

@@ -35,7 +35,7 @@
             <span *ngIf="notif.NombreComercio"><mat-icon>store</mat-icon> {{ notif.NombreComercio }}</span>
           </div>
         </div>
-        <!-- ✅ CORRECCIÓN: Usar ID_Notificacion y Estado -->
+        <!--   Usar ID_Notificacion y Estado -->
         <button mat-icon-button class="mark-read-btn" 
                 *ngIf="notif.Estado !== 'Leido'"
                 (click)="marcarComoLeida(notif.ID_Notificacion); $event.stopPropagation()"

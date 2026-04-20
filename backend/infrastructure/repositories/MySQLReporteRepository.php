@@ -88,7 +88,7 @@ private function invalidateChat(string $uid1, string $uid2): void
         $stmt->bind_param('s', $v);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $data = $result->fetch_assoc();
         
@@ -128,7 +128,7 @@ public function findByUsuario(Uuid $idUsuario): array
         $stmt->bind_param('ss', $v, $v);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $reportes = [];
         
@@ -142,7 +142,7 @@ public function findByUsuario(Uuid $idUsuario): array
             $reportes[] = Reporte::fromArray($row);
         }
         
-        // ✅ Liberar recursos correctamente
+        //  Liberar recursos correctamente
         $result->free();
         $stmt->close();
         
@@ -177,7 +177,7 @@ public function findByUsuario(Uuid $idUsuario): array
         $stmt->bind_param('ssss', $ev, $dv, $dv, $ev);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $reportes = [];
         
@@ -216,7 +216,7 @@ public function findByUsuario(Uuid $idUsuario): array
         $stmt->bind_param('sss', $v, $v, $v);
         $stmt->execute();
         
-        // ✅ CORRECCIÓN: Obtener el resultado UNA SOLA VEZ
+        //   Obtener el resultado UNA SOLA VEZ
         $result = $stmt->get_result();
         $usuarios = [];
         
