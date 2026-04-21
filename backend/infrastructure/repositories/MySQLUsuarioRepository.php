@@ -244,24 +244,24 @@ public function save(Usuario $usuario): void
             return $usuarios;
         }, $this->ttl);
     }
-
 public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
 {
     $excluirStr = $excluirId ? $excluirId->value() : 'none';
-    $cacheKey   = "usuarios:tipo:{$tipo}:excluir:{$excluirStr}";
+    $cacheKey = "usuarios:tipo:{$tipo}:excluir:{$excluirStr}";
 
     return $this->cache->remember($cacheKey, function () use ($tipo, $excluirId) {
         $conn = $this->db->getConnection();
-        $sql  = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                 FROM usuario u 
-                 LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
-                 WHERE u.tipo = ? AND u.estado = 'Activo'";
+        // Eliminar la condición "AND u.estado = 'Activo'" para incluir todos los estados
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                FROM usuario u 
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+                WHERE u.tipo = ?";
         $params = [$tipo];
-        $types  = "s";
+        $types = "s";
         if ($excluirId) {
             $sql .= " AND u.ID_Usuario != ?";
             $params[] = $excluirId->value();
-            $types  .= "s";
+            $types .= "s";
         }
         $sql .= " ORDER BY u.nombre ASC";
         $stmt = $conn->prepare($sql);
@@ -272,14 +272,12 @@ public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
         while ($row = $result->fetch_assoc()) {
             $usuarios[] = $this->hydrate($row);
         }
-        $result->free();  //  Liberar resultado
-        $stmt->close();   //  Cerrar statement
-        // Limpiar resultados pendientes
+        $result->free();
+        $stmt->close();
         $this->db->clearPendingResults($conn);
         return $usuarios;
     }, $this->ttl);
 }
-
 public function findTecnicosByEspecialidad(string $especialidad): array
 {
     $conn = $this->db->getConnection();

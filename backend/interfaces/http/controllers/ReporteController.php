@@ -73,37 +73,45 @@ class ReporteController
     )]
 public function create(Request $request): Response
 {
-    $data = $request->json();
-    
-    if (!isset($data['descripcion'])) {
-        throw new DomainException('La descripción es requerida', 400);
-    }
-
-    $userId = $_SESSION['ID_Usuario'] ?? null;
-    if (!$userId) {
-        throw new DomainException('Usuario no autenticado', 401);
-    }
-
-    //  Usar el nombre de campo que envía el frontend
-    $destinatarioId = $data['ID_Usuario_Destinatario'] 
-                      ?? $data['idUsuarioDestinatario'] 
-                      ?? null;
-    
-    // Validar que el destinatario exista
-    if (empty($destinatarioId)) {
-        throw new DomainException('El destinatario es requerido', 400);
-    }
-
-    $command = new CrearReporteCommand($userId, $destinatarioId, $data['descripcion']);
-    $idReporte = $this->crearReporteHandler->handle($command);
-
     $response = new Response();
-    $response->json([
-        'success' => true, 
-        'message' => 'Reporte creado exitosamente', 
-        'id' => $idReporte
-    ], 201);
-    return $response;
+    try {
+        $data = $request->json();
+        error_log("ReporteController::create - Datos recibidos: " . json_encode($data));
+        
+        if (!isset($data['descripcion'])) {
+            throw new DomainException('La descripción es requerida', 400);
+        }
+        
+        $userId = $_SESSION['ID_Usuario'] ?? $data['ID_Usuario_Emisor'] ?? null;
+        if (!$userId) {
+            throw new DomainException('Usuario no autenticado', 401);
+        }
+        
+        $destinatarioId = $data['ID_Usuario_Destinatario'] ?? $data['idUsuarioDestinatario'] ?? null;
+        if (empty($destinatarioId)) {
+            throw new DomainException('El destinatario es requerido', 400);
+        }
+        
+        error_log("Creando reporte - Emisor: $userId, Destinatario: $destinatarioId");
+        
+        $command = new CrearReporteCommand($userId, $destinatarioId, $data['descripcion']);
+        $idReporte = $this->crearReporteHandler->handle($command);
+        
+        error_log("Reporte creado con ID: $idReporte");
+        
+        return $response->json([
+            'success' => true,
+            'message' => 'Reporte creado exitosamente',
+            'id' => $idReporte
+        ], 201);
+        
+    } catch (\Throwable $e) {
+        error_log("Error en ReporteController::create: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        return $response->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 400);
+    }
 }
 
     #[OA\Get(

@@ -25,6 +25,9 @@ class AuthMiddleware{
     '/usuario/tecnicos/Comprobador',
     '/usuario/tecnicos/Mantenimiento',
 '/usuario/perfil', 
+'/usuarios/por-tipo',
+    '/reportes/crear',
+
     ];
     /**
      * Maneja la petición

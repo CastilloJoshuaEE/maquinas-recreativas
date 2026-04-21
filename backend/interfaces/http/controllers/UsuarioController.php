@@ -110,25 +110,35 @@ public function register(Request $request): Response
         if (!isset($data['email'])) {
             throw new DomainException('Datos incompletos', 400);
         }
-
-        // NOTA: El orden de parámetros ahora es: nombre, apellido, ci, email, tipo, especialidad, contrasenaPlana
+ 
         $command = new RegistrarUsuarioCommand(
-            $data['nombre'] ?? '',      // nombre
-            $data['apellido'] ?? '',    // apellido
-            $data['ci'] ?? '',          // ci
-            $data['email'] ?? '',       // email
-            $data['tipo'] ?? 'Usuario', // tipo
-            $data['especialidad'] ?? null, // especialidad (opcional)
-            null                        // contrasenaPlana (opcional - null = generar automática)
+            $data['nombre']      ?? '',
+            $data['apellido']    ?? '',
+            $data['ci']          ?? '',
+            $data['email']       ?? '',
+            $data['tipo']        ?? 'Usuario',
+            $data['especialidad'] ?? null,
+            null   // contraseña generada automáticamente
         );
-
-        $result = $this->registrarUsuarioHandler->handle($command);
-
+         
+        $result  = $this->registrarUsuarioHandler->handle($command);
+        
+        // Obtener el ID del usuario recién creado
+        $nuevoId = null;
+        if ($result instanceof Uuid) {
+            $nuevoId = $result->value();
+        } elseif (is_string($result)) {
+            $nuevoId = $result;
+        } elseif (is_object($result) && method_exists($result, 'getId')) {
+            $nuevoId = $result->getId()->value();
+        }
+ 
         return (new Response())->json([
             'success' => true,
-            'message' => 'Usuario registrado correctamente. Las credenciales han sido enviadas a su correo.'
+            'message' => 'Usuario registrado correctamente. Las credenciales han sido enviadas a su correo.',
+            'id'      => $nuevoId
         ], 201);
-        
+ 
     } catch (\Exception $e) {
         error_log("Error en registro de usuario: " . $e->getMessage());
         return (new Response())->json([
@@ -137,6 +147,7 @@ public function register(Request $request): Response
         ], 500);
     }
 }
+ 
     #[OA\Post(
         path: "/v1/usuario/login",
         summary: "Iniciar sesión",
@@ -445,20 +456,30 @@ public function obtenerTecnicos(Request $request, string $especialidad): Respons
             new OA\Response(response: 400, description: "Tipo requerido")
         ]
     )]
-    public function getByTipo(Request $request): Response
-    {
-        $tipo      = $request->query('tipo');
-        $excluirId = $request->query('excluirId');
-        if (!$tipo) {
-            throw new DomainException('Tipo de usuario requerido', 400);
-        }
-
-        $query    = new ObtenerUsuariosPorTipoQuery($tipo, $excluirId);
-        $usuarios = $this->obtenerUsuariosPorTipoHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'usuarios' => $usuarios]);
+public function getByTipo(Request $request): Response
+{
+    $tipo = $request->query('tipo');
+    $excluirId = $request->query('excluirId');
+    
+    if (!$tipo) {
+        throw new DomainException('Tipo de usuario requerido', 400);
     }
-
+    
+    error_log("getByTipo: tipo=$tipo, excluirId=$excluirId");
+    
+    $query = new ObtenerUsuariosPorTipoQuery($tipo, $excluirId);
+    $usuarios = $this->obtenerUsuariosPorTipoHandler->handle($query);
+    
+    error_log("getByTipo: encontrados " . count($usuarios) . " usuarios");
+    
+    // Asegurar que la respuesta tenga la estructura esperada por el frontend
+    $responseData = [
+        'success' => true,
+        'usuarios' => $usuarios
+    ];
+    
+    return (new Response())->json($responseData);
+}
     #[OA\Post(
         path: "/v1/historial-actividades",
         summary: "Registrar una actividad del usuario autenticado",
@@ -519,5 +540,25 @@ public function obtenerHistorialActividades(Request $request): Response
     $historial = $this->historialHandler->handle($query);
 
     return (new Response())->json(['success' => true, 'historial' => $historial]);
+}
+#[OA\Get(
+    path: "/v1/administradores",
+    summary: "Obtener lista de administradores",
+    tags: ["Usuarios"],
+    responses: [
+        new OA\Response(response: 200, description: "Lista de administradores")
+    ]
+)]
+public function getAdministradores(Request $request): Response
+{
+    $query = new ObtenerUsuariosPorTipoQuery('Administrador', null);
+    $usuarios = $this->obtenerUsuariosPorTipoHandler->handle($query);
+    
+    error_log("getAdministradores: encontrados " . count($usuarios) . " administradores");
+    
+    return (new Response())->json([
+        'success' => true,
+        'administradores' => $usuarios
+    ]);
 }
 }

@@ -37,13 +37,20 @@ public function save(Reporte $reporte): void
     $descripcion = $data['descripcion'];
     $fechaHora = $data['fecha_hora'];
     $estado = $data['estado'];
-    
+      if (empty($idEmisor)) {
+        error_log("Error: ID_Usuario_Emisor es nulo o vacío para reporte $idReporte");
+        throw new \Exception('El emisor del reporte no puede ser nulo');
+    }
     $sql = "INSERT INTO reporte (ID_Reporte,ID_Usuario_Emisor,ID_Usuario_Destinatario,descripcion,fecha_hora,estado)
             VALUES (?,?,?,?,?,?)
             ON DUPLICATE KEY UPDATE estado=VALUES(estado),descripcion=VALUES(descripcion)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ssssss', $idReporte, $idEmisor, $idDestinatario, $descripcion, $fechaHora, $estado);
-    $stmt->execute(); 
+        $result = $stmt->execute();
+        if (!$result) {
+        error_log("Error en insert de reporte: " . $stmt->error);
+        throw new \Exception('Error al guardar el reporte en la base de datos');
+    }
     $stmt->close();
 
     $this->cache->delete("reporte:id:{$idReporte}");
