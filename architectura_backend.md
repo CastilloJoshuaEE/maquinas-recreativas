@@ -111,9 +111,6 @@ backend/
 │   │   │   ├── EliminarComercioCommand.php
 │   │   │   └── EliminarComercioHandler.php
 
-
-
-
 │   │   │   ├── RegistrarComercioCommand.php
 │   │   │   └── RegistrarComercioHandler.php
 │   │   ├── Componente/
@@ -321,3 +318,15 @@ backend/
     └── rate_limits.json
 
 backend/Swagger/SwaggerConfig.php
+
+`BrevoEmailService.php``backend/Infrastructure/Services/Email/``EnviarEmailCommand.php``backend/Application/Commands/Email/``EnviarEmailHandler.php``backend/Application/Commands/Email/``EmailController.php``backend/Interfaces/Http/Controllers/`
+
+
+```
+├── Application/
+│   ├── Commands/Comentario/
+│   │   ├── EditarComentarioCommand.php (nuevo)
+│   │   ├── EditarComentarioHandler.php (nuevo)
+│   │   ├── EliminarComentarioCommand.php (nuevo)
+│   │   └── EliminarComentarioHandler.php (nuevo)
+```

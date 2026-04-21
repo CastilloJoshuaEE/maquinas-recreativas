@@ -1,18 +1,88 @@
 /* You can add global styles to this file, and also import other style files */
 @import "bootstrap/dist/css/bootstrap.min.css";
-
-/* Custom styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Variables CSS para accesibilidad */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  --link-color: #4f6bed;
+  --link-hover: #3d55c3;
+  --base-font-size: 16px;
+  --font-family: 'Inter', 'Segoe UI', sans-serif;
+  --line-height: 1.5;
+  --letter-spacing: 0;
+  --word-spacing: 0;
 }
 
-html, body {
-  height: 100%;
-}
-
+/* Aplicar variables a elementos base */
 body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f5f5f5;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--base-font-size);
+  font-family: var(--font-family);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+  word-spacing: var(--word-spacing);
+}
+
+/* Enlaces con variables */
+a {
+  color: var(--link-color);
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+/* Modo oscuro (aplicado por JS) */
+body.dark-theme {
+  background-color: #1a1a2e;
+  color: #ffffff;
+}
+
+body.dark-theme .mat-mdc-card {
+  background-color: #16213e !important;
+  color: #ffffff !important;
+}
+
+body.dark-theme .mat-mdc-form-field {
+  color: #ffffff !important;
+}
+
+/* Alto contraste */
+body.high-contrast {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast a {
+  color: #ffff00 !important;
+  text-decoration: underline !important;
+}
+
+body.high-contrast button,
+body.high-contrast .mat-mdc-button {
+  border: 2px solid #ffffff !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.high-contrast input,
+body.high-contrast textarea,
+body.high-contrast select {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Reducir animaciones */
+body.reduce-animations *,
+body.reduce-animations *::before,
+body.reduce-animations *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }

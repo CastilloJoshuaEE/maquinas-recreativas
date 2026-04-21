@@ -274,7 +274,14 @@ ALTER TABLE usuario MODIFY usuario_asignado VARCHAR(25) NOT NULL UNIQUE DEFAULT 
 ALTER TABLE usuario
 ADD COLUMN fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE historial_maquinas MODIFY ID_Maquina CHAR(36) NULL;
+-- Añadir columnas para edición y soft delete
+ALTER TABLE comentario 
+ADD COLUMN fecha_edicion DATETIME NULL,
+ADD COLUMN eliminado BOOLEAN DEFAULT FALSE;
 
+-- Crear índice para búsquedas
+CREATE INDEX idx_comentario_fecha ON comentario(fecha_hora);
+CREATE INDEX idx_comentario_eliminado ON comentario(eliminado);
 INSERT INTO componente (tipo, nombre, precio) VALUES
 ('Logistico', 'Carcasa Arcade Clásica Roja', 150.00),
 ('Logistico', 'Carcasa Arcade Premium Negra', 200.00),

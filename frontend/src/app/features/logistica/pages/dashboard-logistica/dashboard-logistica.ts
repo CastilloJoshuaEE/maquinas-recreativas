@@ -15,7 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatOption, MatSelectModule } from '@angular/material/select';
 import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { LogisticaService } from '../../services/logistica';
 import { AuthService } from '@core/services/auth';
@@ -26,12 +26,17 @@ import { User } from '@core/models/user.model';
 import { ComercioFormComponent } from '../../ui/comercio-form/comercio-form';
 import { MaquinaFormComponent } from '../../ui/maquina-form/maquina-form';
 import { NotificacionMaquinaService } from '@core/services/notification-maquina';
+import { MaquinasDashboardComponent } from '@shared/ui/maquinas-dashboard/maquinas-dashboard';
+import { MaquinaModalComponent } from '@shared/ui/maquina-modal/maquina-modal';
+import { HistorialMaquinaViewerComponent } from '@shared/ui/historial-maquina-viewer/historial-maquina-viewer';
 
+import { MatDialog } from '@angular/material/dialog';
+import { MatOptionModule } from '@angular/material/core';
 @Component({
   selector: 'app-dashboard-logistica',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, ReactiveFormsModule,
+    CommonModule,MaquinasDashboardComponent,MatOption,MatOptionModule, FormsModule, ReactiveFormsModule,
     MatCardModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatFormFieldModule, MatInputModule, MatSelectModule,
     AdminHeaderComponent, ComercioFormComponent, MaquinaFormComponent
@@ -47,6 +52,7 @@ export class DashboardLogisticaComponent implements OnInit {
   private notificacionMaquinaService = inject(NotificacionMaquinaService);
   private snackBar = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+private dialog = inject(MatDialog);
 
   user: User | null = null;
 
@@ -311,4 +317,46 @@ marcarNotificacionLeida(id: string): void {
   getTipoComercio(c: any): string   { return c.tipo    || c.Tipo    || '—'; }
   getDirComercio(c: any): string    { return c.direccion || c.Direccion || '—'; }
   getTelComercio(c: any): string    { return c.telefono  || c.Telefono  || '—'; }
+abrirModalMaquina(): void {
+  const dialogRef = this.dialog.open(MaquinaModalComponent, {
+    width: '600px',
+    data: {
+      modo: 'crear',
+      userId: this.user!.id
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result?.success) {
+      this.cargarMaquinas(); // Recargar listas
+    }
+  });
+}
+
+abrirModalEditarMaquina(maquina: Maquina): void {
+  const dialogRef = this.dialog.open(MaquinaModalComponent, {
+    width: '600px',
+    data: {
+      modo: 'editar',
+      maquina: maquina,
+      userId: this.user!.id
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result?.success) {
+      this.cargarMaquinas();
+    }
+  });
+}
+
+verHistorialMaquina(maquina: Maquina): void {
+  this.dialog.open(HistorialMaquinaViewerComponent, {
+    width: '800px',
+    data: {
+      idMaquina: maquina.ID_Maquina,
+      nombreMaquina: maquina.Nombre_Maquina
+    }
+  });
+}
 }

@@ -469,6 +469,8 @@ use maquinas_recreativas\Application\Queries\Reporte\ObtenerReportePorIdHandler;
 
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
 use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
+use maquinas_recreativas\Application\Commands\Comentario\EditarComentarioHandler;
+use maquinas_recreativas\Application\Commands\Comentario\EliminarComentarioHandler;
 
 use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorMaquinaHandler;
 use maquinas_recreativas\Application\Queries\Historial\ObtenerHistorialPorUsuarioHandler;
@@ -1022,7 +1024,17 @@ Dependencies::register(CrearComentarioHandler::class, function() {
         Dependencies::get(MySQLUsuarioRepository::class)
     );
 });
+Dependencies::register(EditarComentarioHandler::class, function() {
+    return new EditarComentarioHandler(
+        Dependencies::get(MySQLComentarioRepository::class)
+    );
+});
 
+Dependencies::register(EliminarComentarioHandler::class, function() {
+    return new EliminarComentarioHandler(
+        Dependencies::get(MySQLComentarioRepository::class)
+    );
+});
 Dependencies::register(ObtenerComentariosPorReporteHandler::class, function() {
     return new ObtenerComentariosPorReporteHandler(
         Dependencies::get(MySQLComentarioRepository::class),
@@ -1169,12 +1181,15 @@ Dependencies::register(ReporteController::class, function() {
 
 Dependencies::register(ComentarioController::class, function() {
     return new ComentarioController(
-        Dependencies::get(CrearComentarioHandler::class),
-        Dependencies::get(ObtenerComentariosPorReporteHandler::class)
+        Dependencies::get(CrearComentarioHandler::class),           // 1. CrearComentarioHandler
+        Dependencies::get(ObtenerComentariosPorReporteHandler::class), // 2. ObtenerComentariosPorReporteHandler
+        Dependencies::get(EditarComentarioHandler::class),          // 3. EditarComentarioHandler
+        Dependencies::get(EliminarComentarioHandler::class)         // 4. EliminarComentarioHandler
     );
 });
 
 Dependencies::register(InformeController::class, function() {
+
     return new InformeController(
         Dependencies::get(RegistrarRecaudacionHandler::class),
         Dependencies::get(ActualizarRecaudacionHandler::class),

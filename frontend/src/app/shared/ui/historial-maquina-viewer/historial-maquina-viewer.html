@@ -1,0 +1,63 @@
+<mat-dialog-content class="historial-container">
+  <div class="historial-header">
+    <h2>
+      <mat-icon>history</mat-icon>
+      Historial - {{ nombreMaquina }}
+    </h2>
+    <button mat-icon-button (click)="cerrar()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div *ngIf="cargando" class="loading-center">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando historial...</p>
+  </div>
+
+  <div *ngIf="!cargando && historial.length === 0" class="empty-historial">
+    <mat-icon>inbox</mat-icon>
+    <p>No hay registros de historial para esta máquina</p>
+  </div>
+
+  <div *ngIf="!cargando && historial.length > 0" class="timeline">
+    <div *ngFor="let evento of historial" class="timeline-item" [class]="getColorAccion(evento.accion)">
+      <div class="timeline-icon">
+        <mat-icon>{{ getIconoAccion(evento.accion) }}</mat-icon>
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-header">
+          <span class="timeline-accion">{{ evento.accion }}</span>
+          <span class="timeline-fecha">{{ evento.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="timeline-body">
+          <p class="timeline-descripcion">{{ evento.descripcion || 'Sin descripción' }}</p>
+          <div class="timeline-detalles" *ngIf="evento.estado_anterior || evento.estado_nuevo">
+            <span *ngIf="evento.estado_anterior" class="detalle">
+              <strong>Estado anterior:</strong> {{ evento.estado_anterior }}
+            </span>
+            <mat-icon *ngIf="evento.estado_anterior && evento.estado_nuevo" class="arrow-icon">arrow_forward</mat-icon>
+            <span *ngIf="evento.estado_nuevo" class="detalle">
+              <strong>Estado nuevo:</strong> {{ evento.estado_nuevo }}
+            </span>
+          </div>
+          <div class="timeline-usuario">
+            <mat-icon>person</mat-icon>
+            <span>{{ evento.usuario_nombre || '' }} {{ evento.usuario_apellido || '' }} ({{ evento.tipo_usuario }})</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando && totalPaginas > 1" class="paginacion">
+    <button mat-button (click)="paginaAnterior()" [disabled]="pagina === 1">
+      <mat-icon>chevron_left</mat-icon>
+      Anterior
+    </button>
+    <span class="pagina-info">Página {{ pagina }} de {{ totalPaginas }}</span>
+    <button mat-button (click)="paginaSiguiente()" [disabled]="pagina === totalPaginas">
+      Siguiente
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</mat-dialog-content>

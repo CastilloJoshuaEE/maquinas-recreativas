@@ -24,33 +24,61 @@ class MySQLComentarioRepository implements ComentarioRepository
         $this->db    = $db;
         $this->cache = $cache ?? CacheFactory::create();
     }
-
 public function save(Comentario $comentario): void
 {
     $conn = $this->db->getConnection();
     $data = $comentario->toArray();
-    $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora) 
-            VALUES (?, ?, ?, ?, ?)";
     
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssss',
-        $data['ID_Comentario'],
-        $data['ID_Reporte'],
-        $data['ID_Usuario_Emisor'],
-        $data['comentario'],
-        $data['fecha_hora']
-    );
+    // Verificar si ya existe
+    $checkStmt = $conn->prepare("SELECT 1 FROM comentario WHERE ID_Comentario = ?");
+    $checkStmt->bind_param('s', $data['ID_Comentario']);
+    $checkStmt->execute();
+    $exists = $checkStmt->get_result()->num_rows > 0;
+    $checkStmt->close();
+    
+    if ($exists) {
+        // UPDATE - incluir fecha_edicion
+        $sql = "UPDATE comentario 
+                SET comentario = ?, fecha_edicion = ?, eliminado = ? 
+                WHERE ID_Comentario = ?";
+        $stmt = $conn->prepare($sql);
+        $fechaEdicion = date('Y-m-d H:i:s');
+        $eliminado = $data['eliminado'] ?? 0;
+        $stmt->bind_param('ssis', 
+            $data['comentario'],
+            $fechaEdicion,
+            $eliminado,
+            $data['ID_Comentario']
+        );
+    } else {
+        // INSERT
+        $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora, fecha_edicion, eliminado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $fechaEdicion = null;
+        $eliminado = 0;
+        $stmt->bind_param('ssssssi',
+            $data['ID_Comentario'],
+            $data['ID_Reporte'],
+            $data['ID_Usuario_Emisor'],
+            $data['comentario'],
+            $data['fecha_hora'],
+            $fechaEdicion,
+            $eliminado
+        );
+    }
+    
     $stmt->execute();
     $stmt->close();
     
-    //  Limpiar resultados pendientes
+    // Limpiar resultados pendientes
     while ($conn->more_results() && $conn->next_result()) {
         if ($rs = $conn->store_result()) {
             $rs->free();
         }
     }
 
-    // Invalidar comentarios de ese reporte para todos los usuarios
+    // Invalidar caché
     if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
         $this->cache->deleteByPattern("comentarios:reporte:{$data['ID_Reporte']}:*");
     }
@@ -186,6 +214,26 @@ public function deleteByReporte(Uuid $idReporte): bool
     
     if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
         $this->cache->deleteByPattern("comentarios:reporte:{$v}:*");
+    }
+    
+    return $result;
+}
+public function delete(Uuid $id): bool
+{
+    $conn = $this->db->getConnection();
+    
+    // Soft delete - solo marcar como eliminado, NO cambiar el texto
+    $stmt = $conn->prepare("UPDATE comentario SET eliminado = 1 WHERE ID_Comentario = ?");
+    $v = $id->value();
+    $stmt->bind_param('s', $v);
+    $result = $stmt->execute();
+    $stmt->close();
+    
+    // Limpiar caché
+    $this->cache->delete("comentario:id:{$v}");
+    if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
+        $this->cache->deleteByPattern("comentarios:reporte:*");
+        $this->cache->deleteByPattern("comentarios:chat:*");
     }
     
     return $result;

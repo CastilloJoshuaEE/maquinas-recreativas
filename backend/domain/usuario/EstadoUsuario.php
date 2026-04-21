@@ -14,7 +14,7 @@ final class EstadoUsuario
 {
     private const ACTIVO = 'Activo';
     private const INHABILITADO = 'Inhabilitado';
-    private const PENDIENTE_ASIGNACION = 'Pendiente_asignacion';
+    private const PENDIENTE_ASIGNACION = 'Pendiente de asignacion';
     private const VALID_ESTADOS = [
         self::ACTIVO,
         self::INHABILITADO,

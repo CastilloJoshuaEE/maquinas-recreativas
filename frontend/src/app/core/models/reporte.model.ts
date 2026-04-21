@@ -62,6 +62,14 @@ export interface Comentario {
   nombre?: string;
   /** Apellido del usuario */
   apellido?: string;
+    /** Indica si el comentario puede ser editado (menos de 15 min) */
+  puede_editar?: boolean;
+  /** Indica si el comentario puede ser eliminado (menos de 15 min) */
+  puede_eliminar?: boolean;
+  /** Indica si el comentario es del usuario actual */
+  es_propio?: boolean;
+  editado?: boolean; 
+  eliminado?: boolean; 
 }
 
 /**
@@ -72,4 +80,20 @@ export interface ChatData {
   comentarios: Comentario[];
   usuario_actual: User;
   usuario_destino: User;
+}
+/**
+ * Datos para editar un comentario
+ */
+export interface EditarComentarioData {
+  idComentario: string;
+  comentario: string;
+}
+
+/**
+ * Respuesta de operación sobre comentario
+ */
+export interface ComentarioResponse {
+  success: boolean;
+  message: string;
+  comentario?: Comentario;
 }

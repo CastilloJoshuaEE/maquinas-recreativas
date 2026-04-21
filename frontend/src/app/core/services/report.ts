@@ -7,7 +7,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
-import { Reporte, Comentario, CreateReporteData } from '@core/models/reporte.model';
+import { Reporte, Comentario, CreateReporteData,EditarComentarioData  } from '@core/models/reporte.model';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 
 @Injectable({
@@ -65,4 +65,46 @@ createComentario(reporteId: string, usuarioId: string, comentario: string): Obse
       map(response => response.success && response['data'] ? response['data'] : [])
     );
   }
+    /**
+   * Editar un comentario existente
+   * @param data Datos de edición (idComentario, comentario)
+   * @returns Observable con éxito de la operación
+   */
+  editarComentario(data: EditarComentarioData): Observable<boolean> {
+    return this.apiService.put<{ success: boolean }>(`/comentarios/${data.idComentario}`, {
+      comentario: data.comentario
+    }).pipe(
+      map(response => response.success)
+    );
+  }
+
+  /**
+   * Eliminar un comentario
+   * @param idComentario ID del comentario a eliminar
+   * @returns Observable con éxito de la operación
+   */
+  eliminarComentario(idComentario: string): Observable<boolean> {
+    return this.apiService.delete<{ success: boolean }>(`/comentarios/${idComentario}`).pipe(
+      map(response => response.success)
+    );
+  }
+
+/**
+ * Obtener comentarios con información de permisos
+ * @param reporteId ID del reporte
+ * @returns Observable con lista de comentarios
+ */
+getComentariosConPermisos(reporteId: string): Observable<Comentario[]> {
+  return this.apiService.get(API_ENDPOINTS.COMENTARIOS_BY_REPORTE(reporteId)).pipe(
+    map((response: any) => {
+      if (response?.success && response?.data && Array.isArray(response.data)) {
+        return response.data as Comentario[];
+      }
+      if (response?.success && response?.comentarios && Array.isArray(response.comentarios)) {
+        return response.comentarios as Comentario[];
+      }
+      return [];
+    })
+  );
+}
 }

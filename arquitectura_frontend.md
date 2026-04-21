@@ -332,8 +332,6 @@ frontend/
         │   │   │   └── reportes.spec.ts
         │   │   ├── ui/
 
-
-
 │   │   │   ├── consulta-informe-distribucion/
         │   │   │   │   ├── consulta-informe-distribucion.ts
         │   │   │   │   ├── consulta-informe-distribucion.html
@@ -396,6 +394,36 @@ frontend/
         │           ├── historial-general.html
         │           ├── historial-general.css
         │           └── historial-general.spec.ts
+
+`enviar-email.ts/html/cssfrontend/src/app/features/admin/pages/enviar-email/` (carpeta nueva)
+
+frontend/src/app/shared/ui/
+├── maquinas-dashboard/
+│   ├── maquinas-dashboard.ts
+│   ├── maquinas-dashboard.html
+│   ├── maquinas-dashboard.css
+│   └── maquinas-dashboard.spec.ts
+├── maquina-modal/
+│   ├── maquina-modal.ts
+│   ├── maquina-modal.html
+│   ├── maquina-modal.css
+│   └── maquina-modal.spec.ts
+└── historial-maquina-viewer/
+    ├── historial-maquina-viewer.ts
+    ├── historial-maquina-viewer.html
+    ├── historial-maquina-viewer.css
+    └── historial-maquina-viewer.spec.ts
+
+
+
+frontend/src/app/shared/ui/
+├── accessibility-widget/
+│   ├── accessibility-widget.ts
+│   ├── accessibility-widget.html
+│   ├── accessibility-widget.css
+│   └── accessibility-widget.ts
+└── accessibility-settings/
+    └── accessibility-settings.ts
 
 ## Cómo instalarlo
 

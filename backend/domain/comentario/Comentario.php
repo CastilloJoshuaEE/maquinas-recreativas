@@ -24,7 +24,8 @@ class Comentario
     private Uuid $idUsuarioEmisor;
     private string $comentario;
     private DateTimeImmutable $fechaHora;
-
+    private ?DateTimeImmutable $fechaEdicion;
+    private bool $eliminado;
     /**
      * Constructor privado.
      */
@@ -33,13 +34,17 @@ class Comentario
         Uuid $idReporte,
         Uuid $idUsuarioEmisor,
         string $comentario,
-        DateTimeImmutable $fechaHora
+        DateTimeImmutable $fechaHora,
+         ?DateTimeImmutable $fechaEdicion = null,
+        bool $eliminado = false
     ) {
         $this->id = $id;
         $this->idReporte = $idReporte;
         $this->idUsuarioEmisor = $idUsuarioEmisor;
         $this->comentario = $comentario;
         $this->fechaHora = $fechaHora;
+        $this->fechaEdicion = $fechaEdicion;
+        $this->eliminado = $eliminado;
     }
 
     /**
@@ -97,7 +102,10 @@ class Comentario
             'ID_Reporte' => $this->idReporte->value(),
             'ID_Usuario_Emisor' => $this->idUsuarioEmisor->value(),
             'comentario' => $this->comentario,
-            'fecha_hora' => $this->fechaHora->format('Y-m-d H:i:s')
+            'fecha_hora' => $this->fechaHora->format('Y-m-d H:i:s'),
+                    'fecha_edicion' => $this->fechaEdicion?->format('Y-m-d H:i:s'),
+                        'eliminado' => $this->eliminado ? 1:0
+
         ];
     }
 
@@ -107,15 +115,68 @@ class Comentario
      * @param Uuid $idUsuario
      * @return bool
      */
-    public function esDeUsuario(Uuid $idUsuario): bool
+  public function esDeUsuario(Uuid $idUsuario): bool
     {
         return $this->idUsuarioEmisor->equals($idUsuario);
     }
 
+    /**
+     * Verifica si el comentario puede ser editado (menos de 15 minutos)
+     */
+    public function puedeSerEditado(): bool
+    {
+        if ($this->eliminado) return false;
+        
+        $ahora = new DateTimeImmutable();
+        $diferencia = $ahora->getTimestamp() - $this->fechaHora->getTimestamp();
+        return $diferencia <= 900; // 15 minutos = 900 segundos
+    }
+
+    /**
+     * Verifica si el comentario puede ser eliminado (menos de 15 minutos)
+     */
+    public function puedeSerEliminado(): bool
+    {
+        return $this->puedeSerEditado(); // Misma regla
+    }
+
+    /**
+     * Edita el contenido del comentario
+     */
+    public function editar(string $nuevoComentario): void
+    {
+        if (!$this->puedeSerEditado()) {
+            throw new \DomainException('Ya no puedes editar este comentario. Solo tienes 15 minutos.');
+        }
+        
+        if (empty(trim($nuevoComentario))) {
+            throw new \InvalidArgumentException('El comentario no puede estar vacío');
+        }
+        
+        $this->comentario = $nuevoComentario;
+        $this->fechaEdicion = new DateTimeImmutable();
+    }
+
+    /**
+     * Marca el comentario como eliminado (soft delete)
+     */
+    public function eliminar(): void
+    {
+        if (!$this->puedeSerEliminado()) {
+            throw new \DomainException('Ya no puedes eliminar este comentario. Solo tienes 15 minutos.');
+        }
+        
+        $this->eliminado = true;
+        $this->comentario = '[Mensaje eliminado]';
+    }
     // --- Getters ---
     public function id(): Uuid { return $this->id; }
     public function idReporte(): Uuid { return $this->idReporte; }
     public function idUsuarioEmisor(): Uuid { return $this->idUsuarioEmisor; }
     public function comentario(): string { return $this->comentario; }
     public function fechaHora(): DateTimeImmutable { return $this->fechaHora; }
-}
+    public function fechaEdicion(): ?DateTimeImmutable { return $this->fechaEdicion; }
+    public function estaEditado(): bool { return $this->fechaEdicion !== null; }
+    public function estaEliminado(): bool { return $this->eliminado; }
+
+    }

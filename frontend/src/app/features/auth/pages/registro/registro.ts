@@ -1,6 +1,6 @@
 /**
  * @fileoverview Componente de Registro de Usuario
- * @description Página de registro para nuevos usuarios del sistema
+ * @description Página de registro - usuario_asignado y contraseña son generados automáticamente por el backend
  * @component RegistroComponent
  */
 
@@ -15,8 +15,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@core/services/auth';
+import { RegisterData } from '@core/models/user.model';
+import { AuthResponse } from '@core/models/user.model';
+
+
+
 @Component({
   selector: 'app-registro',
   standalone: true,
@@ -30,7 +36,8 @@ import { AuthService } from '@core/services/auth';
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatDialogModule
   ],
   templateUrl: './registro.html',
   styleUrls: ['./registro.css']
@@ -40,24 +47,23 @@ export class RegistroComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
+  private dialog = inject(MatDialog);
   
   registroForm: FormGroup;
   loading = false;
-  hidePassword = true;
   fileName: string = '';
   
   constructor() {
     this.registroForm = this.fb.group({
-      nombre: ['', [Validators.required]],
-      apellido: ['', [Validators.required]],
+      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      apellido: ['', [Validators.required, Validators.minLength(2)]],
       ci: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       email: ['', [Validators.required, Validators.email]],
       tipo: ['Logistica', [Validators.required]],
-      especialidad: [''],
-      usuario_asignado: ['', [Validators.required, Validators.maxLength(15)]],
-      contrasena: ['', [Validators.required, Validators.minLength(8)]]
+      especialidad: ['']
     });
     
+    // Validación condicional para especialidad
     this.registroForm.get('tipo')?.valueChanges.subscribe(tipo => {
       const especialidadControl = this.registroForm.get('especialidad');
       if (tipo === 'Tecnico') {
@@ -77,6 +83,7 @@ export class RegistroComponent {
       if (file.type === 'application/pdf') {
         this.fileName = file.name;
         this.toastr.success(`Currículum "${file.name}" seleccionado correctamente`);
+        
       } else {
         this.toastr.error('Por favor, seleccione un archivo PDF válido');
         input.value = '';
@@ -84,39 +91,52 @@ export class RegistroComponent {
       }
     }
   }
+  
   soloNumeros(event: KeyboardEvent): boolean {
-  const charCode = event.charCode;
-  if (charCode >= 48 && charCode <= 57) {
-    return true;
-  } else {
+    const charCode = event.charCode;
+    if (charCode >= 48 && charCode <= 57) {
+      return true;
+    }
     event.preventDefault();
     return false;
   }
-}
+  
   onSubmit(): void {
-    if (this.registroForm.invalid) return;
+    if (this.registroForm.invalid) {
+      this.registroForm.markAllAsTouched();
+      return;
+    }
     
-    if (!confirm('¿Seguro desea registrarse?')) return;
+    if (!confirm('¿Seguro desea registrarse? Recibirá sus credenciales por correo electrónico.')) {
+      return;
+    }
     
     this.loading = true;
-    const formData = this.registroForm.value;
+    const formData: RegisterData = {
+      nombre: this.registroForm.value.nombre,
+      apellido: this.registroForm.value.apellido,
+      ci: this.registroForm.value.ci,
+      email: this.registroForm.value.email,
+      tipo: this.registroForm.value.tipo,
+      especialidad: this.registroForm.value.especialidad
+    };
     
     this.authService.register(formData).subscribe({
-      next: (response) => {
+      next: (response: AuthResponse) => {
+        this.loading = false;
+        
         if (response.success) {
-          this.toastr.success(
-            'No olvide su usuario y contraseña que acaba de registrar. Pronto nos pondremos en contacto con usted.',
-            '¡Registro exitoso!'
-          );
-          setTimeout(() => this.router.navigate(['/auth/login']), 3000);
+
+          // Limpiar formulario
+          this.registroForm.reset({ tipo: 'Logistica' });
+          this.fileName = '';
         } else {
           this.toastr.error(response.message || 'Error al registrar usuario', 'Error');
         }
-        this.loading = false;
       },
       error: (error) => {
-        this.toastr.error(error.message || 'Error de conexión con el servidor', 'Error');
         this.loading = false;
+        this.toastr.error(error.message || 'Error de conexión con el servidor', 'Error');
       }
     });
   }

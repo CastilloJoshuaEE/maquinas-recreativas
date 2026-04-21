@@ -10,11 +10,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { ChatbotFloatingComponent } from '@shared/ui/chatbot-floating/chatbot-floating';
+import { AccessibilityWidgetComponent } from '@shared/ui/accessibility-widget/accessibility-widget';
 
 @Component({
   selector: 'app-auth-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ChatbotFloatingComponent],
+  imports: [CommonModule, RouterOutlet, ChatbotFloatingComponent, AccessibilityWidgetComponent],
   templateUrl: './auth-layout.html',
   styleUrls: ['./auth-layout.css']
 })

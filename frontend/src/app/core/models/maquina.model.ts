@@ -91,3 +91,20 @@ export interface InformeDistribucion {
   fecha_baja?: string;
   estado: string;
 }
+
+export interface CreateMaquinaData {
+  nombre: string;
+  tipo: string;
+  idComercio: string;
+  idUsuarioLogistica: string;
+  idPlaca: string;
+  idCarcasa: string;
+}
+
+export interface UpdateMaquinaData {
+  idMaquina: string;
+  nombre?: string;
+  tipo?: string;
+  idComercio?: string;
+  estado?: string;
+}

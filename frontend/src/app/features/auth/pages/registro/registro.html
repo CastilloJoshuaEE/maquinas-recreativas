@@ -3,6 +3,7 @@
     <mat-card-header>
       <mat-card-title>
         <h2>Formulario de Registro</h2>
+        <p class="subtitle">Completa tus datos personales. Tus credenciales serán generadas automáticamente.</p>
       </mat-card-title>
     </mat-card-header>
     
@@ -12,31 +13,53 @@
           <mat-label>Nombre</mat-label>
           <input matInput formControlName="nombre">
           <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="registroForm.get('nombre')?.hasError('required')">
+            El nombre es requerido
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('nombre')?.hasError('minlength')">
+            Mínimo 2 caracteres
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Apellido</mat-label>
           <input matInput formControlName="apellido">
           <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="registroForm.get('apellido')?.hasError('required')">
+            El apellido es requerido
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('apellido')?.hasError('minlength')">
+            Mínimo 2 caracteres
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Cédula (CI)</mat-label>
-  <input 
-    matInput 
-    formControlName="ci"
-    type="text"
-    inputmode="numeric"
-    pattern="[0-9]*"
-    (keypress)="soloNumeros($event)">          
-          
+          <input 
+            matInput 
+            formControlName="ci"
+            type="text"
+            inputmode="numeric"
+            (keypress)="soloNumeros($event)">
           <mat-icon matPrefix>badge</mat-icon>
+          <mat-error *ngIf="registroForm.get('ci')?.hasError('required')">
+            La cédula es requerida
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('ci')?.hasError('pattern')">
+            Ingrese una cédula válida (10 dígitos)
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Correo electrónico</mat-label>
           <input matInput formControlName="email" type="email">
           <mat-icon matPrefix>email</mat-icon>
+          <mat-error *ngIf="registroForm.get('email')?.hasError('required')">
+            El correo es requerido
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('email')?.hasError('email')">
+            Ingrese un correo válido
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -48,9 +71,12 @@
             <mat-option value="Administrador">Administrador del sistema</mat-option>
           </mat-select>
           <mat-icon matPrefix>work</mat-icon>
+          <mat-error *ngIf="registroForm.get('tipo')?.hasError('required')">
+            Seleccione un área
+          </mat-error>
         </mat-form-field>
 
-        <!-- Cambiado: Usar @if en lugar de *ngIf -->
+        <!-- Campo de especialidad condicional -->
         @if (registroForm.get('tipo')?.value === 'Tecnico') {
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Especialidad</mat-label>
@@ -60,44 +86,28 @@
               <mat-option value="Mantenimiento">Mantenimiento</mat-option>
             </mat-select>
             <mat-icon matPrefix>build</mat-icon>
+            <mat-error *ngIf="registroForm.get('especialidad')?.hasError('required')">
+              Seleccione una especialidad
+            </mat-error>
           </mat-form-field>
         }
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Nombre de usuario</mat-label>
-          <input matInput formControlName="usuario_asignado">
-          <mat-icon matPrefix>account_circle</mat-icon>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Contraseña</mat-label>
-          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
-          <mat-icon matPrefix>lock</mat-icon>
-          <mat-icon matSuffix (click)="hidePassword = !hidePassword">
-            {{hidePassword ? 'visibility_off' : 'visibility'}}
-          </mat-icon>
-        </mat-form-field>
-
         <div class="file-upload">
           <label class="file-label">
             <mat-icon>attach_file</mat-icon>
             Subir Currículum (PDF)
             <input type="file" accept=".pdf" (change)="onFileSelected($event)" hidden>
           </label>
-          <!-- Cambiado: Usar @if en lugar de *ngIf -->
           @if (fileName) {
             <span class="file-name">{{ fileName }}</span>
           }
         </div>
-
         <div class="form-actions">
           <button mat-raised-button color="primary" type="submit" [disabled]="registroForm.invalid || loading">
-            <!-- Cambiado: Usar @if en lugar de *ngIf -->
             @if (loading) {
               <mat-spinner diameter="20"></mat-spinner>
             }
             @if (!loading) {
-              <span>Registrar</span>
+              <span>Registrarse</span>
             }
           </button>
           <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>

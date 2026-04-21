@@ -93,7 +93,6 @@ class UsuarioController
                     new OA\Property(property: "apellido", type: "string"),
                     new OA\Property(property: "ci", type: "string"),
                     new OA\Property(property: "email", type: "string", format: "email"),
-                    new OA\Property(property: "contrasena", type: "string"),
                     new OA\Property(property: "tipo", type: "string", default: "Usuario"),
                     new OA\Property(property: "especialidad", type: "string", nullable: true)
                 ]
@@ -108,34 +107,33 @@ public function register(Request $request): Response
 {
     try {
         $data = $request->json();
-        if (!isset($data['contrasena'])) {
+        if (!isset($data['email'])) {
             throw new DomainException('Datos incompletos', 400);
         }
 
+        // NOTA: El orden de parámetros ahora es: nombre, apellido, ci, email, tipo, especialidad, contrasenaPlana
         $command = new RegistrarUsuarioCommand(
-            $data['nombre'] ?? '', $data['apellido'] ?? '', $data['ci'] ?? '',
-            $data['email'] ?? '', $data['contrasena'], $data['tipo'] ?? 'Usuario',
-            $data['especialidad'] ?? null
+            $data['nombre'] ?? '',      // nombre
+            $data['apellido'] ?? '',    // apellido
+            $data['ci'] ?? '',          // ci
+            $data['email'] ?? '',       // email
+            $data['tipo'] ?? 'Usuario', // tipo
+            $data['especialidad'] ?? null, // especialidad (opcional)
+            null                        // contrasenaPlana (opcional - null = generar automática)
         );
 
         $result = $this->registrarUsuarioHandler->handle($command);
 
-        $usuarioCreado = $this->obtenerUsuarioPorIdHandler->handle(
-            new ObtenerUsuarioPorIdQuery($result, true)
-        );
-
         return (new Response())->json([
-            'success'          => true,
-            'message'          => 'Usuario registrado correctamente',
-            'userId'           => $result->value(),
-            'usuario_asignado' => $usuarioCreado['usuario_asignado'] ?? '',
+            'success' => true,
+            'message' => 'Usuario registrado correctamente. Las credenciales han sido enviadas a su correo.'
         ], 201);
+        
     } catch (\Exception $e) {
         error_log("Error en registro de usuario: " . $e->getMessage());
-        error_log($e->getTraceAsString());
         return (new Response())->json([
             'success' => false,
-            'error'   => $e->getMessage()
+            'message' => $e->getMessage()
         ], 500);
     }
 }

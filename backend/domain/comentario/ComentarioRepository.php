@@ -21,4 +21,5 @@ interface ComentarioRepository
     public function findByReporte(Uuid $idReporte, Uuid $idUsuario): array;
     public function findByChat(Uuid $emisorId, Uuid $destinatarioId): array;
     public function deleteByReporte(Uuid $idReporte): bool;
-}
+public function delete(Uuid $idComentario): bool;   
+    }

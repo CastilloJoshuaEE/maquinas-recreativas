@@ -70,25 +70,49 @@
             </button>
           </div>
           <div class="chat-mensajes" #mensajesContainer>
-            <div *ngIf="cargandoMensajes" class="loading-mensajes">
-              <mat-spinner diameter="30"></mat-spinner>
-            </div>
-            <div *ngFor="let comentario of comentarios" 
-                 class="comentario-item" 
-                 [ngClass]="{'emisor': comentario.ID_Usuario_Emisor === currentUserId, 
-                            'receptor': comentario.ID_Usuario_Emisor !== currentUserId}">
-              <div class="comentario-header">
-                <strong>{{ comentario.nombre }} {{ comentario.apellido }}</strong>
-                <small>{{ comentario.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</small>
-              </div>
-              <p>{{ comentario.comentario }}</p>
-            </div>
-            <div *ngIf="!cargandoMensajes && comentarios.length === 0 && reporteSeleccionadoId && reporteSeleccionadoId !== 'nuevo'" 
-                 class="no-mensajes">
-              <p>No hay mensajes aún. ¡Envía el primero!</p>
-            </div>
-            <div #scrollAnchor></div>
-          </div>
+  <div *ngIf="cargandoMensajes" class="loading-mensajes">
+    <mat-spinner diameter="30"></mat-spinner>
+  </div>
+  <div *ngFor="let comentario of comentarios" 
+       class="comentario-item" 
+       [ngClass]="{'emisor': comentario.ID_Usuario_Emisor === currentUserId, 
+                  'receptor': comentario.ID_Usuario_Emisor !== currentUserId}">
+    <div class="comentario-header">
+      <strong>{{ comentario.nombre }} {{ comentario.apellido }}</strong>
+      <div class="comentario-metadata">
+        <small>{{ comentario.fecha_hora | date:'dd/MM/yyyy HH:mm' }}</small>
+        <small *ngIf="comentario.editado" class="editado-indicator">(editado)</small>
+      </div>
+    </div>
+    <p class="comentario-texto">{{ comentario.comentario }}</p>
+    
+<div class="comentario-acciones" *ngIf="comentario.ID_Usuario_Emisor === currentUserId && puedeEditar(comentario)">
+      <button mat-icon-button 
+              (click)="editarComentario(comentario)" 
+              matTooltip="Editar mensaje"
+              [disabled]="!puedeEditar(comentario)"
+              class="btn-editar-mensaje">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button 
+              (click)="eliminarComentario(comentario)" 
+              matTooltip="Eliminar mensaje"
+              [disabled]="!puedeEliminar(comentario)"
+              class="btn-eliminar-mensaje">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div *ngIf="!cargandoMensajes && comentarios.length === 0 && reporteSeleccionadoId && reporteSeleccionadoId !== 'nuevo'" 
+       class="no-mensajes">
+    <p>No hay mensajes aún. ¡Envía el primero!</p>
+  </div>
+  <div #scrollAnchor></div>
+</div>
+
+
+
+
           <form class="chat-form" (ngSubmit)="enviarMensaje()" 
                 *ngIf="reporteSeleccionadoId && reporteSeleccionadoId !== 'nuevo'">
             <mat-form-field appearance="outline" class="message-input">

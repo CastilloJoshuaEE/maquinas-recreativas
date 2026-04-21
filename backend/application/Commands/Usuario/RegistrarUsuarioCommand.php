@@ -23,29 +23,30 @@ class RegistrarUsuarioCommand
     private string $apellido;
     private string $ci;
     private string $email;
-    private string $contrasenaPlana;
+    private ?string $contrasenaPlana;
     private string $tipo;
     private ?string $especialidad;
 
     /**
      * RegistrarUsuarioCommand constructor.
+     * NOTA: Los parámetros opcionales deben ir al final
      *
      * @param string $nombre
      * @param string $apellido
      * @param string $ci
      * @param string $email
-     * @param string $contrasenaPlana
      * @param string $tipo
      * @param string|null $especialidad
+     * @param string|null $contrasenaPlana (opcional - va al final)
      */
     public function __construct(
         string $nombre,
         string $apellido,
         string $ci,
         string $email,
-        string $contrasenaPlana,
         string $tipo,
-        ?string $especialidad = null
+        ?string $especialidad = null,
+        ?string $contrasenaPlana = null
     ) {
         $this->nombre = $nombre;
         $this->apellido = $apellido;
@@ -60,7 +61,7 @@ class RegistrarUsuarioCommand
     public function getApellido(): string { return $this->apellido; }
     public function getCi(): string { return $this->ci; }
     public function getEmail(): string { return $this->email; }
-    public function getContrasenaPlana(): string { return $this->contrasenaPlana; }
+    public function getContrasenaPlana(): ?string { return $this->contrasenaPlana; }
     public function getTipo(): string { return $this->tipo; }
     public function getEspecialidad(): ?string { return $this->especialidad; }
 }

@@ -54,8 +54,6 @@ export interface RegisterData {
   apellido: string;
   ci: string;
   email: string;
-  usuario_asignado: string;
-  contrasena: string;
   tipo: string;
   especialidad?: string;
 }

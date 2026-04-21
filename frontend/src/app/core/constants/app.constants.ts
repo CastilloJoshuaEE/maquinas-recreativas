@@ -152,6 +152,7 @@ export const API_ENDPOINTS = {
   COMERCIO_DELETE: (id: string) => `/comercio/eliminar/${id}`,
   // Máquina
   MAQUINA_REGISTER: '/maquina/register',
+  
   MAQUINA_GENERAR_PLACA: '/maquina/generar-placa',
   MAQUINA_MONTAR: '/maquina/registrar-montaje',
   MAQUINA_COMPROBACION: '/maquina/mandar-comprobacion',
@@ -198,7 +199,8 @@ export const API_ENDPOINTS = {
   // Comentarios
   COMENTARIOS: '/comentarios',
   COMENTARIOS_BY_REPORTE: (id: string) => `/comentarios/reporte/${id}`,
-  
+    COMENTARIO_EDITAR: (id: string) => `/comentarios/${id}`,
+  COMENTARIO_ELIMINAR: (id: string) => `/comentarios/${id}`,
   // Notificaciones
   NOTIFICACIONES_MAQUINA: (id: string) => `/notificaciones_maquina/${id}`,
   NOTIFICACIONES: (id: string) => `/notificaciones/${id}`,

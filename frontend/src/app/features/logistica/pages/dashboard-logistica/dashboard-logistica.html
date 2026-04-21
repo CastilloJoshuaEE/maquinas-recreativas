@@ -271,7 +271,12 @@
       </div>
     </div>
   </div>
-
+<!-- Agregar el componente dashboard -->
+<app-maquinas-dashboard
+  (abrirModalCrear)="abrirModalMaquina()"
+  (abrirModalEditar)="abrirModalEditarMaquina($event)"
+  (verHistorial)="verHistorialMaquina($event)">
+</app-maquinas-dashboard>
   <!-- ── Formularios hijo ───────────────────────────────────────────────── -->
   <app-comercio-form *ngIf="mostrarComercioForm"
     (onClose)="cerrarFormularioComercio()"

@@ -27,7 +27,6 @@ export class NotificacionMaquinaService {
       catchError(() => of([]))
     );
   }
-// notification-maquina.service.ts
 marcarComoLeida(notificacionId: string): Observable<boolean> {
   console.log(' NotificacionMaquinaService.marcarComoLeida:', notificacionId);
   
