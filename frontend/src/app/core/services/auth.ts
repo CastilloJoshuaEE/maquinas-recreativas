@@ -114,16 +114,24 @@ if (response.success && response['usuario']) {
    * Guarda la sesión en localStorage
    * @param response - Respuesta de autenticación
    */
-  private setSession(response: AuthResponse): void {
+private setSession(response: AuthResponse): void {
     if (response.usuario) {
-      localStorage.setItem('user', JSON.stringify(response.usuario));
-      this.currentUserSignal.set(response.usuario);
+        // Asegurar que la especialidad se guarde correctamente
+        const userToSave = {
+            ...response.usuario,
+            // Asegurar que especialidad se guarde en ambos formatos para compatibilidad
+            Especialidad: response.usuario.Especialidad || response.usuario.especialidad || '',
+            especialidad: response.usuario.Especialidad || response.usuario.especialidad || ''
+        };
+        
+        console.log('Guardando usuario en sesión:', userToSave);
+        localStorage.setItem('user', JSON.stringify(userToSave));
+        this.currentUserSignal.set(userToSave);
     }
     if (response.token) {
-      localStorage.setItem('token', response.token);
+        localStorage.setItem('token', response.token);
     }
-  }
-
+}
   /**
    * Limpia la sesión actual
    */
@@ -137,14 +145,22 @@ if (response.success && response['usuario']) {
    * Carga el usuario desde localStorage al iniciar
    */
 private loadUserFromStorage(): void {
-  const userStr = localStorage.getItem('user');
-  if (userStr && !this.currentUserSignal()) {
-    try {
-      const user = JSON.parse(userStr);
-      this.currentUserSignal.set(user);
-    } catch (e) {
-      console.error('Error al cargar usuario:', e);
+    const userStr = localStorage.getItem('user');
+    if (userStr && !this.currentUserSignal()) {
+        try {
+            const user = JSON.parse(userStr);
+            // Normalizar la especialidad
+            if (user && !user.Especialidad && user.especialidad) {
+                user.Especialidad = user.especialidad;
+            }
+            if (user && !user.especialidad && user.Especialidad) {
+                user.especialidad = user.Especialidad;
+            }
+            console.log('Usuario cargado desde storage:', user);
+            this.currentUserSignal.set(user);
+        } catch (e) {
+            console.error('Error al cargar usuario:', e);
+        }
     }
-  }
 }
 }

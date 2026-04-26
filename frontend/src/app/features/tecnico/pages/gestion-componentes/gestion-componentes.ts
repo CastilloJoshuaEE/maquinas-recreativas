@@ -269,68 +269,49 @@ liberarComponente(componente: Componente): void {
     this.cargarComponentesDisponibles();
   }
 regresar(): void {
-    console.log('=== REGRESAR - DIAGNÓSTICO ===');
-    
-    // Intentar obtener usuario de múltiples fuentes
+    // Intentar obtener del AuthService
     let user = this.authService.getCurrentUser();
-    console.log('Usuario desde AuthService:', user);
+    let especialidad = user?.Especialidad || user?.especialidad;
     
-    let especialidad = user?.Especialidad;
+    console.log('Usuario en regresar:', user);
+    console.log('Especialidad encontrada:', especialidad);
     
-    // Intentar desde localStorage directamente
+    // Si no tiene especialidad, intentar obtener del localStorage directamente
     if (!especialidad) {
-        try {
-            const storedUser = localStorage.getItem('currentUser');
-            if (storedUser) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
                 const parsedUser = JSON.parse(storedUser);
                 especialidad = parsedUser.Especialidad || parsedUser.especialidad;
-                console.log('Especialidad desde localStorage:', especialidad);
-                
-                // También actualizar el usuario en el servicio si falta la especialidad
-                if (parsedUser && !user?.Especialidad) {
-                    this.user = parsedUser;
-                    console.log('Usuario actualizado desde localStorage:', this.user);
-                }
+                console.log('Especialidad desde localStorage directo:', especialidad);
+            } catch (e) {
+                console.error('Error parsing stored user:', e);
             }
-        } catch (e) {
-            console.error('Error parsing stored user:', e);
         }
     }
     
-    // Si el usuario es técnico pero no tiene especialidad, intentar obtenerla del tipo
-    if (!especialidad && user?.tipo === 'Tecnico') {
-        // Esto es un fallback - deberías obtener la especialidad del backend
-        console.warn('Usuario técnico sin especialidad definida');
-        // Podrías redirigir a una página genérica o mostrar un mensaje
-        this.snackBar.open('Error: Perfil de técnico incompleto. Contacte al administrador.', 'Cerrar', { duration: 5000 });
+    // Si aún no hay especialidad, mostrar error y redirigir a ensamblador
+    if (!especialidad) {
+        console.error('No se pudo determinar la especialidad del técnico');
+        this.snackBar.open('Error: No se pudo determinar su especialidad. Contacte al administrador.', 'Cerrar', { duration: 5000 });
         this.router.navigate(['/tecnico/ensamblador']);
         return;
     }
     
+    // Normalizar especialidad a minúsculas para comparar
+    const especialidadLower = especialidad.toLowerCase();
+    
     // Mapeo de rutas
     const rutaMap: { [key: string]: string } = {
-        'Ensamblador': '/tecnico/ensamblador',
         'ensamblador': '/tecnico/ensamblador',
-        'Comprobador': '/tecnico/comprobador',
         'comprobador': '/tecnico/comprobador',
-        'Mantenimiento': '/tecnico/mantenimiento',
         'mantenimiento': '/tecnico/mantenimiento'
     };
     
-    const rutaDestino = especialidad ? (rutaMap[especialidad] || '/tecnico/ensamblador') : '/tecnico/ensamblador';
+    const rutaDestino = rutaMap[especialidadLower] || '/tecnico/ensamblador';
     
-    console.log('Especialidad final:', especialidad);
     console.log('Redirigiendo a:', rutaDestino);
-    
-    // Limpiar la máquina seleccionada
     localStorage.removeItem('selectedMachine');
-    
-    // Navegar
-    this.router.navigate([rutaDestino]).then(success => {
-        if (!success) {
-            console.error('Error en navegación a:', rutaDestino);
-            this.router.navigate(['/tecnico/ensamblador']);
-        }
-    });
-} 
+    this.router.navigate([rutaDestino]);
+}
 }
