@@ -97,8 +97,8 @@ frontend/
         │   │   │   ├── maquina-list.html
         │   │   │   ├── maquina-list.css
         │   │   │   └── maquina-list.spec.ts
-        │   │   
-        │   │   │
+        │   │
+    │   │   │
         │   │   ├── profile-section/
         │   │   │   ├── profile-section.ts
         │   │   │   ├── profile-section.html
@@ -391,6 +391,8 @@ frontend/
         │           └── historial-general.spec.ts
 
 `enviar-email.ts/html/cssfrontend/src/app/features/admin/pages/enviar-email/` (carpeta nueva)
+
+frontend/src/app/shared/ui/loading-spinner/loading-spinner.ts, loading-spinner.html,loading-spinner.spec.ts , loading-spinner.css
 
 frontend/src/app/shared/ui/
 ├── maquinas-dashboard/

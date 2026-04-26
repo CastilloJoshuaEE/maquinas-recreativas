@@ -103,7 +103,6 @@ export class LevantarInformeComponent implements OnInit {
   }
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────────
-  ngOnInit(): void { this.cargarDatos(); }
 
   private cargarDatos(): void {
     const idRec = this.route.snapshot.params['idRecaudacion'];
@@ -257,15 +256,39 @@ private cargarTecnicos(maquina: any): void {
     this.cargandoTecnicos = false;
   });
 }
-  private cargarComponentes(idMaquina: string): void {
+// En levantar-informe.ts - Modifica cargarComponentes
+private cargarComponentes(idMaquina: string): void {
+    this.cargandoComponentes = true;
+    
+    // Usar el endpoint de componentes por máquina
     this.apiService.get(`/maquina/componentes/${idMaquina}`).subscribe({
-      next: (response: any) => {
-        this.componentes = response?.success && response?.componentes ? response.componentes : [];
-        this.cargandoComponentes = false;
-      },
-      error: () => { this.componentes = []; this.cargandoComponentes = false; }
+        next: (response: any) => {
+            console.log('Respuesta componentes desde endpoint maquina/componentes:', response);
+            
+            let componentesData = [];
+            if (response?.success && response?.componentes) {
+                componentesData = response.componentes;
+            }
+            
+            this.componentes = componentesData.map((comp: any) => ({
+                ID_Componente: comp.ID_Componente || comp.id,
+                nombre: comp.nombre,
+                tipo: comp.tipo,
+                precio: comp.precio || 0
+            }));
+            
+            console.log('Componentes cargados:', this.componentes.length);
+            this.cargandoComponentes = false;
+        },
+        error: (err) => {
+            console.error('Error cargando componentes desde /maquina/componentes:', err);
+            this.componentes = [];
+            this.cargandoComponentes = false;
+        }
     });
-  }
+}
+
+  ngOnInit(): void { this.cargarDatos(); }
 
   // ── Cálculos ──────────────────────────────────────────────────────────────
   get totalPagosTecnicos(): number {

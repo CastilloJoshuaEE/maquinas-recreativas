@@ -64,7 +64,8 @@ class MaquinaController
     private ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler;
 private ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler;
 private ActualizarMaquinaHandler $actualizarMaquinaHandler;
-    public function __construct(
+    
+public function __construct(
         RegistrarMaquinaHandler $registrarMaquinaHandler,
         GenerarPlacaHandler $generarPlacaHandler,
         RegistrarMontajeHandler $registrarMontajeHandler,
@@ -683,19 +684,21 @@ public function obtenerPorEstado(Request $request, string $estado): Response
             new OA\Response(response: 401, description: "No autorizado")
         ]
     )]
-    public function obtenerComponentesPorMaquina(Request $request, string $idMaquina): Response
-    {
-        if (!ValidationHelper::isValidUUID($idMaquina)) {
-            throw new DomainException('ID de máquina inválido', 400);
-        }
 
-        $query       = new ObtenerComponentesMaquinaQuery($idMaquina);
-        $componentes = $this->obtenerComponentesPorMaquinaHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'componentes' => $componentes]);
-        return $response;
+public function obtenerComponentesPorMaquina(Request $request, string $idMaquina): Response
+{
+    if (!ValidationHelper::isValidUUID($idMaquina)) {
+        throw new DomainException('ID de máquina inválido', 400);
     }
+
+    // Usar el handler que ya está inyectado en el constructor
+    $query = new ObtenerComponentesMaquinaQuery($idMaquina);
+    $componentes = $this->obtenerComponentesPorMaquinaHandler->handle($query);
+
+    $response = new Response();
+    $response->json(['success' => true, 'componentes' => $componentes]);
+    return $response;
+}
 public function obtenerTodas(Request $request): Response
 {
     try {
@@ -780,13 +783,13 @@ public function obtenerTodas(Request $request): Response
         // Registrar en historial
         $userId = $_SESSION['ID_Usuario'] ?? null;
         if ($userId) {
-            HistorialHelper::registrar(
-                $idMaquina,
-                $userId,
-                'Logistica',
-                'Actualización',
-                "Máquina actualizada: nombre={$data['nombre']}, tipo={$data['tipo']}"
-            );
+HistorialHelper::getInstance()->registrar(
+    $idMaquina,
+    $userId,
+    'Logistica',
+    'Actualización',
+    "Máquina actualizada: nombre={$data['nombre']}, tipo={$data['tipo']}"
+);
         }
         
         return (new Response())->json(['success' => true, 'message' => 'Máquina actualizada exitosamente']);

@@ -41,17 +41,9 @@ final class ObtenerComponentesMaquinaHandler
             throw new DomainException('Máquina no encontrada.');
         }
 
-        $componentes = $this->maquinaRepository->getComponentesMontaje($maquina);
+        // Cambiar: usar getComponentesEnUsoPorMaquina en lugar de getComponentesMontaje
+        $componentes = $this->maquinaRepository->getComponentesEnUsoPorMaquina($idMaquina);
 
-        return array_map(function ($componente) {
-            return [
-                'id' => $componente->id()->value(),
-                'tipo' => $componente->tipo()->value(),
-                'nombre' => $componente->nombre(),
-                'precio' => $componente->precio(),
-                'esta_disponible' => $componente->estaDisponible(),
-                'esta_asignado' => $componente->estaAsignado()
-            ];
-        }, $componentes);
+        return $componentes;
     }
 }

@@ -103,5 +103,6 @@ interface MaquinaRepository
     public function findByEtapaWithComercio(EtapaMaquina $etapa): array;
     public function findByTecnicoMantenimientoWithComercio(Uuid $idTecnico): array;
     public function findAllWithComercio(): array;
+public function getComponentesEnUsoPorMaquina(Uuid $idMaquina): array;
 
 }

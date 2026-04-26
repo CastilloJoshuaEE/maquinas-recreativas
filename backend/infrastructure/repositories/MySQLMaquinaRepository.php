@@ -621,4 +621,51 @@ public function findAllWithComercio(): array
  
     return $maquinas;
 }
+public function getComponentesEnUsoPorMaquina(Uuid $idMaquina): array
+{
+    $mid = $idMaquina->value();
+    $cacheKey = "maquinas:componentes_en_uso:{$mid}";
+    
+    return $this->cache->remember($cacheKey, function () use ($mid) {
+        $conn = $this->db->getConnection();
+        $sql = "SELECT 
+                    c.ID_Componente,
+                    c.tipo,
+                    c.nombre,
+                    c.precio,
+                    cu.fecha_asignacion
+                FROM componente_usuario cu
+                INNER JOIN componente c ON cu.ID_Componente = c.ID_Componente
+                WHERE cu.ID_Maquina = ?
+                AND cu.fecha_liberacion IS NULL
+                ORDER BY cu.fecha_asignacion DESC";
+        
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            error_log("Error preparando consulta getComponentesEnUsoPorMaquina: " . $conn->error);
+            return [];
+        }
+        
+        $stmt->bind_param('s', $mid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $componentes = [];
+        while ($row = $result->fetch_assoc()) {
+            $componentes[] = [
+                'ID_Componente' => $row['ID_Componente'],
+                'tipo' => $row['tipo'],
+                'nombre' => $row['nombre'],
+                'precio' => (float)$row['precio'],
+                'fecha_asignacion' => $row['fecha_asignacion']
+            ];
+        }
+        
+        $result->free();
+        $stmt->close();
+        $this->db->clearPendingResults($conn);
+        
+        return $componentes;
+    }, 600); // TTL de 10 minutos
+}
 }
