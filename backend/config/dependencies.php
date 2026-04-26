@@ -319,6 +319,8 @@ require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnic
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoEnsambladorHandler.php';
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoQuery.php';
 require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerMaquinasPorTecnicoMantenimientoHandler.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerTodasMaquinasQuery.php';
+require_once __DIR__ . '/../Application/Queries/Maquina/ObtenerTodasMaquinasHandler.php';
 
 // =============================================
 // APPLICATION - QUERIES (Notificacion)
@@ -437,7 +439,7 @@ use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEstadoHan
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorEtapaHandler;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribucionHandler;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaHandler;
-
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerTodasMaquinasHandler;
 use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaHandler;
 use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionReporteHandler;
 use maquinas_recreativas\Application\Commands\Notificacion\MarcarComoLeidaHandler;
@@ -740,7 +742,11 @@ Dependencies::register(RegistrarMaquinaHandler::class, function() {
         Dependencies::get(MySQLComponenteRepository::class)
     );
 });
-
+Dependencies::register(ObtenerTodasMaquinasHandler::class, function() {
+    return new ObtenerTodasMaquinasHandler(
+        Dependencies::get(MySQLMaquinaRepository::class)
+    );
+});
 Dependencies::register(GenerarPlacaHandler::class, function() {
     return new GenerarPlacaHandler(
         Dependencies::get(MySQLComponenteRepository::class),
@@ -1139,7 +1145,8 @@ Dependencies::register(MaquinaController::class, function() {
         Dependencies::get(ObtenerMaquinasPorEstadoHandler::class),
         Dependencies::get(ObtenerMaquinasPorEtapaHandler::class),
         Dependencies::get(ObtenerMaquinasParaDistribucionHandler::class),
-        Dependencies::get(ObtenerComponentesMaquinaHandler::class)
+        Dependencies::get(ObtenerComponentesMaquinaHandler::class),
+        Dependencies::get(ObtenerTodasMaquinasHandler::class) 
     );
 });
 

@@ -60,13 +60,21 @@ export class MaquinaModalComponent implements OnInit {
   }
 
 private initForm(): void {
+  const maquina = this.data.maquina;
+  
+  // Obtener valores independientemente de mayúsculas/minúsculas
+  const tipoValue = maquina?.tipo || maquina?.Tipo || '';
+  const estadoValue = maquina?.estado || maquina?.Estado || 'Ensamblandose';
+  
+  console.log('Valores de máquina:', { tipo: tipoValue, estado: estadoValue });
+  
   this.maquinaForm = this.fb.group({
-    nombre: [this.data.maquina?.Nombre_Maquina || '', [Validators.required, Validators.minLength(3)]],
-    tipo: [this.data.maquina?.tipo || '', Validators.required],  // tipo en minúscula
-    idComercio: [this.data.maquina?.ID_Comercio || '', Validators.required],
+    nombre: [maquina?.Nombre_Maquina || '', [Validators.required, Validators.minLength(3)]],
+    tipo: [tipoValue, Validators.required],
+    idComercio: [maquina?.ID_Comercio || '', Validators.required],
     idPlaca: ['', this.data.modo === 'crear' ? Validators.required : null],
     idCarcasa: ['', this.data.modo === 'crear' ? Validators.required : null],
-    estado: [this.data.maquina?.estado || 'Ensamblandose']  // estado en minúscula
+    estado: [estadoValue]
   });
 }
   private cargarComercios(): void {

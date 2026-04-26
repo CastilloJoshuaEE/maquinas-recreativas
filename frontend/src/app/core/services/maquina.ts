@@ -1,6 +1,12 @@
+/**
+ * @fileoverview Servicio de Máquinas Compartido
+ * @description Maneja operaciones relacionadas con máquinas recreativas
+ * @service MaquinasSharedService
+ */
+
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
+import { ApiService } from '@core/services/api';
 import { API_ENDPOINTS } from '@core/constants/app.constants';
 import { Maquina, CreateMaquinaData, UpdateMaquinaData } from '@core/models/maquina.model';
 
@@ -24,51 +30,161 @@ export interface HistorialEvento {
 
 @Injectable({ providedIn: 'root' })
 export class MaquinasSharedService {
-  private http = inject(HttpClient);
+  private readonly apiService = inject(ApiService);
 
-  // Obtener todas las máquinas (con filtro opcional)
+  /**
+   * Obtiene máquinas con filtro opcional de estado o etapa.
+   * Sin filtros obtiene todas las máquinas.
+   */
   getMaquinas(params?: { estado?: string; etapa?: string }): Observable<{ success: boolean; maquinas: Maquina[] }> {
-    let url = API_ENDPOINTS.MAQUINA_BY_ESTADO(params?.estado || '');
-    if (params?.etapa) {
-      url = API_ENDPOINTS.MAQUINA_BY_ETAPA(params.etapa);
+    if (params?.estado) {
+      return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ESTADO(params.estado)).pipe(
+        map(response => ({
+          success: response.success,
+          maquinas: response.success && response['maquinas'] ? response['maquinas'] : []
+        })),
+        catchError(() => of({ success: false, maquinas: [] }))
+      );
     }
-    return this.http.get<{ success: boolean; maquinas: Maquina[] }>(url);
+    
+    if (params?.etapa) {
+      return this.apiService.get<{ maquinas: Maquina[] }>(API_ENDPOINTS.MAQUINA_BY_ETAPA(params.etapa)).pipe(
+        map(response => ({
+          success: response.success,
+          maquinas: response.success && response['maquinas'] ? response['maquinas'] : []
+        })),
+        catchError(() => of({ success: false, maquinas: [] }))
+      );
+    }
+    
+    return this.getTodasMaquinas();
   }
 
-  // Obtener máquina por ID
+  /**
+   * Obtiene TODAS las máquinas con datos de comercio
+   */
+getTodasMaquinas(): Observable<{ success: boolean; maquinas: Maquina[] }> {
+  return this.apiService.get<{ maquinas: any[] }>(API_ENDPOINTS.MAQUINA_ALL).pipe(
+    map(response => {
+      const maquinas = (response.success && response['maquinas']) ? response['maquinas'].map((m: any) => ({
+        ID_Maquina: m.ID_Maquina,
+        Nombre_Maquina: m.Nombre_Maquina,
+        tipo: m.tipo || m.Tipo || '',      // ← Normalizar
+        estado: m.estado || m.Estado || '', // ← Normalizar
+        etapa: m.etapa || m.Etapa || '',    // ← Normalizar
+        ID_Comercio: m.ID_Comercio,
+        NombreComercio: m.NombreComercio,
+        DireccionComercio: m.DireccionComercio,
+        ID_Tecnico_Ensamblador: m.ID_Tecnico_Ensamblador,
+        ID_Tecnico_Comprobador: m.ID_Tecnico_Comprobador,
+        Fecha_Registro: m.Fecha_Registro
+      })) : [];
+      
+      return {
+        success: response.success,
+        maquinas: maquinas
+      };
+    }),
+    catchError(() => of({ success: false, maquinas: [] }))
+  );
+}
+  /**
+   * Obtiene una máquina por su ID
+   */
   getMaquinaById(id: string): Observable<{ success: boolean; maquina: Maquina }> {
-    return this.http.get<{ success: boolean; maquina: Maquina }>(`/maquina/${id}`);
-  }
-
-  // Crear máquina
-  createMaquina(data: CreateMaquinaData): Observable<{ success: boolean; message: string; maquinaId?: string }> {
-    return this.http.post<{ success: boolean; message: string; maquinaId?: string }>(
-      API_ENDPOINTS.MAQUINA_REGISTER,
-      data
+    return this.apiService.get<{ maquina: Maquina }>(`/maquina/${id}`).pipe(
+      map(response => ({
+        success: response.success,
+        maquina: response.success && response['maquina'] ? response['maquina'] : null as any
+      })),
+      catchError(() => of({ success: false, maquina: null as any }))
     );
   }
 
-  // Actualizar máquina
+  /**
+   * Crea una nueva máquina
+   */
+  createMaquina(data: CreateMaquinaData): Observable<{ success: boolean; message: string; maquinaId?: string }> {
+    return this.apiService.post<{ message: string; idMaquina?: string }>(API_ENDPOINTS.MAQUINA_REGISTER, data).pipe(
+      map(response => ({
+        success: response.success,
+        message: response.message || '',
+        maquinaId: response['idMaquina']
+      })),
+      catchError(() => of({ success: false, message: 'Error al crear máquina' }))
+    );
+  }
+
+  /**
+   * Actualiza una máquina
+   */
   updateMaquina(data: UpdateMaquinaData): Observable<{ success: boolean; message: string }> {
-    return this.http.put<{ success: boolean; message: string }>(`/maquina/${data.idMaquina}`, data);
+    return this.apiService.put<{ message: string }>(`/maquina/${data.idMaquina}`, data).pipe(
+      map(response => ({
+        success: response.success,
+        message: response.message || ''
+      })),
+      catchError(() => of({ success: false, message: 'Error al actualizar máquina' }))
+    );
   }
 
-  // Eliminar máquina (si aplica)
+  /**
+   * Elimina una máquina
+   */
   deleteMaquina(id: string): Observable<{ success: boolean; message: string }> {
-    return this.http.delete<{ success: boolean; message: string }>(`/maquina/${id}`);
+    return this.apiService.delete<{ message: string }>(`/maquina/${id}`).pipe(
+      map(response => ({
+        success: response.success,
+        message: response.message || ''
+      })),
+      catchError(() => of({ success: false, message: 'Error al eliminar máquina' }))
+    );
   }
 
-  // Obtener historial de máquina
-  getHistorialMaquina(idMaquina: string, pagina: number = 1, porPagina: number = 50): Observable<{
+  /**
+   * Obtiene el historial de una máquina (paginado)
+   */
+  getHistorialMaquina(
+    idMaquina: string,
+    pagina: number = 1,
+    porPagina: number = 50
+  ): Observable<{
     success: boolean;
     historial: HistorialEvento[];
     paginacion: { total: number; pagina: number; por_pagina: number; total_paginas: number };
   }> {
-    return this.http.get<any>(`/historial/maquina/${idMaquina}?pagina=${pagina}&por_pagina=${porPagina}`);
+    return this.apiService.get<{
+      historial: HistorialEvento[];
+      paginacion: { total: number; pagina: number; por_pagina: number; total_paginas: number };
+    }>(`/historial/maquina/${idMaquina}`, { pagina, por_pagina: porPagina }).pipe(
+      map(response => ({
+        success: response.success,
+        historial: response.success && response['historial'] ? response['historial'] : [],
+        paginacion: response.success && response['paginacion'] ? response['paginacion'] : {
+          total: 0,
+          pagina: pagina,
+          por_pagina: porPagina,
+          total_paginas: 0
+        }
+      })),
+      catchError(() => of({
+        success: false,
+        historial: [],
+        paginacion: { total: 0, pagina: 1, por_pagina: porPagina, total_paginas: 0 }
+      }))
+    );
   }
 
-  // Obtener componentes de máquina
+  /**
+   * Obtiene los componentes de una máquina
+   */
   getComponentesMaquina(idMaquina: string): Observable<{ success: boolean; componentes: any[] }> {
-    return this.http.get<{ success: boolean; componentes: any[] }>(API_ENDPOINTS.MAQUINA_COMPONENTES(idMaquina));
+    return this.apiService.get<{ componentes: any[] }>(API_ENDPOINTS.MAQUINA_COMPONENTES(idMaquina)).pipe(
+      map(response => ({
+        success: response.success,
+        componentes: response.success && response['componentes'] ? response['componentes'] : []
+      })),
+      catchError(() => of({ success: false, componentes: [] }))
+    );
   }
 }

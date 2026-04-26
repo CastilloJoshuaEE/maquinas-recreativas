@@ -560,4 +560,65 @@ public function findByTecnicoMantenimientoWithComercio(Uuid $idTecnico): array
         if (!empty($com)) $this->cache->delete("maquinas:operativas_comercio:{$com}");
         $this->cache->delete("maquinas:componentes_montaje:{$id}");
     }
+ 
+public function findAllWithComercio(): array
+{
+    $conn = $this->db->getConnection();
+ 
+    $sql = "SELECT 
+                m.ID_Maquina,
+                m.Nombre_Maquina,
+                m.Tipo,
+                m.Estado,
+                m.Etapa,
+                m.ID_Comercio,
+                m.ID_Tecnico_Ensamblador,
+                m.ID_Tecnico_Comprobador,
+                m.Fecha_Registro,
+                c.Nombre      AS NombreComercio,
+                c.Direccion   AS DireccionComercio
+            FROM MaquinaRecreativa m
+            LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+            ORDER BY m.Fecha_Registro DESC";
+ 
+    $stmt = $conn->prepare($sql);
+ 
+    if (!$stmt) {
+        error_log("findAllWithComercio - prepare failed: " . $conn->error);
+        return [];
+    }
+ 
+    if (!$stmt->execute()) {
+        error_log("findAllWithComercio - execute failed: " . $stmt->error);
+        $stmt->close();
+        return [];
+    }
+ 
+    $result   = $stmt->get_result();
+    $maquinas = [];
+ 
+    while ($row = $result->fetch_assoc()) {
+        $maquinas[] = [
+            'ID_Maquina'              => $row['ID_Maquina'],
+            'Nombre_Maquina'          => $row['Nombre_Maquina'],
+            'Tipo'                    => $row['Tipo'],
+            'Estado'                  => $row['Estado'],
+            'Etapa'                   => $row['Etapa'],
+            'ID_Comercio'             => $row['ID_Comercio'],
+            'ID_Tecnico_Ensamblador'  => $row['ID_Tecnico_Ensamblador'],
+            'ID_Tecnico_Comprobador'  => $row['ID_Tecnico_Comprobador'],
+            'Fecha_Registro'          => $row['Fecha_Registro'],
+            'NombreComercio'          => $row['NombreComercio']    ?? '',
+            'DireccionComercio'       => $row['DireccionComercio'] ?? '',
+        ];
+    }
+ 
+    $result->free();
+    $stmt->close();
+    $this->db->clearPendingResults($conn);
+ 
+    error_log("findAllWithComercio: " . count($maquinas) . " máquinas encontradas");
+ 
+    return $maquinas;
+}
 }

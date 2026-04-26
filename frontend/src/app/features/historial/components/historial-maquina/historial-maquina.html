@@ -1,0 +1,253 @@
+<!-- ============================================================
+     historial-maquina.component.html
+     Dialog de historial de máquina recreativa
+     ============================================================ -->
+
+<div class="historial-dialog">
+
+  <!-- ── CABECERA ── -->
+  <div class="dialog-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <mat-icon>history</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 class="dialog-title">Historial de Máquina</h2>
+        <p class="dialog-subtitle">
+          <span class="maquina-nombre">{{ data.maquina.Nombre_Maquina }}</span>
+          <span class="sep">·</span>
+          <span class="total-eventos">{{ paginacion().total }} eventos</span>
+        </p>
+      </div>
+    </div>
+    <button mat-icon-button class="btn-cerrar" (click)="cerrar()" matTooltip="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── FILTROS ── -->
+  <div class="filtros-panel">
+    <div class="filtros-grid">
+
+      <!-- Tipo de usuario -->
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Rol de usuario</mat-label>
+        <mat-select [(ngModel)]="filtroTipoUsuario" (selectionChange)="aplicarFiltros()">
+          <mat-option *ngFor="let t of tiposUsuario" [value]="t.value">{{ t.label }}</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>badge</mat-icon>
+      </mat-form-field>
+
+      <!-- Acción -->
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Acción</mat-label>
+        <mat-select [(ngModel)]="filtroAccion" (selectionChange)="aplicarFiltros()">
+          <mat-option value="">Todas las acciones</mat-option>
+          <mat-option *ngFor="let a of accionesUnicas" [value]="a">{{ a }}</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>filter_list</mat-icon>
+      </mat-form-field>
+
+      <!-- Fecha inicio -->
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Desde</mat-label>
+        <input matInput type="date" [(ngModel)]="filtroFechaInicio" (change)="aplicarFiltros()">
+        <mat-icon matPrefix>event</mat-icon>
+      </mat-form-field>
+
+      <!-- Fecha fin -->
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Hasta</mat-label>
+        <input matInput type="date" [(ngModel)]="filtroFechaFin" (change)="aplicarFiltros()">
+        <mat-icon matPrefix>event</mat-icon>
+      </mat-form-field>
+
+    </div>
+
+    <!-- Chips de filtros activos + limpiar -->
+    <div class="filtros-activos" *ngIf="tieneFiltrosActivos()">
+      <span class="filtros-label">Filtros activos:</span>
+      <mat-chip *ngIf="filtroTipoUsuario" removable (removed)="filtroTipoUsuario=''; aplicarFiltros()">
+        {{ filtroTipoUsuario }} <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      <mat-chip *ngIf="filtroAccion" removable (removed)="filtroAccion=''; aplicarFiltros()">
+        {{ filtroAccion }} <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      <mat-chip *ngIf="filtroFechaInicio" removable (removed)="filtroFechaInicio=''; aplicarFiltros()">
+        Desde: {{ filtroFechaInicio }} <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      <mat-chip *ngIf="filtroFechaFin" removable (removed)="filtroFechaFin=''; aplicarFiltros()">
+        Hasta: {{ filtroFechaFin }} <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+      <button mat-button class="btn-limpiar-filtros" (click)="limpiarFiltros()">
+        <mat-icon>clear_all</mat-icon> Limpiar todo
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CONTENIDO ── -->
+  <mat-dialog-content class="dialog-content">
+
+    <!-- Loading -->
+    <div class="loading-overlay" *ngIf="cargando()">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Cargando historial…</p>
+    </div>
+
+    <!-- Sin resultados -->
+    <div class="empty-state" *ngIf="!cargando() && historial().length === 0">
+      <mat-icon class="empty-icon">manage_search</mat-icon>
+      <p class="empty-title">Sin registros</p>
+      <p class="empty-sub">No hay eventos de historial para esta máquina con los filtros seleccionados.</p>
+      <button mat-stroked-button (click)="limpiarFiltros()" *ngIf="tieneFiltrosActivos()">
+        Limpiar filtros
+      </button>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-container" *ngIf="!cargando() && historial().length > 0">
+
+      <div class="grupo-fecha" *ngFor="let grupo of eventosAgrupados()">
+        <div class="grupo-fecha-header">
+          <span class="fecha-pill">{{ grupo.fecha }}</span>
+        </div>
+
+        <div class="timeline-eventos">
+          <div
+            class="evento-card"
+            *ngFor="let evento of grupo.eventos"
+            [class.expanded]="eventoDetalle()?.ID_Historial === evento.ID_Historial"
+            (click)="verDetalle(evento)">
+
+            <!-- Línea vertical de timeline -->
+            <div class="timeline-line"></div>
+            <div class="timeline-dot" [ngClass]="getAccionColor(evento.accion)">
+              <mat-icon>{{ getAccionIcon(evento.accion) }}</mat-icon>
+            </div>
+
+            <div class="evento-body">
+              <!-- Cabecera del evento -->
+              <div class="evento-header">
+                <div class="evento-meta-left">
+                  <span class="evento-accion" [ngClass]="getAccionColor(evento.accion)">
+                    {{ evento.accion }}
+                  </span>
+                  <span class="badge-usuario" [ngClass]="getTipoUsuarioBadge(evento.tipo_usuario)">
+                    {{ evento.tipo_usuario }}
+                  </span>
+                </div>
+                <div class="evento-meta-right">
+                  <span class="evento-hora">
+                    {{ formatFechaHora(evento.fecha_hora).hora }}
+                  </span>
+                  <mat-icon class="chevron-icon">
+                    {{ eventoDetalle()?.ID_Historial === evento.ID_Historial ? 'expand_less' : 'expand_more' }}
+                  </mat-icon>
+                </div>
+              </div>
+
+              <!-- Descripción -->
+              <p class="evento-descripcion">{{ evento.descripcion || '—' }}</p>
+
+              <!-- Cambio de estado/etapa -->
+              <div class="cambio-container" *ngIf="evento.estado_anterior || evento.estado_nuevo || evento.etapa_anterior || evento.etapa_nueva">
+                <div class="cambio-item" *ngIf="evento.estado_anterior || evento.estado_nuevo">
+                  <span class="cambio-label">Estado</span>
+                  <span class="cambio-from" *ngIf="evento.estado_anterior">{{ evento.estado_anterior }}</span>
+                  <mat-icon class="cambio-arrow">arrow_forward</mat-icon>
+                  <span class="cambio-to" *ngIf="evento.estado_nuevo">{{ evento.estado_nuevo }}</span>
+                </div>
+                <div class="cambio-item" *ngIf="evento.etapa_anterior || evento.etapa_nueva">
+                  <span class="cambio-label">Etapa</span>
+                  <span class="cambio-from" *ngIf="evento.etapa_anterior">{{ evento.etapa_anterior }}</span>
+                  <mat-icon class="cambio-arrow">arrow_forward</mat-icon>
+                  <span class="cambio-to" *ngIf="evento.etapa_nueva">{{ evento.etapa_nueva }}</span>
+                </div>
+              </div>
+
+              <!-- Detalle expandido -->
+              <div class="evento-detalle" *ngIf="eventoDetalle()?.ID_Historial === evento.ID_Historial">
+                <mat-divider></mat-divider>
+                <div class="detalle-grid">
+                  <div class="detalle-row" *ngIf="evento.usuario_nombre">
+                    <span class="detalle-key">
+                      <mat-icon>person</mat-icon> Usuario
+                    </span>
+                    <span class="detalle-val">
+                      {{ evento.usuario_nombre }} {{ evento.usuario_apellido }}
+                      <em class="detalle-tipo">({{ evento.usuario_tipo || evento.tipo_usuario }})</em>
+                    </span>
+                  </div>
+                  <div class="detalle-row" *ngIf="evento.ip_address">
+                    <span class="detalle-key">
+                      <mat-icon>router</mat-icon> IP
+                    </span>
+                    <span class="detalle-val mono">{{ evento.ip_address }}</span>
+                  </div>
+                  <div class="detalle-row">
+                    <span class="detalle-key">
+                      <mat-icon>schedule</mat-icon> Fecha y hora
+                    </span>
+                    <span class="detalle-val">
+                      {{ formatFechaHora(evento.fecha_hora).fecha }},
+                      {{ formatFechaHora(evento.fecha_hora).hora }}
+                    </span>
+                  </div>
+                  <div class="detalle-row" *ngIf="evento.detalles_adicionales">
+                    <span class="detalle-key">
+                      <mat-icon>info</mat-icon> Detalles adicionales
+                    </span>
+                    <pre class="detalle-json">{{ evento.detalles_adicionales | json }}</pre>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /evento-body -->
+          </div><!-- /evento-card -->
+        </div><!-- /timeline-eventos -->
+
+      </div><!-- /grupo-fecha -->
+    </div><!-- /timeline-container -->
+
+  </mat-dialog-content>
+
+  <!-- ── PAGINACIÓN ── -->
+  <div class="paginacion-bar" *ngIf="paginacion().total_paginas > 1 && !cargando()">
+    <button mat-icon-button
+            [disabled]="paginacion().pagina_actual === 1"
+            (click)="irPagina(paginacion().pagina_actual - 1)"
+            matTooltip="Página anterior">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <ng-container *ngFor="let num of paginaArray; let i = index">
+      <span class="pag-ellipsis"
+            *ngIf="i > 0 && num - paginaArray[i-1] > 1">…</span>
+      <button
+        class="pag-btn"
+        [class.pag-active]="num === paginacion().pagina_actual"
+        (click)="irPagina(num)">
+        {{ num }}
+      </button>
+    </ng-container>
+
+    <button mat-icon-button
+            [disabled]="paginacion().pagina_actual === paginacion().total_paginas"
+            (click)="irPagina(paginacion().pagina_actual + 1)"
+            matTooltip="Página siguiente">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <span class="pag-info">
+      {{ (paginacion().pagina_actual - 1) * paginacion().por_pagina + 1 }}–
+      {{ [paginacion().pagina_actual * paginacion().por_pagina, paginacion().total] | min }}
+      de {{ paginacion().total }}
+    </span>
+  </div>
+
+  <!-- ── PIE ── -->
+  <mat-dialog-actions class="dialog-actions" align="end">
+    <button mat-button (click)="cerrar()">Cerrar</button>
+  </mat-dialog-actions>
+
+</div>

@@ -27,6 +27,7 @@ class AuthMiddleware{
 '/usuario/perfil', 
 '/usuarios/por-tipo',
     '/reportes/crear',
+    '/maquina/all',
 
     ];
     /**

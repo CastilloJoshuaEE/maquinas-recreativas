@@ -152,7 +152,7 @@ export const API_ENDPOINTS = {
   COMERCIO_DELETE: (id: string) => `/comercio/eliminar/${id}`,
   // Máquina
   MAQUINA_REGISTER: '/maquina/register',
-  
+  MAQUINA_ALL: '/maquina/all',
   MAQUINA_GENERAR_PLACA: '/maquina/generar-placa',
   MAQUINA_MONTAR: '/maquina/registrar-montaje',
   MAQUINA_COMPROBACION: '/maquina/mandar-comprobacion',

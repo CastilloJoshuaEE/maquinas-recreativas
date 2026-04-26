@@ -17,10 +17,13 @@ export interface Maquina {
   Nombre_Maquina: string;
   /** Tipo de máquina */
   tipo: string;
+  Tipo?: string;  
   /** Estado actual */
   estado: string;
+   Estado?: string;
   /** Etapa actual del ciclo de vida */
   etapa: string;
+   Etapa?: string;  
   /** ID del comercio asociado */
   ID_Comercio: string;
   /** Nombre del comercio */

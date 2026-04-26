@@ -35,6 +35,8 @@ use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribu
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasParaDistribucionHandler;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaQuery;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerComponentesMaquinaHandler;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerTodasMaquinasQuery;
+use maquinas_recreativas\Application\Queries\Maquina\ObtenerTodasMaquinasHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
 use maquinas_recreativas\Core\Request;
@@ -58,6 +60,7 @@ class MaquinaController
     private ObtenerMaquinasPorEtapaHandler $obtenerPorEtapaHandler;
     private ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler;
     private ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler;
+private ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler;
 
     public function __construct(
         RegistrarMaquinaHandler $registrarMaquinaHandler,
@@ -75,7 +78,8 @@ class MaquinaController
         ObtenerMaquinasPorEstadoHandler $obtenerPorEstadoHandler,
         ObtenerMaquinasPorEtapaHandler $obtenerPorEtapaHandler,
         ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler,
-        ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler
+        ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler,
+        ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler
     ) {
         $this->registrarMaquinaHandler              = $registrarMaquinaHandler;
         $this->generarPlacaHandler                  = $generarPlacaHandler;
@@ -93,6 +97,7 @@ class MaquinaController
         $this->obtenerPorEtapaHandler               = $obtenerPorEtapaHandler;
         $this->obtenerMaquinasParaDistribucionHandler = $obtenerMaquinasParaDistribucionHandler;
         $this->obtenerComponentesPorMaquinaHandler  = $obtenerComponentesPorMaquinaHandler;
+        $this->obtenerTodasMaquinasHandler = $obtenerTodasMaquinasHandler;
     }
 
     #[OA\Post(
@@ -594,6 +599,7 @@ public function obtenerPorTecnicoMantenimiento(Request $request, string $idTecni
     )]
 public function obtenerPorEstado(Request $request, string $estado): Response
 {
+    
     error_log("=== obtenerPorEstado: estado=$estado ===");
     $response = new Response();
     try {
@@ -686,4 +692,21 @@ public function obtenerPorEstado(Request $request, string $estado): Response
         $response->json(['success' => true, 'componentes' => $componentes]);
         return $response;
     }
+public function obtenerTodas(Request $request): Response
+{
+    try {
+        $query = new ObtenerTodasMaquinasQuery();
+        $maquinas = $this->obtenerTodasMaquinasHandler->handle($query);
+
+        $response = new Response();
+        $response->json(['success' => true, 'maquinas' => $maquinas]);
+        $response->send(); 
+        return $response;
+    } catch (\Exception $e) {
+        $response = new Response();
+        $response->json(['success' => false, 'message' => $e->getMessage()], 500);
+        $response->send(); 
+        return $response;
+    }
+}
 }

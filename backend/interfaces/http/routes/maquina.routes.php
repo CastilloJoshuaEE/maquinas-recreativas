@@ -17,7 +17,7 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'register'],
         'middleware' => []
     ],
-    
+
     // Generar placa
     [
         'method' => 'POST',
@@ -105,7 +105,12 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerPorTecnicoMantenimiento'],
         'middleware' => []
     ],
-    
+        [
+    'method' => 'GET',
+    'path' => '/maquina/all',
+    'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerTodas'],
+    'middleware' => []
+],    
     // Obtener máquinas por estado
 [
     'method' => 'GET',
@@ -137,4 +142,5 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerComponentesPorMaquina'],
         'middleware' => []
     ]
+
 ];

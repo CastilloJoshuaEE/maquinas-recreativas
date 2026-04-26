@@ -1,34 +1,26 @@
 <div class="maquinas-dashboard-container">
-  <!-- Header con acciones -->
+
+  <!-- Header -->
   <div class="dashboard-header">
     <div class="header-title">
       <h2>📊 Gestión de Máquinas Recreativas</h2>
       <span class="total-count">{{ maquinasFiltradas.length }} máquinas</span>
     </div>
     <div class="header-actions">
-      <button 
-        *ngIf="puedeCrear"
-        mat-raised-button 
-        color="primary"
-        (click)="abrirModalCrear.emit()"
-        class="btn-crear">
-        <mat-icon>add</mat-icon>
-        Nueva Máquina
-      </button>
-      <button 
-        mat-icon-button 
-        (click)="refresh()" 
-        matTooltip="Actualizar">
+      <button mat-icon-button (click)="refresh()" matTooltip="Actualizar">
         <mat-icon>refresh</mat-icon>
       </button>
     </div>
   </div>
 
-  <!-- Barra de filtros -->
+  <!-- Filtros -->
   <div class="filtros-bar">
     <mat-form-field appearance="outline" class="filtro-search">
       <mat-label>Buscar</mat-label>
-      <input matInput [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Nombre, tipo o comercio...">
+      <input matInput
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearchChange()"
+             placeholder="Nombre, tipo o comercio...">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
@@ -40,8 +32,8 @@
         <mat-option value="No operativa">No operativa</mat-option>
         <mat-option value="Retirada">Retirada</mat-option>
         <mat-option value="Ensamblandose">Ensamblándose</mat-option>
-        <mat-option value="Comprobando">Comprobando</mat-option>
-        <mat-option value="Distribucion">Distribución</mat-option>
+        <mat-option value="Comprobandose">Comprobándose</mat-option>
+        <mat-option value="Distribuyendose">Distribuyéndose</mat-option>
         <mat-option value="Mantenimiento">Mantenimiento</mat-option>
       </mat-select>
     </mat-form-field>
@@ -56,21 +48,25 @@
       </mat-select>
     </mat-form-field>
 
-    <button *ngIf="searchTerm || estadoFilter || etapaFilter" 
-            mat-button 
-            (click)="limpiarFiltros()"
-            class="btn-limpiar">
+    <button
+      *ngIf="searchTerm || estadoFilter || etapaFilter"
+      mat-button
+      (click)="limpiarFiltros()"
+      class="btn-limpiar">
       <mat-icon>clear</mat-icon>
       Limpiar filtros
     </button>
   </div>
 
-  <!-- Tabla de máquinas -->
+  <!-- Tabla -->
   <div class="tabla-container">
+
+    <!-- Loading -->
     <div *ngIf="cargando" class="loading-overlay">
       <mat-spinner diameter="40"></mat-spinner>
     </div>
 
+    <!-- Tabla con datos -->
     <table *ngIf="!cargando && maquinasFiltradas.length > 0" class="maquinas-table">
       <thead>
         <tr>
@@ -79,64 +75,70 @@
           <th>Comercio</th>
           <th>Estado</th>
           <th>Etapa</th>
+          <!-- Columna acciones siempre visible: todos ven historial, solo logística ve editar -->
           <th *ngIf="showActions">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let maquina of maquinasFiltradas" 
-            [class.selected]="selectedMaquina?.ID_Maquina === maquina.ID_Maquina"
-            (click)="seleccionarMaquina(maquina)">
-          <!-- Cambiar las referencias en la tabla -->
-<td class="nombre-maquina">
-  <strong>{{ maquina.Nombre_Maquina }}</strong>
-</td>
-<td>{{ maquina.tipo || '—' }}</td>  <!-- tipo en minúscula -->
-<td>
-  <span class="comercio-info">
-    {{ maquina.NombreComercio || '—' }}
-    <span *ngIf="maquina.DireccionComercio" class="direccion-small">
-      ({{ maquina.DireccionComercio }})
-    </span>
-  </span>
-</td>
-<td>
-  <span class="estado-badge" [class]="getEstadoClass(maquina.estado)">  <!-- estado en minúscula -->
-    {{ maquina.estado }}
-  </span>
-</td>
-<td>
-  <span class="etapa-badge" [class]="getEtapaClass(maquina.etapa)">    <!-- etapa en minúscula -->
-    {{ maquina.etapa }}
-  </span>
-</td>
+        <tr
+          *ngFor="let maquina of maquinasFiltradas"
+          [class.selected]="selectedMaquina?.ID_Maquina === maquina.ID_Maquina"
+          (click)="seleccionarMaquina(maquina)">
+
+          <td class="nombre-maquina">
+            <strong>{{ maquina.Nombre_Maquina }}</strong>
+          </td>
+
+          <td>{{ maquina.tipo || '—' }}</td>
+
+          <td>
+            <span class="comercio-info">
+              {{ maquina.NombreComercio || '—' }}
+              <span *ngIf="maquina.DireccionComercio" class="direccion-small">
+                ({{ maquina.DireccionComercio }})
+              </span>
+            </span>
+          </td>
+
+          <td>
+            <span class="estado-badge" [class]="getEstadoClass(maquina.estado)">
+              {{ maquina.estado }}
+            </span>
+          </td>
+
+          <td>
+            <span class="etapa-badge" [class]="getEtapaClass(maquina.etapa)">
+              {{ maquina.etapa }}
+            </span>
+          </td>
+
+          <!-- Acciones: historial para TODOS; editar solo para Logística -->
           <td *ngIf="showActions" class="acciones-cell" (click)="$event.stopPropagation()">
-            <button mat-icon-button 
-                    (click)="verHistorialMaquina(maquina, $event)"
-                    matTooltip="Ver historial"
-                    class="btn-historial">
+
+            <!-- Ver historial → disponible para TODOS los roles -->
+            <button
+              mat-icon-button
+              (click)="verHistorialMaquina(maquina, $event)"
+              matTooltip="Ver historial"
+              class="btn-historial">
               <mat-icon>history</mat-icon>
             </button>
-            <button *ngIf="puedeEditar" 
-                    mat-icon-button 
-                    (click)="editarMaquina(maquina, $event)"
-                    matTooltip="Editar máquina"
-                    class="btn-editar">
+
+            <!-- Editar → solo Logística -->
+            <button
+              *ngIf="puedeEditar"
+              mat-icon-button
+              (click)="editarMaquina(maquina, $event)"
+              matTooltip="Editar máquina"
+              class="btn-editar">
               <mat-icon>edit</mat-icon>
             </button>
+
           </td>
         </tr>
       </tbody>
     </table>
 
-    <div *ngIf="!cargando && maquinasFiltradas.length === 0" class="empty-state">
-      <mat-icon>inventory_2</mat-icon>
-      <p>No se encontraron máquinas</p>
-      <button *ngIf="puedeCrear" 
-              mat-raised-button 
-              color="primary"
-              (click)="abrirModalCrear.emit()">
-        Crear primera máquina
-      </button>
-    </div>
+  
   </div>
 </div>

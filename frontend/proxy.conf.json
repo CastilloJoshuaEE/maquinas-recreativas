@@ -1,0 +1,35 @@
+{
+  "/api": {
+    "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/maquina": {
+    "target": "http://localhost:8000/api/public",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/maquina": ""
+    }
+  },
+  "/historial": {
+    "target": "http://localhost:8000/api/public",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/usuario": {
+    "target": "http://localhost:8000/api/public",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/comercio": {
+    "target": "http://localhost:8000/api/public",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

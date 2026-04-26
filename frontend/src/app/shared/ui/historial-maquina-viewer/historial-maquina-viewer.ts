@@ -1,11 +1,17 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaquinasSharedService, HistorialEvento } from '@core/services/maquina';
+
+// Definir la interfaz de los datos
+interface HistorialDialogData {
+  idMaquina: string;
+  nombreMaquina: string;
+}
 
 @Component({
   selector: 'app-historial-maquina-viewer',
@@ -24,9 +30,11 @@ export class HistorialMaquinaViewerComponent implements OnInit {
   private maquinasService = inject(MaquinasSharedService);
   private snackBar = inject(MatSnackBar);
   private dialogRef = inject(MatDialogRef<HistorialMaquinaViewerComponent>);
+  private data = inject<HistorialDialogData>(MAT_DIALOG_DATA);  // ← Usar MAT_DIALOG_DATA
 
-  @Input() idMaquina!: string;
-  @Input() nombreMaquina!: string;
+  // Obtener los valores de data
+  idMaquina = this.data.idMaquina;
+  nombreMaquina = this.data.nombreMaquina;
 
   historial: HistorialEvento[] = [];
   cargando = false;
@@ -36,13 +44,28 @@ export class HistorialMaquinaViewerComponent implements OnInit {
   totalPaginas = 0;
 
   ngOnInit(): void {
+    console.log('HistorialViewer - ID:', this.idMaquina);
+    console.log('HistorialViewer - Nombre:', this.nombreMaquina);
+    
+    if (!this.idMaquina) {
+      console.error('No se recibió ID de máquina');
+      this.snackBar.open('Error: No se pudo cargar el historial', 'Cerrar', { duration: 3000 });
+      this.cerrar();
+      return;
+    }
+    
     this.cargarHistorial();
   }
 
   cargarHistorial(): void {
+    if (!this.idMaquina) return;
+    
     this.cargando = true;
+    console.log(`Cargando historial para máquina ${this.idMaquina}, página ${this.pagina}`);
+    
     this.maquinasService.getHistorialMaquina(this.idMaquina, this.pagina, this.porPagina).subscribe({
       next: (response) => {
+        console.log('Historial recibido:', response);
         this.historial = response.historial;
         this.total = response.paginacion.total;
         this.totalPaginas = response.paginacion.total_paginas;
