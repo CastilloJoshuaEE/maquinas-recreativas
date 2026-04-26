@@ -2,44 +2,6 @@
   <app-admin-header></app-admin-header>
   <div class="dashboard-sections">
 
-    <hr />
-    
-    <section class="notifications-section">
-      <h2 (click)="mostrarNotificaciones = !mostrarNotificaciones">
-        Notificaciones {{ notificacionesNoLeidas > 0 ? '(' + notificacionesNoLeidas + ')' : '' }} {{ mostrarNotificaciones ? '🔽' : '▶️' }}
-      </h2>
-      
-      @if (mostrarNotificaciones) {
-        <div>
-          @if (cargandoNotificaciones) {
-            <div class="loading-small"><mat-spinner diameter="30"></mat-spinner></div>
-          }
-          
-          @if (!cargandoNotificaciones && notificaciones.length === 0) {
-            <div class="no-data"><p>No hay notificaciones</p></div>
-          }
-          
-          @if (!cargandoNotificaciones && notificaciones.length > 0) {
-            <ul class="notificaciones-list">
-              @for (notif of notificaciones; track notif.ID_Notificaciones) {
-                <li class="notificacion-item" [class.no-leida]="!notif.leida" (click)="marcarNotificacionLeida(notif.ID_Notificaciones)">
-                  <p>
-                    <strong>{{ notif.Tipo }}</strong> - {{ notif.fecha_hora | date:'dd/MM/yyyy HH:mm' }}<br />
-                    <span class="notificacion-content">{{ notif.mensaje }}</span><br />
-                    @if (notif.Nombre_Maquina) {
-                      <span class="notificacion-content"><strong>Máquina:</strong> {{ notif.Nombre_Maquina }}</span>
-                    }
-                  </p>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      }
-    </section>
-    
-    <hr />
-    
     <section class="machines-section">
       <h2>Máquinas Recreativas</h2>
       <div class="machine-list">
@@ -65,11 +27,7 @@
                       <strong>{{ maquina.Nombre_Maquina }}</strong><br />
                       <span class="span-comercio-details"><strong>Comercio:</strong> {{ maquina.NombreComercio }}</span>
                       <span class="span-comercio-details"><strong>Dirección:</strong> {{ maquina.DireccionComercio }}</span>
-<!-- 
-@if (maquina.mensaje_mantenimiento) {
-  <span class="span-comercio-details"><strong>Mensaje:</strong> {{ maquina.mensaje_mantenimiento }}</span>
-}
--->
+
                     </div>
                   </li>
                 }
@@ -86,7 +44,13 @@
         }
       </div>
     </section>
-  
+   <hr />
+        <!-- Dashboard de Máquinas (solo lectura) -->
+        <app-maquinas-dashboard
+          [showActions]="true"
+          [filterEstado]="'Ensamblandose'"
+          (verHistorial)="verHistorialMaquina($event)">
+        </app-maquinas-dashboard>
   </div>
   
   @if (mostrarModalMensaje) {

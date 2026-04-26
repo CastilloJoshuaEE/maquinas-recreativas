@@ -162,7 +162,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
   private handleEmailExistente(email: string): void {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.messages.push({ text: '❌ Correo inválido. Ejemplo: usuario@dominio.com:', sender: 'bot' });
+      this.messages.push({ text: ' Correo inválido. Ejemplo: usuario@dominio.com:', sender: 'bot' });
       return;
     }
 
@@ -179,13 +179,13 @@ export class ChatbotComponent implements OnInit, OnDestroy {
           this.registeredUserId = u.id ?? u.ID_Usuario ?? null;
 
           this.messages.push({
-            text: `✅ Usuario encontrado: ${this.userInfo.nombres} ${this.userInfo.apellidos}. ¿Eres tú? Responde SI o NO`,
+            text: ` Usuario encontrado: ${this.userInfo.nombres} ${this.userInfo.apellidos}. ¿Eres tú? Responde SI o NO`,
             sender: 'bot'
           });
           this.collectingInfo = 'confirmar_usuario';
         } else {
           this.messages.push({
-            text: '⚠️ No se encontró ningún usuario con ese correo. ¿Deseas registrarte? Responde SI o NO para intentar con otro correo.',
+            text: ' No se encontró ningún usuario con ese correo. ¿Deseas registrarte? Responde SI o NO para intentar con otro correo.',
             sender: 'bot'
           });
           this.collectingInfo = 'ofrecer_registro';
@@ -220,7 +220,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   private handleDetalleReporteSI(input: string): void {
     if (input.trim().length < 10) {
       this.messages.push({
-        text: '❌ Por favor describe el problema con más detalle (mínimo 10 caracteres):',
+        text: ' Por favor describe el problema con más detalle (mínimo 10 caracteres):',
         sender: 'bot'
       });
       return;
@@ -231,7 +231,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.registeredUserId) {
       this.messages.push({
-        text: '⚠️ No se pudo verificar tu identidad. Por favor intenta de nuevo.',
+        text: ' No se pudo verificar tu identidad. Por favor intenta de nuevo.',
         sender: 'bot'
       });
       this.resetFlujo();
@@ -272,7 +272,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.nombres) {
       if (input.trim().length < 2) {
-        this.messages.push({ text: '❌ El nombre debe tener al menos 2 caracteres:', sender: 'bot' });
+        this.messages.push({ text: ' El nombre debe tener al menos 2 caracteres:', sender: 'bot' });
         return;
       }
       this.userInfo.nombres = input.trim();
@@ -283,7 +283,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.apellidos) {
       if (input.trim().length < 2) {
-        this.messages.push({ text: '❌ Los apellidos deben tener al menos 2 caracteres:', sender: 'bot' });
+        this.messages.push({ text: ' Los apellidos deben tener al menos 2 caracteres:', sender: 'bot' });
         return;
       }
       this.userInfo.apellidos = input.trim();
@@ -294,7 +294,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.email) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)) {
-        this.messages.push({ text: '❌ Correo inválido. Ejemplo: usuario@dominio.com:', sender: 'bot' });
+        this.messages.push({ text: ' Correo inválido. Ejemplo: usuario@dominio.com:', sender: 'bot' });
         return;
       }
       this.userInfo.email = input.trim();
@@ -305,7 +305,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.telefono) {
       if (!/^\d{10}$/.test(input)) {
-        this.messages.push({ text: '❌ Teléfono inválido. Debe tener exactamente 10 dígitos:', sender: 'bot' });
+        this.messages.push({ text: ' Teléfono inválido. Debe tener exactamente 10 dígitos:', sender: 'bot' });
         return;
       }
       this.userInfo.telefono = input.trim();
@@ -316,7 +316,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.detalle) {
       if (input.trim().length < 10) {
-        this.messages.push({ text: '❌ Por favor describe el problema con más detalle (mínimo 10 caracteres):', sender: 'bot' });
+        this.messages.push({ text: ' Por favor describe el problema con más detalle (mínimo 10 caracteres):', sender: 'bot' });
         return;
       }
       this.userInfo.detalle = input.trim();
@@ -327,13 +327,13 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
     if (!this.userInfo.ci) {
       if (!/^\d{10}$/.test(input)) {
-        this.messages.push({ text: '❌ Cédula inválida. Debe tener exactamente 10 dígitos:', sender: 'bot' });
+        this.messages.push({ text: ' Cédula inválida. Debe tener exactamente 10 dígitos:', sender: 'bot' });
         return;
       }
       this.userInfo.ci = input.trim();
       this.messages.push({
         text:
-          `📋 ¿Esta información es correcta?\n\n` +
+          ` ¿Esta información es correcta?\n\n` +
           `• Nombres: ${this.userInfo.nombres}\n` +
           `• Apellidos: ${this.userInfo.apellidos}\n` +
           `• Email: ${this.userInfo.email}\n` +
@@ -363,14 +363,14 @@ private registrarNuevoUsuarioYReportar(): void {
 
             if (!regRes?.success) {
                 this.messages.push({
-                    text: `❌ Error al registrar: ${regRes?.message ?? 'Error desconocido'}. Por favor intenta más tarde.`,
+                    text: ` Error al registrar: ${regRes?.message ?? 'Error desconocido'}. Por favor intenta más tarde.`,
                     sender: 'bot'
                 });
                 this.resetFlujo();
                 return;
             }
 
-            this.messages.push({ text: '✅ Usuario registrado correctamente.', sender: 'bot' });
+            this.messages.push({ text: ' Usuario registrado correctamente.', sender: 'bot' });
 
             // Obtener el ID del nuevo usuario
             const nuevoId = regRes.id ?? regRes.ID_Usuario ?? null;
@@ -401,14 +401,14 @@ private registrarNuevoUsuarioYReportar(): void {
                     }
 
                     this.messages.push({
-                        text: '⚠️ El registro fue exitoso, pero no se pudo obtener tu identificador. Por favor contacta al administrador.',
+                        text: ' El registro fue exitoso, pero no se pudo obtener tu identificador. Por favor contacta al administrador.',
                         sender: 'bot'
                     });
                     this.resetFlujo();
                 },
                 error: () => {
                     this.messages.push({
-                        text: '⚠️ El registro fue exitoso, pero hubo un error al obtener tu identificador. Contacta al administrador.',
+                        text: ' El registro fue exitoso, pero hubo un error al obtener tu identificador. Contacta al administrador.',
                         sender: 'bot'
                     });
                     this.resetFlujo();
@@ -441,7 +441,7 @@ private registrarNuevoUsuarioYReportar(): void {
             });
           } else {
             this.messages.push({
-              text: `✅ Tu cuenta está activa. Tu usuario asignado es: ${u.usuario_asignado}. Puedes iniciar sesión con tu contraseña actual.`,
+              text: ` Tu cuenta está activa. Tu usuario asignado es: ${u.usuario_asignado}. Puedes iniciar sesión con tu contraseña actual.`,
               sender: 'bot'
             });
           }
@@ -493,7 +493,7 @@ private registrarNuevoUsuarioYReportar(): void {
   private sendReportToAdmin(): void {
     if (!this.registeredUserId) {
       this.messages.push({
-        text: '⚠️ No se pudo identificar tu usuario. Por favor intenta de nuevo.',
+        text: ' No se pudo identificar tu usuario. Por favor intenta de nuevo.',
         sender: 'bot'
       });
       this.resetFlujo();
@@ -522,12 +522,12 @@ private registrarNuevoUsuarioYReportar(): void {
   private enviarReporte(adminId: string): void {
     const descripcion =
       `Reporte desde chatbot — ${this.currentFlowText}\n\n` +
-      `📋 DATOS DEL SOLICITANTE:\n` +
+      ` DATOS DEL SOLICITANTE:\n` +
       `• Nombre: ${this.userInfo.nombres} ${this.userInfo.apellidos}\n` +
       `• Email: ${this.userInfo.email}\n` +
       `• Teléfono: ${this.userInfo.telefono || 'No proporcionado'}\n` +
       `• CI: ${this.userInfo.ci || 'No proporcionado'}\n\n` +
-      `📝 DETALLE DEL PROBLEMA:\n${this.userInfo.detalle}`;
+      ` DETALLE DEL PROBLEMA:\n${this.userInfo.detalle}`;
 
     this.apiService.post(API_ENDPOINTS.REPORTES_CREAR, {
       ID_Usuario_Emisor: this.registeredUserId,
@@ -538,12 +538,12 @@ private registrarNuevoUsuarioYReportar(): void {
       next: (r: any) => {
         if (r?.success) {
           this.messages.push({
-            text: '✅ Hemos recibido tu reporte. El administrador revisará tu caso y se contactará contigo por correo electrónico.',
+            text: ' Hemos recibido tu reporte. El administrador revisará tu caso y se contactará contigo por correo electrónico.',
             sender: 'bot'
           });
         } else {
           this.messages.push({
-            text: '⚠️ Hubo un problema al enviar tu reporte. Por favor intenta más tarde.',
+            text: ' Hubo un problema al enviar tu reporte. Por favor intenta más tarde.',
             sender: 'bot'
           });
         }
@@ -552,7 +552,7 @@ private registrarNuevoUsuarioYReportar(): void {
       error: (err: any) => {
         console.error('Error creando reporte:', err);
         this.messages.push({
-          text: '⚠️ Hubo un error al enviar tu reporte. Por favor intenta más tarde o contacta al administrador directamente.',
+          text: ' Hubo un error al enviar tu reporte. Por favor intenta más tarde o contacta al administrador directamente.',
           sender: 'bot'
         });
         this.finalizarFlujo();
@@ -562,7 +562,7 @@ private registrarNuevoUsuarioYReportar(): void {
 
   private mostrarErrorSinAdmin(): void {
     this.messages.push({
-      text: '⚠️ No se pudo encontrar un administrador disponible. Por favor contacta al soporte directamente.',
+      text: ' No se pudo encontrar un administrador disponible. Por favor contacta al soporte directamente.',
       sender: 'bot'
     });
     this.finalizarFlujo();

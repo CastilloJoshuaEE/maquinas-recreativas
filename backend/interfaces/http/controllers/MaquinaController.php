@@ -21,6 +21,8 @@ use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoCommand;
 use maquinas_recreativas\Application\Commands\Maquina\DarMantenimientoHandler;
 use maquinas_recreativas\Application\Commands\Maquina\FinalizarMantenimientoCommand;
 use maquinas_recreativas\Application\Commands\Maquina\FinalizarMantenimientoHandler;
+use maquinas_recreativas\Application\Commands\Maquina\ActualizarMaquinaCommand;
+use maquinas_recreativas\Application\Commands\Maquina\ActualizarMaquinaHandler;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoEnsambladorQuery;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoEnsambladorHandler;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerMaquinasPorTecnicoComprobadorQuery;
@@ -39,9 +41,9 @@ use maquinas_recreativas\Application\Queries\Maquina\ObtenerTodasMaquinasQuery;
 use maquinas_recreativas\Application\Queries\Maquina\ObtenerTodasMaquinasHandler;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Infrastructure\Security\ValidationHelper;
+use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 use maquinas_recreativas\Core\Request;
 use maquinas_recreativas\Core\Response;
-
 class MaquinaController
 {
     private RegistrarMaquinaHandler $registrarMaquinaHandler;
@@ -61,7 +63,7 @@ class MaquinaController
     private ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler;
     private ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler;
 private ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler;
-
+private ActualizarMaquinaHandler $actualizarMaquinaHandler;
     public function __construct(
         RegistrarMaquinaHandler $registrarMaquinaHandler,
         GenerarPlacaHandler $generarPlacaHandler,
@@ -79,7 +81,8 @@ private ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler;
         ObtenerMaquinasPorEtapaHandler $obtenerPorEtapaHandler,
         ObtenerMaquinasParaDistribucionHandler $obtenerMaquinasParaDistribucionHandler,
         ObtenerComponentesMaquinaHandler $obtenerComponentesPorMaquinaHandler,
-        ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler
+        ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler,
+        ActualizarMaquinaHandler $actualizarMaquinaHandler
     ) {
         $this->registrarMaquinaHandler              = $registrarMaquinaHandler;
         $this->generarPlacaHandler                  = $generarPlacaHandler;
@@ -98,6 +101,7 @@ private ObtenerTodasMaquinasHandler $obtenerTodasMaquinasHandler;
         $this->obtenerMaquinasParaDistribucionHandler = $obtenerMaquinasParaDistribucionHandler;
         $this->obtenerComponentesPorMaquinaHandler  = $obtenerComponentesPorMaquinaHandler;
         $this->obtenerTodasMaquinasHandler = $obtenerTodasMaquinasHandler;
+        $this->actualizarMaquinaHandler = $actualizarMaquinaHandler;
     }
 
     #[OA\Post(
@@ -709,4 +713,82 @@ public function obtenerTodas(Request $request): Response
         return $response;
     }
 }
+    /**
+     * PUT /maquina/{uuid}
+     * Actualizar una máquina recreativa
+     */
+    #[OA\Put(
+        path: "/v1/maquina/{uuid}",
+        summary: "Actualizar una máquina recreativa",
+        tags: ["Máquinas"],
+        security: [["bearerAuth" => []]],
+        parameters: [
+            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ["nombre", "tipo", "idComercio"],
+                properties: [
+                    new OA\Property(property: "nombre", type: "string"),
+                    new OA\Property(property: "tipo", type: "string"),
+                    new OA\Property(property: "idComercio", type: "string"),
+                    new OA\Property(property: "estado", type: "string")
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: "Máquina actualizada exitosamente"),
+            new OA\Response(response: 400, description: "Datos inválidos"),
+            new OA\Response(response: 401, description: "No autenticado"),
+            new OA\Response(response: 404, description: "Máquina no encontrada")
+        ]
+    )]
+    public function update(Request $request, string $idMaquina): Response
+    {
+        error_log("=== update - ID: $idMaquina ===");
+        
+        if (!ValidationHelper::isValidUUID($idMaquina)) {
+            throw new DomainException('ID de máquina inválido', 400);
+        }
+        
+        $data = $request->json();
+        
+        // Validar campos requeridos
+        if (!isset($data['nombre']) || empty(trim($data['nombre']))) {
+            throw new DomainException('El nombre es requerido', 400);
+        }
+        if (!isset($data['tipo']) || empty(trim($data['tipo']))) {
+            throw new DomainException('El tipo es requerido', 400);
+        }
+        if (!isset($data['idComercio']) || empty(trim($data['idComercio']))) {
+            throw new DomainException('El comercio es requerido', 400);
+        }
+        
+        // Crear comando
+        $command = new ActualizarMaquinaCommand(
+            $idMaquina,
+            $data['nombre'],
+            $data['tipo'],
+            $data['idComercio'],
+            $data['estado'] ?? null
+        );
+        
+        // Ejecutar handler
+        $this->actualizarMaquinaHandler->handle($command);
+        
+        // Registrar en historial
+        $userId = $_SESSION['ID_Usuario'] ?? null;
+        if ($userId) {
+            HistorialHelper::registrar(
+                $idMaquina,
+                $userId,
+                'Logistica',
+                'Actualización',
+                "Máquina actualizada: nombre={$data['nombre']}, tipo={$data['tipo']}"
+            );
+        }
+        
+        return (new Response())->json(['success' => true, 'message' => 'Máquina actualizada exitosamente']);
+    }
 }

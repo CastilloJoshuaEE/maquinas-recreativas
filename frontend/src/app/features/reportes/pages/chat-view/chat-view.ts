@@ -200,7 +200,7 @@ export class ChatViewComponent implements OnInit, OnDestroy {
     this.reportesService.getChat(this.currentUserId, this.usuarioSeleccionado.id).subscribe({
       next: (data) => {
         this.reportes = data.reportes;
-        console.log('📊 Reportes del chat:', this.reportes);
+        console.log(' Reportes del chat:', this.reportes);
         
         if (this.reportes.length > 0) { 
           const primerId = this.getReporteId(this.reportes[0]);

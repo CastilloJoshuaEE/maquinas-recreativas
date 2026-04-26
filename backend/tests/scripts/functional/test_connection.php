@@ -13,7 +13,7 @@ echo " Base de datos actual: " . $row['db'] . "\n\n";
 
 // Verificar que las tablas existen
 $tables = ['usuario', 'tecnico', 'logistica', 'comercio', 'maquinarecreativa'];
-echo "📋 Verificando tablas:\n";
+echo " Verificando tablas:\n";
 foreach ($tables as $table) {
     $result = $conn->query("SHOW TABLES LIKE '$table'");
     if ($result->num_rows > 0) {

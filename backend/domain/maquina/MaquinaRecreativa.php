@@ -218,4 +218,23 @@ public function fechaRegistro(): DateTimeImmutable
         }
         $this->idTecnicoMantenimiento = null;
     }
+        public function setNombre(string $nombre): void
+    {
+        $this->nombre = $nombre;
+    }
+
+    public function setTipo(string $tipo): void
+    {
+        $this->tipo = $tipo;
+    }
+
+    public function setIdComercio(Uuid $idComercio): void
+    {
+        $this->idComercio = $idComercio;
+    }
+
+    public function setEstado(string $estado): void
+    {
+        $this->estado = EstadoMaquina::fromString($estado);
+    }
 }

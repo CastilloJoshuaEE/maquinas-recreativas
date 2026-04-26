@@ -141,6 +141,12 @@ return [
         'path' => '/maquina/componentes/:uuid',
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'obtenerComponentesPorMaquina'],
         'middleware' => []
-    ]
-
+    ],
+// Añadir después de las rutas existentes
+[
+    'method' => 'PUT',
+    'path' => '/maquina/:uuid',
+    'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\MaquinaController::class, 'update'],
+    'middleware' => []
+],
 ];

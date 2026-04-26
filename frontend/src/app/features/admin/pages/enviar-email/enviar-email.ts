@@ -70,7 +70,7 @@ export class EnviarEmailComponent {
       next: (response) => {
         if (response?.success) {
           this.enviado = true;
-          this.snackBar.open('✅ Email enviado correctamente', 'Cerrar', { duration: 4000 });
+          this.snackBar.open(' Email enviado correctamente', 'Cerrar', { duration: 4000 });
           this.emailForm.reset();
         } else {
           this.errorMsg = response?.['error'] || 'No se pudo enviar el email';

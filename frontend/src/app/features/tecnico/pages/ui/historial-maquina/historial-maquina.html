@@ -17,9 +17,9 @@
         <div class="timeline-content">
           <div class="timeline-header"><span class="timeline-accion">{{ item.accion }}</span><span class="timeline-fecha">{{ item.fecha_hora | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
           <div class="timeline-usuario"><strong>👤 Usuario:</strong> {{ item.usuario_nombre }} {{ item.usuario_apellido }} ({{ item.tipo_usuario }})</div>
-          <div class="timeline-descripcion" *ngIf="item.descripcion"><strong>📝 Descripción:</strong> {{ item.descripcion }}</div>
+          <div class="timeline-descripcion" *ngIf="item.descripcion"><strong> Descripción:</strong> {{ item.descripcion }}</div>
           <div class="timeline-cambio-estado" *ngIf="item.estado_anterior || item.estado_nuevo"><strong>🔄 Cambio de estado:</strong><span class="estado-anterior" *ngIf="item.estado_anterior">{{ item.estado_anterior }}</span><span *ngIf="item.estado_anterior && item.estado_nuevo"> → </span><span class="estado-nuevo" *ngIf="item.estado_nuevo">{{ item.estado_nuevo }}</span></div>
-          <div class="timeline-cambio-etapa" *ngIf="item.etapa_anterior && item.etapa_nueva"><strong>📊 Cambio de etapa:</strong><span class="etapa-anterior">{{ item.etapa_anterior }}</span><span> → </span><span class="etapa-nueva">{{ item.etapa_nueva }}</span></div>
+          <div class="timeline-cambio-etapa" *ngIf="item.etapa_anterior && item.etapa_nueva"><strong> Cambio de etapa:</strong><span class="etapa-anterior">{{ item.etapa_anterior }}</span><span> → </span><span class="etapa-nueva">{{ item.etapa_nueva }}</span></div>
           <div class="timeline-ip"><small>🌐 IP: {{ item.ip_address || 'Desconocida' }}</small></div>
         </div>
       </div>

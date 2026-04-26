@@ -20,7 +20,7 @@ echo "👥 Total usuarios: " . $row['total'] . "\n";
 
 // Mostrar algunos usuarios de ejemplo
 $result = $conn->query("SELECT ID_Usuario, usuario_asignado, tipo FROM usuario LIMIT 5");
-echo "\n📋 Primeros 5 usuarios:\n";
+echo "\n Primeros 5 usuarios:\n";
 while ($row = $result->fetch_assoc()) {
     echo "   - {$row['usuario_asignado']} ({$row['tipo']}) [{$row['ID_Usuario']}]\n";
 }

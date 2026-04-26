@@ -89,9 +89,9 @@ export class HistorialMaquinaComponent implements OnInit, OnDestroy {
     const iconos: { [key: string]: string } = {
       'Registro': '➕', 'Montaje': '', 'Comprobación': '', 'Distribución': '🚚',
       'Mantenimiento': '⚙️', 'Reparación': '🔨', 'Retirada': '📤', 'Ensamblaje': '🛠️',
-      'Actualización': '🔄', 'Cambio de estado': '📝'
+      'Actualización': '🔄', 'Cambio de estado': ''
     };
-    return iconos[accion] || '📋';
+    return iconos[accion] || '';
   }
   
   getColorAccion(accion: string): string {
