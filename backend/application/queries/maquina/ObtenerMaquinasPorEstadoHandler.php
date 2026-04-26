@@ -18,13 +18,14 @@ final class ObtenerMaquinasPorEstadoHandler
         $this->maquinaRepository = $maquinaRepository;
     }
 
-    public function handle(ObtenerMaquinasPorEstadoQuery $query): array
-    {
+public function handle(ObtenerMaquinasPorEstadoQuery $query): array
+{
+    try {
         $estado = EstadoMaquina::fromString($query->getEstado());
-        
-        // Usar el método que incluye datos del comercio
         $maquinas = $this->maquinaRepository->findByEstadoWithComercio($estado);
-        
         return ['success' => true, 'maquinas' => $maquinas];
+    } catch (DomainException $e) {
+        return ['success' => false, 'error' => $e->getMessage(), 'maquinas' => []];
     }
+}
 }

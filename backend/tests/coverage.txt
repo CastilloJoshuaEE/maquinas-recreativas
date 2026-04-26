@@ -1,20 +1,20 @@
 
 
 [1;37;40mCode Coverage Report:       [0m
-[1;37;40m  2026-04-03 15:10:14       [0m
+[1;37;40m  2026-04-26 03:05:39       [0m
 [1;37;40m                            [0m
 [1;37;40m Summary:                   [0m
-[37;41m  Classes: 16.00% (4/25)    [0m
-[37;41m  Methods: 24.02% (43/179)  [0m
-[37;41m  Lines:   17.26% (372/2155)[0m
+[37;41m  Classes: 20.00% (5/25)    [0m
+[37;41m  Methods: 28.88% (54/187)  [0m
+[37;41m  Lines:   22.28% (495/2222)[0m
 
 maquinas_recreativas\Tests\Application\Commands\ComercioCommandTest
-  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 50/ 50)[0m
+  [30;42mMethods: 100.00% ( 7/ 7)[0m   [30;42mLines: 100.00% ( 46/ 46)[0m
 maquinas_recreativas\Tests\Application\Commands\MaquinaCommandTest
-  [30;42mMethods: 100.00% ( 7/ 7)[0m   [30;42mLines: 100.00% ( 80/ 80)[0m
+  [30;42mMethods: 100.00% ( 9/ 9)[0m   [30;42mLines: 100.00% (121/121)[0m
 maquinas_recreativas\Tests\Application\Commands\UsuarioCommandTest
-  [30;43mMethods:  75.00% ( 9/12)[0m   [30;43mLines:  61.38% ( 89/145)[0m
+  [30;42mMethods: 100.00% (13/13)[0m   [30;42mLines: 100.00% (137/137)[0m
 maquinas_recreativas\Tests\Application\Queries\MaquinaQueryTest
-  [30;42mMethods: 100.00% ( 9/ 9)[0m   [30;42mLines: 100.00% ( 74/ 74)[0m
+  [30;42mMethods: 100.00% (11/11)[0m   [30;42mLines: 100.00% (111/111)[0m
 maquinas_recreativas\Tests\Application\Queries\UsuarioQueryTest
-  [30;42mMethods: 100.00% (13/13)[0m   [30;42mLines: 100.00% ( 79/ 79)[0m
+  [30;42mMethods: 100.00% (14/14)[0m   [30;42mLines: 100.00% ( 80/ 80)[0m

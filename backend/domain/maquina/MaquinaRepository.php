@@ -104,5 +104,11 @@ interface MaquinaRepository
     public function findByTecnicoMantenimientoWithComercio(Uuid $idTecnico): array;
     public function findAllWithComercio(): array;
 public function getComponentesEnUsoPorMaquina(Uuid $idMaquina): array;
-
+ /**
+     * Busca máquinas por estado incluyendo datos del comercio
+     *
+     * @param EstadoMaquina $estado
+     * @return array
+     */
+    public function findByEstadoWithComercio(EstadoMaquina $estado): array;
 }

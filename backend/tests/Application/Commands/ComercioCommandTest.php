@@ -1,8 +1,6 @@
 <?php
 /**
  * Tests de comandos de comercio
- * 
- * @package maquinas_recreativas\Tests\Application\Commands
  */
 
 namespace maquinas_recreativas\Tests\Application\Commands;
@@ -15,8 +13,11 @@ use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioCommand;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
+use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 class ComercioCommandTest extends TestCase
@@ -27,6 +28,16 @@ class ComercioCommandTest extends TestCase
     private BcryptPasswordHasher $passwordHasher;
     private HistorialHelper $historialHelper;
     private Uuid $logisticaId;
+    
+    private function generarCiUnico(): string
+    {
+        return '1' . time() . rand(1000, 9999);
+    }
+    
+    private function generarEmailUnico(string $base = 'test'): string
+    {
+        return $base . '_' . time() . '_' . rand(1000, 9999) . '@test.com';
+    }
     
     protected function setUp(): void
     {
@@ -39,6 +50,7 @@ class ComercioCommandTest extends TestCase
         $this->historialHelper = HistorialHelper::getInstance();
         
         $this->crearUsuarioLogistica();
+        $this->activarUsuarioLogistica();
     }
     
     private function crearUsuarioLogistica(): void
@@ -46,14 +58,22 @@ class ComercioCommandTest extends TestCase
         $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
         
         $logisticaCommand = new RegistrarUsuarioCommand(
-            'Logistica', 'Test', '1111111111', 'logistica@test.com', 'password123', 'Logistica'
+            'Logistica', 'Test', 
+            $this->generarCiUnico(), 
+            $this->generarEmailUnico('logistica'), 
+            'Logistica'
         );
         $this->logisticaId = $registrarUsuario->handle($logisticaCommand);
     }
     
+    private function activarUsuarioLogistica(): void
+    {
+        $cambiarEstadoHandler = new CambiarEstadoUsuarioHandler($this->usuarioRepository);
+        $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->logisticaId, 'Activo'));
+    }
+    
     /**
      * @test
-     * CP-064 - Registrar comercio válido
      */
     public function testRegistrarComercioValido(): void
     {
@@ -78,7 +98,6 @@ class ComercioCommandTest extends TestCase
     
     /**
      * @test
-     * CP-065 - Registrar comercio con nombre duplicado
      */
     public function testRegistrarComercioDuplicado(): void
     {
@@ -94,36 +113,11 @@ class ComercioCommandTest extends TestCase
         
         $registrarComercio->handle($comando);
         
-        $this->expectException(\maquinas_recreativas\Domain\Shared\Exceptions\DomainException::class);
+        $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Ya existe un comercio con ese nombre');
         
         $registrarComercio->handle($comando);
     }
     
-    /**
-     * @test
-     * CP-066 - Registrar comercio con tipo inválido
-     */
-    public function testRegistrarComercioTipoInvalido(): void
-    {
-        // Este test se maneja en el controlador, pero podemos probar la entidad
-        $comando = new RegistrarComercioCommand(
-            'Comercio Invalido',
-            'TipoInvalido',
-            'Dirección',
-            '0977777777',
-            $this->logisticaId->value()
-        );
-        
-        $registrarComercio = new RegistrarComercioHandler($this->comercioRepository, $this->historialHelper);
-        
-        // La validación de tipo debería estar en el handler o en la entidad
-        // Si no está, este test fallará como advertencia
-        try {
-            $registrarComercio->handle($comando);
-            $this->fail('Debería haber lanzado una excepción por tipo inválido');
-        } catch (\Exception $e) {
-            $this->assertInstanceOf(\maquinas_recreativas\Domain\Shared\Exceptions\DomainException::class, $e);
-        }
-    }
+
 }

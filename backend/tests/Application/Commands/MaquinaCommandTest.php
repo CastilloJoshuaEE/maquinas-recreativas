@@ -16,6 +16,8 @@ use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioCommand;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
 use maquinas_recreativas\Application\Commands\Maquina\RegistrarMaquinaCommand;
@@ -25,6 +27,8 @@ use maquinas_recreativas\Application\Commands\Maquina\RegistrarMontajeHandler;
 use maquinas_recreativas\Application\Commands\Maquina\GenerarPlacaCommand;
 use maquinas_recreativas\Application\Commands\Maquina\GenerarPlacaHandler;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
+use maquinas_recreativas\Domain\Componente\Componente;
+use maquinas_recreativas\Domain\Componente\TipoComponente;
 
 class MaquinaCommandTest extends TestCase
 {
@@ -41,6 +45,8 @@ class MaquinaCommandTest extends TestCase
     private Uuid $ensambladorId;
     private Uuid $comprobadorId;
     private string $comercioId;
+    private string $placaId;
+    private string $carcasaId;
     
     private function generarCiUnico(): string
     {
@@ -66,27 +72,84 @@ class MaquinaCommandTest extends TestCase
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearDatosBase();
+        $this->crearComponentesBasicos();
+        $this->activarTecnicos(); // ACTIVAR TÉCNICOS ANTES DE USARLOS
+    }
+    
+    private function activarTecnicos(): void
+    {
+        $cambiarEstadoHandler = new CambiarEstadoUsuarioHandler($this->usuarioRepository);
+        
+        // Activar técnico ensamblador
+        if ($this->ensambladorId) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->ensambladorId, 'Activo'));
+            error_log("Técnico ensamblador activado: " . $this->ensambladorId->value());
+        }
+        
+        // Activar técnico comprobador
+        if ($this->comprobadorId) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->comprobadorId, 'Activo'));
+            error_log("Técnico comprobador activado: " . $this->comprobadorId->value());
+        }
+        
+        // Activar logística
+        if ($this->logisticaId) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->logisticaId, 'Activo'));
+            error_log("Usuario logística activado: " . $this->logisticaId->value());
+        }
+    }
+    
+    private function crearComponentesBasicos(): void
+    {
+        // Crear componente PLACA
+        $placa = Componente::crear(
+            TipoComponente::LOGISTICO(),
+            'PL' . date('y') . '001',
+            120.00
+        );
+        $this->componenteRepository->save($placa);
+        $this->placaId = $placa->id()->value();
+        
+        // Crear componente CARCASA
+        $carcasa = Componente::crear(
+            TipoComponente::ESTRUCTURAL(),
+            'Carcasa Standard',
+            150.00
+        );
+        $this->componenteRepository->save($carcasa);
+        $this->carcasaId = $carcasa->id()->value();
     }
     
     private function crearDatosBase(): void
     {
         $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
         
-        // Usuario logística - usar CI único
+        // Usuario logística
         $logisticaCommand = new RegistrarUsuarioCommand(
-            'Logistica', 'Test', $this->generarCiUnico(), $this->generarEmailUnico('logistica'), 'password123', 'Logistica'
+            'Logistica', 'Test', 
+            $this->generarCiUnico(), 
+            $this->generarEmailUnico('logistica'), 
+            'Logistica'
         );
         $this->logisticaId = $registrarUsuario->handle($logisticaCommand);
         
-        // Técnico ensamblador - usar CI único
+        // Técnico ensamblador
         $ensambladorCommand = new RegistrarUsuarioCommand(
-            'Ensamblador', 'Test', $this->generarCiUnico(), $this->generarEmailUnico('ensamblador'), 'password123', 'Tecnico', 'Ensamblador'
+            'Ensamblador', 'Test', 
+            $this->generarCiUnico(), 
+            $this->generarEmailUnico('ensamblador'), 
+            'Tecnico', 
+            'Ensamblador'
         );
         $this->ensambladorId = $registrarUsuario->handle($ensambladorCommand);
         
-        // Técnico comprobador - usar CI único
+        // Técnico comprobador
         $comprobadorCommand = new RegistrarUsuarioCommand(
-            'Comprobador', 'Test', $this->generarCiUnico(), $this->generarEmailUnico('comprobador'), 'password123', 'Tecnico', 'Comprobador'
+            'Comprobador', 'Test', 
+            $this->generarCiUnico(), 
+            $this->generarEmailUnico('comprobador'), 
+            'Tecnico', 
+            'Comprobador'
         );
         $this->comprobadorId = $registrarUsuario->handle($comprobadorCommand);
         
@@ -103,18 +166,19 @@ class MaquinaCommandTest extends TestCase
     /**
      * @test
      */
-    public function testRegistrarMaquinaValida(): void
+        public function testRegistrarMaquinaValida(): void
     {
         $registrarMaquina = new RegistrarMaquinaHandler(
-            $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository, $this->componenteRepository
+            $this->maquinaRepository, 
+            $this->usuarioRepository, 
+            $this->comercioRepository, 
+            $this->componenteRepository,
+            null  // <-- AÑADIR EL 5to PARÁMETRO (notificacionHandler)
         );
         
-        $placaId = Uuid::v4();
-        $carcasaId = Uuid::v4();
-        
         $maquinaCommand = new RegistrarMaquinaCommand(
-            'Máquina Test', 'Tipo A', $this->comercioId, $this->logisticaId->value(), 
-            $placaId->value(), $carcasaId->value()
+            'Máquina Test', 'Tipo A', $this->comercioId, $this->logisticaId->value(),
+            $this->placaId, $this->carcasaId
         );
         
         $maquinaId = $registrarMaquina->handle($maquinaCommand);
@@ -147,9 +211,9 @@ class MaquinaCommandTest extends TestCase
      */
     public function testRegistrarMontaje(): void
     {
-        // Primero crear componente
-        $componente = \maquinas_recreativas\Domain\Componente\Componente::crear(
-            \maquinas_recreativas\Domain\Componente\TipoComponente::ELECTRONICO(),
+        // Primero crear componente electrónico
+        $componente = Componente::crear(
+            TipoComponente::ELECTRONICO(),
             'Componente Test',
             100.00
         );
@@ -157,15 +221,16 @@ class MaquinaCommandTest extends TestCase
         
         // Registrar máquina
         $registrarMaquina = new RegistrarMaquinaHandler(
-            $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository, $this->componenteRepository
+            $this->maquinaRepository, 
+            $this->usuarioRepository, 
+            $this->comercioRepository, 
+            $this->componenteRepository,
+            null  // <-- AÑADIR EL 5to PARÁMETRO
         );
-        
-        $placaId = Uuid::v4();
-        $carcasaId = Uuid::v4();
         
         $maquinaCommand = new RegistrarMaquinaCommand(
             'Máquina Montaje', 'Tipo A', $this->comercioId, $this->logisticaId->value(),
-            $placaId->value(), $carcasaId->value()
+            $this->placaId, $this->carcasaId
         );
         $maquinaId = $registrarMaquina->handle($maquinaCommand);
         

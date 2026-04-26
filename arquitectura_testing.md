@@ -44,7 +44,7 @@ D:\xampp\htdocs\maquinas-recreativas\backend>composer require --dev phpunit/phpu
 
 ## 1. Ve a la página oficial
 
-👉 [https://xdebug.org/download](https://xdebug.org/download)
+ [https://xdebug.org/download](https://xdebug.org/download)
 
 ---
 
@@ -54,7 +54,7 @@ Tú tienes:
 
 <pre class="overflow-visible! px-0!" data-start="564" data-end="596"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div><div class="w-full overflow-x-hidden overflow-y-auto pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><span>PHP 8.2.12 (ZTS) x64</span></div></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></pre>
 
-👉 Necesitas algo como:
+ Necesitas algo como:
 
 `<pre class="overflow-visible! px-0!" data-start="623" data-end="674"><div class="relative w-full mt-4 mb-1">``<div class=""><div class="relative">``<div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0">``<div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback">``<div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"></div>``<div class="w-full overflow-x-hidden overflow-y-auto pe-11 pt-3"><div class="relative z-0 flex max-w-full">``<div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller">``<div class="cm-content q9tKkq_readonly"><span>`php_xdebug-3.x.x-8.2-ts-vs16-x86_64.dll `</div></div>``</div></div>``</div></div>``</div></div>``</div><div class="">``<div class=""></div>``</div></div>``</div></div>``</pre>`
 
@@ -102,7 +102,12 @@ Ya puedes usar coverage:
 
 vendor\b**in**\phpunit.bat
 
+
 # Ejecutar solo tests de dominio
+
+Ir a: D:\xampp\htdocs\maquinas-recreativas\backend>
+
+y ejecutar
 
 vendor\bin\phpunit.bat -c tests/phpunit.xml --testsuite Domain
 

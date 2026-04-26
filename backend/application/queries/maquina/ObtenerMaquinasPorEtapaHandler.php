@@ -18,13 +18,14 @@ final class ObtenerMaquinasPorEtapaHandler
         $this->maquinaRepository = $maquinaRepository;
     }
 
-    public function handle(ObtenerMaquinasPorEtapaQuery $query): array
-    {
+public function handle(ObtenerMaquinasPorEtapaQuery $query): array
+{
+    try {
         $etapa = EtapaMaquina::fromString($query->getEtapa());
-        
-        // Crear un método en el repositorio que incluya datos del comercio
         $maquinas = $this->maquinaRepository->findByEtapaWithComercio($etapa);
-        
         return ['success' => true, 'maquinas' => $maquinas];
+    } catch (DomainException $e) {
+        return ['success' => false, 'error' => $e->getMessage(), 'maquinas' => []];
     }
+}
 }

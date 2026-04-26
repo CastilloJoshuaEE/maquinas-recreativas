@@ -4,14 +4,16 @@
  */
 
 namespace maquinas_recreativas\Tests\Application\Queries;
-use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdQuery;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerUsuarioPorIdHandler;
 use maquinas_recreativas\Application\Queries\Usuario\ObtenerTodosUsuariosQuery;
@@ -29,6 +31,7 @@ class UsuarioQueryTest extends TestCase
     private TestDatabase $testDb;
     private MySQLUsuarioRepository $usuarioRepository;
     private BcryptPasswordHasher $passwordHasher;
+    private array $tecnicosIds = [];
     
     private function generarCiUnico(): string
     {
@@ -49,6 +52,16 @@ class UsuarioQueryTest extends TestCase
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosDePrueba();
+        $this->activarTecnicos(); // NUEVO: Activar técnicos para que aparezcan en las consultas
+    }
+    
+    private function activarTecnicos(): void
+    {
+        $cambiarEstadoHandler = new CambiarEstadoUsuarioHandler($this->usuarioRepository);
+        
+        foreach ($this->tecnicosIds as $tecnicoId) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($tecnicoId, 'Activo'));
+        }
     }
     
     private function crearUsuariosDePrueba(): void
@@ -56,24 +69,24 @@ class UsuarioQueryTest extends TestCase
         $registrarHandler = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
         
         $usuarios = [
-            ['Juan', 'Perez', $this->generarCiUnico(), $this->generarEmailUnico('juan'), 'password123', 'Administrador'],
-            ['Maria', 'Gomez', $this->generarCiUnico(), $this->generarEmailUnico('maria'), 'password123', 'Usuario'],
-            ['Carlos', 'Lopez', $this->generarCiUnico(), $this->generarEmailUnico('carlos'), 'password123', 'Tecnico', 'Ensamblador'],
-            ['Ana', 'Martinez', $this->generarCiUnico(), $this->generarEmailUnico('ana'), 'password123', 'Tecnico', 'Comprobador'],
-            ['Pedro', 'Rodriguez', $this->generarCiUnico(), $this->generarEmailUnico('pedro'), 'password123', 'Logistica']
+            ['Juan', 'Perez', $this->generarCiUnico(), $this->generarEmailUnico('juan'), 'Administrador'],
+            ['Maria', 'Gomez', $this->generarCiUnico(), $this->generarEmailUnico('maria'), 'Usuario'],
+            ['Carlos', 'Lopez', $this->generarCiUnico(), $this->generarEmailUnico('carlos'), 'Tecnico', 'Ensamblador'],
+            ['Ana', 'Martinez', $this->generarCiUnico(), $this->generarEmailUnico('ana'), 'Tecnico', 'Comprobador'],
+            ['Pedro', 'Rodriguez', $this->generarCiUnico(), $this->generarEmailUnico('pedro'), 'Logistica']
         ];
         
         foreach ($usuarios as $usuario) {
             $command = new RegistrarUsuarioCommand(
-                $usuario[0],
-                $usuario[1],
-                $usuario[2],
-                $usuario[3],
-                $usuario[4],
-                $usuario[5],
-                $usuario[6] ?? null
+                $usuario[0], $usuario[1], $usuario[2], $usuario[3], $usuario[4],
+                $usuario[5] ?? null
             );
-            $registrarHandler->handle($command);
+            $userId = $registrarHandler->handle($command);
+            
+            // Guardar IDs de técnicos para activarlos después
+            if ($usuario[4] === 'Tecnico') {
+                $this->tecnicosIds[] = $userId;
+            }
         }
     }
     
