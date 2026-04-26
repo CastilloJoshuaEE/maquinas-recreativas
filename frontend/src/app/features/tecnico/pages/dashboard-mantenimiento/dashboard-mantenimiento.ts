@@ -20,6 +20,7 @@ import { TecnicoService } from '../../services/tecnico';
 import { AuthService } from '@core/services/auth';
 import { Maquina } from '@core/models/maquina.model';
 import { User } from '@core/models/user.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-mantenimiento',
@@ -42,6 +43,7 @@ export class DashboardMantenimientoComponent implements OnInit {
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   user: User | null = null;
   maquinasMantenimiento: Maquina[] = [];
@@ -119,7 +121,31 @@ export class DashboardMantenimientoComponent implements OnInit {
       }
     });
   }
-
+irAGestionComponentes(maquina: Maquina | null = null): void {
+      const machineToUse = maquina || this.selectedMaquina;
+      
+      if (!machineToUse) {
+          this.snackBar.open('Primero seleccione una máquina', 'Cerrar', { duration: 3000 });
+          return;
+      }
+      
+      // Verificar que la máquina tenga ID y nombre
+      if (!machineToUse.ID_Maquina) {
+          this.snackBar.open('La máquina seleccionada no es válida', 'Cerrar', { duration: 3000 });
+          return;
+      }
+      
+      // Asegurar que el nombre no sea null/undefined
+      const machineToSave = {
+          ...machineToUse,
+          Nombre_Maquina: machineToUse.Nombre_Maquina || 'Máquina sin nombre'
+      };
+      
+      console.log('Guardando máquina:', machineToSave);
+      
+      localStorage.setItem('selectedMachine', JSON.stringify(machineToSave));
+      this.router.navigate(['/tecnico/gestion-componentes']);
+  }
   verHistorialMaquina(maquina: Maquina): void {
     this.dialog.open(HistorialMaquinaViewerComponent, {
       width: '800px',

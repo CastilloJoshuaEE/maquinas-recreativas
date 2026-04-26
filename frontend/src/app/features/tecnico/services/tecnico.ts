@@ -133,18 +133,57 @@ getMaquinasMantenimiento(idTecnico: string): Observable<Maquina[]> {
     return this.apiService.post(API_ENDPOINTS.COMPONENTES_USAR, data).pipe(map(response => response.success));
   }
 
-  liberarComponente(data: LiberarComponenteData): Observable<boolean> {
-    return this.apiService.post(API_ENDPOINTS.COMPONENTES_LIBERAR, data).pipe(map(response => response.success));
-  }
-
-  getComponentesEnUso(idUsuario: string, idMaquina?: string): Observable<Componente[]> {
+liberarComponente(data: LiberarComponenteData): Observable<boolean> {
+    console.log('Servicio liberarComponente - Enviando:', data);
+    return this.apiService.post(API_ENDPOINTS.COMPONENTES_LIBERAR, data).pipe(
+        map(response => {
+            console.log('Respuesta del servidor:', response);
+            return response.success === true;
+        }),
+        catchError(error => {
+            console.error('Error en liberarComponente:', error);
+            return of(false);
+        })
+    );
+}
+getComponentesEnUso(idUsuario: string, idMaquina?: string): Observable<Componente[]> {
     let url = API_ENDPOINTS.COMPONENTES_EN_USO(idUsuario);
     if (idMaquina) url += `?id_maquina=${idMaquina}`;
-    return this.apiService.get<{ componentes: Componente[] }>(url).pipe(
-      map(response => response.success && response['componentes'] ? response['componentes'] : [])
+    
+    console.log('URL de componentes en uso:', url);
+    
+    return this.apiService.get<{ componentes: any[] }>(url).pipe(
+        map(response => {
+            console.log('Respuesta raw de componentes en uso:', response);
+            
+            let componentesData: any[] = [];
+            
+            // Extraer los datos de diferentes estructuras
+            if (response && response.success) {
+                componentesData = response['componentes'] || [];
+            } else if (Array.isArray(response)) {
+                componentesData = response;
+            } else if (response && response['componentes']) {
+                componentesData = response['componentes'];
+            }
+            
+            // Normalizar cada componente para que tenga ID_Componente
+            return componentesData.map((comp: any) => ({
+                ID_Componente: comp.ID_Componente || comp.id,
+                nombre: comp.nombre,
+                tipo: comp.tipo,
+                precio: comp.precio,
+                Nombre_Maquina: comp.Nombre_Maquina || comp.nombre_maquina,
+                fecha_asignacion: comp.fecha_asignacion,
+                id: comp.id  // mantener por si acaso
+            }));
+        }),
+        catchError(error => {
+            console.error('Error en getComponentesEnUso:', error);
+            return of([]);
+        })
     );
-  }
-
+}
 getHistorialMaquina(idMaquina: string, pagina: number = 1, porPagina: number = 20): Observable<{ historial: any[]; paginacion: any }> {
     return this.apiService.get<any>(API_ENDPOINTS.HISTORIAL_MAQUINA(idMaquina), { pagina, por_pagina: porPagina }).pipe(
         map(response => {

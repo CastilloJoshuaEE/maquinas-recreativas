@@ -99,51 +99,65 @@ class ComponenteController
         $response->json(['success' => true, 'componentes' => $componentes]);
         return $response;
     }
-
-    #[OA\Post(
-        path: "/v1/componentes/usar",
-        summary: "Asignar/usar un componente",
-        tags: ["Componentes"],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ["idComponente"],
-                properties: [
-                    new OA\Property(property: "idComponente", type: "string"),
-                    new OA\Property(property: "idMaquina", type: "string", nullable: true)
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: "Componente asignado correctamente"),
-            new OA\Response(response: 400, description: "ID de componente requerido"),
-            new OA\Response(response: 401, description: "Usuario no autenticado")
-        ]
-    )]
-    public function usarComponente(Request $request): Response
-    {
-        $data = $request->json();
-        if (!isset($data['idComponente'])) {
-            throw new DomainException('ID de componente requerido', 400);
-        }
-
-        if (!ValidationHelper::isValidUUID($data['idComponente'])) {
-            throw new DomainException('ID de componente inválido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $command = new UsarComponenteCommand($data['idComponente'], $userId, $data['idMaquina'] ?? null);
-        $this->usarComponenteHandler->handle($command);
-
-        $response = new Response();
-        $response->json(['success' => true, 'message' => 'Componente asignado correctamente']);
-        return $response;
+#[OA\Post(
+    path: "/v1/componentes/usar",
+    summary: "Asignar/usar un componente",
+    tags: ["Componentes"],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ["idComponente"],
+            properties: [
+                new OA\Property(property: "idComponente", type: "string"),
+                new OA\Property(property: "ID_Componente", type: "string"),
+                new OA\Property(property: "id", type: "string"),
+                new OA\Property(property: "ID_Maquina", type: "string", nullable: true),
+                new OA\Property(property: "idMaquina", type: "string", nullable: true)
+            ]
+        )
+    ),
+    responses: [
+        new OA\Response(response: 200, description: "Componente asignado correctamente"),
+        new OA\Response(response: 400, description: "ID de componente requerido"),
+        new OA\Response(response: 401, description: "Usuario no autenticado")
+    ]
+)]
+public function usarComponente(Request $request): Response
+{
+    $data = $request->json();
+    error_log("=== usarComponente - Datos recibidos: " . json_encode($data));
+    
+    // Soporte para múltiples formatos de campo ID
+    $idComponente = $data['idComponente'] ?? $data['ID_Componente'] ?? $data['id'] ?? null;
+    
+    if (!$idComponente) {
+        error_log("usarComponente - ERROR: No se encontró ID de componente");
+        throw new DomainException('ID de componente requerido', 400);
     }
 
+    if (!ValidationHelper::isValidUUID($idComponente)) {
+        error_log("usarComponente - ERROR: ID de componente inválido: $idComponente");
+        throw new DomainException('ID de componente inválido', 400);
+    }
+
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        error_log("usarComponente - ERROR: Usuario no autenticado");
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    // Soporte para múltiples formatos de ID de máquina
+    $idMaquina = $data['ID_Maquina'] ?? $data['idMaquina'] ?? null;
+    
+    error_log("usarComponente - Componente: $idComponente, Usuario: $userId, Máquina: $idMaquina");
+
+    $command = new UsarComponenteCommand($idComponente, $userId, $idMaquina);
+    $this->usarComponenteHandler->handle($command);
+
+    $response = new Response();
+    $response->json(['success' => true, 'message' => 'Componente asignado correctamente']);
+    return $response;
+}
     #[OA\Post(
         path: "/v1/componentes/liberar",
         summary: "Liberar un componente",

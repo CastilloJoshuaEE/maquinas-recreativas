@@ -38,6 +38,10 @@
               <div class="action-buttons">
                 <button mat-raised-button color="success" (click)="abrirModalMensaje(true)" [disabled]="!selectedMaquina">Dar de alta </button>
                 <button mat-raised-button color="warn" (click)="abrirModalMensaje(false)" [disabled]="!selectedMaquina">Dar de baja </button>
+                <button mat-raised-button (click)="irAGestionComponentes(selectedMaquina )" 
+                        [disabled]="!selectedMaquina ">
+                    <mat-icon>memory</mat-icon> Usar Componentes
+                </button>
               </div>
             }
           </div>

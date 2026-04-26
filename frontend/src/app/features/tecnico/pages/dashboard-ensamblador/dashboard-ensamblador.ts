@@ -147,9 +147,31 @@ export class DashboardEnsambladorComponent implements OnInit {
     });
   }
 
-  irAGestionComponentes(): void {
+irAGestionComponentes(maquina: Maquina | null = null): void {
+    const machineToUse = maquina || this.selectedMaquina || this.selectedMaquinaReensamblar;
+    
+    if (!machineToUse) {
+        this.snackBar.open('Primero seleccione una máquina', 'Cerrar', { duration: 3000 });
+        return;
+    }
+    
+    // Verificar que la máquina tenga ID y nombre
+    if (!machineToUse.ID_Maquina) {
+        this.snackBar.open('La máquina seleccionada no es válida', 'Cerrar', { duration: 3000 });
+        return;
+    }
+    
+    // Asegurar que el nombre no sea null/undefined
+    const machineToSave = {
+        ...machineToUse,
+        Nombre_Maquina: machineToUse.Nombre_Maquina || 'Máquina sin nombre'
+    };
+    
+    console.log('Guardando máquina:', machineToSave);
+    
+    localStorage.setItem('selectedMachine', JSON.stringify(machineToSave));
     this.router.navigate(['/tecnico/gestion-componentes']);
-  }
+}
 
   verHistorialMaquina(maquina: Maquina): void {
     this.dialog.open(HistorialMaquinaViewerComponent, {

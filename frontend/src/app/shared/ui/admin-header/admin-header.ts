@@ -3,8 +3,7 @@
  * @description Header común para paneles de administración
  * @component AdminHeaderComponent
  *
- * FIX: el modal de notificaciones usaba NotificacionesListComponent (solo máquinas).
- * Ahora usa NotificacionesPanelComponent (máquinas + reportes, via forkJoin).
+ *
  */
 
 import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
@@ -33,7 +32,6 @@ import { HasRoleDirective } from '@shared/directives/has-role.directive';
     MatMenuModule,
     MatBadgeModule,
     HasRoleDirective,
-    // FIX: NotificacionesPanelComponent (no NotificacionesListComponent)
     NotificacionesPanelComponent,
     ChatComponent
   ],

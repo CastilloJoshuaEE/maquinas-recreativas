@@ -47,15 +47,7 @@
       </div>
     </section>
     
-    <hr />
-    
-    <!-- Dashboard de Máquinas (solo lectura) -->
-    <app-maquinas-dashboard
-      [showActions]="true"
-      [filterEstado]="'Ensamblandose'"
-      (verHistorial)="verHistorialMaquina($event)">
-    </app-maquinas-dashboard>
-    
+
     <!-- Checklist Modal -->
     <div class="checklist-modal" *ngIf="selectedMaquina">
       <h3>Checklist de comprobación - {{ selectedMaquina.Nombre_Maquina }}</h3>
@@ -88,10 +80,22 @@
                 (click)="abrirModalMensaje('reensamblar')">
           Mandar a reensamblar 🔄
         </button>
+        <button mat-raised-button (click)="irAGestionComponentes(selectedMaquina )" 
+                [disabled]="!selectedMaquina ">
+            <mat-icon>memory</mat-icon> Usar Componentes
+        </button>
       </div>
     </div>
   </div>
-
+    <hr />
+    
+    <!-- Dashboard de Máquinas (solo lectura) -->
+    <app-maquinas-dashboard
+      [showActions]="true"
+      [filterEstado]="'Ensamblandose'"
+      (verHistorial)="verHistorialMaquina($event)">
+    </app-maquinas-dashboard>
+    
   <!-- Modal de mensaje -->
   <div class="modal-overlay" *ngIf="mostrarModalMensaje" (click)="cerrarModalMensaje()">
     <div class="modal-mensaje" (click)="$event.stopPropagation()">

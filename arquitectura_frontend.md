@@ -97,12 +97,7 @@ frontend/
         │   │   │   ├── maquina-list.html
         │   │   │   ├── maquina-list.css
         │   │   │   └── maquina-list.spec.ts
-        │   │   │
-        │   │   ├── notificaciones-list/
-        │   │   │   ├── notificaciones-list.ts
-        │   │   │   ├── notificaciones-list.html
-        │   │   │   ├── notificaciones-list.css
-        │   │   │   └── notificaciones-list.spec.ts
+        │   │   
         │   │   │
         │   │   ├── profile-section/
         │   │   │   ├── profile-section.ts
@@ -413,8 +408,6 @@ frontend/src/app/shared/ui/
     ├── historial-maquina-viewer.html
     ├── historial-maquina-viewer.css
     └── historial-maquina-viewer.spec.ts
-
-
 
 frontend/src/app/shared/ui/
 ├── accessibility-widget/

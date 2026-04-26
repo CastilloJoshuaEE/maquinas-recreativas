@@ -41,8 +41,8 @@ export interface UsarComponenteData {
  * Interfaz para liberar componente
  */
 export interface LiberarComponenteData {
-  ID_Componente: string;
-  id: string;
+  idComponente: string;
+  id?: string;
 }
 
 /**

@@ -44,6 +44,10 @@
                     [disabled]="!selectedMaquina">
               Mandar a comprobación 🚀
             </button>
+                        <button mat-raised-button (click)="irAGestionComponentes(selectedMaquina || selectedMaquinaReensamblar)" 
+        [disabled]="!selectedMaquina && !selectedMaquinaReensamblar">
+    <mat-icon>memory</mat-icon> Usar Componentes
+</button>
           </div>
         </div>
       </div>
@@ -86,6 +90,10 @@
                     [disabled]="!selectedMaquinaReensamblar">
               Mandar a comprobación 🔄
             </button>
+            <button mat-raised-button (click)="irAGestionComponentes(selectedMaquina || selectedMaquinaReensamblar)" 
+        [disabled]="!selectedMaquina && !selectedMaquinaReensamblar">
+    <mat-icon>memory</mat-icon> Usar Componentes
+</button>
           </div>
         </div>
       </div>
@@ -100,14 +108,6 @@
       (verHistorial)="verHistorialMaquina($event)">
     </app-maquinas-dashboard>
     
-    <section class="actions-section">
-      <h2>Acciones</h2>
-      <div class="action-buttons">
-        <button mat-raised-button (click)="irAGestionComponentes()">
-          <mat-icon>memory</mat-icon> Gestionar Componentes
-        </button>
-      </div>
-    </section>
   </div>
   
   <!-- Modal de mensaje -->
