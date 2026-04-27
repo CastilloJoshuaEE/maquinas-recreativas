@@ -1,3 +1,13 @@
+asegurarse de tener en la raiz del proyecto de backend el .env comentada la de APP_ENV=development y descomentar la de APP_ENV=testing
+
+# Aplicación en desarrollo
+
+APP_ENV=development
+
+# TESTING  APP_ENV=testing
+
+APP_DEBUG=true
+
 backend/tests/Perfomance/breakpoint-analyzer.php, HttpStressTestCase.php, run_stress_test.php, StressTest.php
 
 backend/tests/
@@ -102,6 +112,13 @@ Ya puedes usar coverage:
 
 vendor\b**in**\phpunit.bat
 
+o
+
+
+ejecutar todo:
+
+cd D:\xampp\htdocs\maquinas-recreativas\backend
+vendor\bin\phpunit -c tests/phpunit.xml
 
 # Ejecutar solo tests de dominio
 
@@ -144,8 +161,7 @@ php run_tests.php
 
 o
 
-cd D:\xampp\htdocs\maquinas-recreativas\backend
-vendor\bin\phpunit -c tests/phpunit.xml
+cd D:\xampp\htdocs\maquinas-recreativas\backend vendor\bin\phpunit -c tests/phpunit.xml --testsuite Functional
 
 EJECUTAR PRUEBAS DE SMOKE
 

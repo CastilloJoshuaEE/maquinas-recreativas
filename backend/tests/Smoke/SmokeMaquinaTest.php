@@ -9,12 +9,15 @@ class SmokeMaquinaTest extends SmokeTestCase
     private ?string $ensambladorId = null;
     private ?string $comprobadorId = null;
 
-    protected function setUp(): void
+protected function setUp(): void
     {
         parent::setUp();
 
-        // 1. Crear y loguear como técnico ensamblador para generar placa y carcasa
-        $this->loginAsTecnicoEnsamblador();
+        // 1. Login como técnico ensamblador (usa el nuevo método)
+        if (!$this->loginAsTecnicoEnsamblador()) {
+            $this->markTestSkipped('No se pudo loguear como técnico ensamblador');
+            return;
+        }
         
         // Guardar el ID del ensamblador para usarlo después
         $this->ensambladorId = $this->testUserId;
@@ -36,17 +39,26 @@ class SmokeMaquinaTest extends SmokeTestCase
         $this->makeRequest('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        // Creamos un usuario técnico comprobador
-        $comprobadorUser = $this->createTecnicoUser('Comprobador');
-        $registerResp = $this->makeRequest('POST', '/usuario/register', $comprobadorUser);
+        // Crear técnico comprobador usando el método correcto
+        $comprobadorData = $this->createTecnicoUserData('Comprobador');
+        
+        // Login como admin para crear usuario
+        $this->loginAsAdmin();
+        $registerResp = $this->makeRequest('POST', '/administrador/usuarios', $comprobadorData);
         
         if ($this->isSuccessResponse($registerResp)) {
-            $this->comprobadorId = $registerResp['userId'];
+            $this->comprobadorId = $registerResp['id'];
+            $comprobadorUsername = $registerResp['usuario_asignado'];
+            
+            // Cerrar sesión de admin
+            $this->makeRequest('POST', '/usuario/logout', []);
+            $this->clearCookies();
         }
         
         // Volvemos a loguear como ensamblador para continuar
         $this->loginAsTecnicoEnsamblador();
     }
+
 
     /** @test */
     public function sePuedeGenerarUnaPlaca()

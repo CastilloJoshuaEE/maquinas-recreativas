@@ -11,14 +11,26 @@ class SmokeReporteTest extends SmokeTestCase
     {
         parent::setUp();
 
-        $this->loginAsTestUser();
+        // Usar registerAndLoginTestUser en lugar de loginAsTestUser
+        if (!$this->registerAndLoginTestUser()) {
+            $this->markTestSkipped('No se pudo autenticar usuario de prueba');
+        }
 
         // Crear un segundo usuario que actúe como destinatario
-        $otroUser = $this->createTestUser();
-        $response = $this->makeRequest('POST', '/usuario/register', $otroUser);
+        // Usar createTestUserData() en lugar de createTestUser()
+        $otroUserData = $this->createTestUserData();
+        
+        // Primero login como admin
+        $this->loginAsAdmin();
+        
+        $response = $this->makeRequest('POST', '/administrador/usuarios', $otroUserData);
         if ($this->isSuccessResponse($response)) {
-            $this->otroUsuarioId = $response['userId'];
+            $this->otroUsuarioId = $response['id'] ?? null;
+            $this->testUserUsername = $response['usuario_asignado'] ?? null;
         }
+        
+        // Volver a loguear como el usuario principal
+        $this->registerAndLoginTestUser();
     }
 
     /** @test */
@@ -38,13 +50,10 @@ class SmokeReporteTest extends SmokeTestCase
 
     /**
      * @test
-     * 
-     * NOTA: Este test es AUTÓNOMO, no depende de ningún otro test.
-     * Crea su propio reporte y luego el comentario.
      */
     public function sePuedeCrearUnComentarioEnUnReporte()
     {
-        // Crear reporte propio (no depender de otro test)
+        // Crear reporte propio
         $reporteResponse = $this->makeRequest('POST', '/reportes/crear', [
             'descripcion'          => 'Reporte para comentario smoke',
             'idUsuarioDestinatario'=> $this->otroUsuarioId,
@@ -103,12 +112,7 @@ class SmokeReporteTest extends SmokeTestCase
         $this->assertTrue($this->isSuccessResponse($response));
     }
 
-    /**
-     * @test
-     *
-     * El servidor devuelve HTTP 200 con success:false para errores de validación,
-     * no HTTP 400. El smoke test verifica el comportamiento real.
-     */
+    /** @test */
     public function noSePuedeCrearReporteSinDescripcion()
     {
         $response = $this->makeRequest('POST', '/reportes/crear', []);

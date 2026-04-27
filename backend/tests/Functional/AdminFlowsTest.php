@@ -4,62 +4,27 @@
 require_once __DIR__ . '/HttpTestCase.php';
 
 class AdminFlowsTest extends HttpTestCase {
-    private $adminUser;
-    private $adminId;
-    private $adminUsuarioAsignado;
     private $usuarioCreadoId;
     
     public function __construct() {
         parent::__construct();
-        
-        $timestamp = time();
-        
-        $this->adminUser = [
-            'nombre' => 'Admin',
-            'apellido' => 'Sistema',
-            'ci' => '00000000' . rand(10, 99),
-            'email' => 'admin_' . $timestamp . '_' . uniqid() . '@test.com',
-            'contrasena' => 'Admin123!',
-            'tipo' => 'Administrador',
-            'estado' => 'Activo'
-        ];
+        // No crear un nuevo admin - usar el que ya existe
     }
     
     public function testFlujoCompletoAdministrador() {
         echo "\nINICIANDO FLUJO COMPLETO DE ADMINISTRADOR\n";
         echo "============================================\n\n";
         
-        $this->pasoRegistrarAdmin();
-        $this->pasoLoginAdmin();
+        // Login como admin existente
+        if (!$this->loginAsAdmin()) {
+            $this->assertTrue(false, 'No se pudo iniciar sesión como administrador');
+            return;
+        }
+        
         $this->pasoObtenerTodosUsuarios();
         $this->pasoCrearUsuario();
         
         echo "\nFLUJO COMPLETO DE ADMINISTRADOR EXITOSO\n";
-    }
-    
-    private function pasoRegistrarAdmin() {
-        echo "Registrando administrador...\n";
-        
-        $response = $this->request('POST', '/usuario/register', $this->adminUser);
-        if ($this->assertResponseSuccess('Error al registrar administrador')) {
-            $this->adminId = $response['userId'] ?? null;
-            $this->adminUsuarioAsignado = $response['usuario_asignado'] ?? null;
-            $this->assertNotNull($this->adminId, 'No se recibio ID');
-            echo "   Admin registrado: {$this->adminUsuarioAsignado} (ID: {$this->adminId})\n";
-        }
-    }
-    
-    private function pasoLoginAdmin() {
-        echo "Login como administrador...\n";
-        
-        $response = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->adminUsuarioAsignado,
-            'contrasena' => $this->adminUser['contrasena']
-        ]);
-        
-        if ($this->assertResponseSuccess('Error al iniciar sesion')) {
-            echo "   Login exitoso\n";
-        }
     }
     
     private function pasoObtenerTodosUsuarios() {

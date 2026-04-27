@@ -81,7 +81,7 @@ class TestDatabase extends Database
         }
         
         // Tabla: usuario
-        $this->connection->query("CREATE TABLE usuario (
+$this->connection->query("CREATE TABLE usuario (
             ID_Usuario CHAR(36) PRIMARY KEY DEFAULT (UUID()),
             ci VARCHAR(100) NOT NULL UNIQUE,
             nombre VARCHAR(50) NOT NULL,
@@ -210,6 +210,8 @@ class TestDatabase extends Database
             ID_Usuario_Emisor CHAR(36) NOT NULL, 
             fecha_hora DATETIME NOT NULL,
             comentario TEXT NOT NULL,
+            fecha_edicion DATETIME NULL,
+            eliminado BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (ID_Reporte) REFERENCES reporte(ID_Reporte) ON DELETE CASCADE,
             FOREIGN KEY (ID_Usuario_Emisor) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
         )");
@@ -309,27 +311,27 @@ class TestDatabase extends Database
         )");
         
         // Tabla: historial_maquinas
- $this->connection->query("CREATE TABLE historial_maquinas (
-    ID_Historial CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    ID_Maquina CHAR(36) NULL,  -- Cambiado de NOT NULL a NULL
-    ID_Usuario CHAR(36) NOT NULL,
-    tipo_usuario VARCHAR(50) NOT NULL,
-    accion VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    estado_anterior VARCHAR(50),
-    estado_nuevo VARCHAR(50),
-    etapa_anterior VARCHAR(50),
-    etapa_nueva VARCHAR(50),
-    fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(45),
-    detalles_adicionales TEXT,
-    INDEX idx_historial_maquina (ID_Maquina),
-    INDEX idx_historial_usuario (ID_Usuario),
-    INDEX idx_historial_fecha (fecha_hora),
-    FOREIGN KEY (ID_Maquina) REFERENCES MaquinaRecreativa(ID_Maquina) ON DELETE CASCADE,
-    FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
-) ENGINE=InnoDB");
-   # ALTER TABLE historial_maquinas MODIFY ID_Maquina CHAR(36) NULL;     
+        $this->connection->query("CREATE TABLE historial_maquinas (
+            ID_Historial CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+            ID_Maquina CHAR(36) NULL,
+            ID_Usuario CHAR(36) NOT NULL,
+            tipo_usuario VARCHAR(50) NOT NULL,
+            accion VARCHAR(100) NOT NULL,
+            descripcion TEXT,
+            estado_anterior VARCHAR(50),
+            estado_nuevo VARCHAR(50),
+            etapa_anterior VARCHAR(50),
+            etapa_nueva VARCHAR(50),
+            fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+            ip_address VARCHAR(45),
+            detalles_adicionales TEXT,
+            INDEX idx_historial_maquina (ID_Maquina),
+            INDEX idx_historial_usuario (ID_Usuario),
+            INDEX idx_historial_fecha (fecha_hora),
+            FOREIGN KEY (ID_Maquina) REFERENCES MaquinaRecreativa(ID_Maquina) ON DELETE CASCADE,
+            FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario) ON DELETE CASCADE
+        ) ENGINE=InnoDB");
+        
         $this->connection->query("SET FOREIGN_KEY_CHECKS = 1");
     }
     

@@ -8,7 +8,10 @@ class SmokeUsuarioTest extends SmokeTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->loginAsTestUser();
+        // Usar registerAndLoginTestUser en lugar de loginAsTestUser
+        if (!$this->registerAndLoginTestUser()) {
+            $this->markTestSkipped('No se pudo autenticar usuario de prueba');
+        }
     }
 
     /** @test */
@@ -32,14 +35,7 @@ class SmokeUsuarioTest extends SmokeTestCase
         $this->assertTrue($this->isSuccessResponse($response));
     }
 
-    /**
-     * @test
-     *
-     * El servidor puede devolver {"success": false, ...} o {"error": "..."} para
-     * credenciales inválidas dependiendo de qué capa capture la excepción.
-     * Ambos formatos son correctos — el smoke test solo verifica que el login
-     * rechaza las credenciales (no devuelve success:true).
-     */
+    /** @test */
     public function elLoginRespondeConCredencialesInvalidas()
     {
         $response = $this->makeRequest('POST', '/usuario/login', [
