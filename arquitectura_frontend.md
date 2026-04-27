@@ -420,109 +420,127 @@ frontend/src/app/shared/ui/
 └── accessibility-settings/
     └── accessibility-settings.ts
 
-## Cómo instalarlo
 
-Navegar a la carpeta del proyecto
-powershell
-cd C:\ruta\de\tu\proyecto\frontend
-3. Limpiar caché de npm (recomendado)
-powershell
+Cómo instalar el proyecto (correcto)
+
+1. Ir al proyecto
+
+Ubícate en la carpeta:
+
+C:\ruta\de\tu\proyecto\frontend
+
+2. Limpiar entorno (muy recomendado)
+
+Eliminar dependencias instaladas previamente y limpiar caché:
+
+rm -r -fo node_modules
+
+rm package-lock.json
+
 npm cache clean --force
-4. Instalar dependencias principales
-powershell
+
+3. Instalar todo automáticamente (forma correcta)
+
 npm install
-5. Instalar Angular CLI globalmente (si no lo tienes)
-powershell
-npm install -g @angular/cli@20.3.6     7. Instalar Bootstrap y dependencias de UI
-powershell
-npm install bootstrap@5.3.3 @popperjs/core@2.11.8 y en angular json poner:           "node_modules/bootstrap/dist/css/bootstrap.min.css",
-8. Instalar Chart.js y Moment.js
-powershell
-npm install chart.js@4.4.0 moment@2.30.1
-9. Instalar ngx-toastr y ngx-pagination
-powershell
-npm install ngx-toastr@19.0.0 ngx-pagination@6.0.3 10. Instalar dependencias de desarrollo  npm install -D
-@angular-devkit/build-angular@20.3.18
-@angular-eslint/builder@20.3.18
-@angular-eslint/eslint-plugin@20.3.18
-@angular-eslint/eslint-plugin-template@20.3.18
-@angular-eslint/schematics@20.3.18
-@angular-eslint/template-parser@20.3.18
-@angular/cli@20.3.18
-@angular/compiler-cli@20.3.18  11. Instalar Compodoc para documentación
-powershell
-npm install -D @compodoc/compodoc@1.1.25  12. Instalar herramientas de testing
-powershell
-npm install -D @types/jasmine@5.1.0 jasmine-core@5.6.0 karma@6.4.0 karma-chrome-launcher@3.2.0 karma-coverage@2.2.0 karma-jasmine@5.1.0 karma-jasmine-html-reporter@2.1.0  npm install -D eslint@9.0.0 @typescript-eslint/eslint-plugin@8.0.0 @typescript-eslint/parser@8.0.0
-15. Verificar instalación
-powershell
-npm list --depth=0
-📜 Script de Instalación Completo (copiar y pegar en PowerShell)
-powershell
 
-# Script de instalación completo para Windows
+Esto instala exactamente las versiones definidas en package.json, que es la mejor práctica.
 
-Write-Host "=== INSTALANDO RECREA SYS FRONTEND ===" -ForegroundColor Green
+Instalación manual (opcional)
 
-# Limpiar caché
+4. Angular (mismas versiones del proyecto)
 
-npm cache clean --force
+npm install @angular/animations@20.3.18 @angular/common@20.3.0 @angular/compiler@20.3.0 @angular/core@20.3.0 @angular/forms@20.3.0 @angular/platform-browser@20.3.0 @angular/router@20.3.0
 
-# Instalar dependencias principales
+5. Angular Material + CDK
 
-npm install @angular/animations@20.3.18 --legacy-peer-deps
+npm install @angular/material@20.2.14 @angular/cdk@20.2.14
 
-npm install @angular/cdk@20.0.0 @angular/common@20.0.0 @angular/compiler@20.0.0 @angular/core@20.0.0 @angular/forms@20.0.0 @angular/material@20.0.0 @angular/platform-browser@20.0.0 @angular/platform-browser-dynamic@20.0.0 @angular/router@20.0.0
-
-# Instalar Bootstrap
+6. UI (Bootstrap + Popper)
 
 npm install bootstrap@5.3.3 @popperjs/core@2.11.8
 
-# Instalar utilidades
+Luego en angular.json:
 
-npm install chart.js@4.4.0 moment@2.30.1
+"styles": [
 
-# Instalar ngx-toastr
+  "node_modules/bootstrap/dist/css/bootstrap.min.css",
 
-npm install ngx-toastr@19.0.0 ngx-pagination@6.0.3
+  "src/styles.css"
 
-npm install zone.js@0.15.0 --legacy-peer-deps
+]
 
-# Instalar dependencias de desarrollo
+7. Librerías funcionales
 
-npm install -D @angular-devkit/build-angular@20.0.0 @angular-eslint/builder@20.0.0 @angular-eslint/eslint-plugin@20.0.0 @angular-eslint/eslint-plugin-template@20.0.0 @angular-eslint/schematics@20.0.0 @angular-eslint/template-parser@20.0.0
+npm install chart.js@4.4.0 moment@2.30.1 ngx-pagination@6.0.3 ngx-toastr@19.0.0
 
-# Instalar Compodoc
+8. Core interno
 
-npm install -D @compodoc/compodoc@1.1.25
+npm install rxjs@7.8.0 tslib@2.3.0 zone.js@0.15.0
 
-# Instalar herramientas de testing
+Dependencias de desarrollo
+
+9. Angular CLI y build
+
+npm install -D @angular/cli@20.3.6 @angular/build@20.3.6 @angular/compiler-cli@20.3.0
+
+10. TypeScript
+
+npm install -D typescript@5.9.2
+
+11. Testing (Karma + Jasmine + Jest)
 
 npm install -D @types/jasmine@5.1.0 jasmine-core@5.6.0 karma@6.4.0 karma-chrome-launcher@3.2.0 karma-coverage@2.2.0 karma-jasmine@5.1.0 karma-jasmine-html-reporter@2.1.0
 
-# Instalar ESLint
+npm install -D jest@30.3.0 @types/jest@30.0.0 ts-jest@29.4.9
 
-npm install -D eslint@9.0.0 @typescript-eslint/eslint-plugin@8.0.0 @typescript-eslint/parser@8.0.0 typescript@5.8.0
-
-# Instalar tipos de Node
+12. Tipos de Node
 
 npm install -D @types/node@20.0.0
+
+13. Documentación (Compodoc)
+
+npm install -D @compodoc/compodoc@1.1.25
+
+14. ESLint (opcional)
+
+npm install -D eslint@9.0.0 @typescript-eslint/eslint-plugin@8.0.0 @typescript-eslint/parser@8.0.0
+
+Angular CLI global
+
+npm install -g @angular/cli@20.3.6
+
 Verificar instalación
-powershell
+
 npm list --depth=0
 
-angular.json:
+Ejecutar proyecto
 
-**"styles"**: [
-"node_modules/bootstrap/dist/css/bootstrap.min.css",
-"src/styles.css"
-],
-"scripts": []
+npm start
 
-npm install --save-dev jest @types/jest ts-jest
-
-## Cómo generar la documentación
+Generar documentación
 
 npx compodoc -p tsconfig.json
+
+Script completo de instalación
+
+rm -r -fo node_modules
+
+rm package-lock.json
+
+npm cache clean --force
+
+npm install
+
+npm install -g @angular/cli@20.3.6
+
+npm install bootstrap@5.3.3 @popperjs/core@2.11.8
+
+npm install chart.js@4.4.0 moment@2.30.1 ngx-pagination@6.0.3 ngx-toastr@19.0.0
+
+npm install -D @compodoc/compodoc@1.1.25
+
+npm install -D eslint@9.0.0 @typescript-eslint/eslint-plugin@8.0.0 @typescript-eslint/parser@8.0.0
+
+npm list --depth=0
 
 **Tu proyecto es un ERP Vertical (Software de planificación de recursos para máquinas recreativas) con arquitectura y despliegue de tipo SaaS.**
