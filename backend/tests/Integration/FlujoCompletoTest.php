@@ -17,8 +17,10 @@ use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository
 use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
-use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
-use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminCommand;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioCommand;
 use maquinas_recreativas\Application\Commands\Comercio\RegistrarComercioHandler;
 use maquinas_recreativas\Application\Commands\Maquina\RegistrarMaquinaCommand;
@@ -31,12 +33,19 @@ use maquinas_recreativas\Application\Commands\Maquina\MandarADistribucionCommand
 use maquinas_recreativas\Application\Commands\Maquina\MandarADistribucionHandler;
 use maquinas_recreativas\Application\Commands\Maquina\PonerOperativaCommand;
 use maquinas_recreativas\Application\Commands\Maquina\PonerOperativaHandler;
-use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionCommand;
-use maquinas_recreativas\Application\Commands\Recaudacion\RegistrarRecaudacionHandler;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
+use maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository;
+use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
+use maquinas_recreativas\Domain\Componente\Componente;
+use maquinas_recreativas\Domain\Componente\TipoComponente;
+use maquinas_recreativas\Domain\Maquina\EstadoMaquina;
+use maquinas_recreativas\Domain\Maquina\EtapaMaquina;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 
 class FlujoCompletoTest extends TestCase
 {
@@ -49,6 +58,11 @@ class FlujoCompletoTest extends TestCase
     private MySQLReporteRepository $reporteRepository;
     private MySQLComentarioRepository $comentarioRepository;
     private BcryptPasswordHasher $passwordHasher;
+    
+    private Uuid $logisticaId;
+    private Uuid $ensambladorId;
+    private Uuid $comprobadorId;
+    private Uuid $mantenimientoId;
     
     protected function setUp(): void
     {
@@ -63,151 +77,146 @@ class FlujoCompletoTest extends TestCase
         $this->reporteRepository = new MySQLReporteRepository($this->testDb);
         $this->comentarioRepository = new MySQLComentarioRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
+        
+        $this->crearUsuarios();
     }
     
-  /**
- * @test
- * CP-047 - Flujo completo: Registro de usuarios -> Comercio -> Máquina -> Montaje -> Comprobación -> Distribución -> Operativa -> Recaudación
- */
-public function testFlujoCompletoMaquina(): void
-{
-    // 1. Registrar usuarios
-    $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
+    private function crearUsuarios(): void
+    {
+        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
+        
+        // Usuario logística
+        $logisticaCommand = new RegistrarUsuarioAdminCommand(
+            'Logistica', 'Test', '1110011111', 'logistica@test.com', null, 'Password123!', 'Logistica', 'Activo'
+        );
+        $logistica = $registrarAdminHandler->handle($logisticaCommand);
+        $this->logisticaId = $logistica->getId();
+        
+        // Técnico ensamblador
+        $ensambladorCommand = new RegistrarUsuarioAdminCommand(
+            'Ensamblador', 'Test', '2222002222', 'ensamblador@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
+        );
+        $ensamblador = $registrarAdminHandler->handle($ensambladorCommand);
+        $this->ensambladorId = $ensamblador->getId();
+        
+        // Técnico comprobador
+        $comprobadorCommand = new RegistrarUsuarioAdminCommand(
+            'Comprobador', 'Test', '3333003333', 'comprobador@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Comprobador'
+        );
+        $comprobador = $registrarAdminHandler->handle($comprobadorCommand);
+        $this->comprobadorId = $comprobador->getId();
+        
+        // Técnico mantenimiento
+        $mantenimientoCommand = new RegistrarUsuarioAdminCommand(
+            'Mantenimiento', 'Test', '4444004444', 'mantenimiento@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Mantenimiento'
+        );
+        $mantenimiento = $registrarAdminHandler->handle($mantenimientoCommand);
+        $this->mantenimientoId = $mantenimiento->getId();
+    }
     
-    // Usuario logística
-    $logisticaCommand = new RegistrarUsuarioCommand(
-        'Logistica', 'Test', '1111111111', 'logistica@test.com', 'password123', 'Logistica'
-    );
-    $logisticaId = $registrarUsuario->handle($logisticaCommand);
-    $this->assertNotNull($logisticaId, "Usuario logística no creado");
-    
-    // Técnico ensamblador
-    $ensambladorCommand = new RegistrarUsuarioCommand(
-        'Ensamblador', 'Test', '2222222222', 'ensamblador@test.com', 'password123', 'Tecnico', 'Ensamblador'
-    );
-    $ensambladorId = $registrarUsuario->handle($ensambladorCommand);
-    $this->assertNotNull($ensambladorId, "Técnico ensamblador no creado");
-    
-    // Técnico comprobador
-    $comprobadorCommand = new RegistrarUsuarioCommand(
-        'Comprobador', 'Test', '3333333333', 'comprobador@test.com', 'password123', 'Tecnico', 'Comprobador'
-    );
-    $comprobadorId = $registrarUsuario->handle($comprobadorCommand);
-    $this->assertNotNull($comprobadorId, "Técnico comprobador no creado");
-    
-    // Técnico mantenimiento
-    $mantenimientoCommand = new RegistrarUsuarioCommand(
-        'Mantenimiento', 'Test', '4444444444', 'mantenimiento@test.com', 'password123', 'Tecnico', 'Mantenimiento'
-    );
-    $mantenimientoId = $registrarUsuario->handle($mantenimientoCommand);
-    $this->assertNotNull($mantenimientoId, "Técnico mantenimiento no creado");
-    
-    // 2. Registrar comercio
-    $registrarComercio = new RegistrarComercioHandler(
-        $this->comercioRepository, 
-        \maquinas_recreativas\Infrastructure\Security\HistorialHelper::getInstance()
-    );
-    
-    $comercioCommand = new RegistrarComercioCommand(
-        'Comercio Test',
-        'Minorista',
-        'Dirección Test',
-        '0999999999',
-        $logisticaId->value()
-    );
-    
-    $comercio = $registrarComercio->handle($comercioCommand);
-    $this->assertNotNull($comercio, "Comercio no creado");
-    $this->assertNotNull($comercio->getNombre(), "Nombre del comercio es null");
-  // 3. Registrar máquina
-$registrarMaquina = new RegistrarMaquinaHandler(
-    $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository, $this->componenteRepository
-);
-
-$placaId = \maquinas_recreativas\Domain\Shared\ValueObjects\Uuid::v4();
-$carcasaId = \maquinas_recreativas\Domain\Shared\ValueObjects\Uuid::v4();
-
-$maquinaCommand = new RegistrarMaquinaCommand(
-    'Máquina Test',
-    'Tipo A',
-    $comercio->getId(),
-    $logisticaId->value(),
-    $placaId->value(),
-    $carcasaId->value()
-);
-
-$maquinaIdString = $registrarMaquina->handle($maquinaCommand); // Esto ya es un string UUID
-
-// Usar el string directamente en lugar de crear un objeto Uuid
-$this->assertNotNull($maquinaIdString);
-$this->assertIsString($maquinaIdString);
-
-// 4. Registrar montaje
-$registrarMontaje = new RegistrarMontajeHandler(
-    $this->maquinaRepository, $this->componenteRepository, 
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository($this->testDb),
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository($this->testDb),
-    $this->usuarioRepository
-);
-
-// Crear componente con el tipo correcto
-$componente = \maquinas_recreativas\Domain\Componente\Componente::crear(
-    \maquinas_recreativas\Domain\Componente\TipoComponente::ELECTRONICO(),
-    'Componente Test',
-    100.00
-);
-$this->componenteRepository->save($componente);
-
-$montajeCommand = new RegistrarMontajeCommand(
-    $maquinaIdString,  // Usar el string directamente
-    $componente->id()->value(),
-    $ensambladorId->value(),
-    'Montaje de prueba'
-);
-$registrarMontaje->handle($montajeCommand);
-
-// 5. Enviar a comprobación
-$mandarAComprobacion = new MandarAComprobacionHandler(
-    $this->maquinaRepository, $this->usuarioRepository, $this->notificacionRepository,
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository($this->testDb)
-);
-
-$comprobacionCommand = new MandarAComprobacionCommand(
-    $maquinaIdString,  // Usar el string directamente
-    $ensambladorId->value(),
-    'Máquina lista para comprobación'
-);
-$mandarAComprobacion->handle($comprobacionCommand);
-
-// 6. Enviar a distribución
-$mandarADistribucion = new MandarADistribucionHandler(
-    $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository,
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository($this->testDb),
-    $this->notificacionRepository,
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository($this->testDb)
-);
-
-$distribucionCommand = new MandarADistribucionCommand(
-    $maquinaIdString,  // Usar el string directamente
-    $comprobadorId->value(),
-    'Máquina aprobada para distribución'
-);
-$mandarADistribucion->handle($distribucionCommand);
-
-// 7. Poner operativa
-$ponerOperativa = new PonerOperativaHandler(
-    $this->maquinaRepository,
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository($this->testDb),
-    new \maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository($this->testDb)
-);
-
-$operativaCommand = new PonerOperativaCommand($maquinaIdString);  // Usar el string directamente
-$ponerOperativa->handle($operativaCommand);
-
-// Para obtener la máquina después de las operaciones, usar el string directamente
-$maquina = $this->maquinaRepository->findById(new \maquinas_recreativas\Domain\Shared\ValueObjects\Uuid($maquinaIdString));
-$this->assertTrue($maquina->estado()->equals(\maquinas_recreativas\Domain\Maquina\EstadoMaquina::OPERATIVA()));
-$this->assertTrue($maquina->etapa()->equals(\maquinas_recreativas\Domain\Maquina\EtapaMaquina::RECAUDACION()));
+    /**
+     * @test
+     * CP-047 - Flujo completo: Registro de usuarios -> Comercio -> Máquina -> Montaje -> Comprobación -> Distribución -> Operativa
+     */
+    public function testFlujoCompletoMaquina(): void
+    {
+        // 2. Registrar comercio
+        $registrarComercio = new RegistrarComercioHandler($this->comercioRepository, HistorialHelper::getInstance());
+        
+        $comercioCommand = new RegistrarComercioCommand(
+            'Comercio Test',
+            'Minorista',
+            'Dirección Test',
+            '0999999909',
+            $this->logisticaId->value()
+        );
+        
+        $comercio = $registrarComercio->handle($comercioCommand);
+        $this->assertNotNull($comercio, "Comercio no creado");
+        
+        // 3. Registrar máquina
+        $registrarMaquina = new RegistrarMaquinaHandler(
+            $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository, $this->componenteRepository, null
+        );
+        
+        $placaId = Uuid::v4();
+        $carcasaId = Uuid::v4();
+        
+        $maquinaCommand = new RegistrarMaquinaCommand(
+            'Máquina Test',
+            'Tipo A',
+            $comercio->getId(),
+            $this->logisticaId->value(),
+            $placaId->value(),
+            $carcasaId->value()
+        );
+        
+        $maquinaIdString = $registrarMaquina->handle($maquinaCommand);
+        $this->assertNotNull($maquinaIdString);
+        $this->assertIsString($maquinaIdString);
+        
+        // 4. Registrar montaje
+        $registrarMontaje = new RegistrarMontajeHandler(
+            $this->maquinaRepository, $this->componenteRepository, 
+            new MySQLMontajeRepository($this->testDb),
+            new MySQLHistorialRepository($this->testDb),
+            $this->usuarioRepository
+        );
+        
+        // Crear componente
+        $componente = Componente::crear(TipoComponente::ELECTRONICO(), 'Componente Test', 100.00);
+        $this->componenteRepository->save($componente);
+        
+        $montajeCommand = new RegistrarMontajeCommand(
+            $maquinaIdString,
+            $componente->id()->value(),
+            $this->ensambladorId->value(),
+            'Montaje de prueba'
+        );
+        $registrarMontaje->handle($montajeCommand);
+        
+        // 5. Enviar a comprobación
+        $mandarAComprobacion = new MandarAComprobacionHandler(
+            $this->maquinaRepository, $this->usuarioRepository, $this->notificacionRepository,
+            new MySQLHistorialRepository($this->testDb)
+        );
+        
+        $comprobacionCommand = new MandarAComprobacionCommand(
+            $maquinaIdString,
+            $this->ensambladorId->value(),
+            'Máquina lista para comprobación'
+        );
+        $mandarAComprobacion->handle($comprobacionCommand);
+        
+        // 6. Enviar a distribución
+        $mandarADistribucion = new MandarADistribucionHandler(
+            $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository,
+            new MySQLDistribucionRepository($this->testDb),
+            $this->notificacionRepository,
+            new MySQLHistorialRepository($this->testDb)
+        );
+        
+        $distribucionCommand = new MandarADistribucionCommand(
+            $maquinaIdString,
+            $this->comprobadorId->value(),
+            'Máquina aprobada para distribución'
+        );
+        $mandarADistribucion->handle($distribucionCommand);
+        
+        // 7. Poner operativa
+        $ponerOperativa = new PonerOperativaHandler(
+            $this->maquinaRepository,
+            new MySQLDistribucionRepository($this->testDb),
+            new MySQLHistorialRepository($this->testDb)
+        );
+        
+        $operativaCommand = new PonerOperativaCommand($maquinaIdString);
+        $ponerOperativa->handle($operativaCommand);
+        
+        // Verificar estado final
+        $maquina = $this->maquinaRepository->findById(new Uuid($maquinaIdString));
+        $this->assertTrue($maquina->estado()->equals(EstadoMaquina::OPERATIVA()));
+        $this->assertTrue($maquina->etapa()->equals(EtapaMaquina::RECAUDACION()));
     }
     
     /**
@@ -216,18 +225,21 @@ $this->assertTrue($maquina->etapa()->equals(\maquinas_recreativas\Domain\Maquina
      */
     public function testFlujoCompletoReportes(): void
     {
-        // 1. Registrar usuarios
-        $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
+        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
         
-        $usuario1Command = new RegistrarUsuarioCommand(
-            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', 'password123', 'Usuario'
+        // Usuario 1
+        $usuario1Command = new RegistrarUsuarioAdminCommand(
+            'Usuario', 'Uno', '1111118111', 'usuario1@test.com', null, 'Password123!', 'Usuario', 'Activo'
         );
-        $usuario1Id = $registrarUsuario->handle($usuario1Command);
+        $usuario1 = $registrarAdminHandler->handle($usuario1Command);
+        $usuario1Id = $usuario1->getId();
         
-        $usuario2Command = new RegistrarUsuarioCommand(
-            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', 'password123', 'Usuario'
+        // Usuario 2
+        $usuario2Command = new RegistrarUsuarioAdminCommand(
+            'Usuario', 'Dos', '2222212222', 'usuario2@test.com', null, 'Password123!', 'Usuario', 'Activo'
         );
-        $usuario2Id = $registrarUsuario->handle($usuario2Command);
+        $usuario2 = $registrarAdminHandler->handle($usuario2Command);
+        $usuario2Id = $usuario2->getId();
         
         // 2. Crear reporte
         $crearReporte = new CrearReporteHandler($this->reporteRepository, $this->notificacionRepository, $this->usuarioRepository);
@@ -249,51 +261,52 @@ $this->assertTrue($maquina->etapa()->equals(\maquinas_recreativas\Domain\Maquina
         
         // 4. Verificar comentario
         $comentarios = $this->comentarioRepository->findByReporte(
-            new \maquinas_recreativas\Domain\Shared\ValueObjects\Uuid($reporteId),
-            new \maquinas_recreativas\Domain\Shared\ValueObjects\Uuid($usuario2Id->value())
+            new Uuid($reporteId),
+            new Uuid($usuario2Id->value())
         );
         
         $this->assertIsArray($comentarios);
         $this->assertCount(1, $comentarios);
     }
- /**
- * @test
- * CP-049 - Transacción con rollback
- */
-public function testTransaccionConRollback(): void
-{
-    $usuarioId = null;
     
-    $this->testDb->beginTransaction();
-    
-    try {
-        $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
+    /**
+     * @test
+     * CP-049 - Transacción con rollback
+     */
+    public function testTransaccionConRollback(): void
+    {
+        $usuarioId = null;
         
-        $usuarioCommand = new RegistrarUsuarioCommand(
-            'Usuario', 'Test', '9999999999', 'usuario@test.com', 'password123', 'Usuario'
-        );
-        $usuarioId = $registrarUsuario->handle($usuarioCommand);
+        $this->testDb->beginTransaction();
         
-        // Verificar que el usuario se guardó en la transacción
-        $usuarioEncontrado = $this->usuarioRepository->findById($usuarioId);
-        $this->assertNotNull($usuarioEncontrado, 'El usuario debería existir dentro de la transacción');
+        try {
+            $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
+            
+            $usuarioCommand = new RegistrarUsuarioAdminCommand(
+                'Usuario', 'Test', '9999999109', 'usuario@test.com', null, 'Password123!', 'Usuario', 'Activo'
+            );
+            $usuario = $registrarAdminHandler->handle($usuarioCommand);
+            $usuarioId = $usuario->getId();
+            
+            // Verificar que el usuario se guardó en la transacción
+            $usuarioEncontrado = $this->usuarioRepository->findById($usuarioId);
+            $this->assertNotNull($usuarioEncontrado, 'El usuario debería existir dentro de la transacción');
+            
+            // Forzar error para rollback
+            throw new \Exception('Error simulado para rollback');
+            
+            $this->testDb->commit();
+        } catch (\Exception $e) {
+            $this->testDb->rollback();
+            error_log("Rollback ejecutado correctamente: " . $e->getMessage());
+        }
         
-        // Forzar error para rollback
-        throw new \Exception('Error simulado para rollback');
-        
-        $this->testDb->commit();
-    } catch (\Exception $e) {
-        $this->testDb->rollback();
-        // Log del error para depuración
-        error_log("Rollback ejecutado correctamente: " . $e->getMessage());
+        // Verificar que el usuario NO se guardó después del rollback
+        if ($usuarioId !== null) {
+            $usuario = $this->usuarioRepository->findById($usuarioId);
+            $this->assertNull($usuario, 'El usuario no debería existir después del rollback');
+        } else {
+            $this->markTestSkipped('No se pudo crear el usuario para probar rollback');
+        }
     }
-    
-    // Verificar que el usuario NO se guardó después del rollback
-    if ($usuarioId !== null) {
-        $usuario = $this->usuarioRepository->findById($usuarioId);
-        $this->assertNull($usuario, 'El usuario no debería existir después del rollback');
-    } else {
-        $this->markTestSkipped('No se pudo crear el usuario para probar rollback');
-    }
-}
 }

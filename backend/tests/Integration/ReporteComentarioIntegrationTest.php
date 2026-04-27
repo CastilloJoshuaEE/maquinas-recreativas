@@ -15,12 +15,14 @@ use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
 use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
-use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
-use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminCommand;
+use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioCommand;
+use maquinas_recreativas\Application\Commands\Usuario\CambiarEstadoUsuarioHandler;
 use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteQuery;
 use maquinas_recreativas\Application\Queries\Comentario\ObtenerComentariosPorReporteHandler;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -51,23 +53,38 @@ class ReporteComentarioIntegrationTest extends TestCase
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosPrueba();
+        $this->activarUsuarios();
+    }
+    
+    private function activarUsuarios(): void
+    {
+        $cambiarEstadoHandler = new CambiarEstadoUsuarioHandler($this->usuarioRepository);
+        
+        if ($this->usuario1Id) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->usuario1Id, 'Activo'));
+        }
+        if ($this->usuario2Id) {
+            $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->usuario2Id, 'Activo'));
+        }
     }
     
     private function crearUsuariosPrueba(): void
     {
-        $registrarUsuario = new RegistrarUsuarioHandler($this->usuarioRepository, $this->passwordHasher);
+        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
         
         // Usuario 1 (Administrador)
-        $command1 = new RegistrarUsuarioCommand(
-            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', 'password123', 'Administrador'
+        $command1 = new RegistrarUsuarioAdminCommand(
+            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', null, 'Password123!', 'Administrador', 'Activo'
         );
-        $this->usuario1Id = $registrarUsuario->handle($command1);
+        $usuario1 = $registrarAdminHandler->handle($command1);
+        $this->usuario1Id = $usuario1->getId();
         
         // Usuario 2 (Tecnico)
-        $command2 = new RegistrarUsuarioCommand(
-            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', 'password123', 'Tecnico', 'Ensamblador'
+        $command2 = new RegistrarUsuarioAdminCommand(
+            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
         );
-        $this->usuario2Id = $registrarUsuario->handle($command2);
+        $usuario2 = $registrarAdminHandler->handle($command2);
+        $this->usuario2Id = $usuario2->getId();
         
         $this->assertNotNull($this->usuario1Id);
         $this->assertNotNull($this->usuario2Id);

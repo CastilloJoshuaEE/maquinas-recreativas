@@ -103,6 +103,12 @@ backend/
 │   │   ├── Comentario/
 │   │   │   ├── CrearComentarioCommand.php
 │   │   │   └── CrearComentarioHandler.php
+
+│   │   │   ├── EliminarComentarioCommand.php
+│   │   │   └── EliminarComentarioHandler.php
+
+│   │   │   ├── ActualizarComentarioCommand.php
+│   │   │   └── ActualizarComentarioHandler.php
 │   │   ├── Comercio/
 
 │   │   │   ├── ActualizarComercioCommand.php
@@ -320,7 +326,6 @@ backend/
 backend/Swagger/SwaggerConfig.php
 
 `BrevoEmailService.php``backend/Infrastructure/Services/Email/``EnviarEmailCommand.php``backend/Application/Commands/Email/``EnviarEmailHandler.php``backend/Application/Commands/Email/``EmailController.php``backend/Interfaces/Http/Controllers/`
-
 
 ```
 ├── Application/

@@ -114,7 +114,6 @@ vendor\b**in**\phpunit.bat
 
 o
 
-
 ejecutar todo:
 
 cd D:\xampp\htdocs\maquinas-recreativas\backend
@@ -154,7 +153,7 @@ php security-test.php
 
 php -S localhost:8000 -t backend/public
 
-# En otra terminal, ejecutar las pruebas de integración
+# En otra terminal, ejecutar las pruebas funcionales
 
 cd tests/Functional
 php run_tests.php
