@@ -1,0 +1,9 @@
+<!-- Widget del chatbot (visible cuando está abierto) -->
+<app-chatbot *ngIf="isOpen()"></app-chatbot>
+
+<!-- Botón flotante -->
+<div class="chatbot-floating" (click)="toggle()">
+  <mat-icon>{{ isOpen() ? 'close' : 'smart_toy' }}</mat-icon>
+  <span *ngIf="!isOpen()">¿Necesitas ayuda?</span>
+  <span *ngIf="isOpen()">Cerrar</span>
+</div>

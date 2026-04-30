@@ -1,0 +1,79 @@
+.machine-list {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.machine-list-header {
+  cursor: pointer;
+  color: white;
+  margin: 0;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.machine-list-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.maquinas-ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+
+.li-maquina {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.li-maquina:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.li-maquina.selected {
+  background: rgba(79, 107, 237, 0.3);
+  border-left-color: #4f6bed;
+}
+
+.li-maquina-content {
+  display: block;
+}
+
+.span-comercio-details {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.25rem;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.action-buttons-container {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons-container button {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .action-buttons-container {
+    flex-direction: column;
+  }
+}

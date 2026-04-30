@@ -1,0 +1,212 @@
+<!-- Botón flotante -->
+<div class="accessibility-floating" (click)="toggleWidget()" 
+     [class.active]="isOpen()" matTooltip="Opciones de accesibilidad">
+  <mat-icon>accessibility_new</mat-icon>
+  <span class="floating-text">Accesibilidad</span>
+</div>
+
+<!-- Panel de accesibilidad -->
+<div class="accessibility-panel" [class.open]="isOpen()">
+  <div class="panel-header">
+    <div class="header-title">
+      <mat-icon>accessibility_new</mat-icon>
+      <h3>Opciones de Accesibilidad</h3>
+    </div>
+    <button class="close-btn" (click)="toggleWidget()" matTooltip="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="panel-tabs">
+    <button [class.active]="activeTab() === 'visual'" (click)="setActiveTab('visual')">
+      <mat-icon>visibility</mat-icon>
+      <span>Visual</span>
+    </button>
+    <button [class.active]="activeTab() === 'reading'" (click)="setActiveTab('reading')">
+      <mat-icon>menu_book</mat-icon>
+      <span>Lectura</span>
+    </button>
+    <button [class.active]="activeTab() === 'navigation'" (click)="setActiveTab('navigation')">
+      <mat-icon>keyboard</mat-icon>
+      <span>Navegación</span>
+    </button>
+  </div>
+
+  <div class="panel-content">
+    <!-- Pestaña Visual -->
+    <div class="tab-content" *ngIf="activeTab() === 'visual'">
+      <!-- Tema -->
+      <div class="setting-group">
+        <label>Tema</label>
+        <div class="theme-buttons">
+          <button class="theme-btn" [class.active]="settings().themeMode === 'light'" 
+                  (click)="toggleTheme()" *ngIf="settings().themeMode !== 'dark'">
+            <mat-icon>light_mode</mat-icon>
+            <span>Claro</span>
+          </button>
+          <button class="theme-btn" [class.active]="settings().themeMode === 'dark'" 
+                  (click)="toggleTheme()" *ngIf="settings().themeMode !== 'light'">
+            <mat-icon>dark_mode</mat-icon>
+            <span>Oscuro</span>
+          </button>
+          <button class="theme-btn high-contrast" [class.active]="settings().highContrast" 
+                  (click)="toggleHighContrast()">
+            <mat-icon>contrast</mat-icon>
+            <span>Alto contraste</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tamaño de fuente -->
+      <div class="setting-group">
+        <label>Tamaño de texto</label>
+        <div class="font-size-controls">
+          <button class="size-btn" (click)="decreaseFontSize()" matTooltip="Reducir tamaño">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <span class="current-size">{{ getFontSizeLabel(settings().fontSize) }}</span>
+          <button class="size-btn" (click)="increaseFontSize()" matTooltip="Aumentar tamaño">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+        <div class="font-size-preview">
+          <span [style.fontSize]="settings().fontSize === 'small' ? '12px' : 
+                                   settings().fontSize === 'normal' ? '16px' : 
+                                   settings().fontSize === 'large' ? '20px' : '24px'">
+            Texto de ejemplo
+          </span>
+        </div>
+      </div>
+
+      <!-- Tipo de letra -->
+      <div class="setting-group">
+        <label>Tipo de letra</label>
+        <select class="accessibility-select" [value]="settings().fontFamily" 
+                (change)="setFontFamily($any($event.target).value)">
+          <option *ngFor="let opt of fontFamilyOptions" [value]="opt.value">
+            {{ opt.label }} - {{ opt.example }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtro de color -->
+      <div class="setting-group">
+        <label>Filtro de color</label>
+        <select class="accessibility-select" [value]="settings().colorFilter" 
+                (change)="setColorFilter($any($event.target).value)">
+          <option *ngFor="let opt of colorFilterOptions" [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Pestaña Lectura -->
+    <div class="tab-content" *ngIf="activeTab() === 'reading'">
+      <!-- Espaciado de texto -->
+      <div class="setting-group">
+        <label>Espaciado de texto</label>
+        <div class="spacing-buttons">
+<button *ngFor="let opt of textSpacingOptions" 
+        class="spacing-btn" [class.active]="settings().textSpacing === opt.value"
+        (click)="setTextSpacingFromString(opt.value)">
+  {{ opt.label }}
+</button>
+        </div>
+      </div>
+
+      <!-- Altura de línea -->
+      <div class="setting-group">
+        <label>Altura de línea: {{ settings().lineHeight }}</label>
+        <mat-slider min="1" max="3" step="0.1" class="slider-full">
+          <input matSliderThumb [value]="settings().lineHeight" 
+                 (valueChange)="updateLineHeight($event)">
+        </mat-slider>
+      </div>
+
+      <!-- Espaciado entre letras -->
+      <div class="setting-group">
+        <label>Espaciado entre letras: {{ settings().letterSpacing }}px</label>
+        <mat-slider min="0" max="5" step="0.5" class="slider-full">
+          <input matSliderThumb [value]="settings().letterSpacing" 
+                 (valueChange)="updateLetterSpacing($event)">
+        </mat-slider>
+      </div>
+
+      <!-- Espaciado entre palabras -->
+      <div class="setting-group">
+        <label>Espaciado entre palabras: {{ settings().wordSpacing }}px</label>
+        <mat-slider min="0" max="10" step="0.5" class="slider-full">
+          <input matSliderThumb [value]="settings().wordSpacing" 
+                 (valueChange)="updateWordSpacing($event)">
+        </mat-slider>
+      </div>
+
+      <!-- Reducir animaciones -->
+      <div class="setting-group">
+        <div class="toggle-item">
+          <label>Reducir animaciones y efectos visuales</label>
+          <mat-slide-toggle [checked]="settings().reduceAnimations" 
+                            (toggleChange)="toggleReduceAnimations()">
+          </mat-slide-toggle>
+        </div>
+        <p class="setting-hint">Reduce o elimina movimientos y animaciones en la interfaz</p>
+      </div>
+    </div>
+
+    <!-- Pestaña Navegación -->
+    <div class="tab-content" *ngIf="activeTab() === 'navigation'">
+      <!-- Indicador de enfoque -->
+      <div class="setting-group">
+        <div class="toggle-item">
+          <label>Indicador de enfoque visible</label>
+          <mat-slide-toggle [checked]="settings().focusIndicator" 
+                            (toggleChange)="toggleFocusIndicator()">
+          </mat-slide-toggle>
+        </div>
+        <p class="setting-hint">Resalta el elemento que tiene el foco del teclado</p>
+      </div>
+
+      <!-- Atajos de teclado -->
+      <div class="setting-group">
+        <label>Atajos de teclado</label>
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <kbd>Tab</kbd>
+            <span>Navegar entre elementos</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Enter</kbd> / <kbd>Espacio</kbd>
+            <span>Activar elemento</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Esc</kbd>
+            <span>Cerrar modales / Cerrar este panel</span>
+          </div>
+          <div class="shortcut-item">
+            <kbd>Alt</kbd> + <kbd>A</kbd>
+            <span>Abrir panel de accesibilidad</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de accesibilidad -->
+      <div class="info-box">
+        <mat-icon>info</mat-icon>
+        <div>
+          <strong>Navegación por teclado</strong>
+          <p>Puedes navegar por toda la aplicación usando solo el teclado. Usa TAB para moverte entre elementos y ENTER para seleccionar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón reset -->
+    <div class="reset-section">
+      <button class="reset-btn" (click)="resetSettings()">
+        <mat-icon>restore</mat-icon>
+        Restablecer configuración
+      </button>
+    </div>
+  </div>
+</div>

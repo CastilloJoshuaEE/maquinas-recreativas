@@ -1,0 +1,59 @@
+.registrar-usuario-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%);
+}
+
+.content-wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.page-header h2 {
+  color: white;
+  margin: 0;
+}
+
+.back-button {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.success-message {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 1rem;
+  }
+}

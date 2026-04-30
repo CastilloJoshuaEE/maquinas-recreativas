@@ -1,0 +1,214 @@
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%);
+}
+
+/* Estilos para el nav y botones del header */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+nav a {
+  color: #2c3e50;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background: rgba(79, 107, 237, 0.1);
+  color: #4f6bed;
+}
+
+/* Estilo para el botón "¿QUIERES TRABAJAR CON NOSOTROS?" - SIEMPRE VISIBLE */
+.btn-trabajar {
+  background: #4f6bed !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 1.2rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  display: inline-flex !important;  /* ← Asegurar visibilidad */
+  align-items: center !important;
+}
+
+.btn-trabajar:hover {
+  background: #3a5bd9 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 107, 237, 0.3);
+}
+
+/* Mensaje de error en el formulario */
+.error-message {
+  background: rgba(244, 67, 54, 0.1);
+  border-left: 4px solid #f44336;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ff6b6b;
+  font-size: 0.9rem;
+}
+
+.error-message mat-icon {
+  font-size: 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* Blur para el formulario mientras carga */
+.formulario_login.blur {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Asegurar que los botones de Angular Material se vean correctamente */
+::ng-deep .mat-mdc-button {
+  border-radius: 8px !important;
+}
+
+header {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  color: #2c3e50;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.pantalla_completa {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.contenedor_todo {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1100px;
+  padding: 1rem;
+  position: relative;
+}
+
+.contenedor_login_register {
+  flex: 1;
+  max-width: 450px;
+}
+
+.formulario_login {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  color: white;
+}
+
+.formulario_login h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.enlaces_recuperacion {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.enlaces_recuperacion a {
+  color: #4f6bed;
+  text-decoration: none;
+}
+
+.enlaces_recuperacion a:hover {
+  text-decoration: underline;
+}
+
+.boton-info-sistema {
+  position: absolute;
+  bottom: -60px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.boton-info-sistema:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Ajustes responsivos - mantener el botón visible siempre */
+@media (max-width: 850px) {
+  header {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  header h1 {
+    font-size: 1.2rem;
+  }
+  
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .btn-trabajar {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem !important;
+  }
+
+  .contenedor_todo {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .boton-info-sistema {
+    position: static;
+    margin-top: 1rem;
+  }
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .btn-trabajar {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem !important;
+  }
+  
+  .formulario_login {
+    padding: 1.5rem;
+  }
+}

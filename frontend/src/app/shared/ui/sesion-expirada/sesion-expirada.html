@@ -1,0 +1,24 @@
+<div class="sesion-expirada-modal">
+  <div class="modal-icon">
+    <mat-icon class="warning-icon">warning</mat-icon>
+  </div>
+  
+  <h2 mat-dialog-title>Sesión Expirada</h2>
+  
+  <div mat-dialog-content>
+    <p>{{ data.mensaje || 'Su sesión ha expirado por inactividad.' }}</p>
+    <p class="sub-message">Por seguridad, debe iniciar sesión nuevamente para continuar.</p>
+    
+    <div class="tiempo-info" *ngIf="data.tiempoRestante">
+      <mat-icon>hourglass_empty</mat-icon>
+      <span>Tiempo de inactividad: {{ data.tiempoRestante }} segundos</span>
+    </div>
+  </div>
+  
+  <div mat-dialog-actions align="end">
+    <button mat-raised-button color="primary" (click)="irALogin()">
+      <mat-icon>login</mat-icon>
+      Iniciar Sesión
+    </button>
+  </div>
+</div>

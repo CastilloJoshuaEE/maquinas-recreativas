@@ -1,0 +1,177 @@
+/**
+ * @fileoverview Estilos globales de la aplicación
+ * @description Estilos que se aplican en toda la aplicación
+ */
+
+@import './variables.scss';
+@import './mixins.scss';
+
+// Reset de estilos
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// Estilos base del body
+body {
+  font-family: $font-family-base;
+  background: $gradient-bg;
+  background-attachment: fixed;
+  color: $color-gray-800;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Enlaces
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+  
+  &:hover {
+    color: $color-primary-dark;
+  }
+}
+
+// Contenedor principal
+#root, app-root {
+  display: block;
+  min-height: 100vh;
+}
+
+// Utilidades de texto
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-muted { color: $color-gray-600; }
+.text-primary { color: $color-primary; }
+.text-success { color: $color-success; }
+.text-danger { color: $color-danger; }
+.text-warning { color: $color-warning; }
+
+// Utilidades de espaciado
+@for $i from 1 through 5 {
+  .m-#{$i} { margin: $spacing-4 * $i; }
+  .mt-#{$i} { margin-top: $spacing-4 * $i; }
+  .mb-#{$i} { margin-bottom: $spacing-4 * $i; }
+  .ml-#{$i} { margin-left: $spacing-4 * $i; }
+  .mr-#{$i} { margin-right: $spacing-4 * $i; }
+  .mx-#{$i} { margin-left: $spacing-4 * $i; margin-right: $spacing-4 * $i; }
+  .my-#{$i} { margin-top: $spacing-4 * $i; margin-bottom: $spacing-4 * $i; }
+  
+  .p-#{$i} { padding: $spacing-4 * $i; }
+  .pt-#{$i} { padding-top: $spacing-4 * $i; }
+  .pb-#{$i} { padding-bottom: $spacing-4 * $i; }
+  .pl-#{$i} { padding-left: $spacing-4 * $i; }
+  .pr-#{$i} { padding-right: $spacing-4 * $i; }
+  .px-#{$i} { padding-left: $spacing-4 * $i; padding-right: $spacing-4 * $i; }
+  .py-#{$i} { padding-top: $spacing-4 * $i; padding-bottom: $spacing-4 * $i; }
+}
+
+// Utilidades de display
+.d-none { display: none; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+// Utilidades de flex
+.flex-row { flex-direction: row; }
+.flex-column { flex-direction: column; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.align-start { align-items: flex-start; }
+.align-end { align-items: flex-end; }
+.align-center { align-items: center; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-nowrap { flex-wrap: nowrap; }
+.gap-1 { gap: $spacing-1; }
+.gap-2 { gap: $spacing-2; }
+.gap-3 { gap: $spacing-3; }
+.gap-4 { gap: $spacing-4; }
+
+// Utilidades de ancho
+.w-100 { width: 100%; }
+.w-75 { width: 75%; }
+.w-50 { width: 50%; }
+.w-25 { width: 25%; }
+.w-auto { width: auto; }
+
+// Utilidades de alto
+.h-100 { height: 100%; }
+.h-auto { height: auto; }
+
+// Utilidades de posición
+.position-relative { position: relative; }
+.position-absolute { position: absolute; }
+.position-fixed { position: fixed; }
+.position-sticky { position: sticky; }
+
+// Scrollbar personalizada para toda la app
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $color-gray-200;
+  border-radius: $border-radius-md;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $color-gray-500;
+  border-radius: $border-radius-md;
+  
+  &:hover {
+    background: $color-gray-600;
+  }
+}
+
+// Estilos para impresión
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+// Animaciones globales
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+// Clases de animación
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}

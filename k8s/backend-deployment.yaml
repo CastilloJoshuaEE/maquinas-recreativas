@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: recrea-sys
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      # initContainer copia el código al volumen compartido con nginx
+      initContainers:
+        - name: copy-code
+          image: recrea-backend:latest
+          imagePullPolicy: Never
+          command: ['sh', '-c', 'cp -rp /var/www/html/backend/. /shared-code/ && echo "Código copiado OK"']
+          volumeMounts:
+            - name: shared-code
+              mountPath: /shared-code
+
+      containers:
+        - name: php
+          image: recrea-backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9000
+          env:
+            - name: DB_HOST
+              value: "mysql-service"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "bd_recrea_sys"
+            - name: DB_USER
+              value: "recrea_user"
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_PASSWORD
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: APP_ENV
+              value: "production"
+            - name: APP_DEBUG
+              value: "false"
+          # El código ya está en la imagen - NO montar emptyDir aquí
+          # Solo montar el código compartido si se necesita sincronía con nginx
+          volumeMounts:
+            - name: shared-code
+              mountPath: /var/www/html/backend
+
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+            - name: shared-code
+              mountPath: /var/www/html/backend
+
+      volumes:
+        - name: shared-code
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: nginx-config

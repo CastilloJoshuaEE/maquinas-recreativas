@@ -3,7 +3,7 @@
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-echo "🔍 PRUEBA DE LATENCIA EN INSERCIÓN DE USUARIOS\n";
+echo " PRUEBA DE LATENCIA EN INSERCIÓN DE USUARIOS\n";
 echo "==============================================\n\n";
 
 $conn = $testDb->getConnection();
@@ -31,9 +31,9 @@ $result = $getIdStmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    echo "✅ UUID recuperado inmediatamente: " . $row['ID_Usuario'] . "\n";
+    echo " UUID recuperado inmediatamente: " . $row['ID_Usuario'] . "\n";
 } else {
-    echo "❌ No se pudo recuperar inmediatamente\n";
+    echo " No se pudo recuperar inmediatamente\n";
     
     // Esperar y reintentar
     sleep(1);
@@ -42,8 +42,8 @@ if ($result->num_rows > 0) {
     
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        echo "✅ UUID recuperado después de 1 segundo: " . $row['ID_Usuario'] . "\n";
+        echo " UUID recuperado después de 1 segundo: " . $row['ID_Usuario'] . "\n";
     }
 }
 
-echo "\n✅ Prueba completada\n";
+echo "\n Prueba completada\n";

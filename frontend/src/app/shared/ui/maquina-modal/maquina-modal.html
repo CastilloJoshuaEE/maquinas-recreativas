@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>{{ getTitulo() }}</h2>
+
+<form [formGroup]="maquinaForm" (ngSubmit)="guardar()">
+  <mat-dialog-content>
+    <div class="form-grid">
+      <!-- Nombre -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre de la máquina</mat-label>
+        <input matInput formControlName="nombre" placeholder="Ej: Arcade Deluxe v2">
+        <mat-error *ngIf="maquinaForm.get('nombre')?.hasError('required')">
+          El nombre es requerido
+        </mat-error>
+        <mat-error *ngIf="maquinaForm.get('nombre')?.hasError('minlength')">
+          Mínimo 3 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Tipo -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tipo de máquina</mat-label>
+        <input matInput formControlName="tipo" placeholder="Ej: Arcade, Pinball, Simulador">
+        <mat-error *ngIf="maquinaForm.get('tipo')?.hasError('required')">
+          El tipo es requerido
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Comercio -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Comercio</mat-label>
+        <mat-select formControlName="idComercio">
+          <mat-option *ngFor="let comercio of comercios" [value]="comercio.ID_Comercio">
+            {{ comercio.nombre || comercio.Nombre }} - {{ comercio.Direccion || comercio.Direccion }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="maquinaForm.get('idComercio')?.hasError('required')">
+          Seleccione un comercio
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Componentes (solo en creación) -->
+      <div *ngIf="data.modo === 'crear'" class="componentes-section">
+        <h3>Componentes</h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Placa Base</mat-label>
+          <mat-select formControlName="idPlaca">
+            <mat-option *ngFor="let comp of componentesDisponibles" [value]="comp.ID_Componente">
+              {{ comp.nombre }} - {{ comp.tipo }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="maquinaForm.get('idPlaca')?.hasError('required')">
+            Seleccione una placa base
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Carcasa</mat-label>
+          <mat-select formControlName="idCarcasa">
+            <mat-option *ngFor="let comp of componentesDisponibles" [value]="comp.ID_Componente">
+              {{ comp.nombre }} - {{ comp.tipo }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="maquinaForm.get('idCarcasa')?.hasError('required')">
+            Seleccione una carcasa
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Estado (solo en edición) -->
+      <mat-form-field *ngIf="data.modo === 'editar'" appearance="outline" class="full-width">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="estado">
+          <mat-option value="Operativa">Operativa</mat-option>
+          <mat-option value="No operativa">No operativa</mat-option>
+          <mat-option value="Retirada">Retirada</mat-option>
+          <mat-option value="Ensamblandose">Ensamblándose</mat-option>
+          <mat-option value="Comprobando">Comprobando</mat-option>
+          <mat-option value="Distribucion">Distribución</mat-option>
+          <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="cerrar()" [disabled]="guardando">Cancelar</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="guardando">
+      <mat-spinner diameter="20" *ngIf="guardando"></mat-spinner>
+      <span *ngIf="!guardando">{{ data.modo === 'crear' ? 'Crear' : 'Guardar' }}</span>
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -1,0 +1,15 @@
+.gestion-componentes-container { min-height: 100vh; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); }
+.content-wrapper { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.page-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.page-header h2 { color: white; margin: 0; }
+.back-button { color: white; background: rgba(255,255,255,0.15); }
+.selected-machine-info { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; color: white; }
+.selected-machine-info h3 { color: white; margin-bottom: 0.5rem; }
+.componentes-section, .componentes-en-uso-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.componentes-section h3, .componentes-en-uso-section h3 { color: white; margin-bottom: 1rem; }
+.filtros-componentes { margin-bottom: 1rem; }
+.filtros-componentes mat-form-field { width: 200px; }
+table { width: 100%; background: rgba(255,255,255,0.95); border-radius: 8px; overflow: hidden; }
+.loading-container { display: flex; justify-content: center; padding: 2rem; }
+.no-data { text-align: center; padding: 2rem; color: rgba(255,255,255,0.7); }
+@media (max-width: 768px) { .content-wrapper { padding: 1rem; } .filtros-componentes mat-form-field { width: 100%; } }

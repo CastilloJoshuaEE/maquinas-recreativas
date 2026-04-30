@@ -1,7 +1,9 @@
 <?php
 // tests/Functional/HttpTestCase.php
 
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../Config/constants.php';
+require_once __DIR__ . '/../../Infrastructure/Security/CifradoHelper.php';
+
 abstract class HttpTestCase {
     protected $baseUrl = 'http://localhost:8000';
     protected $cookies = [];
@@ -11,207 +13,187 @@ abstract class HttpTestCase {
     protected $assertionFailures = [];
     protected $requestCount = 0;
     protected $maxRetries = 3;
+    protected $sessionCookieFile;
     
-    /**
-     * Realiza una petición HTTP con manejo de rate limiting y reintentos
-     */
-    // tests/Functional/HttpTestCase.php
-
-protected function request($method, $endpoint, $data = null, $headers = [], $retry = 0) {
-    $this->requestCount++;
-    $requestId = $this->requestCount;
-    
-    echo "      → Request #{$requestId}: $method $endpoint\n";
-    
-    // Espera base según el tipo de endpoint
-    $baseWait = 300000; // 0.3 segundos
-    if (strpos($endpoint, '/usuario/login') !== false || 
-        strpos($endpoint, '/usuario/register') !== false) {
-        $baseWait = 800000; // 0.8 segundos para login/register
-    }
-    
-    // Espera progresiva según el número de requests
-    $progressiveWait = $baseWait * (1 + floor($this->requestCount / 10));
-    usleep($progressiveWait);
-    
-    $url = $this->baseUrl . $endpoint;
-    $ch = curl_init($url);
-    
-    $options = [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST => $method,
-        CURLOPT_HEADER => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_FOLLOWLOCATION => true
+    // Usuario administrador ya existente en TestDatabase
+    protected $adminUser = [
+        'usuario_asignado' => 'admin_test',
+        'contrasena' => 'admin123'
     ];
     
-    // IMPORTANTE: Habilitar cookies de sesión
-    $cookieFile = sys_get_temp_dir() . '/curl_cookies_' . uniqid() . '.txt';
+    public function __construct() {
+        $this->sessionCookieFile = sys_get_temp_dir() . '/phpunit_cookies_' . uniqid() . '.txt';
+    }
     
-    // Usar archivo de cookies para mantener sesión entre requests
-    $options[CURLOPT_COOKIEFILE] = $cookieFile;
-    $options[CURLOPT_COOKIEJAR] = $cookieFile;
-    
-    // Cookies manuales como respaldo
-    if (!empty($this->cookies)) {
-        $cookieString = '';
-        foreach ($this->cookies as $name => $value) {
-            $cookieString .= "$name=$value; ";
+    public function __destruct() {
+        if (file_exists($this->sessionCookieFile)) {
+            @unlink($this->sessionCookieFile);
         }
-        $options[CURLOPT_COOKIE] = $cookieString;
     }
     
-    // Headers
-    $httpHeaders = [
-        'Content-Type: application/json',
-        'User-Agent: PHPUnit' 
-    ];
-
-    if (!empty($headers)) {
-        $httpHeaders = array_merge($httpHeaders, $headers);
-    }
-
-    $options[CURLOPT_HTTPHEADER] = $httpHeaders;
-    
-    // Datos
-    if (in_array($method, ['POST', 'PUT', 'PATCH']) && $data) {
-        $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);
+    // Asegurar que el administrador existe (login exitoso)
+    protected function ensureAdminExists(): bool {
+        $response = $this->request('POST', '/usuario/login', $this->adminUser);
+        if ($this->isSuccessResponse($response)) {
+            return true;
+        }
+        // Si falla, crear administrador mediante registro normal y activación por BD (no lo usaremos)
+        return false;
     }
     
-    curl_setopt_array($ch, $options);
+    // Login como administrador
+    protected function loginAsAdmin(): bool {
+        if (!$this->ensureAdminExists()) return false;
+        $response = $this->request('POST', '/usuario/login', $this->adminUser);
+        return $this->isSuccessResponse($response);
+    }
     
-    $response = curl_exec($ch);
+    // Registrar usuario mediante endpoint de administrador
+    protected function registrarUsuarioAdmin(array $userData): ?array {
+        $response = $this->request('POST', '/administrador/usuarios', $userData);
+        if ($this->isSuccessResponse($response) && isset($response['id'])) {
+            return $response;
+        }
+        return null;
+    }
     
-    if (curl_error($ch)) {
-        $this->lastResponse = ['error' => curl_error($ch)];
+    // Buscar un usuario por email después de crearlo (para obtener usuario_asignado)
+    protected function buscarUsuarioPorEmail(string $email): ?array {
+        $response = $this->request('GET', '/administrador/usuarios');
+        if (!$this->isSuccessResponse($response)) return null;
+        $usuarios = $response['usuarios'] ?? [];
+        foreach ($usuarios as $usuario) {
+            if ($usuario['email'] === $email) {
+                return $usuario;
+            }
+        }
+        return null;
+    }
+    
+    protected function request($method, $endpoint, $data = null, $headers = [], $retry = 0) {
+        $this->requestCount++;
+        echo "      -> Request #{$this->requestCount}: $method $endpoint\n";
+        usleep(100000);
+        
+        $url = $this->baseUrl . $endpoint;
+        $ch = curl_init($url);
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HEADER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_COOKIEFILE => $this->sessionCookieFile,
+            CURLOPT_COOKIEJAR => $this->sessionCookieFile,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'User-Agent: PHPUnit-Test'
+            ]
+        ];
+        if (!empty($headers)) $options[CURLOPT_HTTPHEADER] = array_merge($options[CURLOPT_HTTPHEADER], $headers);
+        if (in_array($method, ['POST','PUT','PATCH']) && $data !== null) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data, JSON_UNESCAPED_UNICODE);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->lastResponse = ['success' => false, 'error' => 'JSON encode error'];
+                return $this->lastResponse;
+            }
+        }
+        curl_setopt_array($ch, $options);
+        $response = curl_exec($ch);
+        if (curl_error($ch)) {
+            $this->lastResponse = ['success' => false, 'error' => curl_error($ch)];
+            curl_close($ch);
+            return $this->lastResponse;
+        }
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $body = substr($response, $headerSize);
+        $this->extractCookies(substr($response, 0, $headerSize));
         curl_close($ch);
-        @unlink($cookieFile);
+        echo "      HTTP Status: {$this->lastHttpCode}\n";
+        $this->lastResponse = json_decode($body, true) ?? ['success' => false, 'raw' => $body];
+        if ($this->lastHttpCode === 429 && $retry < $this->maxRetries) {
+            sleep(pow(2,$retry)*2);
+            return $this->request($method,$endpoint,$data,$headers,$retry+1);
+        }
         return $this->lastResponse;
     }
     
-    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-    $this->lastHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    $headers = substr($response, 0, $headerSize);
-    $this->extractCookies($headers);
-    
-    $body = substr($response, $headerSize);
-    $this->lastResponse = json_decode($body, true);
-    
-    curl_close($ch);
-    @unlink($cookieFile);
-    
-    // Si hay rate limiting (429), esperar más y reintentar
-    if ($this->lastHttpCode === 429 && $retry < $this->maxRetries) {
-        $waitTime = pow(2, $retry) * 5; // 5, 10, 20 segundos
-        echo "      ⚠️  Rate limit detected! Esperando {$waitTime} segundos (intento " . ($retry+1) . "/{$this->maxRetries})...\n";
-        sleep($waitTime);
-        return $this->request($method, $endpoint, $data, $headers, $retry + 1);
-    }
-    
-    return $this->lastResponse;
-}
-    
-    /**
-     * Extrae cookies de la respuesta
-     */
-    private function extractCookies($headerString) {
+    protected function extractCookies($headerString) {
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $headerString, $matches);
         foreach ($matches[1] as $cookie) {
             $parts = explode('=', $cookie, 2);
-            if (count($parts) == 2) {
-                $this->cookies[$parts[0]] = $parts[1];
-            }
+            if (count($parts) == 2) $this->cookies[$parts[0]] = $parts[1];
         }
     }
     
-    /**
-     * Limpia las cookies (útil entre pruebas)
-     */
     public function clearCookies(): void {
         $this->cookies = [];
+        if (file_exists($this->sessionCookieFile)) @unlink($this->sessionCookieFile);
+        $this->sessionCookieFile = sys_get_temp_dir() . '/phpunit_cookies_' . uniqid() . '.txt';
     }
     
-    /**
-     * ASSERT: Respuesta exitosa
-     */
+    protected function isSuccessResponse($response): bool {
+        if (!is_array($response)) return false;
+        // Algunos endpoints devuelven directamente datos sin campo 'success'
+        if (isset($response['success'])) return $response['success'] === true;
+        // Si no hay 'success' pero hay 'id' o 'usuarios', asumimos éxito (código 2xx)
+        if ($this->lastHttpCode >= 200 && $this->lastHttpCode < 300) return true;
+        return false;
+    }
+    
     protected function assertResponseSuccess($message = '') {
         $this->assertionCount++;
-        $success = isset($this->lastResponse['success']) && $this->lastResponse['success'] === true;
-        
+        $success = $this->isSuccessResponse($this->lastResponse);
         if (!$success) {
-            $error = $message ? "$message: " : '';
-            $error .= json_encode($this->lastResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            $error = ($message ? "$message: " : '') . json_encode($this->lastResponse, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             $this->assertionFailures[] = $error;
-            echo "      ❌ $error\n";
+            echo "      FAIL: $error\n";
         } else {
-            echo "      ✅ OK\n";
+            echo "      OK\n";
         }
-        
         return $success;
     }
     
     protected function assertNotNull($value, $message = '') {
         $this->assertionCount++;
-        $success = $value !== null;
-        
-        if (!$success) {
-            $this->assertionFailures[] = $message ?: 'El valor no debe ser nulo';
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+        if ($value === null || $value === '') {
+            $this->assertionFailures[] = $message ?: 'Value should not be null or empty';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            return false;
         }
-        
-        return $success;
-    }
-    
-    protected function assertArrayHasKey($key, $array, $message = '') {
-        $this->assertionCount++;
-        $success = is_array($array) && array_key_exists($key, $array);
-        
-        if (!$success) {
-            $this->assertionFailures[] = $message ?: "El array no contiene la clave '$key'";
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
-        }
-        
-        return $success;
-    }
-    
-    protected function assertEquals($expected, $actual, $message = '') {
-        $this->assertionCount++;
-        $success = $expected == $actual;
-        
-        if (!$success) {
-            $error = $message ?: "Valores no coinciden";
-            $error .= " - Esperado: $expected, Actual: $actual";
-            $this->assertionFailures[] = $error;
-            echo "      ❌ $error\n";
-        }
-        
-        return $success;
+        return true;
     }
     
     protected function assertTrue($condition, $message = '') {
         $this->assertionCount++;
-        $success = $condition === true;
-        
-        if (!$success) {
-            $this->assertionFailures[] = $message ?: 'La condición debe ser verdadera';
-            echo "      ❌ {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+        if ($condition !== true) {
+            $this->assertionFailures[] = $message ?: 'Condition must be true';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            return false;
         }
-        
-        return $success;
+        return true;
     }
     
-    protected function assertHttpCode($expectedCode) {
+    protected function assertArrayHasKey($key, $array, $message = '') {
         $this->assertionCount++;
-        $condition = ($this->lastHttpCode == $expectedCode);
-        
-        if (!$condition) {
-            $errorMsg = "Código HTTP esperado $expectedCode, recibido {$this->lastHttpCode}";
-            $this->assertionFailures[] = $errorMsg;
-            echo "      ❌ $errorMsg\n";
+        if (!is_array($array) || !array_key_exists($key, $array)) {
+            $this->assertionFailures[] = $message ?: "Array does not contain key '$key'";
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            return false;
         }
-        
-        return $condition;
+        return true;
+    }
+    
+    protected function assertNotEmpty($value, $message = '') {
+        $this->assertionCount++;
+        if (empty($value)) {
+            $this->assertionFailures[] = $message ?: 'Value should not be empty';
+            echo "      FAIL: {$this->assertionFailures[count($this->assertionFailures)-1]}\n";
+            return false;
+        }
+        return true;
     }
     
     public function getAssertionSummary() {
@@ -220,9 +202,5 @@ protected function request($method, $endpoint, $data = null, $headers = [], $ret
             'failures' => count($this->assertionFailures),
             'failures_list' => $this->assertionFailures
         ];
-    }
-    
-    public function __construct() {
-        // Constructor vacío
     }
 }

@@ -5,25 +5,32 @@
  * Esta excepción se lanza cuando falla la validación de datos en el sistema,
  * como contraseñas cortas, emails inválidos, etc.
  */
-class ValidacionDatosException extends Exception {
+
+namespace maquinas_recreativas\Tests\Exceptions;
+
+use Exception;
+use Throwable;
+
+class ValidacionDatosException extends Exception
+{
     /**
      * @var array Detalles adicionales del error de validación
      */
-    private $detalles;
+    private array $detalles;
 
     /**
      * Constructor de la excepción
      * 
      * @param string $message Mensaje descriptivo del error
-     * @param int $code Código de error (usar códigos > 1000 para errores de validación)
-     * @param array $detalles Datos adicionales sobre el error (opcional)
-     * @param Throwable|null $previous Excepción previa (para encadenamiento)
+     * @param int $code Código de error
+     * @param array $detalles Datos adicionales sobre el error
+     * @param Throwable|null $previous Excepción previa
      */
     public function __construct(
-        string $message = "", 
-        int $code = 0, 
-        array $detalles = [], 
-        Throwable $previous = null
+        string $message = "",
+        int $code = 0,
+        array $detalles = [],
+        ?Throwable $previous = null
     ) {
         parent::__construct($message, $code, $previous);
         $this->detalles = $detalles;
@@ -32,37 +39,21 @@ class ValidacionDatosException extends Exception {
     /**
      * Obtiene los detalles adicionales del error
      * 
-     * @return array Detalles del error
+     * @return array
      */
-    public function getDetalles(): array {
+    public function getDetalles(): array
+    {
         return $this->detalles;
     }
 
     /**
-     * Representación string de la excepción
-     * 
-     * @return string
-     */
-    public function __toString(): string {
-        $base = parent::__toString();
-        
-        if (!empty($this->detalles)) {
-            $base .= "\nDetalles: " . json_encode($this->detalles, JSON_PRETTY_PRINT);
-        }
-        
-        return $base;
-    }
-
-    /**
-     *    
-     * CP-006
-     * Prueba el registro fallido con contraseña corta.
-     * Factory method para crear una excepción de validación de contraseña
+     * Factory method para crear una excepción de contraseña corta
      * 
      * @param int $minLength Longitud mínima requerida
-     * @return ValidacionDatosException
+     * @return self
      */
-    public static function forPasswordTooShort(int $minLength): ValidacionDatosException {
+    public static function forPasswordTooShort(int $minLength): self
+    {
         return new self(
             "La contraseña debe tener al menos {$minLength} caracteres",
             1200,
@@ -74,9 +65,10 @@ class ValidacionDatosException extends Exception {
      * Factory method para crear una excepción de email inválido
      * 
      * @param string $email Email inválido
-     * @return ValidacionDatosException
+     * @return self
      */
-    public static function forInvalidEmail(string $email): ValidacionDatosException {
+    public static function forInvalidEmail(string $email): self
+    {
         return new self(
             "El email proporcionado no es válido",
             1201,

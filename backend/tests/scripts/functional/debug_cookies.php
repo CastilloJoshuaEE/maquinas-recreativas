@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../Functional/HttpTestCase.php';
 
 class DebugCookiesTest extends HttpTestCase {
     public function testCookies() {
-        echo "🔍 DEBUG: Verificando manejo de cookies\n";
+        echo " DEBUG: Verificando manejo de cookies\n";
         echo "======================================\n\n";
         
         // Registrar usuario
@@ -37,7 +37,7 @@ class DebugCookiesTest extends HttpTestCase {
         echo "Verificando sesión...\n";
         echo "Cookies actuales: " . json_encode($this->cookies) . "\n";
         
-        echo "\n✅ Debug completado\n";
+        echo "\n Debug completado\n";
     }
 }
 

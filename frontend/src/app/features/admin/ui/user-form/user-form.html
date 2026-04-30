@@ -1,0 +1,169 @@
+<div class="user-form-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ modo === 'crear' ? 'person_add' : modo === 'estado' ? 'swap_horiz' : 'edit' }}</mat-icon>
+        {{ formTitle }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+
+      <div *ngIf="success" class="success-message">
+        <mat-icon>check_circle</mat-icon>
+        <p>¡Operación realizada correctamente!</p>
+      </div>
+
+      <!-- Modo Estado -->
+      <form [formGroup]="userForm" (ngSubmit)="onSubmitForm()" *ngIf="modo === 'estado'">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option *ngFor="let estado of estados" [value]="estado">
+              {{ estado }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matPrefix>toggle_on</mat-icon>
+          <mat-error *ngIf="isFieldInvalid('estado')">{{ getFieldError('estado') }}</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+            <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+            <span *ngIf="!submitting">{{ submitLabel }}</span>
+          </button>
+          <button mat-button type="button" (click)="onCancelForm()">Cancelar</button>
+        </div>
+      </form>
+
+      <!-- Modo Crear/Editar con Stepper -->
+      <mat-stepper [linear]="true" #stepper *ngIf="modo !== 'estado'">
+        <!-- Paso 1: Información Personal -->
+        <mat-step [stepControl]="userForm">
+          <form [formGroup]="userForm">
+            <ng-template matStepLabel>Información Personal</ng-template>
+            
+            <div class="step-content">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nombre</mat-label>
+                <input matInput formControlName="nombre" placeholder="Ingrese el nombre">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('nombre')">{{ getFieldError('nombre') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Apellido</mat-label>
+                <input matInput formControlName="apellido" placeholder="Ingrese el apellido">
+                <mat-icon matPrefix>person</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('apellido')">{{ getFieldError('apellido') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Cédula</mat-label>
+                <input matInput formControlName="ci" placeholder="Número de cédula" maxlength="10">
+                <mat-icon matPrefix>badge</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('ci')">{{ getFieldError('ci') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Correo Electrónico</mat-label>
+                <input matInput formControlName="email" placeholder="ejemplo@correo.com" type="email">
+                <mat-icon matPrefix>email</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('email')">{{ getFieldError('email') }}</mat-error>
+              </mat-form-field>
+            </div>
+            
+            <div class="step-actions">
+              <button mat-button matStepperNext [disabled]="userForm.get('nombre')?.invalid || userForm.get('apellido')?.invalid || userForm.get('ci')?.invalid || userForm.get('email')?.invalid">
+                Siguiente
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Paso 2: Credenciales -->
+        <mat-step [stepControl]="userForm">
+          <form [formGroup]="userForm">
+            <ng-template matStepLabel>Credenciales</ng-template>
+            
+            <div class="step-content">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Usuario Asignado</mat-label>
+                <input matInput formControlName="usuario_asignado" placeholder="Nombre de usuario">
+                <mat-icon matPrefix>account_circle</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('usuario_asignado')">{{ getFieldError('usuario_asignado') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Contraseña</mat-label>
+                <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+                <mat-icon matPrefix>lock</mat-icon>
+                <mat-icon matSuffix (click)="hidePassword = !hidePassword">
+                  {{hidePassword ? 'visibility_off' : 'visibility'}}
+                </mat-icon>
+                <mat-error *ngIf="isFieldInvalid('contrasena')">{{ getFieldError('contrasena') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width" *ngIf="modo === 'crear'">
+                <mat-label>Confirmar Contraseña</mat-label>
+                <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmar_contrasena">
+                <mat-icon matPrefix>lock</mat-icon>
+                <mat-icon matSuffix (click)="hideConfirmPassword = !hideConfirmPassword">
+                  {{hideConfirmPassword ? 'visibility_off' : 'visibility'}}
+                </mat-icon>
+                <mat-error *ngIf="userForm.hasError('passwordMismatch') && (userForm.get('confirmar_contrasena')?.dirty || userForm.get('confirmar_contrasena')?.touched)">
+                  Las contraseñas no coinciden
+                </mat-error>
+              </mat-form-field>
+            </div>
+            
+            <div class="step-actions">
+              <button mat-button matStepperPrevious>Atrás</button>
+              <button mat-button matStepperNext [disabled]="userForm.get('usuario_asignado')?.invalid || userForm.get('contrasena')?.invalid || (modo === 'crear' && userForm.hasError('passwordMismatch'))">
+                Siguiente
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Paso 3: Rol y Configuración -->
+        <mat-step [stepControl]="userForm">
+          <form [formGroup]="userForm">
+            <ng-template matStepLabel>Rol y Configuración</ng-template>
+            
+            <div class="step-content">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Tipo de Usuario</mat-label>
+                <mat-select formControlName="tipo">
+                  <mat-option *ngFor="let rol of roles" [value]="rol">{{ rol }}</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>work</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('tipo')">{{ getFieldError('tipo') }}</mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width" *ngIf="userForm.get('tipo')?.value === 'Tecnico'">
+                <mat-label>Especialidad</mat-label>
+                <mat-select formControlName="especialidad">
+                  <mat-option *ngFor="let esp of especialidades" [value]="esp">{{ esp }}</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>build</mat-icon>
+                <mat-error *ngIf="isFieldInvalid('especialidad')">{{ getFieldError('especialidad') }}</mat-error>
+              </mat-form-field>
+            </div>
+            
+            <div class="step-actions">
+              <button mat-button matStepperPrevious>Atrás</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="userForm.invalid || submitting">
+                <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+                <span *ngIf="!submitting">{{ submitLabel }}</span>
+              </button>
+            </div>
+          </form>
+        </mat-step>
+      </mat-stepper>
+    </mat-card-content>
+  </mat-card>
+</div>

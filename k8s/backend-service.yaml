@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: recrea-sys
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 80
+      targetPort: 9000
+  type: ClusterIP

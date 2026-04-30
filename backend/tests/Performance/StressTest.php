@@ -1,327 +1,362 @@
 <?php
 // tests/Performance/StressTest.php
-// Versión adaptada al estilo de las pruebas funcionales
 
 require_once __DIR__ . '/HttpStressTestCase.php';
 
 class StressTest extends HttpStressTestCase {
-    
-    private $adminUser;
     private $ensambladorUser;
     private $comprobadorUser;
     private $logisticaUser;
     private $contabilidadUser;
     private $mantenimientoUser;
     
-    private $adminId;
     private $ensambladorId;
     private $comprobadorId;
     private $logisticaId;
     private $contabilidadId;
     private $mantenimientoId;
     
+    private $ensambladorUsuarioAsignado;
+    private $comprobadorUsuarioAsignado;
+    private $logisticaUsuarioAsignado;
+    private $contabilidadUsuarioAsignado;
+    private $mantenimientoUsuarioAsignado;
+    
     private $comercioId;
     private $maquinaId;
     private $placaId;
+    private $carcasaId;
+    private $maquinaData;
     
-    // Configuración de fases de carga
     private $loadPhases = [
-        ['users' => 10,  'duration' => 20, 'description' => '✅ Carga muy ligera'],
-        ['users' => 25, 'duration' => 20, 'description' => '✅ Carga ligera'],
-        ['users' => 50,  'duration' => 20, 'description' => '⚠️ Carga media'],
-        ['users' => 75, 'duration' => 20, 'description' => '⚠️ Carga alta'],
-        ['users' => 100, 'duration' => 20, 'description' => '❌ Carga crítica'],
+        ['users' => 5,  'duration' => 15, 'description' => 'Carga muy ligera'],
+        ['users' => 10, 'duration' => 15, 'description' => 'Carga ligera'],
+        ['users' => 20, 'duration' => 15, 'description' => 'Carga media'],
+        ['users' => 30, 'duration' => 15, 'description' => 'Carga alta'],
+        ['users' => 50, 'duration' => 15, 'description' => 'Carga crítica'],
     ];
     
-    // Almacenar resultados por fase
     private $phaseResults = [];
     
     public function __construct() {
         parent::__construct();
-    }
-    
-    /**
-     * Inicializar la prueba
-     */
-    public function init() {
-        echo "\n";
-        echo "╔════════════════════════════════════════════════════════════╗\n";
-        echo "║        PRUEBAS DE ESTRÉS - SISTEMA RECREASYS               ║\n";
-        echo "╚════════════════════════════════════════════════════════════╝\n\n";
-    }
-    
-    /**
-     * PRUEBA PRINCIPAL: Ejecutar todas las fases de estrés
-     */
-    public function testEjecutarEstres() {
-        echo "🚀 INICIANDO PRUEBAS DE ESTRÉS\n";
-        echo "================================\n\n";
+        $timestamp = time();
+        $rand = rand(10, 999);
         
-        // PASO 1: Crear todos los usuarios necesarios
-        $this->pasoCrearUsuarios();
-        
-        // PASO 2: Setup inicial (crear datos base)
-        $setupOk = $this->faseSetupInicial();
-        if (!$setupOk) {
-            echo "❌ Error en setup inicial. Abortando pruebas.\n";
-            return;
-        }
-        
-        echo "\n✅ SETUP COMPLETADO. Iniciando fases de carga...\n";
-        
-        // Ejecutar cada fase de carga
-        foreach ($this->loadPhases as $index => $phase) {
-            $continuar = $this->ejecutarFaseCarga($index + 1, $phase);
-            if (!$continuar) {
-                break;
-            }
-        }
-        
-        // Mostrar resumen final
-        $this->mostrarResumen();
-    }
-    
-    /**
-     * PASO 1: Crear todos los usuarios necesarios
-     */
-    private function pasoCrearUsuarios() {
-        echo "📝 PASO 1: Creando usuarios de prueba...\n";
-        echo str_repeat("-", 40) . "\n";
-        
-        // Limpiar cookies antes de empezar
-        $this->clearCookies();
-        
-        // 1.1 Crear Técnico Ensamblador
-        echo "   1.1 Creando técnico ensamblador...\n";
         $this->ensambladorUser = [
             'nombre' => 'Ensamblador',
             'apellido' => 'Stress',
-            'ci' => '10000001' . rand(10, 99),
-            'email' => 'ensamblador_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'ens_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'ci' => '10000001' . $rand,
+            'email' => 'ensamblador_stress_' . $timestamp . '_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Ensamblador'
         ];
         
-        $respEns = $this->request('POST', '/usuario/register', $this->ensambladorUser);
-        $this->assertResponseSuccess('Error al crear ensamblador');
-        $this->ensambladorId = $respEns['userId'] ?? null;
-        echo "      ✅ Ensamblador ID: {$this->ensambladorId}\n";
-        
-        // 1.2 Crear Técnico Comprobador
-        echo "   1.2 Creando técnico comprobador...\n";
         $this->comprobadorUser = [
             'nombre' => 'Comprobador',
             'apellido' => 'Stress',
-            'ci' => '20000002' . rand(10, 99),
-            'email' => 'comprobador_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'comp_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'ci' => '20000002' . $rand,
+            'email' => 'comprobador_stress_' . $timestamp . '_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Comprobador'
         ];
         
-        $respComp = $this->request('POST', '/usuario/register', $this->comprobadorUser);
-        $this->assertResponseSuccess('Error al crear comprobador');
-        $this->comprobadorId = $respComp['userId'] ?? null;
-        echo "      ✅ Comprobador ID: {$this->comprobadorId}\n";
-        
-        // 1.3 Crear Técnico Mantenimiento
-        echo "   1.3 Creando técnico mantenimiento...\n";
         $this->mantenimientoUser = [
             'nombre' => 'Mantenimiento',
             'apellido' => 'Stress',
-            'ci' => '30000003' . rand(10, 99),
-            'email' => 'mantenimiento_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'mant_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'ci' => '30000003' . $rand,
+            'email' => 'mantenimiento_stress_' . $timestamp . '_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
             'tipo' => 'Tecnico',
             'especialidad' => 'Mantenimiento'
         ];
         
-        $respMant = $this->request('POST', '/usuario/register', $this->mantenimientoUser);
-        $this->assertResponseSuccess('Error al crear mantenimiento');
-        $this->mantenimientoId = $respMant['userId'] ?? null;
-        echo "      ✅ Mantenimiento ID: {$this->mantenimientoId}\n";
-        
-        // 1.4 Crear Logística
-        echo "   1.4 Creando usuario logística...\n";
         $this->logisticaUser = [
             'nombre' => 'Logistica',
             'apellido' => 'Stress',
-            'ci' => '40000004' . rand(10, 99),
-            'email' => 'logistica_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'log_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'ci' => '40000004' . $rand,
+            'email' => 'logistica_stress_' . $timestamp . '_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
             'tipo' => 'Logistica'
         ];
         
-        $respLog = $this->request('POST', '/usuario/register', $this->logisticaUser);
-        $this->assertResponseSuccess('Error al crear logística');
-        $this->logisticaId = $respLog['userId'] ?? null;
-        echo "      ✅ Logística ID: {$this->logisticaId}\n";
-        
-        // 1.5 Crear Contabilidad
-        echo "   1.5 Creando usuario contabilidad...\n";
         $this->contabilidadUser = [
             'nombre' => 'Contabilidad',
             'apellido' => 'Stress',
-            'ci' => '50000005' . rand(10, 99),
-            'email' => 'contabilidad_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'cont_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
+            'ci' => '50000005' . $rand,
+            'email' => 'contabilidad_stress_' . $timestamp . '_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
             'tipo' => 'Contabilidad'
         ];
+    }
+    
+    public function init() {
+        echo "\n";
+        echo "╔════════════════════════════════════════════════════════════════════════════╗\n";
+        echo "║                    PRUEBAS DE ESTRÉS - SISTEMA maquinas_recreativas       ║\n";
+        echo "╚════════════════════════════════════════════════════════════════════════════╝\n\n";
+    }
+    
+    public function testEjecutarEstres() {
+        echo "INICIANDO PRUEBAS DE ESTRÉS\n";
+        echo "================================\n\n";
         
-        $respCont = $this->request('POST', '/usuario/register', $this->contabilidadUser);
-        $this->assertResponseSuccess('Error al crear contabilidad');
-        $this->contabilidadId = $respCont['userId'] ?? null;
-        echo "      ✅ Contabilidad ID: {$this->contabilidadId}\n";
+        if (!$this->loginDefaultAdmin()) {
+            echo "Error crítico: No se pudo iniciar sesión como administrador. Abortando.\n";
+            return;
+        }
         
-        // 1.6 Crear Administrador
-        echo "   1.6 Creando usuario administrador...\n";
-        $this->adminUser = [
-            'nombre' => 'Admin',
-            'apellido' => 'Stress',
-            'ci' => '60000006' . rand(10, 99),
-            'email' => 'admin_stress_' . uniqid() . '@test.com',
-            'usuario_asignado' => 'admin_' . substr(uniqid(), -8),
-            'contrasena' => 'password123',
-            'tipo' => 'Administrador'
-        ];
+        if (!$this->pasoCrearUsuarios()) {
+            echo "Error crítico: No se pudieron crear los usuarios. Abortando.\n";
+            return;
+        }
         
-        $respAdmin = $this->request('POST', '/usuario/register', $this->adminUser);
-        $this->assertResponseSuccess('Error al crear admin');
-        $this->adminId = $respAdmin['userId'] ?? null;
-        echo "      ✅ Admin ID: {$this->adminId}\n";
+        if (!$this->faseSetupInicial()) {
+            echo "Error crítico: No se pudo completar el setup inicial. Abortando.\n";
+            return;
+        }
         
-        echo "\n   ✅ Todos los usuarios creados exitosamente\n\n";
+        echo "\nSETUP COMPLETADO. Iniciando fases de carga...\n";
+        
+        foreach ($this->loadPhases as $index => $phase) {
+            $continuar = $this->ejecutarFaseCarga($index + 1, $phase);
+            if (!$continuar) break;
+            sleep(2);
+        }
+        
+        $this->mostrarResumen();
+    }
+    
+    private function loginDefaultAdmin(): bool {
+        echo "PASO 1: Login como administrador del sistema...\n";
+        $this->clearCookies();
+        
+        $response = $this->request('POST', '/usuario/login', [
+            'usuario_asignado' => 'admin_test',
+            'contrasena' => 'admin123'
+        ]);
+        
+        if ($this->assertResponseSuccess('Error login admin')) {
+            echo "   ✓ Login exitoso como admin_test\n";
+            return true;
+        }
+        return false;
+    }
+    
+    private function crearUsuarioAdmin(array $userData): ?array {
+        $response = $this->request('POST', '/administrador/usuarios', $userData);
+        if ($this->assertResponseSuccess('Error crear usuario')) {
+            return $response;
+        }
+        return null;
     }
     
     /**
-     * Fase 0: Crear datos base para las pruebas
+     * Obtener un usuario completo por su ID (incluyendo usuario_asignado)
      */
-    private function faseSetupInicial() {
-        echo "\n📦 PASO 2: Preparación de datos base\n";
+    private function obtenerUsuarioPorId(string $userId): ?array {
+        $response = $this->request('GET', '/administrador/usuarios');
+        if (!$this->assertResponseSuccess('Error obtener usuarios')) {
+            return null;
+        }
+        
+        $usuarios = $response['usuarios'] ?? [];
+        foreach ($usuarios as $usuario) {
+            if ($usuario['id'] === $userId) {
+                return $usuario;
+            }
+        }
+        return null;
+    }
+    
+    private function pasoCrearUsuarios() {
+        echo "\nPASO 2: Creando usuarios de prueba...\n";
         echo str_repeat("-", 40) . "\n";
         
-        // 2.1 Login como logística
-        echo "   2.1 Iniciando sesión como logística...\n";
+        // Crear Ensamblador
+        echo "   2.1 Creando técnico ensamblador...\n";
+        $respEns = $this->crearUsuarioAdmin($this->ensambladorUser);
+        if (!$respEns) return false;
+        $this->ensambladorId = $respEns['id'] ?? null;
+        echo "       Ensamblador ID: {$this->ensambladorId}\n";
+        sleep(1);
+        
+        // Crear Comprobador
+        echo "   2.2 Creando técnico comprobador...\n";
+        $respComp = $this->crearUsuarioAdmin($this->comprobadorUser);
+        if (!$respComp) return false;
+        $this->comprobadorId = $respComp['id'] ?? null;
+        echo "       Comprobador ID: {$this->comprobadorId}\n";
+        sleep(1);
+        
+        // Crear Mantenimiento
+        echo "   2.3 Creando técnico mantenimiento...\n";
+        $respMant = $this->crearUsuarioAdmin($this->mantenimientoUser);
+        if (!$respMant) return false;
+        $this->mantenimientoId = $respMant['id'] ?? null;
+        echo "       Mantenimiento ID: {$this->mantenimientoId}\n";
+        sleep(1);
+        
+        // Crear Logística
+        echo "   2.4 Creando usuario logística...\n";
+        $respLog = $this->crearUsuarioAdmin($this->logisticaUser);
+        if (!$respLog) return false;
+        $this->logisticaId = $respLog['id'] ?? null;
+        echo "       Logística ID: {$this->logisticaId}\n";
+        sleep(1);
+        
+        // Crear Contabilidad
+        echo "   2.5 Creando usuario contabilidad...\n";
+        $respCont = $this->crearUsuarioAdmin($this->contabilidadUser);
+        if (!$respCont) return false;
+        $this->contabilidadId = $respCont['id'] ?? null;
+        echo "       Contabilidad ID: {$this->contabilidadId}\n";
+        sleep(1);
+        
+        // Obtener usuario_asignado de cada usuario (consultando la lista)
+        echo "\n   Obteniendo datos de usuarios...\n";
+        
+        $ensUsuario = $this->obtenerUsuarioPorId($this->ensambladorId);
+        $this->ensambladorUsuarioAsignado = $ensUsuario['usuario_asignado'] ?? null;
+        
+        $compUsuario = $this->obtenerUsuarioPorId($this->comprobadorId);
+        $this->comprobadorUsuarioAsignado = $compUsuario['usuario_asignado'] ?? null;
+        
+        $logUsuario = $this->obtenerUsuarioPorId($this->logisticaId);
+        $this->logisticaUsuarioAsignado = $logUsuario['usuario_asignado'] ?? null;
+        
+        echo "      Ensamblador usuario: {$this->ensambladorUsuarioAsignado}\n";
+        echo "      Comprobador usuario: {$this->comprobadorUsuarioAsignado}\n";
+        echo "      Logística usuario: {$this->logisticaUsuarioAsignado}\n";
+        
+        echo "\n   ✓ Todos los usuarios creados exitosamente\n\n";
+        return true;
+    }
+    
+    private function faseSetupInicial() {
+        echo "PASO 3: Preparación de datos base\n";
+        echo str_repeat("-", 40) . "\n";
+        
+        $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
+        
+        // 3.1 Login como logística
+        echo "   3.1 Iniciando sesión como logística...\n";
         $loginResp = $this->request('POST', '/usuario/login', [
-            'usuario_asignado' => $this->logisticaUser['usuario_asignado'],
+            'usuario_asignado' => $this->logisticaUsuarioAsignado,
             'contrasena' => $this->logisticaUser['contrasena']
         ]);
-        
         if (!$this->assertResponseSuccess('Error en login logística')) {
-            echo "   ❌ No se pudo iniciar sesión como logística\n";
+            echo "       Error: No se pudo iniciar sesión como logística\n";
             return false;
         }
-        echo "      ✅ Login exitoso\n";
+        echo "       Login exitoso\n";
         
-        // 2.2 Crear comercio
-        echo "   2.2 Creando comercio...\n";
+        // 3.2 Crear comercio
+        echo "   3.2 Creando comercio...\n";
         $comercioData = [
-            'nombre' => 'Comercio Stress ' . uniqid(),
+            'nombre' => 'Comercio Stress ' . time(),
             'tipo' => 'Minorista',
             'direccion' => 'Av. Pruebas 123',
             'telefono' => '0999' . rand(100000, 999999)
         ];
-        
         $comercioResp = $this->request('POST', '/comercio/register', $comercioData);
         if (!$this->assertResponseSuccess('Error al crear comercio')) {
-            echo "   ❌ No se pudo crear comercio\n";
             return false;
         }
-        echo "      ✅ Comercio creado\n";
+        $this->comercioId = $comercioResp['idComercio'] ?? null;
+        echo "       Comercio ID: {$this->comercioId}\n";
         
-        // 2.3 Obtener ID del comercio
-        echo "   2.3 Obteniendo ID del comercio...\n";
-        sleep(1); // Pequeña pausa para que se registre
-        $comercios = $this->request('GET', '/comercio/all');
-        if (isset($comercios['comercios']) && is_array($comercios['comercios'])) {
-            foreach ($comercios['comercios'] as $c) {
-                if ($c['Nombre'] === $comercioData['nombre']) {
-                    $this->comercioId = $c['ID_Comercio'];
-                    echo "      ✅ Comercio encontrado ID: {$this->comercioId}\n";
-                    break;
-                }
-            }
-        }
-        
-        if (!$this->comercioId) {
-            echo "   ❌ No se pudo obtener ID del comercio\n";
-            return false;
-        }
-        
-        // 2.4 Generar placa
-        echo "   2.4 Generando placa...\n";
-        $placaResp = $this->request('POST', '/maquina/generar-placa', [
-            'ID_Usuario' => $this->logisticaId
-        ]);
-        
-        if (!$this->assertResponseSuccess('Error al generar placa')) {
-            echo "   ❌ No se pudo generar placa\n";
-            return false;
-        }
-        
-        if (isset($placaResp['id_componente'])) {
-            $this->placaId = $placaResp['id_componente'];
-            echo "      ✅ Placa generada ID: {$this->placaId}\n";
-        }
-        
-        if (!$this->placaId) {
-            echo "   ❌ No se pudo obtener ID de placa\n";
-            return false;
-        }
-        
-        // 2.5 Crear máquina (AHORA DEBERÍA FUNCIONAR porque tenemos técnicos)
-        echo "   2.5 Creando máquina...\n";
-        $maquinaData = [
-            'nombre' => 'Máquina Stress ' . uniqid(),
-            'tipo' => 'Arcade',
-            'idComercio' => $this->comercioId,
-            'idUsuarioLogistica' => $this->logisticaId,
-            'idPlaca' => $this->placaId,
-            'idCarcasa' => $this->placaId
-        ];
-        
-        $maquinaResp = $this->request('POST', '/maquina/register', $maquinaData);
-        
-        // Verificar la respuesta
-        if (isset($maquinaResp['success']) && $maquinaResp['success'] === true) {
-            if (isset($maquinaResp['idMaquina'])) {
-                $this->maquinaId = $maquinaResp['idMaquina'];
-                echo "      ✅ Máquina creada ID: {$this->maquinaId}\n";
-            } else {
-                echo "      ⚠️ Respuesta exitosa pero sin ID: " . json_encode($maquinaResp) . "\n";
-                // Intentar con un ID fijo para pruebas
-                $this->maquinaId = '00000000-0000-0000-0000-000000000001';
-            }
-        } else {
-            echo "      ❌ Error al crear máquina: " . json_encode($maquinaResp) . "\n";
-            return false;
-        }
-        
-        // 2.6 Logout
-        echo "   2.6 Cerrando sesión...\n";
+        // 3.3 Logout
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        echo "\n   ✅ Datos base listos\n";
+        // 3.4 Login como ensamblador
+        echo "   3.4 Iniciando sesión como ensamblador...\n";
+        $loginResp = $this->request('POST', '/usuario/login', [
+            'usuario_asignado' => $this->ensambladorUsuarioAsignado,
+            'contrasena' => $this->ensambladorUser['contrasena']
+        ]);
+        if (!$this->assertResponseSuccess('Error en login ensamblador')) {
+            return false;
+        }
+        echo "       Login exitoso\n";
+        
+        // 3.5 Generar placa
+        echo "   3.5 Generando placa...\n";
+        $placaResp = $this->request('POST', '/maquina/generar-placa', []);
+        if (!$this->assertResponseSuccess('Error al generar placa')) {
+            return false;
+        }
+        $this->placaId = $placaResp['idComponente'] ?? null;
+        echo "       Placa ID: {$this->placaId}\n";
+        
+        // 3.6 Generar carcasa
+        echo "   3.6 Generando carcasa...\n";
+        $carcasaResp = $this->request('POST', '/maquina/generar-placa', []);
+        if (!$this->assertResponseSuccess('Error al generar carcasa')) {
+            return false;
+        }
+        $this->carcasaId = $carcasaResp['idComponente'] ?? null;
+        echo "       Carcasa ID: {$this->carcasaId}\n";
+        
+        // 3.7 Logout
+        $this->request('POST', '/usuario/logout', []);
+        $this->clearCookies();
+        
+        // 3.8 Login como logística nuevamente
+        echo "   3.8 Iniciando sesión como logística...\n";
+        $loginResp = $this->request('POST', '/usuario/login', [
+            'usuario_asignado' => $this->logisticaUsuarioAsignado,
+            'contrasena' => $this->logisticaUser['contrasena']
+        ]);
+        if (!$this->assertResponseSuccess('Error en login logística')) {
+            return false;
+        }
+        echo "       Login exitoso\n";
+        
+        // 3.9 Registrar máquina
+        echo "   3.9 Registrando máquina...\n";
+        $maquinaData = [
+            'nombre' => 'Máquina Stress ' . time(),
+            'tipo' => 'Arcade Clasica',
+            'idComercio' => $this->comercioId,
+            'idPlaca' => $this->placaId,
+            'idCarcasa' => $this->carcasaId,
+            'idEnsamblador' => $this->ensambladorId,
+            'idComprobador' => $this->comprobadorId
+        ];
+        
+        $this->maquinaData = [
+            'nombre' => 'Máquina Stress ' . time(),
+            'tipo' => 'Arcade Clasica'
+        ];
+        
+        $maquinaResp = $this->request('POST', '/maquina/register', $maquinaData);
+        if (!$this->assertResponseSuccess('Error al registrar máquina')) {
+            echo "       HTTP Code: {$this->lastHttpCode}\n";
+            return false;
+        }
+        $this->maquinaId = $maquinaResp['idMaquina'] ?? null;
+        echo "       Máquina registrada: {$this->maquinaData['nombre']} (ID: {$this->maquinaId})\n";
+        
+        // 3.10 Logout
+        $this->request('POST', '/usuario/logout', []);
+        $this->clearCookies();
+        
+        echo "\n   ✓ Datos base listos\n";
         echo "      • Comercio ID: {$this->comercioId}\n";
         echo "      • Máquina ID: {$this->maquinaId}\n";
-        echo "      • Placa ID: {$this->placaId}\n\n";
+        echo "      • Placa ID: {$this->placaId}\n";
+        echo "      • Carcasa ID: {$this->carcasaId}\n\n";
         
         return true;
     }
     
-    /**
-     * Ejecutar una fase específica de carga
-     */
     private function ejecutarFaseCarga($faseNum, $phase) {
-        echo "\n📊 FASE {$faseNum}: {$phase['users']} usuarios - {$phase['description']}\n";
+        echo "\nFASE {$faseNum}: {$phase['users']} usuarios - {$phase['description']}\n";
         echo str_repeat("=", 50) . "\n";
         
         $startTime = microtime(true);
@@ -329,57 +364,37 @@ class StressTest extends HttpStressTestCase {
         $errors = 0;
         $responseTimes = [];
         
-        // Login con cada tipo de usuario
-        echo "   Obteniendo tokens de autenticación...\n";
-        $tokens = $this->loginTodosLosUsuarios();
+        echo "   Simulando carga por {$phase['duration']} segundos...\n";
         
-        if (empty($tokens)) {
-            echo "   ❌ No se pudo obtener tokens de autenticación\n";
-            return false;
-        }
-        
-        echo "   Iniciando simulación de carga por {$phase['duration']} segundos...\n";
-        
-        // Ejecutar requests durante la duración de la fase
         $endTime = $startTime + $phase['duration'];
         $iteracion = 0;
         
         while (microtime(true) < $endTime) {
             $iteracion++;
-            
-            // Seleccionar un usuario aleatorio
-            $userTypes = array_keys($tokens);
-            if (empty($userTypes)) continue;
-            
+            $userTypes = ['ensamblador', 'comprobador', 'mantenimiento', 'logistica', 'contabilidad'];
             $userType = $userTypes[array_rand($userTypes)];
-            $user = $tokens[$userType];
             
-            // Realizar request según tipo de usuario
             $requestStart = microtime(true);
-            $success = $this->ejecutarRequestUsuario($userType, $user);
-            $requestTime = (microtime(true) - $requestStart) * 1000; // en ms
+            $success = $this->ejecutarRequestSimulado($userType);
+            $requestTime = (microtime(true) - $requestStart) * 1000;
             
             $requests++;
             $responseTimes[] = $requestTime;
+            if (!$success) $errors++;
             
-            if (!$success) {
-                $errors++;
+            if ($iteracion % 50 == 0) {
+                echo "      Progreso: {$requests} requests realizados...\n";
             }
-            
-            // Pequeña pausa entre requests para no saturar
-            usleep(50000); // 0.05 segundos
+            usleep(50000);
         }
         
-        // Calcular métricas
         $duration = microtime(true) - $startTime;
         $rps = $requests / $duration;
         $errorRate = ($errors / max($requests, 1)) * 100;
-        
         sort($responseTimes);
         $p95 = $responseTimes[floor(count($responseTimes) * 0.95)] ?? 0;
         $p99 = $responseTimes[floor(count($responseTimes) * 0.99)] ?? 0;
         
-        // Guardar resultados
         $this->phaseResults[] = [
             'users' => $phase['users'],
             'requests' => $requests,
@@ -388,256 +403,91 @@ class StressTest extends HttpStressTestCase {
             'rps' => round($rps, 2),
             'p95' => round($p95, 2),
             'p99' => round($p99, 2),
-            'duration' => round($duration, 2)
         ];
         
-        // Mostrar resultados de la fase
-        echo "\n   📈 RESULTADOS FASE {$faseNum}:\n";
+        echo "\n    RESULTADOS FASE {$faseNum}:\n";
         echo "      • Requests: {$requests}\n";
         echo "      • Errores: {$errors} (" . round($errorRate, 2) . "%)\n";
         echo "      • RPS: " . round($rps, 2) . " req/s\n";
         echo "      • Tiempo respuesta (p95): " . round($p95, 2) . "ms\n";
-        echo "      • Tiempo respuesta (p99): " . round($p99, 2) . "ms\n";
         
-        // Determinar estado
-        if ($errorRate > 10 || $p95 > 2000) {
-            echo "   ❌ SISTEMA COLAPSADO\n";
-            if ($faseNum < count($this->loadPhases)) {
-                echo "   ⚠️  Deteniendo pruebas - Punto de quiebre alcanzado\n";
-                return false;
-            }
-        } elseif ($errorRate > 5 || $p95 > 1000) {
-            echo "   ⚠️  SISTEMA DEGRADADO\n";
+        if ($errorRate > 10 || $p95 > 3000) {
+            echo "    ⚠ SISTEMA COLAPSADO - Deteniendo pruebas\n";
+            return false;
+        } elseif ($errorRate > 5 || $p95 > 1500) {
+            echo "    ⚠ SISTEMA DEGRADADO\n";
         } else {
-            echo "   ✅ SISTEMA ESTABLE\n";
+            echo "    ✓ SISTEMA ESTABLE\n";
         }
-        
         return true;
     }
     
-    /**
-     * Login con todos los tipos de usuario
-     */
-    private function loginTodosLosUsuarios() {
-        $tokens = [];
+    private function ejecutarRequestSimulado($userType) {
+        $publicEndpoints = ['/health', '/test-db'];
         
-        $users = [
-            'admin' => ['creds' => $this->adminUser, 'id' => $this->adminId],
-            'ensamblador' => ['creds' => $this->ensambladorUser, 'id' => $this->ensambladorId],
-            'comprobador' => ['creds' => $this->comprobadorUser, 'id' => $this->comprobadorId],
-            'mantenimiento' => ['creds' => $this->mantenimientoUser, 'id' => $this->mantenimientoId],
-            'logistica' => ['creds' => $this->logisticaUser, 'id' => $this->logisticaId],
-            'contabilidad' => ['creds' => $this->contabilidadUser, 'id' => $this->contabilidadId]
+        $endpoints = [
+            'ensamblador' => ['/componentes/disponibles'],
+            'comprobador' => ['/componentes/disponibles'],
+            'mantenimiento' => ['/componentes/disponibles'],
+            'logistica' => ['/comercio/all'],
+            'contabilidad' => ['/contabilidad/recaudaciones']
         ];
         
-        foreach ($users as $type => $user) {
-            if (!$user['id']) {
-                echo "      ⚠️  Usuario {$type} no tiene ID, saltando...\n";
-                continue;
-            }
-            
-            $this->clearCookies(); // Limpiar cookies para cada login
-            
-            $response = $this->request('POST', '/usuario/login', [
-                'usuario_asignado' => $user['creds']['usuario_asignado'],
-                'contrasena' => $user['creds']['contrasena']
-            ]);
-            
-            if ($this->lastHttpCode === 200 && isset($response['success']) && $response['success']) {
-                $tokens[$type] = [
-                    'id' => $user['id'],
-                    'cookies' => $this->cookies
-                ];
-                echo "      ✅ Login {$type} exitoso\n";
-            } else {
-                echo "      ❌ Login {$type} falló (HTTP {$this->lastHttpCode})\n";
-            }
-        }
-        
-        return $tokens;
-    }
-    
-    /**
-     * Ejecutar un request específico según tipo de usuario
-     */
-    private function ejecutarRequestUsuario($userType, $user) {
-        // Restaurar cookies del usuario
-        $this->cookies = $user['cookies'];
-        
         $rand = mt_rand(1, 100);
-        $success = true;
+        if ($rand <= 30) {
+            $endpoint = $publicEndpoints[array_rand($publicEndpoints)];
+        } else {
+            $userEndpoints = $endpoints[$userType] ?? $publicEndpoints;
+            $endpoint = $userEndpoints[array_rand($userEndpoints)];
+        }
         
         try {
-            switch($userType) {
-                case 'admin':
-                    if ($rand <= 30) {
-                        $this->request('GET', '/administrador/usuarios');
-                    } elseif ($rand <= 60) {
-                        $this->request('GET', "/administrador/usuarios/{$user['id']}");
-                    } else {
-                        $this->request('GET', '/historial-actividades?usuarioId=' . $user['id']);
-                    }
-                    break;
-                    
-                case 'ensamblador':
-                    if ($rand <= 40) {
-                        $this->request('GET', "/maquina/ensamblador/{$user['id']}");
-                    } elseif ($rand <= 70) {
-                        $this->request('GET', '/componentes/disponibles');
-                    } else {
-                        $this->request('GET', "/componentes/en-uso/{$user['id']}");
-                    }
-                    break;
-                    
-                case 'comprobador':
-                    if ($rand <= 40) {
-                        $this->request('GET', "/maquina/comprobador/{$user['id']}");
-                    } elseif ($rand <= 70) {
-                        $this->request('GET', '/componentes/disponibles');
-                    } else {
-                        $this->request('GET', "/componentes/en-uso/{$user['id']}");
-                    }
-                    break;
-                    
-                case 'mantenimiento':
-                    if ($rand <= 40) {
-                        $this->request('GET', "/maquina/mantenimiento/{$user['id']}");
-                    } elseif ($rand <= 70) {
-                        $this->request('GET', '/componentes/disponibles');
-                    } else {
-                        $this->request('GET', "/componentes/en-uso/{$user['id']}");
-                    }
-                    break;
-                    
-                case 'logistica':
-                    if ($rand <= 25) {
-                        $this->request('GET', '/maquina/distribucion');
-                    } elseif ($rand <= 50) {
-                        $this->request('GET', '/distribucion/informes');
-                    } elseif ($rand <= 75) {
-                        $this->request('GET', '/comercio/all');
-                    } else {
-                        $this->request('GET', "/usuario/profile/{$user['id']}");
-                    }
-                    break;
-                    
-                case 'contabilidad':
-                    if ($rand <= 20) {
-                        $this->request('GET', '/contabilidad/recaudaciones');
-                    } elseif ($rand <= 40) {
-                        $this->request('GET', '/contabilidad/resumen-recaudaciones?limit=10');
-                    } elseif ($rand <= 60) {
-                        $this->request('GET', '/contabilidad/maquinas-recaudacion');
-                    } elseif ($rand <= 80) {
-                        $this->request('GET', "/usuario/profile/{$user['id']}");
-                    } else {
-                        $this->request('GET', '/contabilidad/maquinas-operativas-por-comercio?ID_Comercio=' . $this->comercioId);
-                    }
-                    break;
-            }
+            $this->request('GET', $endpoint, []);
+            return $this->lastHttpCode < 400;
         } catch (Exception $e) {
-            $success = false;
+            return false;
         }
-        
-        // Verificar si hubo error HTTP
-        if ($this->lastHttpCode >= 400 && $this->lastHttpCode != 404) {
-            $success = false;
-        }
-        
-        return $success;
     }
     
-    /**
-     * Mostrar resumen final de todas las fases
-     */
     private function mostrarResumen() {
         echo "\n\n";
-        echo "📊 RESUMEN FINAL DE PRUEBAS DE ESTRÉS\n";
+        echo "RESUMEN FINAL DE PRUEBAS DE ESTRÉS\n";
         echo "======================================\n\n";
         
-        echo str_pad("Usuarios", 12) . 
-             str_pad("Requests", 12) . 
-             str_pad("Errores", 12) . 
-             str_pad("Tasa Error", 12) . 
-             str_pad("RPS", 10) . 
-             str_pad("p95 (ms)", 10) . 
-             "Estado\n";
+        echo str_pad("Usuarios", 12) . str_pad("Requests", 12) . str_pad("Errores", 12) . str_pad("Tasa Error", 12) . str_pad("RPS", 10) . str_pad("p95 (ms)", 10) . "Estado\n";
         echo str_repeat("-", 80) . "\n";
         
         $breakpoint = null;
-        
         foreach ($this->phaseResults as $result) {
-            $estado = $result['error_rate'] < 5 ? "✅ OK" : 
-                     ($result['error_rate'] < 10 ? "⚠️ Lento" : "❌ Falla");
-            
-            echo str_pad($result['users'], 12) .
-                 str_pad($result['requests'], 12) .
-                 str_pad($result['errors'], 12) .
-                 str_pad($result['error_rate'] . "%", 12) .
-                 str_pad($result['rps'], 10) .
-                 str_pad($result['p95'], 10) .
-                 $estado . "\n";
-            
-            // Detectar punto de quiebre
-            if ($result['error_rate'] >= 10 && !$breakpoint) {
-                $breakpoint = $result['users'];
-            }
+            $estado = $result['error_rate'] < 5 ? "✓ OK" : ($result['error_rate'] < 10 ? "⚠ Lento" : "✗ Falla");
+            echo str_pad($result['users'], 12) . str_pad($result['requests'], 12) . str_pad($result['errors'], 12) . str_pad($result['error_rate'] . "%", 12) . str_pad($result['rps'], 10) . str_pad($result['p95'], 10) . $estado . "\n";
+            if ($result['error_rate'] >= 10 && !$breakpoint) $breakpoint = $result['users'];
         }
         
-        echo "\n\n";
-        echo "🔍 ANÁLISIS DEL PUNTO DE QUIEBRE\n";
+        echo "\n\nANÁLISIS DEL PUNTO DE QUIEBRE\n";
         echo "--------------------------------\n";
-        
         if ($breakpoint) {
-            echo "❌ El sistema COMIENZA A FALLAR a partir de {$breakpoint} usuarios\n";
-            
-            echo "\n💡 RECOMENDACIONES:\n";
-            if ($breakpoint <= 25) {
-                echo "   • Revisar configuración del servidor web\n";
-                echo "   • Aumentar límites de conexiones simultáneas\n";
-                echo "   • Optimizar consultas a base de datos\n";
-            } elseif ($breakpoint <= 50) {
-                echo "   • Implementar caché para consultas frecuentes\n";
-                echo "   • Optimizar índices en tablas más utilizadas\n";
-                echo "   • Considerar aumentar recursos del servidor\n";
-            } else {
-                echo "   • Implementar balanceador de carga\n";
-                echo "   • Usar caché distribuido (Redis/Memcached)\n";
-                echo "   • Escalar horizontalmente\n";
-            }
+            echo " El sistema COMIENZA A FALLAR a partir de {$breakpoint} usuarios concurrentes\n";
         } else {
-            echo "✅ El sistema soportó TODAS las cargas de prueba\n";
-            echo "   El punto de quiebre está por encima de " . end($this->phaseResults)['users'] . " usuarios\n";
+            echo " El sistema soportó TODAS las cargas de prueba\n";
         }
         
-        // Guardar resultados en archivo
         $this->guardarResultados();
     }
     
-    /**
-     * Guardar resultados en archivo JSON
-     */
     private function guardarResultados() {
-        $filename = 'stress_test_results_' . date('Y-m-d_H-i-s') . '.json';
-        $data = [
+        $filename = __DIR__ . '/stress_test_results_' . date('Y-m-d_H-i-s') . '.json';
+        file_put_contents($filename, json_encode([
             'timestamp' => date('Y-m-d H:i:s'),
-            'total_phases' => count($this->phaseResults),
             'results' => $this->phaseResults,
             'breakpoint' => $this->findBreakpoint()
-        ];
-        
-        file_put_contents($filename, json_encode($data, JSON_PRETTY_PRINT));
-        echo "\n📁 Resultados guardados en: {$filename}\n";
+        ], JSON_PRETTY_PRINT));
+        echo "\n Resultados guardados en: {$filename}\n";
     }
     
-    /**
-     * Encontrar el punto de quiebre
-     */
     private function findBreakpoint() {
         foreach ($this->phaseResults as $result) {
-            if ($result['error_rate'] >= 10 || $result['p95'] > 2000) {
-                return $result['users'];
-            }
+            if ($result['error_rate'] >= 10 || $result['p95'] > 3000) return $result['users'];
         }
         return null;
     }

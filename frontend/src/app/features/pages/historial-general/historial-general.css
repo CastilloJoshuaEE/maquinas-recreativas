@@ -1,0 +1,24 @@
+.historial-general-container { min-height: 100vh; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); }
+.historial-general-content { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.historial-header-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.historial-header-section h1 { color: white; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem; }
+.ver-historial-btn { background: linear-gradient(135deg, #4f6bed, #3d55c3); }
+.historial-info-card { background: rgba(255,255,255,0.95); border-radius: 12px; overflow: hidden; }
+.info-icon { text-align: center; margin-bottom: 1rem; }
+.info-icon mat-icon { font-size: 3rem; width: auto; height: auto; color: #4f6bed; }
+.historial-info-card h2 { text-align: center; color: #2c3e50; margin-bottom: 1rem; }
+.historial-info-card p { text-align: center; color: #666; margin-bottom: 2rem; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1.5rem; margin: 2rem 0; }
+.info-item { text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; transition: transform 0.3s ease; }
+.info-item:hover { transform: translateY(-5px); }
+.info-item mat-icon { font-size: 2.5rem; width: auto; height: auto; color: #4f6bed; margin-bottom: 0.5rem; }
+.info-item h3 { color: #2c3e50; margin-bottom: 0.5rem; }
+.info-item p { color: #777; font-size: 0.85rem; margin: 0; }
+.nota { display: flex; align-items: center; gap: 0.5rem; padding: 1rem; background: #fff3cd; border-radius: 8px; margin-top: 1rem; }
+.nota mat-icon { color: #856404; }
+.nota p { margin: 0; color: #856404; text-align: left; }
+.acceso-denegado { text-align: center; padding: 3rem; background: rgba(255,255,255,0.95); border-radius: 12px; }
+.acceso-denegado mat-icon { font-size: 4rem; width: auto; height: auto; color: #dc3545; margin-bottom: 1rem; }
+.acceso-denegado h2 { color: #dc3545; margin-bottom: 0.5rem; }
+.acceso-denegado p { color: #666; margin-bottom: 1.5rem; }
+@media (max-width: 768px) { .historial-general-content { padding: 1rem; } .historial-header-section { flex-direction: column; text-align: center; } .info-grid { grid-template-columns: 1fr; } }

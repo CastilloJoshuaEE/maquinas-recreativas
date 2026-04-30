@@ -1,0 +1,59 @@
+<div class="contabilidad-container">
+  <app-admin-header></app-admin-header>
+  <main class="contabilidad-content">
+    <section class="welcome-section">
+      <h2>Bienvenido al área de contabilidad</h2>
+      <p>Aquí podrás gestionar todos los aspectos financieros del sistema</p>
+    </section>
+
+    <div class="contabilidad-grid">
+      <mat-card class="contabilidad-card">
+        <mat-card-header><mat-card-title><mat-icon>assessment</mat-icon> Resumen Financiero</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loadingResumen" class="loading-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+          <div *ngIf="!loadingResumen && resumen.length > 0">
+            <div *ngFor="let item of resumen" class="summary-item">
+              <h4>{{ item.Tipo_Comercio }}</h4>
+              <div class="summary-details">
+                <p><strong>Recaudaciones:</strong> {{ item.TotalRecaudaciones }}</p>
+                <p><strong>Total:</strong> ${{ item.TotalRecaudado | number:'1.2-2' }}</p>
+                <p><strong>Empresa:</strong> ${{ item.TotalEmpresa | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!loadingResumen && resumen.length === 0" class="no-data"><p>No hay datos disponibles</p></div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="contabilidad-card">
+        <mat-card-header><mat-card-title><mat-icon>show_chart</mat-icon> Recaudación Mensual</mat-card-title></mat-card-header>
+        <mat-card-content><canvas id="recaudacionChart"></canvas></mat-card-content>
+      </mat-card>
+
+      <mat-card class="contabilidad-card">
+        <mat-card-header><mat-card-title><mat-icon>speed</mat-icon> Acciones Rápidas</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="action-buttons">
+            <button mat-raised-button color="primary" (click)="irAGestionRecaudacion()"><mat-icon>attach_money</mat-icon> Gestionar recaudación</button>
+            <button mat-raised-button color="accent" (click)="irAConsultarRecaudaciones()"><mat-icon>search</mat-icon> Consultar recaudaciones</button>
+            <button mat-raised-button (click)="irAConsultarInformes()"><mat-icon>description</mat-icon> Consultar informes</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="contabilidad-card">
+        <mat-card-header><mat-card-title><mat-icon>history</mat-icon> Transacciones Recientes</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div *ngIf="loadingTransacciones" class="loading-spinner"><mat-spinner diameter="40"></mat-spinner></div>
+          <div *ngIf="!loadingTransacciones && transaccionesRecientes.length > 0">
+            <div *ngFor="let tx of transaccionesRecientes" class="transaction-item">
+              <div class="transaction-info"><strong>{{ tx.Nombre_Maquina }}</strong><span class="transaction-amount">${{ tx.Monto_Total | number:'1.2-2' }}</span></div>
+              <div class="transaction-date">{{ tx.fecha | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+          </div>
+          <div *ngIf="!loadingTransacciones && transaccionesRecientes.length === 0" class="no-data"><p>No hay transacciones recientes</p></div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </main>
+</div>

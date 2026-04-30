@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+vendor/
+storage/
+coverage/
+node_modules/
+tests/coverage/
+*.log
+*.sql
+.DS_Store
+.idea/
+.vscode/
+.env.docker

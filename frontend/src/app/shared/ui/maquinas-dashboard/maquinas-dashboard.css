@@ -1,0 +1,286 @@
+.maquinas-dashboard-container {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 12px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-title h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.total-count {
+  font-size: 0.875rem;
+  color: #7f8c8d;
+  margin-left: 12px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-crear mat-icon {
+  margin-right: 4px;
+}
+
+/* Filtros */
+.filtros-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.filtro-search {
+  flex: 2;
+  min-width: 200px;
+}
+
+.filtro-select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.btn-limpiar {
+  height: 56px;
+}
+
+/* Tabla */
+.tabla-container {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.maquinas-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.maquinas-table thead th {
+  text-align: left;
+  padding: 16px;
+  background: #34495e;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.maquinas-table tbody tr {
+  border-bottom: 1px solid #ecf0f1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.maquinas-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.maquinas-table tbody tr.selected {
+  background: #e3f2fd;
+}
+
+.maquinas-table td {
+  padding: 14px 16px;
+  font-size: 0.875rem;
+  color: #2c3e50;
+}
+
+.nombre-maquina strong {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.comercio-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.direccion-small {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+  margin-top: 2px;
+}
+
+/* Badges de estado */
+.estado-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.estado-operativa {
+  background: #d4edda;
+  color: #155724;
+}
+
+.estado-no-operativa {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.estado-retirada {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.estado-ensamblaje {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.estado-comprobacion {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.estado-distribucion {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.estado-mantenimiento {
+  background: #fef2e0;
+  color: #a16207;
+}
+
+.estado-default {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* Badges de etapa */
+.etapa-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.etapa-montaje {
+  background: #e7e5ff;
+  color: #4a3aff;
+}
+
+.etapa-distribucion {
+  background: #ffe5e5;
+  color: #c0392b;
+}
+
+.etapa-recaudacion {
+  background: #e5f5e5;
+  color: #27ae60;
+}
+
+.etapa-default {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* Acciones */
+.acciones-cell {
+  white-space: nowrap;
+}
+
+.btn-historial {
+  color: #3498db;
+}
+
+.btn-editar {
+  color: #f39c12;
+}
+
+.btn-editar:hover, .btn-historial:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .maquinas-dashboard-container {
+    padding: 12px;
+  }
+  
+  .filtros-bar {
+    flex-direction: column;
+  }
+  
+  .filtro-search, .filtro-select {
+    width: 100%;
+  }
+  
+  .maquinas-table thead {
+    display: none;
+  }
+  
+  .maquinas-table tbody tr {
+    display: block;
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  
+  .maquinas-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .maquinas-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 16px;
+    color: #7f8c8d;
+  }
+}

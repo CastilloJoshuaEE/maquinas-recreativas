@@ -1,0 +1,116 @@
+<div class="actualizar-perfil-container">
+  <app-admin-header></app-admin-header>
+  <div class="content-wrapper">
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h2>Editar Perfil</h2>
+    </div>
+    
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+    
+    <div *ngIf="error" class="error-message">{{ error }}</div>
+    
+    <mat-card *ngIf="!loading && !error && usuario">
+      <mat-card-content>
+        <form [formGroup]="perfilForm" (ngSubmit)="onSubmit()">
+          
+          <!-- ── Campos EDITABLES ─────────────────────────────── -->
+          <div class="section-title">
+            <mat-icon>edit</mat-icon> Información que puedes editar
+          </div>
+          
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="perfilForm.get('nombre')?.hasError('required')">Nombre requerido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Apellido</mat-label>
+            <input matInput formControlName="apellido">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="perfilForm.get('apellido')?.hasError('required')">Apellido requerido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Cédula</mat-label>
+            <input matInput formControlName="ci" type="text" inputmode="numeric" (keypress)="soloNumeros($event)">
+            <mat-icon matPrefix>badge</mat-icon>
+            <mat-error *ngIf="perfilForm.get('ci')?.hasError('required')">Cédula requerida</mat-error>
+            <mat-error *ngIf="perfilForm.get('ci')?.hasError('pattern')">Cédula debe tener 10 dígitos</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Correo electrónico</mat-label>
+            <input matInput formControlName="email" type="email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="perfilForm.get('email')?.hasError('required')">Email requerido</mat-error>
+            <mat-error *ngIf="perfilForm.get('email')?.hasError('email')">Email inválido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nueva Contraseña (opcional)</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-icon matSuffix style="cursor:pointer" (click)="hidePassword = !hidePassword">
+              {{ hidePassword ? 'visibility_off' : 'visibility' }}
+            </mat-icon>
+            <mat-hint>Dejar vacío para mantener la contraseña actual</mat-hint>
+            <mat-error *ngIf="perfilForm.get('contrasena')?.hasError('minlength')">Mínimo 8 caracteres</mat-error>
+          </mat-form-field>
+
+          <!-- ── Campos de SOLO LECTURA (información del sistema) ── -->
+          <div class="section-title readonly-title">
+            <mat-icon>info</mat-icon> Información del sistema (solo consulta)
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width readonly-field">
+            <mat-label>Usuario asignado</mat-label>
+            <input matInput formControlName="usuario_asignado" readonly>
+            <mat-icon matPrefix>account_circle</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width readonly-field">
+            <mat-label>Función del sistema</mat-label>
+            <input matInput formControlName="tipo" readonly>
+            <mat-icon matPrefix>work</mat-icon>
+          </mat-form-field>
+
+          <!-- Especialidad - Solo visible para técnicos -->
+          <mat-form-field appearance="outline" class="full-width readonly-field" *ngIf="esTecnico">
+            <mat-label>Especialidad</mat-label>
+            <input matInput formControlName="especialidad" readonly>
+            <mat-icon matPrefix>build</mat-icon>
+            <mat-hint>La especialidad no se puede modificar</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width readonly-field">
+            <mat-label>Estado</mat-label>
+            <input matInput formControlName="estado" readonly>
+            <mat-icon matPrefix>info</mat-icon>
+            <mat-hint>El estado solo puede ser cambiado por un administrador</mat-hint>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+              <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+              <span *ngIf="!submitting">Actualizar Perfil</span>
+            </button>
+            <button mat-button type="button" (click)="regresar()">Cancelar</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+    
+    <div *ngIf="success" class="success-message">
+      <mat-icon>check_circle</mat-icon>
+      <p>¡Perfil actualizado correctamente! Redirigiendo...</p>
+    </div>
+  </div>
+</div>

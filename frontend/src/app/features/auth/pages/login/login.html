@@ -1,0 +1,76 @@
+<!-- login.html -->
+<div class="login-page">
+  <header>
+    <h1>Bienvenido a Recrea Sys</h1>
+    <nav>
+      <a routerLink="/auth/login">Iniciar sesión</a>
+      <button mat-raised-button (click)="irARegistro()" class="btn-trabajar">
+        ¿QUIERES TRABAJAR CON NOSOTROS?
+      </button>
+    </nav>
+  </header>
+
+  <main class="pantalla_completa">
+    <div class="contenedor_todo">
+      <button class="boton-info-sistema" (click)="irAInformacion()" title="Información del sistema">
+        Información del sistema
+      </button>
+
+      <div class="contenedor_login_register">
+        <!-- Spinner de carga - pantalla completa durante el login -->
+        <app-loading-spinner 
+          *ngIf="loading"
+          [fullScreen]="true"
+          message="Iniciando sesión..."
+          [diameter]="60"
+          color="primary">
+        </app-loading-spinner>
+
+        <!-- Formulario de login -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="formulario_login" [class.blur]="loading">
+          <h2>Iniciar Sesión</h2>
+
+          <!-- Mensaje de error general -->
+          <div *ngIf="loginError" class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ loginError }}</span>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Usuario asignado</mat-label>
+            <input matInput formControlName="usuario_asignado" placeholder="Ingrese su usuario">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="loginForm.get('usuario_asignado')?.hasError('required') && loginForm.get('usuario_asignado')?.touched">
+              Usuario requerido
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('usuario_asignado')?.hasError('maxlength')">
+              Máximo 15 caracteres
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Contraseña</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="contrasena">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-icon matSuffix (click)="hidePassword = !hidePassword" style="cursor:pointer">
+              {{hidePassword ? 'visibility_off' : 'visibility'}}
+            </mat-icon>
+            <mat-error *ngIf="loginForm.get('contrasena')?.hasError('required') && loginForm.get('contrasena')?.touched">
+              Contraseña requerida
+            </mat-error>
+          </mat-form-field>
+
+          <div class="enlaces_recuperacion">
+            <a routerLink="/auth/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
+            <a routerLink="/auth/recuperar-usuario">¿Olvidaste tu usuario?</a>
+          </div>
+
+          <button mat-raised-button color="primary" type="submit"
+                  [disabled]="loginForm.invalid || loading" class="full-width">
+            <span>Entrar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>

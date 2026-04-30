@@ -5,3 +5,16 @@
 phpDocumentor.phar
 composer
 .phpdoc
+openapi
+openapi.bat
+php-parse
+php-parse.bat
+yaml-lint
+yaml-lint.bat
+phpdoc-parser
+phpunit
+code-unit
+swagger.php
+/vendor/
+backend/vendor/
+vendor/

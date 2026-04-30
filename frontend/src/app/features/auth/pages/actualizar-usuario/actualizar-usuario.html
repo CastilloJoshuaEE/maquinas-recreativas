@@ -1,0 +1,45 @@
+<div class="actualizar-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <h2>Actualizar Usuario Asignado</h2>
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="actualizarForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Correo electrónico registrado</mat-label>
+          <input matInput formControlName="email" placeholder="ejemplo@correo.com" type="email">
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-error *ngIf="actualizarForm.get('email')?.hasError('required')">
+            Email requerido
+          </mat-error>
+          <mat-error *ngIf="actualizarForm.get('email')?.hasError('email')">
+            Email inválido
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nuevo usuario asignado</mat-label>
+          <input matInput formControlName="usuario_asignado" placeholder="Nuevo nombre de usuario">
+          <mat-icon matPrefix>account_circle</mat-icon>
+          <mat-error *ngIf="actualizarForm.get('usuario_asignado')?.hasError('required')">
+            Usuario requerido
+          </mat-error>
+          <mat-error *ngIf="actualizarForm.get('usuario_asignado')?.hasError('maxlength')">
+            Máximo 15 caracteres
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="actualizarForm.invalid || loading">
+            <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
+            <span *ngIf="!loading">Actualizar usuario</span>
+          </button>
+          <button mat-button type="button" routerLink="/auth/login">Volver al inicio</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

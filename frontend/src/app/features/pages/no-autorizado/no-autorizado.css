@@ -1,0 +1,10 @@
+.no-autorizado-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); padding: 2rem; }
+.error-card { max-width: 500px; width: 100%; text-align: center; background: white; border-radius: 20px; animation: fadeInUp 0.5s ease; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.error-icon { margin-bottom: 1.5rem; }
+.error-icon mat-icon { font-size: 4rem; width: auto; height: auto; color: #dc3545; }
+h1 { color: #dc3545; margin-bottom: 1rem; font-size: 2rem; }
+p { color: #555; margin-bottom: 0.5rem; }
+.mensaje-ayuda { font-size: 0.85rem; color: #999; margin-top: 1rem; }
+.botones-accion { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; }
+@media (max-width: 768px) { .error-card { margin: 1rem; } .botones-accion { flex-direction: column; } .botones-accion a, .botones-accion button { width: 100%; } }

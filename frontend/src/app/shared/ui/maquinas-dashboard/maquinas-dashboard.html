@@ -1,0 +1,144 @@
+<div class="maquinas-dashboard-container">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-title">
+      <h2> Gestión de Máquinas Recreativas</h2>
+      <span class="total-count">{{ maquinasFiltradas.length }} máquinas</span>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="refresh()" matTooltip="Actualizar">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-bar">
+    <mat-form-field appearance="outline" class="filtro-search">
+      <mat-label>Buscar</mat-label>
+      <input matInput
+             [(ngModel)]="searchTerm"
+             (ngModelChange)="onSearchChange()"
+             placeholder="Nombre, tipo o comercio...">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filtro-select">
+      <mat-label>Estado</mat-label>
+      <mat-select [(ngModel)]="estadoFilter" (selectionChange)="aplicarFiltros()">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="Operativa">Operativa</mat-option>
+        <mat-option value="No operativa">No operativa</mat-option>
+        <mat-option value="Retirada">Retirada</mat-option>
+        <mat-option value="Ensamblandose">Ensamblándose</mat-option>
+        <mat-option value="Comprobandose">Comprobándose</mat-option>
+        <mat-option value="Distribuyendose">Distribuyéndose</mat-option>
+        <mat-option value="Mantenimiento">Mantenimiento</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filtro-select">
+      <mat-label>Etapa</mat-label>
+      <mat-select [(ngModel)]="etapaFilter" (selectionChange)="aplicarFiltros()">
+        <mat-option value="">Todas</mat-option>
+        <mat-option value="Montaje">Montaje</mat-option>
+        <mat-option value="Distribucion">Distribución</mat-option>
+        <mat-option value="Recaudacion">Recaudación</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button
+      *ngIf="searchTerm || estadoFilter || etapaFilter"
+      mat-button
+      (click)="limpiarFiltros()"
+      class="btn-limpiar">
+      <mat-icon>clear</mat-icon>
+      Limpiar filtros
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-container">
+
+    <!-- Loading -->
+    <div *ngIf="cargando" class="loading-overlay">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Tabla con datos -->
+    <table *ngIf="!cargando && maquinasFiltradas.length > 0" class="maquinas-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Comercio</th>
+          <th>Estado</th>
+          <th>Etapa</th>
+          <!-- Columna acciones siempre visible: todos ven historial, solo logística ve editar -->
+          <th *ngIf="showActions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let maquina of maquinasFiltradas"
+          [class.selected]="selectedMaquina?.ID_Maquina === maquina.ID_Maquina"
+          (click)="seleccionarMaquina(maquina)">
+
+          <td class="nombre-maquina">
+            <strong>{{ maquina.Nombre_Maquina }}</strong>
+          </td>
+
+          <td>{{ maquina.tipo || '—' }}</td>
+
+          <td>
+            <span class="comercio-info">
+              {{ maquina.NombreComercio || '—' }}
+              <span *ngIf="maquina.DireccionComercio" class="direccion-small">
+                ({{ maquina.DireccionComercio }})
+              </span>
+            </span>
+          </td>
+
+          <td>
+            <span class="estado-badge" [class]="getEstadoClass(maquina.estado)">
+              {{ maquina.estado }}
+            </span>
+          </td>
+
+          <td>
+            <span class="etapa-badge" [class]="getEtapaClass(maquina.etapa)">
+              {{ maquina.etapa }}
+            </span>
+          </td>
+
+          <!-- Acciones: historial para TODOS; editar solo para Logística -->
+          <td *ngIf="showActions" class="acciones-cell" (click)="$event.stopPropagation()">
+
+            <!-- Ver historial → disponible para TODOS los roles -->
+            <button
+              mat-icon-button
+              (click)="verHistorialMaquina(maquina, $event)"
+              matTooltip="Ver historial"
+              class="btn-historial">
+              <mat-icon>history</mat-icon>
+            </button>
+
+            <!-- Editar → solo Logística -->
+            <button
+              *ngIf="puedeEditar"
+              mat-icon-button
+              (click)="editarMaquina(maquina, $event)"
+              matTooltip="Editar máquina"
+              class="btn-editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  
+  </div>
+</div>

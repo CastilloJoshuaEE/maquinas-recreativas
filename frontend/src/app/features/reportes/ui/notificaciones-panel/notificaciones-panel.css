@@ -1,0 +1,24 @@
+.notificaciones-panel { background: white; border-radius: 12px; overflow: hidden; max-height: 500px; display: flex; flex-direction: column; }
+.panel-header { padding: 1rem 1.5rem; background: linear-gradient(135deg, #4f6bed, #3d55c3); color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.panel-header h2 { margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem; }
+.unread-count { background: #ff4757; color: white; border-radius: 20px; padding: 2px 8px; font-size: 0.75rem; font-weight: bold; }
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+.error-message { padding: 1rem; background: #f8d7da; color: #721c24; text-align: center; }
+.no-notificaciones { text-align: center; padding: 2rem; color: #999; }
+.no-notificaciones mat-icon { font-size: 3rem; width: auto; height: auto; margin-bottom: 0.5rem; }
+.notificaciones-list { overflow-y: auto; flex: 1; }
+.notificacion-item { display: flex; padding: 1rem; border-bottom: 1px solid #e0e0e0; cursor: pointer; transition: background 0.2s; position: relative; }
+.notificacion-item:hover { background: #f8f9fa; }
+.notificacion-item.no-leida { background: #e3f2fd; }
+.notificacion-item.no-leida:hover { background: #d1e7fd; }
+.notificacion-icon { margin-right: 1rem; }
+.notificacion-icon mat-icon { font-size: 1.5rem; width: auto; height: auto; }
+.notificacion-content { flex: 1; }
+.notificacion-mensaje { margin-bottom: 0.5rem; color: #333; }
+.notificacion-detalles { display: flex; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: #666; }
+.detalle { display: inline-flex; align-items: center; gap: 0.25rem; }
+.detalle mat-icon { font-size: 0.9rem; width: auto; height: auto; }
+.notificacion-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: #999; }
+.marcar-leida { background: none; border: none; cursor: pointer; color: #999; padding: 0 0.5rem; }
+.marcar-leida:hover { color: #4f6bed; }
+@media (max-width: 768px) { .panel-header { flex-direction: column; align-items: stretch; } .notificacion-item { flex-direction: column; } .notificacion-icon { margin-bottom: 0.5rem; } .marcar-leida { position: absolute; top: 0.5rem; right: 0.5rem; } }

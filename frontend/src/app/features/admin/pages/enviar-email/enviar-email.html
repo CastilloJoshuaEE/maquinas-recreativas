@@ -1,0 +1,122 @@
+<div class="enviar-email-container">
+  <app-admin-header></app-admin-header>
+
+  <div class="content-wrapper">
+
+    <div class="page-header">
+      <button mat-icon-button (click)="regresar()" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h2><mat-icon class="title-icon">email</mat-icon> Enviar Email</h2>
+        <p class="subtitle">Envía un mensaje de correo electrónico a cualquier destinatario</p>
+      </div>
+    </div>
+
+    <!-- Mensaje de éxito -->
+    <div *ngIf="enviado" class="success-banner">
+      <mat-icon>check_circle</mat-icon>
+      <span>¡Email enviado correctamente!</span>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMsg" class="error-banner">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMsg }}</span>
+    </div>
+
+    <mat-card class="email-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>compose</mat-icon> Redactar email
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="emailForm" (ngSubmit)="enviar()" class="email-form">
+
+          <!-- Email del destinatario -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email del destinatario</mat-label>
+            <input matInput
+                   type="email"
+                   formControlName="destinatarioEmail"
+                   placeholder="ejemplo@correo.com">
+            <mat-icon matPrefix>alternate_email</mat-icon>
+            <mat-error *ngIf="emailForm.get('destinatarioEmail')?.hasError('required')">
+              El email del destinatario es requerido
+            </mat-error>
+            <mat-error *ngIf="emailForm.get('destinatarioEmail')?.hasError('email')">
+              Ingresa un email válido
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Nombre del destinatario (opcional) -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nombre del destinatario (opcional)</mat-label>
+            <input matInput
+                   formControlName="destinatarioNombre"
+                   placeholder="Ej: Juan Pérez">
+            <mat-icon matPrefix>person</mat-icon>
+          </mat-form-field>
+
+          <!-- Asunto -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Asunto</mat-label>
+            <input matInput
+                   formControlName="asunto"
+                   placeholder="Asunto del email">
+            <mat-icon matPrefix>subject</mat-icon>
+            <mat-error *ngIf="emailForm.get('asunto')?.hasError('required')">
+              El asunto es requerido
+            </mat-error>
+            <mat-error *ngIf="emailForm.get('asunto')?.hasError('minlength')">
+              El asunto debe tener al menos 3 caracteres
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Mensaje -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mensaje</mat-label>
+            <textarea matInput
+                      formControlName="mensaje"
+                      rows="8"
+                      placeholder="Escribe tu mensaje aquí..."></textarea>
+            <mat-icon matPrefix>message</mat-icon>
+            <mat-hint>El email se enviará con el nombre del sistema como remitente</mat-hint>
+            <mat-error *ngIf="emailForm.get('mensaje')?.hasError('required')">
+              El mensaje es requerido
+            </mat-error>
+            <mat-error *ngIf="emailForm.get('mensaje')?.hasError('minlength')">
+              El mensaje debe tener al menos 10 caracteres
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Acciones -->
+          <div class="form-actions">
+            <button mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="enviando || emailForm.invalid"
+                    class="send-btn">
+              <mat-spinner diameter="20" *ngIf="enviando"></mat-spinner>
+              <mat-icon *ngIf="!enviando">send</mat-icon>
+              <span>{{ enviando ? 'Enviando...' : 'Enviar Email' }}</span>
+            </button>
+
+            <button mat-stroked-button
+                    type="button"
+                    (click)="limpiar()"
+                    [disabled]="enviando"
+                    class="clear-btn">
+              <mat-icon>clear</mat-icon>
+              <span>Limpiar</span>
+            </button>
+          </div>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<section class="profile-section" *ngIf="user">
+  <h2>
+    <mat-icon>account_circle</mat-icon>
+    Perfil
+  </h2>
+  <div class="profile-info">
+    <p><strong>Cédula:</strong> {{ user.ci }}</p>
+    <p><strong>Nombre:</strong> {{ user.nombre }} {{ user.apellido }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Usuario:</strong> {{ user.usuario_asignado }}</p>
+    <p><strong>Rol:</strong> {{ user.tipo }}</p>
+    <p *ngIf="user.Especialidad"><strong>Especialidad:</strong> {{ user.Especialidad }}</p>
+    <p><strong>Estado:</strong> 
+      <span class="estado-badge" [ngClass]="{
+        'estado-activo': user.estado === 'Activo',
+        'estado-inhabilitado': user.estado === 'Inhabilitado',
+        'estado-pendiente': user.estado === 'Pendiente de asignacion'
+      }">{{ user.estado }}</span>
+    </p>
+    
+    <!-- Campos adicionales -->
+    <ng-container *ngFor="let field of additionalFields">
+      <p><strong>{{ field.label }}:</strong> {{ field.value }}</p>
+    </ng-container>
+  </div>
+</section>

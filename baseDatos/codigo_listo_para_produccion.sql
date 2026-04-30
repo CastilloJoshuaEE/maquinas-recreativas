@@ -1,3 +1,8 @@
+CREATE USER 'recrea_user'@'%' IDENTIFIED BY 'recrea_pass123';
+GRANT ALL PRIVILEGES ON bd_recrea_sys.* TO 'recrea_user'@'%';
+FLUSH PRIVILEGES;
+-- Seleccionar base de datos principal
+USE `bd_recrea_sys`;
 CREATE DATABASE IF NOT EXISTS bd_recrea_sys;
 USE bd_recrea_sys;
 -- DROP DATABASE bd_recrea_sys;
@@ -43,7 +48,7 @@ CREATE TABLE Logistica(
 CREATE TABLE historial_actividades (
     ID_Historial_Actividades CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     ID_Usuario CHAR(36) NOT NULL,
-    descripcion TEXT DEFAULT 'Estuvo en su main',
+    descripcion TEXT NOT NULL,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ID_Usuario) REFERENCES usuario(ID_Usuario)
 );
@@ -65,7 +70,7 @@ CREATE TABLE MaquinaRecreativa (
     Nombre_Maquina VARCHAR(100) NOT NULL,
     Tipo VARCHAR(50) NOT NULL,
     Etapa ENUM('Montaje', 'Distribucion', 'Recaudacion') DEFAULT 'Montaje' NOT NULL,
-    Estado ENUM('Ensamblandose', 'Comprobandose', 'Reensamblandose', 'Distribuyendose', 'Operativa', 'No operativa', 'Retirada') DEFAULT 'Ensamblándose' NOT NULL,
+    Estado ENUM('Ensamblandose', 'Comprobandose', 'Reensamblandose', 'Distribuyendose', 'Operativa', 'No operativa', 'Retirada') DEFAULT 'Ensamblandose' NOT NULL,
     Fecha_Registro DATE NOT NULL,
     ID_Tecnico_Ensamblador CHAR(36) NOT NULL,
     ID_Tecnico_Comprobador CHAR(36) NOT NULL,
@@ -105,7 +110,7 @@ CREATE INDEX idx_notificacion_maquina_estado ON NotificacionMaquinaRecreativa(Es
 -- Tabla: componente (con UUID)
 CREATE TABLE componente (
     ID_Componente CHAR(36) PRIMARY KEY DEFAULT (UUID()),
-    tipo ENUM('Ensamblador', 'Comprobador', 'Mantenimiento', 'Logistico') NOT NULL,
+    tipo ENUM('Logistico', 'Electronico', 'Estructural', 'Accesorio') NOT NULL,
     nombre VARCHAR(50) NOT NULL,
     precio DECIMAL(10,2) DEFAULT 10.00
 );
@@ -265,69 +270,15 @@ CREATE TABLE historial_maquinas (
 ALTER TABLE usuario MODIFY usuario_asignado VARCHAR(25) NOT NULL UNIQUE DEFAULT 'Aun no tiene';
 ALTER TABLE usuario
 ADD COLUMN fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP;
-INSERT INTO componente (tipo, nombre, precio) VALUES
-('Ensamblador', 'Monitor LED 32" Pantalla Táctil', 250.00),
-('Ensamblador', 'Placa Base Arcade Pro V2', 220.00),
-('Ensamblador', 'Joystick Industrial con Botones RGB', 55.00),
-('Ensamblador', 'Fuente de Alimentación 600W Certificada', 95.00),
-('Ensamblador', 'Kit Cableado Premium con Conectores Dorados', 35.00),
-('Ensamblador', 'Tarjeta Gráfica Arcade 4GB', 180.00),
-('Ensamblador', 'Sistema de Refrigeración Liquida', 120.00),
-('Ensamblador', 'Panel de Control con 8 Botones', 45.00),
-('Ensamblador', 'Convertidor de Video HDMI a VGA', 30.00),
-('Ensamblador', 'Kit de Montaje Completo para Arcade', 75.00),
-('Ensamblador', 'Cable HDMI Premium 2m', 12.00),
-('Ensamblador', 'Adaptador USB a DB9', 8.50),
-('Ensamblador', 'Altavoces estéreo USB', 25.00),
-('Ensamblador', 'RAM DDR4 8GB Kit', 45.00),
-('Ensamblador', 'Disco SSD 240GB', 55.00),
-('Ensamblador', 'Procesador Intel i3', 110.00),
-('Ensamblador', 'Procesador AMD Ryzen 3', 115.00),
-('Ensamblador', 'Módulo Wi-Fi integrado', 20.00),
-('Ensamblador', 'Módulo Bluetooth 5.0', 15.00),
-('Ensamblador', 'Receptor IR para mandos', 10.00),
-('Ensamblador', 'Teclado numérico auxiliar', 18.00),
-('Ensamblador', 'Panel LED de señalización', 22.00),
-('Ensamblador', 'Monitor secundario 7\"', 60.00),
-('Ensamblador', 'Amplificador de audio 20W', 35.00),
-('Ensamblador', 'Tarjeta de sonido 5.1', 40.00),
-('Ensamblador', 'Módulo de iluminación RGB', 28.00),
-('Ensamblador', 'Sensor de proximidad IR', 12.00),
-('Ensamblador', 'Módulo de cámara VGA', 30.00),
-('Ensamblador', 'Batería de respaldo 5V', 14.00),
-('Ensamblador', 'Kit tornillería acero M3', 16.00);
+ALTER TABLE historial_maquinas MODIFY ID_Maquina CHAR(36) NULL;
+-- Añadir columnas para edición y soft delete
+ALTER TABLE comentario 
+ADD COLUMN fecha_edicion DATETIME NULL,
+ADD COLUMN eliminado BOOLEAN DEFAULT FALSE;
 
-INSERT INTO componente (tipo, nombre, precio) VALUES
-('Mantenimiento', 'Kit Reparación Premium 50 Piezas', 50.00),
-('Mantenimiento', 'Lubricante Industrial Especial', 25.00),
-('Mantenimiento', 'Set Limpieza Profesional para Arcade', 30.00),
-('Mantenimiento', 'Pasta Térmica de Alto Rendimiento', 15.00),
-('Mantenimiento', 'Kit de Reparación para Pantallas', 60.00),
-('Mantenimiento', 'Repuestos para Joysticks (Pack 10)', 20.00),
-('Mantenimiento', 'Botones de Reemplazo RGB (Pack 20)', 35.00),
-('Mantenimiento', 'Ventiladores de Refrigeración 120mm', 18.00),
-('Mantenimiento', 'Cintas Aislantes y Termorretráctiles', 12.00),
-('Mantenimiento', 'Kit Emergencia para Fuentes', 40.00),
-('Mantenimiento', 'Fusible rápido 5A', 2.50),
-('Mantenimiento', 'Fusible rápido 3A', 2.00),
-('Mantenimiento', 'Conector de repuesto HDMI', 5.00),
-('Mantenimiento', 'Switch de encendido', 7.00),
-('Mantenimiento', 'Panel de botones recambio', 12.00),
-('Mantenimiento', 'Cable de alimentación IEC', 6.00),
-('Mantenimiento', 'Taco antivibración de goma', 4.00),
-('Mantenimiento', 'Correa para ventilador', 3.50),
-('Mantenimiento', 'Soporte metálico para placa', 9.00),
-('Mantenimiento', 'Sensor térmico NTC', 8.00),
-('Mantenimiento', 'Disipador con ventilador', 14.00),
-('Mantenimiento', 'Resistencia 10 Ω', 1.50),
-('Mantenimiento', 'Condensador 1000 µF', 2.00),
-('Mantenimiento', 'Diodo rectificador (5 pz)', 4.00),
-('Mantenimiento', 'LED recambio (pack 20)', 6.00),
-('Mantenimiento', 'Conector Molex 4 pines', 3.50),
-('Mantenimiento', 'Adaptador DC Jack', 5.50),
-('Mantenimiento', 'Cinta térmica Kapton', 7.50),
-('Mantenimiento', 'Pata ajustable para carcasa', 6.00),
-('Mantenimiento', 'Estuche porta-fusibles', 8.00);
+-- Crear índice para búsquedas
+CREATE INDEX idx_comentario_fecha ON comentario(fecha_hora);
+CREATE INDEX idx_comentario_eliminado ON comentario(eliminado);
 INSERT INTO componente (tipo, nombre, precio) VALUES
 ('Logistico', 'Carcasa Arcade Clásica Roja', 150.00),
 ('Logistico', 'Carcasa Arcade Premium Negra', 200.00),
@@ -339,3 +290,95 @@ INSERT INTO componente (tipo, nombre, precio) VALUES
 ('Logistico', 'Carcasa Móvil con Ruedas', 170.00),
 ('Logistico', 'Carcasa Personalizable (Base Blanca)', 160.00),
 ('Logistico', 'Carcasa Arcade XL para 2 Jugadores', 300.00);
+
+-- =============================================
+-- INSERTAR COMPONENTES ELECTRONICOS
+-- =============================================
+INSERT INTO componente (tipo, nombre, precio) VALUES
+('Electronico', 'Placa Base Arcade Pro V2', 220.00),
+('Electronico', 'Tarjeta Gráfica Arcade 4GB', 180.00),
+('Electronico', 'Procesador Intel i3', 110.00),
+('Electronico', 'Procesador AMD Ryzen 3', 115.00),
+('Electronico', 'RAM DDR4 8GB Kit', 45.00),
+('Electronico', 'Disco SSD 240GB', 55.00),
+('Electronico', 'Fuente de Alimentación 600W Certificada', 95.00),
+('Electronico', 'Convertidor de Video HDMI a VGA', 30.00),
+('Electronico', 'Tarjeta de sonido 5.1', 40.00),
+('Electronico', 'Módulo Wi-Fi integrado', 20.00),
+('Electronico', 'Módulo Bluetooth 5.0', 15.00),
+('Electronico', 'Sensor de proximidad IR', 12.00),
+('Electronico', 'Módulo de cámara VGA', 30.00),
+('Electronico', 'Receptor IR para mandos', 10.00),
+('Electronico', 'Amplificador de audio 20W', 35.00),
+('Electronico', 'Módulo de iluminación RGB', 28.00),
+('Electronico', 'Batería de respaldo 5V', 14.00),
+('Electronico', 'Sensor térmico NTC', 8.00),
+('Electronico', 'Resistencia 10 Ω', 1.50),
+('Electronico', 'Condensador 1000 µF', 2.00),
+('Electronico', 'Diodo rectificador (5 pz)', 4.00),
+('Electronico', 'LED recambio (pack 20)', 6.00),
+('Electronico', 'Adaptador DC Jack', 5.50);
+
+-- =============================================
+-- INSERTAR COMPONENTES ESTRUCTURALES
+-- =============================================
+INSERT INTO componente (tipo, nombre, precio) VALUES
+('Estructural', 'Carcasa Arcade Premium Negro', 150.00),
+('Estructural', 'Carcasa Arcade Premium Blanco', 150.00),
+('Estructural', 'Carcasa Arcade Compacta', 120.00),
+('Estructural', 'Panel de Control con 8 Botones', 45.00),
+('Estructural', 'Joystick Industrial con Botones RGB', 55.00),
+('Estructural', 'Soporte metálico para placa', 9.00),
+('Estructural', 'Kit tornillería acero M3', 16.00),
+('Estructural', 'Taco antivibración de goma', 4.00),
+('Estructural', 'Soporte para ventilador', 7.00),
+('Estructural', 'Pata ajustable para carcasa', 6.00),
+('Estructural', 'Marco de metal para monitor', 25.00),
+('Estructural', 'Base de apoyo antideslizante', 12.00),
+('Estructural', 'Bisagras para panel de servicio', 8.00),
+('Estructural', 'Manija de transporte', 10.00),
+('Estructural', 'Rejilla de ventilación', 5.00),
+('Estructural', 'Soporte para tarjeta madre', 15.00),
+('Estructural', 'Guía para cables', 4.00),
+('Estructural', 'Clip organizador de cables', 3.00),
+('Estructural', 'Protector de esquinas', 6.00),
+('Estructural', 'Pieza de unión estructural', 7.00);
+
+-- =============================================
+-- INSERTAR COMPONENTES ACCESORIOS
+-- =============================================
+INSERT INTO componente (tipo, nombre, precio) VALUES
+('Accesorio', 'Monitor LED 32" Pantalla Táctil', 250.00),
+('Accesorio', 'Monitor secundario 7"', 60.00),
+('Accesorio', 'Kit Cableado Premium con Conectores Dorados', 35.00),
+('Accesorio', 'Sistema de Refrigeración Liquida', 120.00),
+('Accesorio', 'Kit de Montaje Completo para Arcade', 75.00),
+('Accesorio', 'Cable HDMI Premium 2m', 12.00),
+('Accesorio', 'Adaptador USB a DB9', 8.50),
+('Accesorio', 'Altavoces estéreo USB', 25.00),
+('Accesorio', 'Teclado numérico auxiliar', 18.00),
+('Accesorio', 'Panel LED de señalización', 22.00),
+('Accesorio', 'Kit Reparación Premium 50 Piezas', 50.00),
+('Accesorio', 'Lubricante Industrial Especial', 25.00),
+('Accesorio', 'Set Limpieza Profesional para Arcade', 30.00),
+('Accesorio', 'Pasta Térmica de Alto Rendimiento', 15.00),
+('Accesorio', 'Kit de Reparación para Pantallas', 60.00),
+('Accesorio', 'Repuestos para Joysticks (Pack 10)', 20.00),
+('Accesorio', 'Botones de Reemplazo RGB (Pack 20)', 35.00),
+('Accesorio', 'Ventiladores de Refrigeración 120mm', 18.00),
+('Accesorio', 'Cintas Aislantes y Termorretráctiles', 12.00),
+('Accesorio', 'Kit Emergencia para Fuentes', 40.00),
+('Accesorio', 'Fusible rápido 5A', 2.50),
+('Accesorio', 'Fusible rápido 3A', 2.00),
+('Accesorio', 'Conector de repuesto HDMI', 5.00),
+('Accesorio', 'Switch de encendido', 7.00),
+('Accesorio', 'Panel de botones recambio', 12.00),
+('Accesorio', 'Cable de alimentación IEC', 6.00),
+('Accesorio', 'Correa para ventilador', 3.50),
+('Accesorio', 'Disipador con ventilador', 14.00),
+('Accesorio', 'Conector Molex 4 pines', 3.50),
+('Accesorio', 'Cinta térmica Kapton', 7.50),
+('Accesorio', 'Estuche porta-fusibles', 8.00);
+
+
+SELECT tipo, COUNT(*) as cantidad FROM componente GROUP BY tipo;

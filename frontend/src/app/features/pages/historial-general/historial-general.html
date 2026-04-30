@@ -1,0 +1,32 @@
+<div class="historial-general-container">
+  <app-admin-header></app-admin-header>
+  <div class="historial-general-content">
+    <div class="historial-header-section">
+      <h1><mat-icon>history</mat-icon> Historial General de Actividades</h1>
+      <button mat-raised-button color="primary" class="ver-historial-btn" (click)="mostrarHistorial = true"><mat-icon>visibility</mat-icon> Ver Historial Completo</button>
+    </div>
+
+    <mat-card class="historial-info-card">
+      <mat-card-content>
+        <div class="info-icon"><mat-icon>info</mat-icon></div>
+        <h2>¿Qué puedes ver aquí?</h2>
+        <p>Desde esta sección puedes ver todas las actividades realizadas en las máquinas recreativas, incluyendo montajes, comprobaciones, mantenimientos y cambios de estado.</p>
+        <div class="info-grid">
+          <div class="info-item"><mat-icon>handyman</mat-icon><h3>Ensamblajes</h3><p>Registros de montaje y ensamblaje de máquinas</p></div>
+          <div class="info-item"><mat-icon>check_circle</mat-icon><h3>Comprobaciones</h3><p>Controles de calidad y verificaciones</p></div>
+          <div class="info-item"><mat-icon>local_shipping</mat-icon><h3>Distribuciones</h3><p>Envíos y asignaciones a comercios</p></div>
+          <div class="info-item"><mat-icon>build</mat-icon><h3>Mantenimientos</h3><p>Reparaciones y mantenimiento correctivo</p></div>
+          <div class="info-item"><mat-icon>attach_money</mat-icon><h3>Recaudaciones</h3><p>Registros de ingresos por máquina</p></div>
+          <div class="info-item"><mat-icon>swap_horiz</mat-icon><h3>Cambios de Estado</h3><p>Transiciones entre estados operativos</p></div>
+        </div>
+        <div class="nota" *ngIf="!esAdminOrLogistica"><mat-icon>warning</mat-icon><p>Solo los administradores y personal de logística tienen acceso completo al historial.</p></div>
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="acceso-denegado" *ngIf="esDenegado">
+      <mat-icon>lock</mat-icon><h2>Acceso Denegado</h2><p>No tienes permisos para ver esta página.</p>
+      <button mat-raised-button color="primary" (click)="regresar()"><mat-icon>arrow_back</mat-icon> Volver al inicio</button>
+    </div>
+  </div>
+  <app-historial-maquina *ngIf="mostrarHistorial" [nombreMaquina]="'General'" (onClose)="mostrarHistorial = false"></app-historial-maquina>
+</div>

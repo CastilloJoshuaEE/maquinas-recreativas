@@ -1,0 +1,84 @@
+<div class="dashboard-container">
+  <app-admin-header></app-admin-header>
+  <div class="dashboard-sections">
+
+    <section class="machines-section">
+      <h2>Máquinas Recreativas</h2>
+      <div class="machine-list">
+        <h3 (click)="mostrarMantenimiento = !mostrarMantenimiento">
+          En Mantenimiento {{ mostrarMantenimiento ? '🔽' : '▶️' }}
+        </h3>
+        
+        @if (mostrarMantenimiento) {
+          <div>
+            @if (cargandoMantenimiento) {
+              <div class="loading-small"><mat-spinner diameter="30"></mat-spinner></div>
+            }
+            
+            @if (!cargandoMantenimiento && maquinasMantenimiento.length === 0) {
+              <div class="no-data"><p>No hay máquinas para dar mantenimiento...</p></div>
+            }
+            
+            @if (!cargandoMantenimiento && maquinasMantenimiento.length > 0) {
+              <ul>
+                @for (maquina of maquinasMantenimiento; track maquina.ID_Maquina) {
+                  <li class="li-maquina" [class.selected]="selectedMaquina?.ID_Maquina === maquina.ID_Maquina" (click)="seleccionarMaquina(maquina)">
+                    <div class="li-maquina-content">
+                      <strong>{{ maquina.Nombre_Maquina }}</strong><br />
+                      <span class="span-comercio-details"><strong>Comercio:</strong> {{ maquina.NombreComercio }}</span>
+                      <span class="span-comercio-details"><strong>Dirección:</strong> {{ maquina.DireccionComercio }}</span>
+
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+            
+            @if (maquinasMantenimiento.length > 0 && selectedMaquina) {
+              <div class="action-buttons">
+                <button mat-raised-button color="success" (click)="abrirModalMensaje(true)" [disabled]="!selectedMaquina">Dar de alta </button>
+                <button mat-raised-button color="warn" (click)="abrirModalMensaje(false)" [disabled]="!selectedMaquina">Dar de baja </button>
+                <button mat-raised-button (click)="irAGestionComponentes(selectedMaquina )" 
+                        [disabled]="!selectedMaquina ">
+                    <mat-icon>memory</mat-icon> Usar Componentes
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
+   <hr />
+        <!-- Dashboard de Máquinas (solo lectura) -->
+        <app-maquinas-dashboard
+          [showActions]="true"
+          [filterEstado]="'Ensamblandose'"
+          (verHistorial)="verHistorialMaquina($event)">
+        </app-maquinas-dashboard>
+  </div>
+  
+  @if (mostrarModalMensaje) {
+    <div class="modal-overlay" (click)="cerrarModalMensaje()">
+      <div class="modal-mensaje" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Mensaje para logística</h3>
+          <button class="modal-close" (click)="cerrarModalMensaje()">×</button>
+        </div>
+        <div class="modal-body">
+          <textarea [(ngModel)]="mensaje" placeholder="Describe el resultado del mantenimiento..." rows="4" class="mensaje-textarea"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button mat-button (click)="cerrarModalMensaje()">Cancelar</button>
+          <button mat-raised-button color="primary" (click)="finalizarMantenimiento()" [disabled]="!mensaje.trim() || enviando">
+            @if (enviando) {
+              <mat-spinner diameter="20"></mat-spinner>
+            }
+            @if (!enviando) {
+              <span>Enviar</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,27 @@
+.informacion-page { min-height: 100vh; background: linear-gradient(135deg, #07224c 0%, #124258 50%, #3b4a66 100%); }
+header { background: rgba(255,255,255,0.95); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: fixed; width: 100%; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+header h1 { color: #2c3e50; margin: 0; font-size: 1.5rem; }
+header nav a { color: #4f6bed; text-decoration: none; font-weight: 600; }
+.informacion-container { max-width: 1200px; margin: 0 auto; padding: 100px 20px 40px; }
+.informacion-card { background: rgba(255,255,255,0.95); border-radius: 20px; overflow: hidden; }
+.seccion-informacion { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0e0e0; }
+.seccion-informacion:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.seccion-informacion h2 { display: flex; align-items: center; gap: 0.5rem; color: #2c3e50; margin-bottom: 1rem; font-size: 1.3rem; }
+.seccion-informacion h2 mat-icon { color: #4f6bed; }
+.seccion-informacion p { color: #555; line-height: 1.6; margin-bottom: 0.75rem; }
+.seccion-informacion ul { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.seccion-informacion li { color: #555; margin-bottom: 0.25rem; }
+.grid-distribucion { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1.5rem; margin-top: 1rem; }
+.tipo-comercio { background: #f8f9fa; padding: 1rem; border-radius: 12px; border-left: 4px solid #4f6bed; }
+.tipo-comercio h3 { color: #4f6bed; margin-bottom: 0.5rem; }
+.tipo-comercio p { color: #666; font-size: 0.85rem; font-style: italic; margin-bottom: 0.5rem; }
+.tipo-comercio ul { padding-left: 1.25rem; }
+.tipo-comercio li { font-size: 0.9rem; }
+.ciclo-vida { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+.etapa { display: flex; flex-direction: column; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 12px; min-width: 100px; }
+.etapa mat-icon { font-size: 2rem; width: auto; height: auto; color: #4f6bed; margin-bottom: 0.5rem; }
+.etapa span { font-size: 0.8rem; color: #555; }
+.flecha { color: #4f6bed; }
+.boton-volver-container { text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0; }
+.boton-volver { display: inline-flex; align-items: center; gap: 0.5rem; }
+@media (max-width: 768px) { header { padding: 0.75rem 1rem; } header h1 { font-size: 1.2rem; } .informacion-container { padding: 80px 15px 30px; } .ciclo-vida { flex-direction: column; } .flecha { transform: rotate(90deg); } .grid-distribucion { grid-template-columns: 1fr; } }
