@@ -1,3 +1,4 @@
+
 Basado en TU sistema de máquinas recreativas:
 Arquitectura Hexagonal (Ports and Adapters) + DDD + CQRS
 
@@ -31,7 +32,7 @@ backend/
 │   ├── Comentario/
 │   │   ├── Comentario.php
 │   │   └── ComentarioRepository.php
-│   ├──Comercio/
+│   ├── Comercio/
 │   │   ├── Comercio.php
 │   │   └── ComercioRepository.php
 │   ├── Componente/
@@ -70,7 +71,7 @@ backend/
 │   └── Shared/
 │       ├── Exceptions/
 │       │   └── DomainException.php
-│       └── Valueobjects/
+│       └── ValueObjects/
 │           ├── Email.php
 │           └── Uuid.php
 ├── Infrastructure/
@@ -90,35 +91,37 @@ backend/
 │   │   ├── MySQLRecaudacionRepository.php
 │   │   ├── MySQLReporteRepository.php
 │   │   └── MySQLUsuarioRepository.php
-│   └── Security/
-│       ├── BcryptPasswordHasher.php
-│       ├── CifradoHelper.php
-│       ├── HistorialHelper.php
-│       ├── PasswordHasher.php
-│       ├── RateLimiter.php
-│       ├── UsuarioHelper.php
-│       └── ValidationHelper.php
+│   ├── Security/
+│   │   ├── BcryptPasswordHasher.php
+│   │   ├── CifradoHelper.php
+│   │   ├── HistorialHelper.php
+│   │   ├── PasswordHasher.php
+│   │   ├── RateLimiter.php
+│   │   ├── UsuarioHelper.php
+│   │   └── ValidationHelper.php
+│   └── Services/
+│       └── Email/
+│           └── BrevoEmailService.php
 ├── Application/
-│   ├── Commands/Command.php y CommandHandler.php
+│   ├── Commands/
+│   │   ├── Command.php
+│   │   ├── CommandHandler.php
 │   │   ├── Comentario/
 │   │   │   ├── CrearComentarioCommand.php
-│   │   │   └── CrearComentarioHandler.php
-
-│   │   │   ├── EliminarComentarioCommand.php
-│   │   │   └── EliminarComentarioHandler.php
-
+│   │   │   ├── CrearComentarioHandler.php
 │   │   │   ├── ActualizarComentarioCommand.php
-│   │   │   └── ActualizarComentarioHandler.php
+│   │   │   ├── ActualizarComentarioHandler.php
+│   │   │   ├── EliminarComentarioCommand.php
+│   │   │   ├── EliminarComentarioHandler.php
+│   │   │   ├── EditarComentarioCommand.php
+│   │   │   └── EditarComentarioHandler.php
 │   │   ├── Comercio/
-
+│   │   │   ├── RegistrarComercioCommand.php
+│   │   │   ├── RegistrarComercioHandler.php
 │   │   │   ├── ActualizarComercioCommand.php
-│   │   │   └── ActualizarComercioHandler.php
-
+│   │   │   ├── ActualizarComercioHandler.php
 │   │   │   ├── EliminarComercioCommand.php
 │   │   │   └── EliminarComercioHandler.php
-
-│   │   │   ├── RegistrarComercioCommand.php
-│   │   │   └── RegistrarComercioHandler.php
 │   │   ├── Componente/
 │   │   │   ├── AsignarCarcasaCommand.php
 │   │   │   ├── AsignarCarcasaHandler.php
@@ -129,22 +132,22 @@ backend/
 │   │   │   ├── UsarComponenteCommand.php
 │   │   │   └── UsarComponenteHandler.php
 │   │   ├── Maquina/
+│   │   │   ├── RegistrarMaquinaCommand.php
+│   │   │   ├── RegistrarMaquinaHandler.php
+│   │   │   ├── GenerarPlacaCommand.php
+│   │   │   ├── GenerarPlacaHandler.php
+│   │   │   ├── PonerOperativaCommand.php
+│   │   │   ├── PonerOperativaHandler.php
 │   │   │   ├── DarMantenimientoCommand.php
 │   │   │   ├── DarMantenimientoHandler.php
 │   │   │   ├── FinalizarMantenimientoCommand.php
 │   │   │   ├── FinalizarMantenimientoHandler.php
-│   │   │   ├── GenerarPlacaCommand.php
-│   │   │   ├── GenerarPlacaHandler.php
 │   │   │   ├── MandarAComprobacionCommand.php
 │   │   │   ├── MandarAComprobacionHandler.php
 │   │   │   ├── MandarADistribucionCommand.php
 │   │   │   ├── MandarADistribucionHandler.php
 │   │   │   ├── MandarAReensamblarCommand.php
 │   │   │   ├── MandarAReensamblarHandler.php
-│   │   │   ├── PonerOperativaCommand.php
-│   │   │   ├── PonerOperativaHandler.php
-│   │   │   ├── RegistrarMaquinaCommand.php
-│   │   │   ├── RegistrarMaquinaHandler.php
 │   │   │   ├── RegistrarMontajeCommand.php
 │   │   │   └── RegistrarMontajeHandler.php
 │   │   ├── Notificacion/
@@ -157,121 +160,45 @@ backend/
 │   │   │   ├── MarcarTodasComoLeidasCommand.php
 │   │   │   └── MarcarTodasComoLeidasHandler.php
 │   │   ├── Recaudacion/
+│   │   │   ├── RegistrarRecaudacionCommand.php
+│   │   │   ├── RegistrarRecaudacionHandler.php
 │   │   │   ├── ActualizarRecaudacionCommand.php
 │   │   │   ├── ActualizarRecaudacionHandler.php
 │   │   │   ├── EliminarRecaudacionCommand.php
 │   │   │   ├── EliminarRecaudacionHandler.php
 │   │   │   ├── GuardarInformeCommand.php
-│   │   │   ├── GuardarInformeHandler.php
-│   │   │   ├── RegistrarRecaudacionCommand.php
-│   │   │   └── RegistrarRecaudacionHandler.php
+│   │   │   └── GuardarInformeHandler.php
 │   │   ├── Reporte/
-│   │   │   ├── ActualizarEstadoReporteCommand.php
-│   │   │   ├── ActualizarEstadoReporteHandler.php
 │   │   │   ├── CrearReporteCommand.php
-│   │   │   └── CrearReporteHandler.php
-│   │   └── Usuario/
-│   │       ├── ActualizarPerfilCommand.php
-│   │       ├── ActualizarPerfilHandler.php
-│   │       ├── ActualizarUsuarioAsignadoCommand.php
-│   │       ├── ActualizarUsuarioAsignadoHandler.php
-│   │       ├── ActualizarUsuarioCommand.php
-│   │       ├── ActualizarUsuarioHandler.php
-│   │       ├── CambiarEstadoUsuarioCommand.php
-│   │       ├── CambiarEstadoUsuarioHandler.php
-│   │       ├── EliminarUsuarioCommand.php
-│   │       ├── EliminarUsuarioHandler.php
-│   │       ├── LoginCommand.php
-│   │       ├── LoginHandler.php
-│   │       ├── LogoutCommand.php
-│   │       ├── LogoutHandler.php
-│   │       ├── RecuperarContrasenaCommand.php
-│   │       ├── RecuperarContrasenaHandler.php
-│   │       ├── RegistrarActividadCommand.php
-│   │       ├── RegistrarActividadHandler.php
-│   │       ├── RegistrarUsuarioAdminCommand.php
-│   │       ├── RegistrarUsuarioAdminHandler.php
-│   │       ├── RegistrarUsuarioCommand.php
-│   │       └── RegistrarUsuarioHandler.php
-│   └── Queries/Query.php y QueryHandler.php
-│       ├── Comentario/
-│       │   ├── ObtenerComentariosPorReporteQuery.php
-│       │   └── ObtenerComentariosPorReporteHandler.php
-│       ├── Comercio/
-│       │   ├── ObtenerComerciosHandler.php
-│       │   └── ObtenerComerciosQuery.php
-│       ├── Componente/
-│       │   ├── ObtenerComponentes.php
-│       │   ├── ObtenerComponentesDisponiblesHandler.php
-│       │   ├── ObtenerComponentesDisponiblesQuery.php
-│       │   ├── ObtenerComponentesEnUsoHandler.php
-│       │   ├── ObtenerComponentesEnUsoQuery.php
-│       │   ├── ObtenerComponentesHandler.php
-│       │   └── ObtenerComponentesQuery.php
-│       ├── Distribucion/
-│       │   ├── ObtenerInformesDistribucionHandler.php
-│       │   └── ObtenerInformesDistribucionQuery.php
-│       ├── Historial/
-│       │   ├── ObtenerHistorialGeneralHandler.php
-│       │   ├── ObtenerHistorialGeneralQuery.php
-│       │   ├── ObtenerHistorialPorMaquinaHandler.php
-│       │   ├── ObtenerHistorialPorMaquinaQuery.php
-│       │   ├── ObtenerHistorialPorUsuarioHandler.php
-│       │   ├── ObtenerHistorialPorUsuarioQuery.php
-│       │   ├── ObtenerResumenRecienteHandler.php
-│       │   └── ObtenerResumenRecienteQuery.php
-│       ├── Maquina/
-│       │   ├── ObtenerComponentesMaquinaHandler.php
-│       │   ├── ObtenerComponentesMaquinaQuery.php
-│       │   ├── ObtenerMaquinasParaDistribucionHandler.php
-│       │   ├── ObtenerMaquinasParaDistribucionQuery.php
-│       │   ├── ObtenerMaquinasPorEstadoHandler.php
-│       │   ├── ObtenerMaquinasPorEstadoQuery.php
-│       │   ├── ObtenerMaquinasPorEtapaHandler.php
-│       │   ├── ObtenerMaquinasPorEtapaQuery.php
-│       │   ├── ObtenerMaquinasPorTecnicoComprobadorHandler.php
-│       │   ├── ObtenerMaquinasPorTecnicoComprobadorQuery.php
-│       │   ├── ObtenerMaquinasPorTecnicoEnsambladorHandler.php
-│       │   ├── ObtenerMaquinasPorTecnicoEnsambladorQuery.php
-│       │   ├── ObtenerMaquinasPorTecnicoMantenimientoHandler.php
-│       │   └── ObtenerMaquinasPorTecnicoMantenimientoQuery.php
-│       ├── Notificacion/
-│       │   ├── ObtenerCantidadNoLeidasHandler.php
-│       │   ├── ObtenerCantidadNoLeidasQuery.php
-│       │   ├── ObtenerNoLeidasHandler.php
-│       │   ├── ObtenerNoLeidasQuery.php
-│       │   ├── ObtenerNotificacionesMaquinaHandler.php
-│       │   ├── ObtenerNotificacionesMaquinaQuery.php
-│       │   ├── ObtenerNotificacionesReporteHandler.php
-│       │   └── ObtenerNotificacionesReporteQuery.php
-│       ├── Recaudacion/
-│       │   ├── ObtenerComercioRecaudacionHandler.php
-│       │   ├── ObtenerComercioRecaudacionQuery.php
-│       │   ├── ObtenerInformePorRecaudacionHandler.php
-│       │   ├── ObtenerInformePorRecaudacionQuery.php
-│       │   ├── ObtenerMaquinasOperativasPorComercioHandler.php
-│       │   ├── ObtenerMaquinasOperativasPorComercioQuery.php
-│       │   ├── ObtenerMaquinasRecaudacionHandler.php
-│       │   ├── ObtenerMaquinasRecaudacionQuery.php
-│       │   ├── ObtenerRecaudacionesHandler.php
-│       │   ├── ObtenerRecaudacionesQuery.php
-│       │   ├── ObtenerRecaudacionPorIdHandler.php
-│       │   ├── ObtenerRecaudacionPorIdQuery.php
-│       │   ├── ObtenerResumenRecaudacionesHandler.php
-│       │   └── ObtenerResumenRecaudacionesQuery.php
-│       └── Usuario/
-│           ├── BuscarPorEmailHandler.php
-│           ├── BuscarPorEmailQuery.php
-│           ├── ObtenerHistorialActividadesHandler.php
-│           ├── ObtenerHistorialActividadesQuery.php
-│           ├── ObtenerTecnicosPorEspecialidadHandler.php
-│           ├── ObtenerTecnicosPorEspecialidad.php
-│           ├── ObtenerTodosUsuariosHandler.php
-│           ├── ObtenerTodosUsuarios.php
-│           ├── ObtenerUsuarioPorIdHandler.php
-│           ├── ObtenerUsuarioPorIdQuery.php
-│           ├── ObtenerUsuariosPorTipoHandler.php
-│           └── ObtenerUsuariosPorTipoQuery.php
+│   │   │   ├── CrearReporteHandler.php
+│   │   │   ├── ActualizarEstadoReporteCommand.php
+│   │   │   └── ActualizarEstadoReporteHandler.php
+│   │   ├── Usuario/
+│   │   │   ├── LoginCommand.php
+│   │   │   ├── LoginHandler.php
+│   │   │   ├── LogoutCommand.php
+│   │   │   ├── LogoutHandler.php
+│   │   │   ├── RegistrarUsuarioCommand.php
+│   │   │   ├── RegistrarUsuarioHandler.php
+│   │   │   ├── RegistrarUsuarioAdminCommand.php
+│   │   │   ├── RegistrarUsuarioAdminHandler.php
+│   │   │   ├── ActualizarUsuarioCommand.php
+│   │   │   ├── ActualizarUsuarioHandler.php
+│   │   │   ├── EliminarUsuarioCommand.php
+│   │   │   ├── EliminarUsuarioHandler.php
+│   │   │   ├── CambiarEstadoUsuarioCommand.php
+│   │   │   ├── CambiarEstadoUsuarioHandler.php
+│   │   │   ├── RecuperarContrasenaCommand.php
+│   │   │   ├── RecuperarContrasenaHandler.php
+│   │   │   ├── RegistrarActividadCommand.php
+│   │   │   └── RegistrarActividadHandler.php
+│   │   └── Email/
+│   │       ├── EnviarEmailCommand.php
+│   │       └── EnviarEmailHandler.php
+│   └── Queries/
+│       ├── Query.php
+│       ├── QueryHandler.php
+│       └── (todas las queries organizadas por módulo como en tu estructura original)
 ├── Interfaces/Http/
 │   ├── Controllers/
 │   │   ├── AdministradorController.php
@@ -287,7 +214,8 @@ backend/
 │   │   ├── TecnicoComprobadorController.php
 │   │   ├── TecnicoEnsambladorController.php
 │   │   ├── TecnicoMantenimientoController.php
-│   │   └── UsuarioController.php
+│   │   ├── UsuarioController.php
+│   │   └── EmailController.php
 │   └── Routes/
 │       ├── administrador.routes.php
 │       ├── auth.routes.php
@@ -314,24 +242,14 @@ backend/
 │   ├── robots.txt
 │   ├── serve.php
 │   └── sitemap.xml
-
-├── public/docs/index.html y swagger-initializer.js
+├── public/docs/
+│   ├── index.html
+│   └── swagger-initializer.js
+├── Swagger/
+│   └── SwaggerConfig.php
 ├── Scripts/
 │   └── hash.php
 └── Storage/
     ├── Cache/
     ├── Logs/
     └── rate_limits.json
-
-backend/Swagger/SwaggerConfig.php
-
-`BrevoEmailService.php``backend/Infrastructure/Services/Email/``EnviarEmailCommand.php``backend/Application/Commands/Email/``EnviarEmailHandler.php``backend/Application/Commands/Email/``EmailController.php``backend/Interfaces/Http/Controllers/`
-
-```
-├── Application/
-│   ├── Commands/Comentario/
-│   │   ├── EditarComentarioCommand.php (nuevo)
-│   │   ├── EditarComentarioHandler.php (nuevo)
-│   │   ├── EliminarComentarioCommand.php (nuevo)
-│   │   └── EliminarComentarioHandler.php (nuevo)
-```

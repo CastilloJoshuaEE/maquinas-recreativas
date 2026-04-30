@@ -24,7 +24,7 @@ if (!file_exists($bootstrapEnv)) {
 }
 require_once $bootstrapEnv;
 
-$configConstants = $projectRoot . '/config/constants.php';
+$configConstants = $projectRoot . '/Config/constants.php';
 if (!file_exists($configConstants)) {
     die("Error: No se encuentra config/constants.php en: " . $configConstants . "\n");
 }

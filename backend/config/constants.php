@@ -1,6 +1,6 @@
 <?php
 /**
- * backend/config/constants.php
+ * backend/Config/constants.php
  * Archivo de constantes globales del sistema
  * 
  * Define todas las constantes utilizadas en la aplicación para

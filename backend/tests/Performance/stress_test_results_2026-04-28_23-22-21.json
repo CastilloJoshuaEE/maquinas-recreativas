@@ -1,0 +1,51 @@
+{
+    "timestamp": "2026-04-28 23:22:21",
+    "results": [
+        {
+            "users": 5,
+            "requests": 122,
+            "errors": 0,
+            "error_rate": 0,
+            "rps": 8.13,
+            "p95": 92.32,
+            "p99": 115.58
+        },
+        {
+            "users": 10,
+            "requests": 123,
+            "errors": 0,
+            "error_rate": 0,
+            "rps": 8.18,
+            "p95": 89.05,
+            "p99": 98.02
+        },
+        {
+            "users": 20,
+            "requests": 122,
+            "errors": 0,
+            "error_rate": 0,
+            "rps": 7.88,
+            "p95": 84.65,
+            "p99": 102
+        },
+        {
+            "users": 30,
+            "requests": 118,
+            "errors": 0,
+            "error_rate": 0,
+            "rps": 7.85,
+            "p95": 99.6,
+            "p99": 244.48
+        },
+        {
+            "users": 50,
+            "requests": 121,
+            "errors": 0,
+            "error_rate": 0,
+            "rps": 8.01,
+            "p95": 98.59,
+            "p99": 123.5
+        }
+    ],
+    "breakpoint": null
+}

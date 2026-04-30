@@ -20,7 +20,7 @@ services:
       test: ["CMD", "php", "-v"]
       interval: 10s
       timeout: 5s
-      retries: 3      
+      retries: 3
     networks:
       - maquinas_network
     depends_on:
@@ -82,7 +82,7 @@ services:
       - maquinas_network
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
-  # PHPMyAdmin para administrar BD
+  # PHPMyAdmin
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: maquinas_recreativas_phpmyadmin
@@ -98,7 +98,7 @@ services:
     depends_on:
       - mysql
 
-  # Redis para cache y sesiones
+  # Redis
   redis:
     image: redis:7.2-alpine
     container_name: maquinas_recreativas_redis
@@ -110,7 +110,7 @@ services:
     networks:
       - maquinas_network
 
-  # MailHog para pruebas de email
+  # MailHog
   mailhog:
     image: mailhog/mailhog:latest
     container_name: maquinas_recreativas_mailhog
@@ -120,7 +120,7 @@ services:
     networks:
       - maquinas_network
 
-  # Node.js para herramientas (opcional)
+  # Node.js
   node:
     image: node:18-alpine
     container_name: maquinas_recreativas_node
@@ -131,6 +131,74 @@ services:
     networks:
       - maquinas_network
 
+  # =============================================
+  # OBSERVABILIDAD
+  # =============================================
+
+  # Prometheus - recolecta métricas
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: maquinas_recreativas_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - maquinas_network
+    depends_on:
+      - nginx
+
+  # Loki - recolecta logs
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: maquinas_recreativas_loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - maquinas_network
+
+  # Promtail - envía logs de Docker a Loki
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: maquinas_recreativas_promtail
+    volumes:
+      - ./observability/promtail.yml:/etc/promtail/promtail.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail.yml
+    networks:
+      - maquinas_network
+    depends_on:
+      - loki
+
+  # Grafana - visualización
+  grafana:
+    image: grafana/grafana:latest
+    container_name: maquinas_recreativas_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    networks:
+      - maquinas_network
+    depends_on:
+      - prometheus
+      - loki
+
 networks:
   maquinas_network:
     driver: bridge
@@ -139,3 +207,6 @@ volumes:
   mysql_data:
   mysql_test_data:
   redis_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:

@@ -124,7 +124,6 @@ private setSession(response: AuthResponse): void {
             especialidad: response.usuario.Especialidad || response.usuario.especialidad || ''
         };
         
-        console.log('Guardando usuario en sesión:', userToSave);
         localStorage.setItem('user', JSON.stringify(userToSave));
         this.currentUserSignal.set(userToSave);
     }
@@ -156,7 +155,7 @@ private loadUserFromStorage(): void {
             if (user && !user.especialidad && user.Especialidad) {
                 user.especialidad = user.Especialidad;
             }
-            console.log('Usuario cargado desde storage:', user);
+            
             this.currentUserSignal.set(user);
         } catch (e) {
             console.error('Error al cargar usuario:', e);

@@ -45,7 +45,7 @@ require_once $autoloadPath;
 // =============================================
 // 4. CONSTANTES GLOBALES
 // =============================================
-require_once __DIR__ . '/../config/constants.php';
+require_once __DIR__ . '/../Config/constants.php';
 
 // =============================================
 // 5. CONFIGURACIÓN DE SESIÓN
@@ -73,7 +73,7 @@ if ($isTestEnvironment && !defined('TEST_ENVIRONMENT')) {
 // =============================================
 // 8. INICIALIZAR CONTENEDOR DE DEPENDENCIAS
 // =============================================
-require_once __DIR__ . '/../config/dependencies.php';
+require_once __DIR__ . '/../Config/dependencies.php';
 // Cargar Redis y configurar sesiones
 
 require_once __DIR__ . '/redis.php';

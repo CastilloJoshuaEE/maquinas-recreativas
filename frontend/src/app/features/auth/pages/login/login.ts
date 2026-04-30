@@ -13,11 +13,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@core/services/auth';
 import { UserService } from '@core/services/user';
 import { TECNICO_ESPECIALIDADES } from '@core/constants/app.constants';
+import { LoadingSpinnerComponent } from '@shared/ui/loading-spinner/loading-spinner';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +31,7 @@ import { TECNICO_ESPECIALIDADES } from '@core/constants/app.constants';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    LoadingSpinnerComponent  // ← Importar el componente de carga
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
@@ -46,6 +46,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   loading = false;
   hidePassword = true;
+  loginError: string = '';  // ← Variable para mostrar error en el formulario
   
   constructor() {
     this.loginForm = this.fb.group({
@@ -54,28 +55,63 @@ export class LoginComponent {
     });
   }
   
-  onSubmit(): void {
-    if (this.loginForm.invalid) return;
+onSubmit(): void {
+    if (this.loginForm.invalid) {
+        Object.keys(this.loginForm.controls).forEach(key => {
+            this.loginForm.get(key)?.markAsTouched();
+        });
+        return;
+    }
     
     this.loading = true;
+    this.loginError = '';
     const credentials = this.loginForm.value;
     
     this.authService.login(credentials).subscribe({
-      next: (response) => {
-        if (response.success && response.usuario) {
-          this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
-          this.redirigirPorRol(response.usuario);
-        } else {
-          this.toastr.error(response.message || 'Credenciales incorrectas', 'Error');
+        next: (response: any) => {
+            this.loading = false;
+            
+            // Verificar que response existe
+            if (!response) {
+                this.loginError = 'Error de conexión con el servidor';
+                this.toastr.error(this.loginError, 'Error');
+                return;
+            }
+            
+            // Verificar que tiene la propiedad success
+            if (response.success && response.usuario) {
+                this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
+                this.redirigirPorRol(response.usuario);
+            } else {
+                this.loginError = response.message || 'Credenciales incorrectas';
+                this.toastr.error(this.loginError, 'Error de autenticación');
+            }
+        },
+        error: (error) => {
+            this.loading = false;
+            console.error('Error detallado:', error);
+            
+            // Extraer mensaje de error correctamente
+            let errorMessage = 'Error al conectar con el servidor';
+            
+            if (error.error) {
+                // Si el error es del backend con estructura { success: false, message: ... }
+                if (typeof error.error === 'object' && error.error.message) {
+                    errorMessage = error.error.message;
+                } 
+                // Si es string
+                else if (typeof error.error === 'string') {
+                    errorMessage = error.error;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            this.loginError = errorMessage;
+            this.toastr.error(errorMessage, 'Error');
         }
-        this.loading = false;
-      },
-      error: (error) => {
-        this.toastr.error(error.message || 'Error al iniciar sesión', 'Error');
-        this.loading = false;
-      }
     });
-  }
+}
   
   private redirigirPorRol(usuario: any): void {
     const userType = usuario.tipo === 'Técnico' ? 'Tecnico' : usuario.tipo;
@@ -86,10 +122,8 @@ export class LoginComponent {
         break;
         
       case 'Tecnico':
-        // Obtener especialidad (puede venir como Especialidad o especialidad)
         const especialidad = usuario.Especialidad || usuario.especialidad || '';
         
-        // Mapear especialidad a la ruta correcta (minúsculas)
         let rutaEspecialidad = '';
         switch (especialidad) {
           case TECNICO_ESPECIALIDADES.ENSAMBLADOR:

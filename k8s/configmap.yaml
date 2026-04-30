@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: recrea-sys
+data:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  DB_HOST: "mysql-service"
+  DB_NAME: "bd_recrea_sys"
+  DB_USER: "recrea_user"
+  REDIS_HOST: "redis-service"

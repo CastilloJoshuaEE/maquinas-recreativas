@@ -10,7 +10,7 @@
 // =============================================
 
 // Cargar el EnvManager
-require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../Config/env.php';
 
 // Cargar variables de entorno
 EnvManager::load();
@@ -41,8 +41,8 @@ if (!$dbName) {
 require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
 require_once __DIR__ . '/Inserter.php';
-require_once __DIR__ . '/../config/constants.php';
-require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../Config/constants.php';
+require_once __DIR__ . '/../Config/env.php';
 
 use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Database\Inserter;
@@ -64,7 +64,7 @@ echo "✓ Conexión establecida a: " . DB_NAME . "\n";
 // =============================================
 // VERIFICAR Y CREAR LOCK FILE
 // =============================================
-$lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
+$lockFile = __DIR__ . '/../Config/.usuarios_iniciales.lock';
 
 // Verificar si ya se ejecutó
 if (file_exists($lockFile)) {

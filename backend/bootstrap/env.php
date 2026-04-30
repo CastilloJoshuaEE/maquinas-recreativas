@@ -9,7 +9,7 @@
  * @author Tu Equipo
  * @version 1.0
  */
-require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../Config/env.php';
 
 // Asegurar que se carguen las variables
 EnvManager::load();

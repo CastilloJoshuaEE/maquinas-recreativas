@@ -5,7 +5,7 @@
  * Ejecutar: php backend/scripts/resetear-usuarios.php
  */
 // Cargar el EnvManager
-require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../Config/env.php';
 
 // Cargar variables de entorno
 EnvManager::load();
@@ -50,7 +50,7 @@ $database = new Database();
 $connection = $database->getConnection();
 
 // Eliminar lock file
-$lockFile = __DIR__ . '/../config/.usuarios_iniciales.lock';
+$lockFile = __DIR__ . '/../Config/.usuarios_iniciales.lock';
 if (file_exists($lockFile)) {
     unlink($lockFile);
     echo " Lock file eliminado\n";
