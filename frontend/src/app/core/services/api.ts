@@ -8,7 +8,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, retry, timeout, map } from 'rxjs/operators';
-import { environment } from 'environments/environment';
+import { environment } from 'src/environments/environment';
 /**
  * Interfaz para respuesta estándar de la API
  */

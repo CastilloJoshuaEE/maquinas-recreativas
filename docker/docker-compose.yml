@@ -131,13 +131,13 @@ services:
     networks:
       - maquinas_network
 
-  # =============================================
-  # OBSERVABILIDAD
-  # =============================================
+# =============================================
+# OBSERVABILIDAD - VERSIONES ESTABLES
+# =============================================
 
   # Prometheus - recolecta métricas
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.0  # ← versión estable específica
     container_name: maquinas_recreativas_prometheus
     ports:
       - "9090:9090"
@@ -154,9 +154,9 @@ services:
     depends_on:
       - nginx
 
-  # Loki - recolecta logs
+  # Loki - recolecta logs (versión estable)
   loki:
-    image: grafana/loki:2.9.0
+    image: grafana/loki:2.9.8  # ← versión más reciente de 2.9.x
     container_name: maquinas_recreativas_loki
     ports:
       - "3100:3100"
@@ -166,9 +166,9 @@ services:
     networks:
       - maquinas_network
 
-  # Promtail - envía logs de Docker a Loki
+  # Promtail - envía logs (versión estable)
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:2.9.8  # ← misma versión que Loki
     container_name: maquinas_recreativas_promtail
     volumes:
       - ./observability/promtail.yml:/etc/promtail/promtail.yml
@@ -180,9 +180,9 @@ services:
     depends_on:
       - loki
 
-  # Grafana - visualización
+  # Grafana - visualización (versión estable)
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.2.0  # ← versión estable específica
     container_name: maquinas_recreativas_grafana
     ports:
       - "3000:3000"
@@ -198,7 +198,6 @@ services:
     depends_on:
       - prometheus
       - loki
-
 networks:
   maquinas_network:
     driver: bridge

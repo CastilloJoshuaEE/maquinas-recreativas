@@ -1,9 +1,9 @@
 RewriteEngine On
 
-# Si el archivo o carpeta existe, servirlo normalmente
+# Evitar reescritura de archivos reales
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Si no existe, redirigir todo a React
+# Manejar rutas de Angular (SPA)
 RewriteRule ^ index.html [L]
