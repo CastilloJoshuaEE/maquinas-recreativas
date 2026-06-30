@@ -20,6 +20,7 @@ $allowedOrigins = [
     'http://localhost:8080',
             'http://127.0.0.1:4200',
         'http://127.0.0.1:8000',
+        'https://maquinas-recreativas1.onrender.com',
 ];
 
 // Endpoints públicos que no requieren autenticación
