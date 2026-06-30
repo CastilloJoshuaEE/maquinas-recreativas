@@ -3,7 +3,6 @@
  * Infrastructure/Cache/NullCache.php
  *
  * Implementación nula del caché. Se usa cuando Redis no está disponible
- * (p.ej. hosting compartido como InfinityFree). El sistema funciona igual,
  * solo sin caching.
  */
 namespace maquinas_recreativas\Infrastructure\Cache;

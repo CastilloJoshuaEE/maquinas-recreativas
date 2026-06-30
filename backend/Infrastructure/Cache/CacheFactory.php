@@ -3,7 +3,6 @@
  * Infrastructure/Cache/CacheFactory.php
  *
  * Crea la instancia de caché apropiada. Intenta Redis; si no está disponible
- * (hosting sin Redis, InfinityFree, etc.) devuelve NullCache transparentemente.
  */
 namespace maquinas_recreativas\Infrastructure\Cache;
 
