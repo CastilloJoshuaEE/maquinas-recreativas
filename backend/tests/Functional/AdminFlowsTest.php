@@ -1,0 +1,61 @@
+<?php
+// tests/Functional/AdminFlowsTest.php
+
+require_once __DIR__ . '/HttpTestCase.php';
+
+class AdminFlowsTest extends HttpTestCase {
+    private $usuarioCreadoId;
+    
+    public function __construct() {
+        parent::__construct();
+        // No crear un nuevo admin - usar el que ya existe
+    }
+    
+    public function testFlujoCompletoAdministrador() {
+        echo "\nINICIANDO FLUJO COMPLETO DE ADMINISTRADOR\n";
+        echo "============================================\n\n";
+        
+        // Login como admin existente
+        if (!$this->loginAsAdmin()) {
+            $this->assertTrue(false, 'No se pudo iniciar sesión como administrador');
+            return;
+        }
+        
+        $this->pasoObtenerTodosUsuarios();
+        $this->pasoCrearUsuario();
+        
+        echo "\nFLUJO COMPLETO DE ADMINISTRADOR EXITOSO\n";
+    }
+    
+    private function pasoObtenerTodosUsuarios() {
+        echo "Obteniendo todos los usuarios...\n";
+        
+        $response = $this->request('GET', '/administrador/usuarios');
+        if ($this->assertResponseSuccess('Error al obtener usuarios')) {
+            $total = count($response['usuarios'] ?? []);
+            echo "   Se obtuvieron {$total} usuarios\n";
+        }
+    }
+    
+    private function pasoCrearUsuario() {
+        echo "Creando nuevo usuario...\n";
+        
+        $nuevoUsuario = [
+            'nombre' => 'Usuario',
+            'apellido' => 'Prueba',
+            'ci' => '11122233' . rand(10, 99),
+            'email' => 'usuario_' . uniqid() . '@test.com',
+            'contrasena' => 'Password123!',
+            'tipo' => 'Tecnico',
+            'estado' => 'Activo',
+            'especialidad' => 'Mantenimiento'
+        ];
+        
+        $response = $this->request('POST', '/administrador/usuarios', $nuevoUsuario);
+        if ($this->assertResponseSuccess('Error al crear usuario')) {
+            $this->usuarioCreadoId = $response['id'] ?? null;
+            $this->assertNotNull($this->usuarioCreadoId, 'No se recibio ID');
+            echo "   Usuario creado con ID: {$this->usuarioCreadoId}\n";
+        }
+    }
+}
