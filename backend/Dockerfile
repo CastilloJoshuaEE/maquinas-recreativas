@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     make \
     default-mysql-client \
     postgresql-client \
+    libpq-dev \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -70,8 +71,8 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
     sed -i 's!/var/www/html!/var/www/html/backend/public!g' /etc/apache2/conf-available/docker-php.conf
 
 # Habilitar el módulo de reescritura de Apache
-RUN a2enmod rewrite
 RUN a2enmod rewrite headers
+
 # Copiar configuración de Apache personalizada si existe
 COPY apache.conf /etc/apache2/conf-available/custom.conf
 RUN a2enconf custom || true
