@@ -4,7 +4,7 @@
  * maquinas_recreativas - Session Configuration
  * 
  * Configura los parámetros de sesión según el entorno.
- * Usa el handler nativo de PHP (archivos) como fallback cuando Redis no está disponible.
+ * Usa el handler nativo de PHP (archivos) para sesiones.
  * 
  * @package maquinas_recreativas\Bootstrap
  * @author Tu Equipo
@@ -24,14 +24,22 @@ $isLocalhost = (
     )
 );
 
-// Configuración de sesión
+// =============================================
+// CONFIGURACIÓN DE SESIÓN
+// =============================================
+
+// Forzar el uso de archivos para sesiones (no Redis)
+ini_set('session.save_handler', 'files');
+ini_set('session.save_path', sys_get_temp_dir());
+
+// Configuración de seguridad
 ini_set('session.use_only_cookies', '1');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.cookie_httponly', '1');
 ini_set('session.gc_maxlifetime', 7200);
 ini_set('session.cookie_lifetime', '0');
 
-// SameSite=Lax permite envío en peticiones cross-site iniciadas por el usuario
+// SameSite
 $sameSite = $isHttps && !$isLocalhost ? 'None' : 'Lax';
 $secureCookie = $isHttps && !$isLocalhost;
 
@@ -44,33 +52,48 @@ session_set_cookie_params([
     'samesite' => $sameSite
 ]);
 
-// Usar el handler nativo de sesiones (archivos)
-// Si Redis está disponible, se configurará en redis.php
-ini_set('session.save_handler', 'files');
+// =============================================
+// INICIAR SESIÓN
+// =============================================
 
-// Iniciar sesión si no está iniciada
-if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
-}
-
-// Si la sesión no se inició, intentar con el handler de archivos
-if (session_status() === PHP_SESSION_NONE) {
-    // Forzar el handler de archivos
-    ini_set('session.save_handler', 'files');
+// Verificar si la sesión ya está activa
+if (session_status() === PHP_SESSION_ACTIVE) {
+    // Ya hay una sesión activa, no hacer nada
+} else {
+    // Intentar iniciar sesión
     session_start();
 }
 
-// Regenerar ID de sesión periódicamente
-if (!isset($_SESSION['_created'])) {
-    $_SESSION['_created'] = time();
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        @session_regenerate_id(true);
+// Si falló, asegurar que se use el handler de archivos
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    ini_set('session.save_handler', 'files');
+    ini_set('session.save_path', sys_get_temp_dir());
+    session_start();
+}
+
+// =============================================
+// REGENERAR ID DE SESIÓN PERIÓDICAMENTE
+// =============================================
+
+if (session_status() === PHP_SESSION_ACTIVE) {
+    if (!isset($_SESSION['_created'])) {
+        $_SESSION['_created'] = time();
+        session_regenerate_id(true);
+    } elseif (time() - $_SESSION['_created'] > 1800) {
+        session_regenerate_id(true);
+        $_SESSION['_created'] = time();
     }
-} elseif (time() - $_SESSION['_created'] > 1800) {
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        @session_regenerate_id(true);
+}
+
+// =============================================
+// FUNCIÓN DE AYUDA PARA SESIÓN
+// =============================================
+
+if (!function_exists('session_is_active')) {
+    function session_is_active(): bool
+    {
+        return session_status() === PHP_SESSION_ACTIVE;
     }
-    $_SESSION['_created'] = time();
 }
  /*
  * Si usas:
