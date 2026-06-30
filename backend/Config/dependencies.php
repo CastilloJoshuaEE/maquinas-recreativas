@@ -549,10 +549,20 @@ $database = new \maquinas_recreativas\Infrastructure\Database\Database();
 Dependencies::register(\maquinas_recreativas\Infrastructure\Database\Database::class, function() use ($database) {
     return $database;
 });
-// Registrar RedisCache
+// Registrar RedisCache solo si está disponible
 Dependencies::register(RedisCache::class, function() {
-    $redisConfig = require __DIR__ . '/redis.php';
-    return new RedisCache($redisConfig['host'], $redisConfig['port'], $redisConfig['prefix']);
+    try {
+        $redisConfig = require __DIR__ . '/redis.php';
+        return new RedisCache(
+            $redisConfig['host'], 
+            $redisConfig['port'], 
+            $redisConfig['prefix']
+        );
+    } catch (\Exception $e) {
+        error_log("Redis no disponible: " . $e->getMessage());
+        // Devolver null, el sistema usará NullCache
+        return null;
+    }
 });
 // Password Hasher
 Dependencies::register(BcryptPasswordHasher::class, function() {
