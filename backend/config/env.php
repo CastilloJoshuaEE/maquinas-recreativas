@@ -9,191 +9,151 @@
  * @version 1.0.0
  */
 
-/**
- * Clase EnvManager
- * 
- * Gestiona la carga y acceso a las variables de entorno del sistema.
- */
 class EnvManager
 {
-    /**
-     * @var array Almacena las variables de entorno cargadas
-     */
     private static array $variables = [];
-    
-    /**
-     * @var bool Indica si las variables ya fueron cargadas
-     */
     private static bool $loaded = false;
-    
-    /**
-     * Carga las variables de entorno desde el archivo .env
-     * 
-     * @param string $envPath Ruta al archivo .env (opcional)
-     * @return void
-     * @throws RuntimeException Si el archivo .env no existe
-     */
+
     public static function load(string $envPath = null): void
     {
         if (self::$loaded) {
             return;
         }
-        
+
         if ($envPath === null) {
             $envPath = dirname(__DIR__) . '/.env';
         }
-        
+
+        /**
+         *  NUEVO COMPORTAMIENTO:
+         * - Si existe .env → lo carga (modo local)
+         * - Si NO existe → no rompe (modo cloud: Render, Docker, etc)
+         */
+
         if (!file_exists($envPath)) {
-            // En desarrollo, permitir continuar con valores por defecto
-            if (getenv('APP_ENV') !== 'production') {
-                error_log("Advertencia: Archivo .env no encontrado en: {$envPath}");
-                self::$loaded = true;
-                return;
-            }
-            throw new RuntimeException("Archivo .env no encontrado en: {$envPath}");
+
+            //  Solo advertencia, nunca crash
+            error_log("EnvManager: .env no encontrado en {$envPath}, usando variables del entorno del sistema");
+
+            self::$loaded = true;
+            return;
         }
-        
+
         $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        
+
         foreach ($lines as $line) {
             $line = trim($line);
-            
-            // Ignorar comentarios
-            if (strpos($line, '#') === 0) {
+
+            if ($line === '' || strpos($line, '#') === 0) {
                 continue;
             }
-            
-            // Buscar asignación de variable
+
             $parts = explode('=', $line, 2);
-            if (count($parts) === 2) {
-                $key = trim($parts[0]);
-                $value = trim($parts[1]);
-                
-                // Remover comillas si existen
-                $value = trim($value, '"\'');
-                
-                self::$variables[$key] = $value;
-                
-                // También establecer como variable de entorno para funciones getenv()
-                putenv("{$key}={$value}");
-                $_ENV[$key] = $value;
+
+            if (count($parts) !== 2) {
+                continue;
             }
+
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
+
+            $value = trim($value, "\"'");
+
+            self::$variables[$key] = $value;
+
+            // sincronizar con entorno real
+            putenv("$key=$value");
+            $_ENV[$key] = $value;
         }
-        
+
         self::$loaded = true;
     }
-    
-    /**
-     * Obtiene una variable de entorno
-     * 
-     * @param string $key Nombre de la variable
-     * @param mixed $default Valor por defecto si no existe
-     * @return mixed
-     */
+
     public static function get(string $key, $default = null)
     {
         if (!self::$loaded) {
             self::load();
         }
-        
-        // Prioridad: getenv() -> array interno -> $_ENV -> $default
+
+        /**
+         *  NUEVA PRIORIDAD CORRECTA:
+         * 1. Variables del sistema (Render / Docker / Apache env)
+         * 2. getenv()
+         * 3. .env cargado local
+         * 4. $_ENV
+         * 5. default
+         */
+
+        $value = $_SERVER[$key] ?? null;
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = getenv($key);
         if ($value !== false) {
             return $value;
         }
-        
+
         if (array_key_exists($key, self::$variables)) {
             return self::$variables[$key];
         }
-        
+
         if (array_key_exists($key, $_ENV)) {
             return $_ENV[$key];
         }
-        
+
         return $default;
     }
-    
-    /**
-     * Obtiene todas las variables de entorno cargadas
-     * 
-     * @return array
-     */
+
     public static function all(): array
     {
         if (!self::$loaded) {
             self::load();
         }
-        return self::$variables;
+
+        // fusionar también variables del sistema
+        return array_merge($_ENV, self::$variables);
     }
-    
-    /**
-     * Verifica si una variable de entorno existe
-     * 
-     * @param string $key
-     * @return bool
-     */
+
     public static function has(string $key): bool
     {
         if (!self::$loaded) {
             self::load();
         }
-        
-        return array_key_exists($key, self::$variables) || 
-               getenv($key) !== false ||
-               array_key_exists($key, $_ENV);
+
+        return isset($_SERVER[$key])
+            || getenv($key) !== false
+            || array_key_exists($key, self::$variables)
+            || array_key_exists($key, $_ENV);
     }
-    
-    /**
-     * Obtiene el entorno actual (local, testing, production)
-     * 
-     * @return string
-     */
+
     public static function getEnvironment(): string
     {
         return self::get('APP_ENV', 'local');
     }
-    
-    /**
-     * Verifica si estamos en entorno de desarrollo
-     * 
-     * @return bool
-     */
+
     public static function isDevelopment(): bool
     {
-        return self::getEnvironment() === 'development' || self::getEnvironment() === 'local';
+        return in_array(self::getEnvironment(), ['development', 'local']);
     }
-    
-    /**
-     * Verifica si estamos en entorno de pruebas
-     * 
-     * @return bool
-     */
+
     public static function isTesting(): bool
     {
-        return self::getEnvironment() === 'testing' || 
-               (defined('TEST_ENVIRONMENT') && TEST_ENVIRONMENT === true);
+        return self::getEnvironment() === 'testing'
+            || (defined('TEST_ENVIRONMENT') && TEST_ENVIRONMENT === true);
     }
-    
-    /**
-     * Verifica si estamos en entorno de producción
-     * 
-     * @return bool
-     */
+
     public static function isProduction(): bool
     {
         return self::getEnvironment() === 'production';
     }
-    
-    /**
-     * Obtiene el nombre de la base de datos según el entorno
-     * 
-     * @return string
-     */
+
     public static function getDatabaseName(): string
     {
         if (self::isTesting()) {
             return self::get('DB_NAME_TEST', self::get('DB_NAME'));
         }
+
         return self::get('DB_NAME', 'bd_recrea_sys');
     }
 }
