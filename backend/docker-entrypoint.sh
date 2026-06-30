@@ -1,14 +1,15 @@
-#!/bin/bash
-
+#!/bin/sh
 set -e
 
 echo "Iniciando backend..."
 
-mkdir -p Storage/Logs
-mkdir -p Storage/Cache
+# Crear directorios necesarios
+mkdir -p storage/logs storage/cache
 
-chmod -R 775 Storage || true
+# Dar permisos
+chmod -R 775 storage || true
 
 echo "Configuración completada"
 
-exec apache2-foreground
+# Ejecutar el comando principal
+exec "$@"

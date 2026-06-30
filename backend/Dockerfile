@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-apache
 
 # Instalar dependencias del sistema
 RUN apk add --no-cache \
@@ -67,4 +67,4 @@ RUN chown -R www-data:www-data /var/www/html/backend \
 RUN php-fpm -t
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["php-fpm", "-F"]
+CMD ["apache2-foreground"]
