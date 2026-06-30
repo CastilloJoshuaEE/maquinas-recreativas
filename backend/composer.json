@@ -9,6 +9,12 @@
     "autoload": {
         "psr-4": {
             "maquinas_recreativas\\": ""
+        
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "maquinas_recreativas\\Tests\\": "tests/"
         }
     },
     "require-dev": {

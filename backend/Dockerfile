@@ -69,7 +69,7 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
 
 # Habilitar el módulo de reescritura de Apache
 RUN a2enmod rewrite
-
+RUN a2enmod rewrite headers
 # Copiar configuración de Apache personalizada si existe
 COPY apache.conf /etc/apache2/conf-available/custom.conf
 RUN a2enconf custom || true
