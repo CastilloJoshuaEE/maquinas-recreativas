@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     default-mysql-client \
+    postgresql-client \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,6 +23,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_mysql \
+    pdo_pgsql \
     mysqli \
     zip \
     gd \

@@ -1,10 +1,11 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLHistorialRepository.php
- * TTL: 300 s — crece constantemente, datos semi-frescos aceptables.
+ * Migrado a PDO. TTL: 300s.
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
+use PDO;
 use maquinas_recreativas\Domain\Historial\HistorialMaquina;
 use maquinas_recreativas\Domain\Historial\HistorialActividad;
 use maquinas_recreativas\Domain\Historial\HistorialRepository;
@@ -25,8 +26,6 @@ class MySQLHistorialRepository implements HistorialRepository
         $this->cache = $cache ?? CacheFactory::create();
     }
 
-    // ---- escritura (no se cachea; invalida claves existentes) ---------------
-
     public function save(HistorialMaquina $historial): void
     {
         $conn = $this->db->getConnection();
@@ -35,14 +34,13 @@ class MySQLHistorialRepository implements HistorialRepository
                      estado_anterior,estado_nuevo,etapa_anterior,etapa_nueva,ip_address,detalles_adicionales,fecha_hora)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ssssssssssss',
+        $stmt->execute([
             $data['ID_Maquina'],$data['ID_Usuario'],$data['tipo_usuario'],$data['accion'],
             $data['descripcion'],$data['estado_anterior'],$data['estado_nuevo'],
             $data['etapa_anterior'],$data['etapa_nueva'],$data['ip_address'],
-            $data['detalles_adicionales'],$data['fecha_hora']);
-        $stmt->execute(); $stmt->close();
+            $data['detalles_adicionales'],$data['fecha_hora']
+        ]);
 
-        // Invalidar
         $this->cache->delete("historial:maquina:{$data['ID_Maquina']}:1:50");
         $this->cache->delete("historial:usuario:{$data['ID_Usuario']}:1:50");
         $this->cache->delete("historial:resumen:20");
@@ -56,44 +54,32 @@ class MySQLHistorialRepository implements HistorialRepository
         $conn = $this->db->getConnection();
         $data = $actividad->toArray();
         $stmt = $conn->prepare("INSERT INTO historial_actividades (ID_Usuario,descripcion,fecha_registro) VALUES (?,?,?)");
-        $stmt->bind_param('sss', $data['ID_Usuario'], $data['descripcion'], $data['fecha_registro']);
-        $stmt->execute(); $stmt->close();
+        $stmt->execute([$data['ID_Usuario'], $data['descripcion'], $data['fecha_registro']]);
         $this->cache->delete("historial:actividades:{$data['ID_Usuario']}");
     }
 
-    // ---- lectura con caché --------------------------------------------------
-public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0): array
-{
-    $cacheKey = "historial:maquina:{$idMaquina->value()}:{$limit}:{$offset}";
-    return $this->cache->remember($cacheKey, function () use ($idMaquina, $limit, $offset) {
-        $conn = $this->db->getConnection();
-        $sql  = "SELECT h.*,u.nombre as usuario_nombre,u.apellido as usuario_apellido,u.tipo as usuario_tipo,m.Nombre_Maquina
-                 FROM historial_maquinas h
-                 INNER JOIN usuario u ON h.ID_Usuario = u.ID_Usuario
-                 INNER JOIN MaquinaRecreativa m ON h.ID_Maquina = m.ID_Maquina
-                 WHERE h.ID_Maquina = ? 
-                 ORDER BY h.fecha_hora DESC 
-                 LIMIT ? OFFSET ?";
-        $stmt = $conn->prepare($sql);
-        $v    = $idMaquina->value();
-        $stmt->bind_param('sii', $v, $limit, $offset);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $historial = [];
-        while ($row = $result->fetch_assoc()) {
-            $historial[] = HistorialMaquina::fromArray($row);
-        }
-        $result->free();  //  Liberar el resultado
-        $stmt->close();   //  Cerrar el statement
-        // Limpiar resultados pendientes
-        while ($conn->more_results() && $conn->next_result()) {
-            if ($rs = $conn->store_result()) {
-                $rs->free();
+    public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0): array
+    {
+        $cacheKey = "historial:maquina:{$idMaquina->value()}:{$limit}:{$offset}";
+        return $this->cache->remember($cacheKey, function () use ($idMaquina, $limit, $offset) {
+            $conn = $this->db->getConnection();
+            $sql  = "SELECT h.*,u.nombre as usuario_nombre,u.apellido as usuario_apellido,u.tipo as usuario_tipo,m.Nombre_Maquina
+                     FROM historial_maquinas h
+                     INNER JOIN usuario u ON h.ID_Usuario = u.ID_Usuario
+                     INNER JOIN MaquinaRecreativa m ON h.ID_Maquina = m.ID_Maquina
+                     WHERE h.ID_Maquina = ?
+                     ORDER BY h.fecha_hora DESC
+                     LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$idMaquina->value(), $limit, $offset]);
+            $historial = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $historial[] = HistorialMaquina::fromArray($row);
             }
-        }
-        return $historial;
-    }, $this->ttl);
-}
+            return $historial;
+        }, $this->ttl);
+    }
+
     public function findByUsuario(Uuid $idUsuario, int $limit = 50, int $offset = 0): array
     {
         $cacheKey = "historial:usuario:{$idUsuario->value()}:{$limit}:{$offset}";
@@ -105,27 +91,21 @@ public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0)
                      INNER JOIN MaquinaRecreativa m ON h.ID_Maquina=m.ID_Maquina
                      WHERE h.ID_Usuario=? ORDER BY h.fecha_hora DESC LIMIT ? OFFSET ?";
             $stmt = $conn->prepare($sql);
-            $v    = $idUsuario->value();
-            $stmt->bind_param('sii', $v, $limit, $offset);
-            $stmt->execute();
+            $stmt->execute([$idUsuario->value(), $limit, $offset]);
             $historial = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $historial[] = HistorialMaquina::fromArray($row);
-            $stmt->close();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $historial[] = HistorialMaquina::fromArray($row);
             return $historial;
         }, $this->ttl);
     }
 
     public function findByAccion(string $accion, int $limit = 100, int $offset = 0): array
     {
-        // Búsqueda dinámica — sin caché
-        $conn    = $this->db->getConnection();
-        $like    = "%{$accion}%";
-        $stmt    = $conn->prepare("SELECT * FROM historial_maquinas WHERE accion LIKE ? ORDER BY fecha_hora DESC LIMIT ? OFFSET ?");
-        $stmt->bind_param('sii', $like, $limit, $offset);
-        $stmt->execute();
+        $conn = $this->db->getConnection();
+        $like = "%{$accion}%";
+        $stmt = $conn->prepare("SELECT * FROM historial_maquinas WHERE accion LIKE ? ORDER BY fecha_hora DESC LIMIT ? OFFSET ?");
+        $stmt->execute([$like, $limit, $offset]);
         $historial = [];
-        while ($row = $stmt->get_result()->fetch_assoc()) $historial[] = HistorialMaquina::fromArray($row);
-        $stmt->close();
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $historial[] = HistorialMaquina::fromArray($row);
         return $historial;
     }
 
@@ -145,66 +125,52 @@ public function findByMaquina(Uuid $idMaquina, int $limit = 50, int $offset = 0)
                        INNER JOIN MaquinaRecreativa m ON h.ID_Maquina=m.ID_Maquina
                        LEFT JOIN Comercio c ON m.ID_Comercio=c.ID_Comercio
                        WHERE 1=1";
-            $params = []; $types = "";
-            if ($idMaquina)    { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value();    $types .= "s"; }
-            if ($idUsuario)    { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value();    $types .= "s"; }
-            if ($tipoUsuario)  { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario;           $types .= "s"; }
-            if ($accion)       { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%";          $types .= "s"; }
-            if ($fechaInicio)  { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio;       $types .= "s"; }
-            if ($fechaFin)     { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin;          $types .= "s"; }
+            $params = [];
+            if ($idMaquina)    { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value(); }
+            if ($idUsuario)    { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value(); }
+            if ($tipoUsuario)  { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario; }
+            if ($accion)       { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%"; }
+            if ($fechaInicio)  { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio; }
+            if ($fechaFin)     { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin; }
             $sql .= " ORDER BY h.fecha_hora DESC LIMIT ? OFFSET ?";
-            $params[] = $limit; $params[] = $offset; $types .= "ii";
+            $params[] = $limit; $params[] = $offset;
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+            $stmt->execute($params);
             $historial = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $historial[] = HistorialMaquina::fromArray($row);
-            $stmt->close();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $historial[] = HistorialMaquina::fromArray($row);
             return $historial;
         }, $this->ttl);
     }
-public function countByFilters(
-    ?Uuid $idMaquina = null, ?Uuid $idUsuario = null,
-    ?string $tipoUsuario = null, ?string $accion = null,
-    ?string $fechaInicio = null, ?string $fechaFin = null
-): int {
-    $conn   = $this->db->getConnection();
-    $sql    = "SELECT COUNT(*) as total FROM historial_maquinas h WHERE 1=1";
-    $params = []; $types = "";
-    if ($idMaquina)   { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value();  $types .= "s"; }
-    if ($idUsuario)   { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value();  $types .= "s"; }
-    if ($tipoUsuario) { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario;         $types .= "s"; }
-    if ($accion)      { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%";        $types .= "s"; }
-    if ($fechaInicio) { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio;     $types .= "s"; }
-    if ($fechaFin)    { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin;        $types .= "s"; }
-    $stmt = $conn->prepare($sql);
-    if (!empty($params)) $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $total = (int)$row['total'];
-    $result->free();  //  Liberar resultado
-    $stmt->close();   //  Cerrar statement
-    // Limpiar resultados pendientes
-    while ($conn->more_results() && $conn->next_result()) {
-        if ($rs = $conn->store_result()) {
-            $rs->free();
-        }
+
+    public function countByFilters(
+        ?Uuid $idMaquina = null, ?Uuid $idUsuario = null,
+        ?string $tipoUsuario = null, ?string $accion = null,
+        ?string $fechaInicio = null, ?string $fechaFin = null
+    ): int {
+        $conn   = $this->db->getConnection();
+        $sql    = "SELECT COUNT(*) as total FROM historial_maquinas h WHERE 1=1";
+        $params = [];
+        if ($idMaquina)   { $sql .= " AND h.ID_Maquina=?";    $params[] = $idMaquina->value(); }
+        if ($idUsuario)   { $sql .= " AND h.ID_Usuario=?";    $params[] = $idUsuario->value(); }
+        if ($tipoUsuario) { $sql .= " AND h.tipo_usuario=?";  $params[] = $tipoUsuario; }
+        if ($accion)      { $sql .= " AND h.accion LIKE ?";   $params[] = "%{$accion}%"; }
+        if ($fechaInicio) { $sql .= " AND DATE(h.fecha_hora)>=?"; $params[] = $fechaInicio; }
+        if ($fechaFin)    { $sql .= " AND DATE(h.fecha_hora)<=?"; $params[] = $fechaFin; }
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$row['total'];
     }
-    return $total;
-}
+
     public function findActividadesByUsuario(Uuid $idUsuario, int $limit = 50): array
     {
         $cacheKey = "historial:actividades:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario, $limit) {
             $conn = $this->db->getConnection();
             $stmt = $conn->prepare("SELECT * FROM historial_actividades WHERE ID_Usuario=? ORDER BY fecha_registro DESC LIMIT ?");
-            $v    = $idUsuario->value();
-            $stmt->bind_param('si', $v, $limit);
-            $stmt->execute();
+            $stmt->execute([$idUsuario->value(), $limit]);
             $actividades = [];
-            while ($row = $stmt->get_result()->fetch_assoc()) $actividades[] = HistorialActividad::fromArray($row);
-            $stmt->close();
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) $actividades[] = HistorialActividad::fromArray($row);
             return $actividades;
         }, $this->ttl);
     }

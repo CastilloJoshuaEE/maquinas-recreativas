@@ -1,14 +1,13 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLTecnicoRepository.php
- * TTL: 1800 s — datos estables.
- * Claves: tecnicos:especialidad:{esp}
- *         tecnicos:disponibles:{esp}
+ * Migrado a PDO. TTL: 1800 s — datos estables.
  */
 declare(strict_types=1);
 
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
+use PDO;
 use maquinas_recreativas\Domain\Usuario\Tecnico;
 use maquinas_recreativas\Domain\Usuario\TecnicoRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -25,8 +24,8 @@ final class MySQLTecnicoRepository implements TecnicoRepository
 
     public function __construct(Database $db, ?CacheInterface $cache = null)
     {
-        $this->db                = $db;
-        $this->cache             = $cache ?? CacheFactory::create();
+        $this->db = $db;
+        $this->cache = $cache ?? CacheFactory::create();
         $this->usuarioRepository = new MySQLUsuarioRepository($db, $this->cache);
     }
 
@@ -36,20 +35,19 @@ final class MySQLTecnicoRepository implements TecnicoRepository
 
         return $this->cache->remember($cacheKey, function () use ($especialidad) {
             $conn = $this->db->getConnection();
-            $sql  = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                     FROM usuario u
-                     INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                     WHERE t.Especialidad = ?
-                     ORDER BY u.nombre ASC";
+            $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                    FROM usuario u
+                    INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                    WHERE t.Especialidad = ?
+                    ORDER BY u.nombre ASC";
+            
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $especialidad);
-            $stmt->execute();
-            $result   = $stmt->get_result();
+            $stmt->execute([$especialidad]);
+            
             $tecnicos = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tecnicos[] = $this->usuarioRepository->hydrate($row);
             }
-            $stmt->close();
             return $tecnicos;
         }, $this->ttl);
     }
@@ -60,12 +58,9 @@ final class MySQLTecnicoRepository implements TecnicoRepository
         $stmt = $conn->prepare(
             "UPDATE Tecnico SET Cantidad_Actividades = Cantidad_Actividades + 1 WHERE ID_Tecnico = ?"
         );
-        $v      = $tecnicoId->value();
-        $stmt->bind_param('s', $v);
-        $result = $stmt->execute();
-        $stmt->close();
+        $v = $tecnicoId->value();
+        $result = $stmt->execute([$v]);
 
-        // Invalidar caché del técnico y sus listados
         $this->cache->delete("usuario:id:{$v}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
             $this->cache->deleteByPattern("tecnicos:especialidad:*");
@@ -81,21 +76,20 @@ final class MySQLTecnicoRepository implements TecnicoRepository
 
         return $this->cache->remember($cacheKey, function () use ($especialidad) {
             $conn = $this->db->getConnection();
-            $sql  = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                     FROM usuario u
-                     INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                     WHERE t.Especialidad = ? 
-                       AND u.estado = 'Activo'
-                     ORDER BY t.Cantidad_Actividades ASC";
+            $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
+                    FROM usuario u
+                    INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
+                    WHERE t.Especialidad = ? 
+                      AND u.estado = 'Activo'
+                    ORDER BY t.Cantidad_Actividades ASC";
+            
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $especialidad);
-            $stmt->execute();
-            $result   = $stmt->get_result();
+            $stmt->execute([$especialidad]);
+            
             $tecnicos = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tecnicos[] = $this->usuarioRepository->hydrate($row);
             }
-            $stmt->close();
             return $tecnicos;
         }, $this->ttl);
     }

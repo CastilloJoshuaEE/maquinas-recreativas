@@ -1,145 +1,123 @@
 <?php
 /**
- * Script para insertar usuarios iniciales en la base de datos
- * 
- * Ejecutar: php backend/scripts/insertar-usuarios-iniciales.php
+ * scripts/insertar-usuarios-iniciales.php
+ * Script para insertar usuarios iniciales en el sistema
  */
 
-// =============================================
-// CARGAR CONFIGURACIÓN CON ENVMANAGER
-// =============================================
-
-// Cargar el EnvManager
-require_once __DIR__ . '/../Config/env.php';
-
-// Cargar variables de entorno
-EnvManager::load();
-
-// =============================================
-// DETECTAR ENTORNO
-// =============================================
-$isTest = EnvManager::isTesting();
-
-// =============================================
-// SELECCIONAR BASE DE DATOS
-// =============================================
-$dbName = EnvManager::getDatabaseName();
-
-if ($isTest) {
-    echo "✓ Modo TEST: usando base de datos {$dbName}\n";
-}
-
-if (!$dbName) {
-    die(" No se ha definido DB_NAME en el .env\n");
-}
-
-
-
-// =============================================
-// INCLUIR DEPENDENCIAS
-// =============================================
-require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
-require_once __DIR__ . '/../Infrastructure/Database/Database.php';
-require_once __DIR__ . '/Inserter.php';
-require_once __DIR__ . '/../Config/constants.php';
-require_once __DIR__ . '/../Config/env.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 use maquinas_recreativas\Infrastructure\Database\Database;
-use maquinas_recreativas\Infrastructure\Database\Inserter;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
+use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 
-// =============================================
-// CONEXIÓN A LA BASE DE DATOS
-// =============================================
-echo "✓ Conectando a la base de datos...\n";
+echo "=== Insertando usuarios iniciales ===\n";
 
-$database = new Database();
-$connection = $database->getConnection();
+$db = new Database();
+$conn = $db->getConnection();
+$hasher = new BcryptPasswordHasher();
 
-if (!$connection) {
-    die(" Error de conexión a la base de datos\n");
-}
+$usuarios = [
+    [
+        'id' => '11111111-1111-1111-1111-111111111111',
+        'nombre' => 'Admin',
+        'apellido' => 'Sistema',
+        'ci' => '1234567890',
+        'email' => 'admin@recreasys.com',
+        'usuario_asignado' => 'admin',
+        'contrasena' => 'Admin123!',
+        'tipo' => 'Administrador',
+        'estado' => 'Activo'
+    ],
+    [
+        'id' => '22222222-2222-2222-2222-222222222222',
+        'nombre' => 'Tecnico',
+        'apellido' => 'Ensamblador',
+        'ci' => '0987654321',
+        'email' => 'tecnico@recreasys.com',
+        'usuario_asignado' => 'tecnico',
+        'contrasena' => 'Tecnico123!',
+        'tipo' => 'Tecnico',
+        'estado' => 'Activo',
+        'especialidad' => 'Ensamblador'
+    ],
+    [
+        'id' => '33333333-3333-3333-3333-333333333333',
+        'nombre' => 'Logistica',
+        'apellido' => 'Distribucion',
+        'ci' => '1122334455',
+        'email' => 'logistica@recreasys.com',
+        'usuario_asignado' => 'logistica',
+        'contrasena' => 'Logistica123!',
+        'tipo' => 'Logistica',
+        'estado' => 'Activo'
+    ],
+    [
+        'id' => '44444444-4444-4444-4444-444444444444',
+        'nombre' => 'Contabilidad',
+        'apellido' => 'Finanzas',
+        'ci' => '5544332211',
+        'email' => 'contabilidad@recreasys.com',
+        'usuario_asignado' => 'contabilidad',
+        'contrasena' => 'Contabilidad123!',
+        'tipo' => 'Contabilidad',
+        'estado' => 'Activo'
+    ]
+];
 
-echo "✓ Conexión establecida a: " . DB_NAME . "\n";
-
-// =============================================
-// VERIFICAR Y CREAR LOCK FILE
-// =============================================
-$lockFile = __DIR__ . '/../Config/.usuarios_iniciales.lock';
-
-// Verificar si ya se ejecutó
-if (file_exists($lockFile)) {
-    echo "⚠ Los usuarios iniciales ya fueron insertados anteriormente.\n";
-    echo "  Lock file: {$lockFile}\n";
-    echo "  Si deseas reiniciar la inserción, elimina este archivo y vuelve a ejecutar el script.\n";
-    
-    $confirm = readline("¿Deseas forzar la inserción de todos modos? (s/N): ");
-    if (strtolower($confirm) !== 's') {
-        echo " Operación cancelada.\n";
-        exit(0);
-    }
-    echo " Forzando inserción...\n";
-}
-
-// =============================================
-// INSERTAR USUARIOS
-// =============================================
-echo "\n Insertando usuarios iniciales...\n";
-echo str_repeat("-", 50) . "\n";
-
-$inserter = new Inserter($connection);
-
-try {
-    $inserter->insertarUsuariosIniciales();
-    
-    // Crear lock file
-    file_put_contents($lockFile, "Usuarios iniciales creados el " . date("Y-m-d H:i:s") . "\n");
-    
-    echo "\n Usuarios insertados correctamente!\n";
-    echo " Lock file creado en: {$lockFile}\n";
-    
-    // Mostrar resumen
-    echo "\n RESUMEN DE USUARIOS INSERTADOS:\n";
-    echo str_repeat("-", 50) . "\n";
-    
-    $result = $connection->query("SELECT usuario_asignado, nombre, apellido, tipo, estado FROM usuario ORDER BY tipo, nombre");
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            echo "• {$row['usuario_asignado']} | {$row['nombre']} {$row['apellido']} | {$row['tipo']} | {$row['estado']}\n";
+foreach ($usuarios as $usuario) {
+    try {
+        // Verificar si ya existe
+        $checkStmt = $conn->prepare("SELECT COUNT(*) as total FROM usuario WHERE ID_Usuario = ?");
+        $checkStmt->execute([$usuario['id']]);
+        $row = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($row['total'] > 0) {
+            echo "  Usuario {$usuario['usuario_asignado']} ya existe, saltando...\n";
+            continue;
         }
-        $result->close();
-    }
-    
-} catch (Exception $e) {
-    echo "\n Error al insertar usuarios iniciales:\n";
-    echo "   " . $e->getMessage() . "\n";
-    exit(1);
-}
 
-// =============================================
-// VERIFICACIÓN FINAL
-// =============================================
-echo "\n🔍 Verificando que los datos se pueden desencriptar correctamente...\n";
-echo str_repeat("-", 50) . "\n";
+        // Encriptar datos
+        $ciEncriptada = CifradoHelper::encriptar($usuario['ci']);
+        $emailEncriptado = CifradoHelper::encriptar($usuario['email']);
+        $contrasenaHash = $hasher->hash($usuario['contrasena']);
 
-$testUsers = ['admin1', 'euro', 'joshua', 'joel'];
+        // Insertar usuario
+        $sql = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, usuario_asignado, contrasena, tipo, estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([
+            $usuario['id'],
+            $usuario['nombre'],
+            $usuario['apellido'],
+            $ciEncriptada,
+            $emailEncriptado,
+            $usuario['usuario_asignado'],
+            $contrasenaHash,
+            $usuario['tipo'],
+            $usuario['estado']
+        ]);
 
-foreach ($testUsers as $username) {
-    $result = $connection->query("SELECT ID_Usuario, usuario_asignado, email, ci FROM usuario WHERE usuario_asignado = '{$username}'");
-    if ($result && $row = $result->fetch_assoc()) {
-        try {
-            $emailDec = \maquinas_recreativas\Infrastructure\Security\CifradoHelper::desencriptar($row['email']);
-            $ciDec = \maquinas_recreativas\Infrastructure\Security\CifradoHelper::desencriptar($row['ci']);
-            
-            if (!empty($emailDec) && !empty($ciDec)) {
-                echo " {$username}: Email={$emailDec}, CI={$ciDec}\n";
-            } else {
-                echo "⚠ {$username}: Desencriptación parcial - Email=" . ($emailDec ?: 'VACÍO') . ", CI=" . ($ciDec ?: 'VACÍO') . "\n";
-            }
-        } catch (Exception $e) {
-            echo " {$username}: Error al desencriptar - " . $e->getMessage() . "\n";
+        echo "  Usuario {$usuario['usuario_asignado']} creado correctamente\n";
+
+        // Si es técnico, insertar en tabla Tecnico
+        if ($usuario['tipo'] === 'Tecnico' && isset($usuario['especialidad'])) {
+            $sqlTecnico = "INSERT INTO Tecnico (ID_Tecnico, Especialidad, Cantidad_Actividades) VALUES (?, ?, 0)";
+            $stmtTecnico = $conn->prepare($sqlTecnico);
+            $stmtTecnico->execute([$usuario['id'], $usuario['especialidad']]);
+            echo "    -> Especialidad: {$usuario['especialidad']}\n";
         }
-        $result->close();
+
+        // Si es logistica, insertar en tabla Logistica
+        if ($usuario['tipo'] === 'Logistica') {
+            $sqlLogistica = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
+            $stmtLogistica = $conn->prepare($sqlLogistica);
+            $stmtLogistica->execute([$usuario['id']]);
+            echo "    -> Registrado como logistica\n";
+        }
+
+    } catch (Exception $e) {
+        echo "  Error al insertar {$usuario['usuario_asignado']}: " . $e->getMessage() . "\n";
     }
 }
 
-echo "\n🎉 Proceso completado!\n";
+echo "=== Proceso completado ===\n";

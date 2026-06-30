@@ -1,10 +1,11 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLMontajeRepository.php
- * TTL: 300 s
+ * Migrado a PDO. TTL: 300s.
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
+use PDO;
 use maquinas_recreativas\Domain\Montaje\Montaje;
 use maquinas_recreativas\Domain\Montaje\MontajeRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -29,11 +30,10 @@ class MySQLMontajeRepository implements MontajeRepository
         $conn = $this->db->getConnection();
         $data = $montaje->toArray();
         $stmt = $conn->prepare("INSERT INTO montaje (ID_Montaje,ID_Maquina,ID_Componente,ID_Tecnico,detalle,fecha) VALUES (?,?,?,?,?,?)");
-        $stmt->bind_param('ssssss',
+        $stmt->execute([
             $data['ID_Montaje'],$data['ID_Maquina'],$data['ID_Componente'],
-            $data['ID_Tecnico'],$data['detalle'],$data['fecha']);
-        $stmt->execute(); 
-        $stmt->close();
+            $data['ID_Tecnico'],$data['detalle'],$data['fecha']
+        ]);
 
         $this->cache->delete("montajes:maquina:{$data['ID_Maquina']}");
         $this->cache->delete("montajes:componente:{$data['ID_Componente']}");
@@ -46,17 +46,11 @@ class MySQLMontajeRepository implements MontajeRepository
         return $this->cache->remember($cacheKey, function () use ($idMaquina) {
             $conn = $this->db->getConnection();
             $stmt = $conn->prepare("SELECT * FROM montaje WHERE ID_Maquina=? ORDER BY fecha DESC");
-            $v    = $idMaquina->value(); 
-            $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $stmt->execute([$idMaquina->value()]);
             $montajes = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $montajes[] = Montaje::fromArray($row);
             }
-            $result->free();
-            $stmt->close();
-            $this->db->clearPendingResults($conn);
             return $montajes;
         }, $this->ttl);
     }
@@ -67,17 +61,11 @@ class MySQLMontajeRepository implements MontajeRepository
         return $this->cache->remember($cacheKey, function () use ($idComponente) {
             $conn = $this->db->getConnection();
             $stmt = $conn->prepare("SELECT * FROM montaje WHERE ID_Componente=? ORDER BY fecha DESC");
-            $v    = $idComponente->value(); 
-            $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $stmt->execute([$idComponente->value()]);
             $montajes = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $montajes[] = Montaje::fromArray($row);
             }
-            $result->free();
-            $stmt->close();
-            $this->db->clearPendingResults($conn);
             return $montajes;
         }, $this->ttl);
     }
@@ -88,17 +76,11 @@ class MySQLMontajeRepository implements MontajeRepository
         return $this->cache->remember($cacheKey, function () use ($idTecnico) {
             $conn = $this->db->getConnection();
             $stmt = $conn->prepare("SELECT * FROM montaje WHERE ID_Tecnico=? ORDER BY fecha DESC");
-            $v    = $idTecnico->value(); 
-            $stmt->bind_param('s', $v);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $stmt->execute([$idTecnico->value()]);
             $montajes = [];
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $montajes[] = Montaje::fromArray($row);
             }
-            $result->free();
-            $stmt->close();
-            $this->db->clearPendingResults($conn);
             return $montajes;
         }, $this->ttl);
     }

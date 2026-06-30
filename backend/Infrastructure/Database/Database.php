@@ -1,80 +1,169 @@
 <?php
 /**
- * backend/infrastructure/database/Database.php
+ * infrastructure/database/Database.php
  */
 
 namespace maquinas_recreativas\Infrastructure\Database;
 
-class Database {
-    protected $connection;
-    protected $host;
-    protected $username;
-    protected $password;
-    protected $dbname;
+use PDO;
+use PDOStatement;
 
-    public function __construct() {
-        $this->host = DB_HOST;
-        $this->username = DB_USER;
-        $this->password = DB_PASS;
-        $this->dbname = DB_NAME;
-        
-        $this->connection = new \mysqli($this->host, $this->username, $this->password, $this->dbname);
-        
-        if ($this->connection->connect_error) {
-            die("Connection failed: " . $this->connection->connect_error);
-        }
+class Database
+{
+    private PDO $connection;
+    private string $driver;
 
-        $this->connection->set_charset("utf8mb4");
+    public function __construct()
+    {
+        $this->connection = DatabaseFactory::getConnection();
+        $this->driver = DatabaseFactory::getDriver();
     }
 
-    public function getConnection() {
+    public function getConnection(): PDO
+    {
         return $this->connection;
     }
 
-    public function getHost(): string {
-        return $this->host;
+    public function getDriver(): string
+    {
+        return $this->driver;
     }
 
-    public function getUsername(): string {
-        return $this->username;
+    public function isMySQL(): bool
+    {
+        return $this->driver === 'mysql';
     }
 
-    public function getPassword(): string {
-        return $this->password;
+    public function isPostgreSQL(): bool
+    {
+        return $this->driver === 'pgsql';
     }
 
-    public function getDbName(): string {
-        return $this->dbname;
+    /**
+     * Alias de isPostgreSQL() para compatibilidad
+     */
+    public function isPostgres(): bool
+    {
+        return $this->isPostgreSQL();
     }
 
-    public function closeConnection() {
-        if ($this->connection) {
-            $this->connection->close();
+    /**
+     * Ejecuta una consulta y retorna los resultados
+     */
+    public function query(string $sql, array $params = []): array
+    {
+        $stmt = $this->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Ejecuta una consulta y retorna una fila
+     */
+    public function queryOne(string $sql, array $params = []): ?array
+    {
+        $stmt = $this->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    /**
+     * Ejecuta una consulta que no retorna datos
+     */
+    public function execute(string $sql, array $params = []): int
+    {
+        $stmt = $this->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    /**
+     * Prepara una consulta con placeholders compatibles
+     */
+    public function prepare(string $sql): PDOStatement
+    {
+        if ($this->isPostgreSQL()) {
+            $sql = $this->convertPlaceholders($sql);
         }
+        return $this->connection->prepare($sql);
     }
 
-    public function query($sql) {
-        $result = $this->connection->query($sql);
-        if (!$result) {
-            error_log("Error en consulta SQL: " . $this->connection->error);
-            error_log("Consulta: " . $sql);
+    private function convertPlaceholders(string $sql): string
+    {
+        $count = 0;
+        return preg_replace_callback('/\?/', function() use (&$count) {
+            $count++;
+            return '$' . $count;
+        }, $sql);
+    }
+
+    /**
+     * Obtiene el último ID insertado
+     * 
+     * @param string|null $sequence Nombre de la secuencia (para PostgreSQL)
+     */
+    public function getLastInsertId(?string $sequence = null): string
+    {
+        if ($this->isPostgreSQL()) {
+            return $this->connection->lastInsertId($sequence ?? '');
         }
-        return $result;
+        return $this->connection->lastInsertId();
     }
 
-    public function escapeString($string) {
-        return $this->connection->real_escape_string($string);
+    /**
+     * Obtiene el nombre de la función UUID
+     */
+    public function getUuidFunction(): string
+    {
+        return $this->isPostgreSQL() ? 'gen_random_uuid()' : 'UUID()';
     }
 
-    public function getLastInsertId() {
-        return $this->connection->insert_id;
+    /**
+     * Inicia una transacción
+     */
+    public function beginTransaction(): bool
+    {
+        return $this->connection->beginTransaction();
     }
-    public function clearPendingResults(\mysqli $conn): void
-{
-    while ($conn->more_results() && $conn->next_result()) {
-        if ($result = $conn->store_result()) {
-            $result->free();
-        }
+
+    /**
+     * Confirma una transacción
+     */
+    public function commit(): bool
+    {
+        return $this->connection->commit();
     }
-}
+
+    /**
+     * Revierte una transacción
+     */
+    public function rollBack(): bool
+    {
+        return $this->connection->rollBack();
+    }
+
+    /**
+     * Verifica si hay una transacción activa
+     */
+    public function inTransaction(): bool
+    {
+        return $this->connection->inTransaction();
+    }
+
+    /**
+     * Limpia resultados pendientes (compatibilidad con MySQL)
+     */
+    public function clearPendingResults(): void
+    {
+        // En PDO no es necesario, pero mantenemos por compatibilidad
+    }
+
+    /**
+     * Escapa un string para SQL
+     */
+    public function escapeString(string $string): string
+    {
+        return $this->connection->quote($string);
+    }
 }
