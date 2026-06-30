@@ -23,7 +23,7 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 // Buffer de salida para manejar headers
-ob_start();
+//ob_start();
 
 // Eliminar headers sensibles
 header_remove('X-Powered-By');

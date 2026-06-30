@@ -10,116 +10,101 @@
  */
 namespace maquinas_recreativas\Core;
 
-class Response{
+class Response
+{
     private array $headers = [];
     private mixed $content = null;
     private int $statusCode = 200;
+    private bool $sent = false;
     
-    /**
-     * Establece un header
-     * 
-     * @param string $name
-     * @param string $value
-     * @return self
-     */
-    public function header(string $name, string $value): self{
+    public function header(string $name, string $value): self
+    {
         $this->headers[$name] = $value;
         return $this;
     }
     
-    /**
-     * Obtiene todos los headers
-     * 
-     * @return array
-     */
-    public function getHeaders(): array{
+    public function getHeaders(): array
+    {
         return $this->headers;
     }
     
-    /**
-     * Obtiene un header específico
-     * 
-     * @param string $name
-     * @param mixed $default
-     * @return mixed
-     */
-    public function getHeader(string $name, $default = null){
+    public function getHeader(string $name, $default = null)
+    {
         return $this->headers[$name] ?? $default;
     }
     
-    /**
-     * Establece múltiples headers
-     * 
-     * @param array $headers
-     * @return self
-     */  
-    public function withHeaders(array $headers): self{
+    public function withHeaders(array $headers): self
+    {
         $this->headers = array_merge($this->headers, $headers);
         return $this;
     }
     
-    /**
-     * Establece el código de estado
-     * 
-     * @param int $code
-     * @return self
-     */
-    public function status(int $code): self{
+    public function status(int $code): self
+    {
         $this->statusCode = $code;
         return $this;
     }
     
-    /**
-     * Establece el contenido
-     * 
-     * @param mixed $content
-     * @return self
-     */    
-    public function content(mixed $content): self{
+    public function content(mixed $content): self
+    {
         $this->content = $content;
         return $this;
     }
     
-    /**
-     * Envía una respuesta JSON
-     * 
-     * @param mixed $data
-     * @param int $statusCode
-     * @return self
-     */
-public function json($data, int $statusCode = 200): self
-{
-    $this->status($statusCode);
-    $this->header('Content-Type', 'application/json; charset=utf-8');
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-    if ($json === false) {
-        error_log("JSON encode error: " . json_last_error_msg());
-        $json = json_encode(['success' => false, 'message' => 'Error interno al generar respuesta']);
+    public function json($data, int $statusCode = 200): self
+    {
+        $this->status($statusCode);
+        $this->header('Content-Type', 'application/json; charset=utf-8');
+        
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            error_log("JSON encode error: " . json_last_error_msg());
+            $json = json_encode([
+                'success' => false, 
+                'message' => 'Error interno al generar respuesta',
+                'error' => json_last_error_msg()
+            ]);
+        }
+        $this->content = $json;
+        return $this;
     }
-    $this->content = $json;
-    return $this;
-}
     
-    /**
-     * Envía la respuesta
-     * 
-     * @return void
-     */    
-    public function send(): void{
+    public function send(): void
+    {
+        if ($this->sent) {
+            return;
+        }
+        $this->sent = true;
+
+        // Limpiar cualquier salida previa
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+
         // Aplicar código de estado
         http_response_code($this->statusCode);
+
         // Enviar headers
-        foreach($this->headers as $name => $value){
-            header("$name: $value");
+        foreach ($this->headers as $name => $value) {
+            if (!headers_sent()) {
+                header("{$name}: {$value}");
+            }
         }
+
         // Enviar contenido
-        if($this->content !== null){
+        if ($this->content !== null) {
             echo $this->content;
+        }
+
+        // Finalizar el buffer
+        if (ob_get_level() > 0) {
+            ob_end_flush();
         }
         exit;
     }
+    
     public function getContent(): mixed
-{
-    return $this->content;
-}
+    {
+        return $this->content;
+    }
 }

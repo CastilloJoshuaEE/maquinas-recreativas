@@ -90,26 +90,19 @@ class App
         }
     }
 
-public function run(): void
+    public function run(): void
     {
         try {
             if ($this->handleSpecialFiles()) {
                 return;
             }
             
-            if ($this->request->getPath() === '/reset-rate-limits') {
-                if (function_exists('applyRateLimitReset')) {
-                    applyRateLimitReset();
-                } else {
-                    $this->response->json(['success' => false, 'message' => 'Rate limit reset not available'], 500);
-                }
-                return;
-            }
-            
             $this->pipeline->handle($this->request, function ($request) {
                 $route = $this->router->match($request->getMethod(), $request->getPath());
+                
                 if (!$route) {
                     $this->response->json(['success' => false, 'message' => 'Endpoint no encontrado'], 404);
+                    $this->response->send();
                     return;
                 }
                 
@@ -119,26 +112,29 @@ public function run(): void
                 }
                 
                 $routePipeline->handle($request, function ($request) use ($route) {
-    [$controllerClass, $method] = $route['handler'];
-    $controller = $this->resolveController($controllerClass);
-    if (!$controller || !method_exists($controller, $method)) {
-        throw new \RuntimeException("Handler inválido para la ruta");
-    }
+                    [$controllerClass, $method] = $route['handler'];
+                    $controller = $this->resolveController($controllerClass);
+                    
+                    if (!$controller || !method_exists($controller, $method)) {
+                        throw new \RuntimeException("Handler inválido para la ruta");
+                    }
 
-    $params = $route['params'] ?? [];
-    $result = $controller->$method($request, ...$params);  //  aquí se pasan los parámetros
+                    $params = $route['params'] ?? [];
+                    $result = $controller->$method($request, ...$params);
 
-    if ($result instanceof Response) {
-        $result->send();
-    } else {
-        $this->response->json($result);
-    }
-});
+                    if ($result instanceof Response) {
+                        $result->send();
+                    } else {
+                        $this->response->json($result);
+                        $this->response->send();
+                    }
+                });
             });
         } catch (\Throwable $e) {
             $this->handleException($e);
         }
     }
+
     private function handleSpecialFiles(): bool
     {
         $path = $this->request->getPath();
@@ -180,9 +176,7 @@ public function run(): void
      */
     private function resolveController(string $class): ?object
     {
-        // Intentar obtener del contenedor Dependencies
         try {
-            //  Usar class_exists correctamente
             if (class_exists('\\Dependencies')) {
                 $instance = \Dependencies::get($class);
                 if ($instance !== null) {
@@ -193,7 +187,6 @@ public function run(): void
             error_log("Error obteniendo {$class} del contenedor: " . $e->getMessage());
         }
         
-        // Intentar crear instancia con parámetros por defecto (fallback)
         if (class_exists($class)) {
             try {
                 $reflection = new \ReflectionClass($class);
@@ -208,32 +201,18 @@ public function run(): void
                 
                 foreach ($params as $param) {
                     $paramType = $param->getType();
-                    //  Verificar métodos correctamente
-                    if ($paramType) {
-    // Verificar si es un tipo de clase (no built-in)
-    $isBuiltin = false;
-    
-    // Para PHP 7.1+ podemos usar isBuiltin()
-    if (method_exists($paramType, 'isBuiltin')) {
-        $isBuiltin = $paramType->isBuiltin();
-    }
-    
-    if (!$isBuiltin) {
-        $paramClass = method_exists($paramType, 'getName') 
-            ? $paramType->getName() 
-            : (string)$paramType;
-        try {
-            $args[] = $this->resolveController($paramClass);
-        } catch (\Exception $e) {
-            if ($param->isDefaultValueAvailable()) {
-                $args[] = $param->getDefaultValue();
-            } else {
-                throw new \RuntimeException("No se puede resolver el parámetro {$param->getName()} para {$class}");
-            }
-        }
-        continue;
-    }
-
+                    
+                    if ($paramType && method_exists($paramType, 'isBuiltin') && !$paramType->isBuiltin()) {
+                        $paramClass = $paramType->getName();
+                        try {
+                            $args[] = $this->resolveController($paramClass);
+                        } catch (\Exception $e) {
+                            if ($param->isDefaultValueAvailable()) {
+                                $args[] = $param->getDefaultValue();
+                            } else {
+                                $args[] = null;
+                            }
+                        }
                     } elseif ($param->isDefaultValueAvailable()) {
                         $args[] = $param->getDefaultValue();
                     } else {
@@ -254,6 +233,7 @@ public function run(): void
     private function handleException(\Throwable $e): void
     {
         error_log("App Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+        error_log("Trace: " . $e->getTraceAsString());
         
         $response = [
             'success' => false,
@@ -262,8 +242,16 @@ public function run(): void
         
         if ($this->config['debug']) {
             $response['trace'] = $e->getTraceAsString();
+            $response['file'] = $e->getFile();
+            $response['line'] = $e->getLine();
+        }
+        
+        // Limpiar buffer antes de enviar
+        if (ob_get_level() > 0) {
+            ob_clean();
         }
         
         $this->response->json($response, 500);
+        $this->response->send();
     }
 }
