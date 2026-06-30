@@ -1,22 +1,21 @@
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema
-RUN apk add --no-cache \
+# Instalar dependencias del sistema (usando apt para Debian)
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
     libzip-dev \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
     autoconf \
     g++ \
     make \
-    linux-headers \
-    mysql-client \
+    default-mysql-client \
     netcat-openbsd \
-    fcgi
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensiones PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
@@ -63,8 +62,8 @@ RUN composer install --no-interaction --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/backend \
     && chmod -R 775 /var/www/html/backend/storage
 
-# Verificar que PHP-FPM está configurado correctamente
-RUN php-fpm -t
+# Habilitar el módulo de reescritura de Apache
+RUN a2enmod rewrite
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
