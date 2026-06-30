@@ -22,14 +22,6 @@ class Router
         ':estado' => '([A-Za-z]+)'
     ];
     
-    /**
-     * Añade una ruta
-     * 
-     * @param string $method Método HTTP
-     * @param string $path Patrón de ruta
-     * @param callable|array $handler Controlador/método
-     * @param array $middleware Middlewares específicos
-     */
     public function add(string $method, string $path, $handler, array $middleware = []): void
     {
         $this->routes[] = [
@@ -41,17 +33,10 @@ class Router
         ];
     }
     
-    /**
-     * Compila un patrón de ruta a regex
-     * 
-     * @param string $path
-     * @return string
-     */
     private function compilePattern(string $path): string
     {
         $pattern = preg_quote($path, '#');
         
-        // Reemplazar placeholders
         foreach ($this->patterns as $placeholder => $regex) {
             $pattern = str_replace(preg_quote($placeholder, '#'), $regex, $pattern);
         }
@@ -59,24 +44,22 @@ class Router
         return '#^' . $pattern . '$#';
     }
     
-    /**
-     * Busca una ruta que coincida
-     * 
-     * @param string $method
-     * @param string $uri
-     * @return array|null
-     */
     public function match(string $method, string $uri): ?array
     {
-        foreach ($this->routes as $route) {
+        error_log("=== Router::match ===");
+        error_log("Buscando: " . $method . " " . $uri);
+        error_log("Total routes: " . count($this->routes));
+        
+        foreach ($this->routes as $index => $route) {
+            error_log("Route " . $index . ": " . $route['method'] . " " . $route['path'] . " -> " . $route['pattern']);
+            
             if ($route['method'] !== strtoupper($method)) {
                 continue;
             }
             
             if (preg_match($route['pattern'], $uri, $matches)) {
-                // Extraer parámetros
-                array_shift($matches); // Quitar la coincidencia completa
-                
+                error_log("MATCH FOUND! Route: " . $route['path']);
+                array_shift($matches);
                 return [
                     'handler' => $route['handler'],
                     'middleware' => $route['middleware'],
@@ -85,44 +68,30 @@ class Router
             }
         }
         
+        error_log("No match found");
         return null;
     }
     
-    /**
-     * Añade ruta GET
-     */
     public function get(string $path, $handler, array $middleware = []): void
     {
         $this->add('GET', $path, $handler, $middleware);
     }
     
-    /**
-     * Añade ruta POST
-     */
     public function post(string $path, $handler, array $middleware = []): void
     {
         $this->add('POST', $path, $handler, $middleware);
     }
     
-    /**
-     * Añade ruta PUT
-     */
     public function put(string $path, $handler, array $middleware = []): void
     {
         $this->add('PUT', $path, $handler, $middleware);
     }
     
-    /**
-     * Añade ruta DELETE
-     */
     public function delete(string $path, $handler, array $middleware = []): void
     {
         $this->add('DELETE', $path, $handler, $middleware);
     }
     
-    /**
-     * Añade ruta PATCH
-     */
     public function patch(string $path, $handler, array $middleware = []): void
     {
         $this->add('PATCH', $path, $handler, $middleware);
