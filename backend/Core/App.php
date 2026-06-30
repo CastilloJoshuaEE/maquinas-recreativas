@@ -97,11 +97,26 @@ class App
                 return;
             }
             
-            $this->pipeline->handle($this->request, function ($request) {
-                $route = $this->router->match($request->getMethod(), $request->getPath());
+            $method = $this->request->getMethod();
+            $path = $this->request->getPath();
+            
+            // Log para depuración
+            error_log("=== DEBUG ROUTE ===");
+            error_log("Method: " . $method);
+            error_log("Path: " . $path);
+            error_log("Full URI: " . $this->request->getUri());
+            
+            $this->pipeline->handle($this->request, function ($request) use ($method, $path) {
+                $route = $this->router->match($method, $path);
+                
+                error_log("Route matched: " . ($route ? 'YES' : 'NO'));
+                if ($route) {
+                    error_log("Route handler: " . print_r($route['handler'], true));
+                }
                 
                 if (!$route) {
-                    $this->response->json(['success' => false, 'message' => 'Endpoint no encontrado'], 404);
+                    error_log("No route found for path: " . $path);
+                    $this->response->json(['success' => false, 'message' => 'Endpoint no encontrado: ' . $path], 404);
                     $this->response->send();
                     return;
                 }
@@ -246,7 +261,6 @@ class App
             $response['line'] = $e->getLine();
         }
         
-        // Limpiar buffer antes de enviar
         if (ob_get_level() > 0) {
             ob_clean();
         }
