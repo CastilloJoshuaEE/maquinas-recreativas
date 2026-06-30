@@ -1,12 +1,20 @@
-RewriteEngine On
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Permitir solicitudes OPTIONS
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    
+    # Si existe archivo servirlo
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Redirigir todo a index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
 
-# Permitir solicitudes OPTIONS
-RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ $1 [R=200,L]
-
-# Si existe archivo servirlo
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Redirigir todo a index.php
-RewriteRule ^ index.php [QSA,L]
+# Proteger archivos sensibles
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

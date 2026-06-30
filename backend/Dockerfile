@@ -62,8 +62,17 @@ RUN composer install --no-interaction --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/backend \
     && chmod -R 775 /var/www/html/backend/storage
 
+# Configurar Apache para apuntar al directorio public
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
+    sed -i 's!/var/www/html!/var/www/html/backend/public!g' /etc/apache2/sites-available/000-default.conf && \
+    sed -i 's!/var/www/html!/var/www/html/backend/public!g' /etc/apache2/conf-available/docker-php.conf
+
 # Habilitar el módulo de reescritura de Apache
 RUN a2enmod rewrite
+
+# Copiar configuración de Apache personalizada si existe
+COPY apache.conf /etc/apache2/conf-available/custom.conf
+RUN a2enconf custom || true
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
