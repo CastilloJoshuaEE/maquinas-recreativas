@@ -16,7 +16,7 @@ class HealthController
     public function __construct(?CacheInterface $cache = null)
     {
         $this->cache = $cache ?? CacheFactory::create();
-        define('DB_NAME', $_ENV['DB_NAME'] ?? 'bd_recrea_sys');
+       
     }
 
     public function check(): Response

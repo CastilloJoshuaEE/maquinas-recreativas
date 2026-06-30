@@ -93,7 +93,7 @@ class App
 
     private function loadRouteFiles(): void
     {
-        $routesPath = __DIR__ . '/../interfaces/http/routes/';
+        $routesPath = __DIR__ . '/../Interfaces/Http/Routes/';
         
         if (!is_dir($routesPath)) {
             error_log("El directorio de rutas no existe: " . $routesPath);
