@@ -23,7 +23,7 @@ class App
         $this->pipeline = new MiddlewarePipeline();
         $this->loadConfig();
         $this->registerMiddleware();
-        $this->registerRoutes();
+        $this->registerRoutesDirect();
     }
 
     public static function getInstance(): self
@@ -51,9 +51,54 @@ class App
         $this->pipeline->add('json-response', \maquinas_recreativas\Middleware\JsonResponseMiddleware::class);
     }
 
-    private function registerRoutes(): void
+    /**
+     * Registra rutas directamente sin depender de archivos
+     */
+    private function registerRoutesDirect(): void
+    {
+        error_log("=== REGISTRANDO RUTAS DIRECTAMENTE ===");
+        
+        // Ruta health
+        $this->router->add(
+            'GET',
+            '/health',
+            [\maquinas_recreativas\Interfaces\Http\Controllers\HealthController::class, 'check'],
+            []
+        );
+        error_log("Ruta registrada: GET /health");
+        
+        // Ruta test-db
+        $this->router->add(
+            'GET',
+            '/test-db',
+            [\maquinas_recreativas\Interfaces\Http\Controllers\HealthController::class, 'testDb'],
+            []
+        );
+        error_log("Ruta registrada: GET /test-db");
+        
+        // Ruta raíz
+        $this->router->add(
+            'GET',
+            '/',
+            [\maquinas_recreativas\Interfaces\Http\Controllers\HealthController::class, 'check'],
+            []
+        );
+        error_log("Ruta registrada: GET /");
+        
+        // Intentar cargar rutas desde archivos
+        $this->loadRouteFiles();
+        
+        error_log("Total rutas registradas: " . count($this->router->getRoutes()));
+    }
+
+    private function loadRouteFiles(): void
     {
         $routesPath = __DIR__ . '/../interfaces/http/routes/';
+        
+        if (!is_dir($routesPath)) {
+            error_log("El directorio de rutas no existe: " . $routesPath);
+            return;
+        }
         
         $routeFiles = [
             'index.php',
@@ -75,6 +120,7 @@ class App
         foreach ($routeFiles as $file) {
             $filePath = $routesPath . $file;
             if (file_exists($filePath)) {
+                error_log("Cargando archivo de rutas: " . $filePath);
                 $routes = require $filePath;
                 if (is_array($routes)) {
                     foreach ($routes as $route) {
@@ -84,8 +130,11 @@ class App
                             $route['handler'],
                             $route['middleware'] ?? []
                         );
+                        error_log("  Ruta cargada: " . $route['method'] . " " . $route['path']);
                     }
                 }
+            } else {
+                error_log("Archivo no encontrado: " . $filePath);
             }
         }
     }
@@ -100,19 +149,14 @@ class App
             $method = $this->request->getMethod();
             $path = $this->request->getPath();
             
-            // Log para depuración
             error_log("=== DEBUG ROUTE ===");
             error_log("Method: " . $method);
             error_log("Path: " . $path);
             error_log("Full URI: " . $this->request->getUri());
+            error_log("Total routes in router: " . count($this->router->getRoutes()));
             
             $this->pipeline->handle($this->request, function ($request) use ($method, $path) {
                 $route = $this->router->match($method, $path);
-                
-                error_log("Route matched: " . ($route ? 'YES' : 'NO'));
-                if ($route) {
-                    error_log("Route handler: " . print_r($route['handler'], true));
-                }
                 
                 if (!$route) {
                     error_log("No route found for path: " . $path);
@@ -121,6 +165,8 @@ class App
                     return;
                 }
                 
+                error_log("Route found! Handler: " . print_r($route['handler'], true));
+                
                 $routePipeline = new MiddlewarePipeline();
                 foreach ($route['middleware'] as $middleware) {
                     $routePipeline->add($middleware, $middleware);
@@ -128,13 +174,22 @@ class App
                 
                 $routePipeline->handle($request, function ($request) use ($route) {
                     [$controllerClass, $method] = $route['handler'];
+                    
+                    error_log("Instanciando controlador: " . $controllerClass);
                     $controller = $this->resolveController($controllerClass);
                     
-                    if (!$controller || !method_exists($controller, $method)) {
-                        throw new \RuntimeException("Handler inválido para la ruta");
+                    if (!$controller) {
+                        error_log("Controlador no encontrado: " . $controllerClass);
+                        throw new \RuntimeException("Controlador no encontrado: " . $controllerClass);
+                    }
+                    
+                    if (!method_exists($controller, $method)) {
+                        error_log("Método no encontrado: " . $controllerClass . "::" . $method);
+                        throw new \RuntimeException("Método no encontrado: " . $controllerClass . "::" . $method);
                     }
 
                     $params = $route['params'] ?? [];
+                    error_log("Ejecutando: " . $controllerClass . "::" . $method);
                     $result = $controller->$method($request, ...$params);
 
                     if ($result instanceof Response) {
@@ -186,15 +241,14 @@ class App
         return false;
     }
 
-    /**
-     * Resuelve un controlador desde el contenedor
-     */
     private function resolveController(string $class): ?object
     {
+        // Intentar obtener del contenedor Dependencies
         try {
             if (class_exists('\\Dependencies')) {
                 $instance = \Dependencies::get($class);
                 if ($instance !== null) {
+                    error_log("Controlador obtenido del contenedor: " . $class);
                     return $instance;
                 }
             }
@@ -202,8 +256,10 @@ class App
             error_log("Error obteniendo {$class} del contenedor: " . $e->getMessage());
         }
         
+        // Intentar crear instancia manualmente
         if (class_exists($class)) {
             try {
+                error_log("Creando instancia manual de: " . $class);
                 $reflection = new \ReflectionClass($class);
                 $constructor = $reflection->getConstructor();
                 
@@ -242,6 +298,7 @@ class App
             }
         }
         
+        error_log("Clase no encontrada: " . $class);
         return null;
     }
 

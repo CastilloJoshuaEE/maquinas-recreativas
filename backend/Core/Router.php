@@ -33,6 +33,11 @@ class Router
         ];
     }
     
+    public function getRoutes(): array
+    {
+        return $this->routes;
+    }
+    
     private function compilePattern(string $path): string
     {
         $pattern = preg_quote($path, '#');
@@ -48,11 +53,8 @@ class Router
     {
         error_log("=== Router::match ===");
         error_log("Buscando: " . $method . " " . $uri);
-        error_log("Total routes: " . count($this->routes));
         
         foreach ($this->routes as $index => $route) {
-            error_log("Route " . $index . ": " . $route['method'] . " " . $route['path'] . " -> " . $route['pattern']);
-            
             if ($route['method'] !== strtoupper($method)) {
                 continue;
             }
