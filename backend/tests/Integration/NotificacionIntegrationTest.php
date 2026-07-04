@@ -67,28 +67,33 @@ class NotificacionIntegrationTest extends TestCase
         }
     }
     
-    private function crearUsuariosPrueba(): void
-    {
-        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
-        
-        // Usuario Emisor (Administrador)
-        $command1 = new RegistrarUsuarioAdminCommand(
-            'Emisor', 'Test', '1111111111', 'emisor@test.com', null, 'Password123!', 'Administrador', 'Activo'
-        );
-        $usuario1 = $registrarAdminHandler->handle($command1);
-        $this->emisorId = $usuario1->getId();
-        
-        // Usuario Destinatario (Tecnico)
-        $command2 = new RegistrarUsuarioAdminCommand(
-            'Destinatario', 'Test', '2222222222', 'destinatario@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
-        );
-        $usuario2 = $registrarAdminHandler->handle($command2);
-        $this->destinatarioId = $usuario2->getId();
-        
-        $this->assertNotNull($this->emisorId);
-        $this->assertNotNull($this->destinatarioId);
-    }
+private function crearUsuariosPrueba(): void
+{
+    $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
     
+    $timestamp = time();
+    
+    // Usuario Emisor (Administrador)
+    $command1 = new RegistrarUsuarioAdminCommand(
+        'Emisor', 'Test', '111111' . $timestamp, 
+        'emisor_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Administrador', 'Activo'
+    );
+    $usuario1 = $registrarAdminHandler->handle($command1);
+    $this->emisorId = $usuario1->getId();
+    
+    // Usuario Destinatario (Tecnico)
+    $command2 = new RegistrarUsuarioAdminCommand(
+        'Destinatario', 'Test', '222222' . $timestamp, 
+        'destinatario_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
+    );
+    $usuario2 = $registrarAdminHandler->handle($command2);
+    $this->destinatarioId = $usuario2->getId();
+    
+    $this->assertNotNull($this->emisorId);
+    $this->assertNotNull($this->destinatarioId);
+}
     /**
      * @test
      * CPI-004: Obtener notificaciones por usuario

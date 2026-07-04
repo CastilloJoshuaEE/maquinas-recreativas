@@ -5,14 +5,13 @@
  * Carga y gestiona las variables de entorno desde el archivo .env
  * 
  * @package maquinas_recreativas\Config
- * @author Tu Equipo
- * @version 1.0.0
  */
 
 class EnvManager
 {
     private static array $variables = [];
     private static bool $loaded = false;
+    private static string $envFileLoaded = '';
 
     public static function load(string $envPath = null): void
     {
@@ -20,21 +19,68 @@ class EnvManager
             return;
         }
 
-        if ($envPath === null) {
-            $envPath = dirname(__DIR__) . '/.env';
+        // ============================================================
+        // IMPORTANTE: Primero leer APP_ENV desde variables ya definidas
+        // ============================================================
+        $appEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? $_SERVER['APP_ENV'] ?? null;
+        
+        // Si APP_ENV es 'testing', forzarlo en todas partes ANTES de cargar cualquier archivo
+        if ($appEnv === 'testing') {
+            putenv('APP_ENV=testing');
+            $_ENV['APP_ENV'] = 'testing';
+            $_SERVER['APP_ENV'] = 'testing';
+            
+            // También forzar variables de base de datos de pruebas
+            $dbNameTest = getenv('DB_NAME_TEST') ?: $_ENV['DB_NAME_TEST'] ?? $_SERVER['DB_NAME_TEST'] ?? null;
+            if ($dbNameTest) {
+                putenv('DB_NAME=' . $dbNameTest);
+                putenv('DB_NAME_TEST=' . $dbNameTest);
+                $_ENV['DB_NAME'] = $dbNameTest;
+                $_ENV['DB_NAME_TEST'] = $dbNameTest;
+                $_SERVER['DB_NAME'] = $dbNameTest;
+                $_SERVER['DB_NAME_TEST'] = $dbNameTest;
+            }
+            
+            error_log("EnvManager: APP_ENV forzado a 'testing' desde variables de entorno");
         }
 
-        /**
-         *  NUEVO COMPORTAMIENTO:
-         * - Si existe .env → lo carga (modo local)
-         * - Si NO existe → no rompe (modo cloud: Render, Docker, etc)
-         */
+        // Ahora determinar qué archivo cargar
+        if ($envPath === null) {
+            $basePath = dirname(__DIR__);
+            
+            // Verificar nuevamente APP_ENV (puede haber cambiado)
+            $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'local';
+            
+            error_log("EnvManager: APP_ENV actual = '{$currentAppEnv}'");
+            
+            // Si es testing, buscar .env.testing
+            if ($currentAppEnv === 'testing') {
+                $testingEnv = $basePath . '/.env.testing';
+                if (file_exists($testingEnv)) {
+                    $envPath = $testingEnv;
+                    self::$envFileLoaded = $envPath;
+                    error_log("EnvManager: Cargando .env.testing desde: {$envPath}");
+                } else {
+                    error_log("EnvManager: .env.testing no encontrado en {$testingEnv}, buscando .env");
+                }
+            }
+            
+            // Si no se encontró .env.testing o no es testing, usar .env
+            if ($envPath === null) {
+                $envPath = $basePath . '/.env';
+                if (file_exists($envPath)) {
+                    self::$envFileLoaded = $envPath;
+                    error_log("EnvManager: Cargando .env desde: {$envPath}");
+                } else {
+                    error_log("EnvManager: .env no encontrado en {$envPath}, usando variables del entorno del sistema");
+                    self::$loaded = true;
+                    return;
+                }
+            }
+        }
 
         if (!file_exists($envPath)) {
-
-            //  Solo advertencia, nunca crash
-            error_log("EnvManager: .env no encontrado en {$envPath}, usando variables del entorno del sistema");
-
+            error_log("EnvManager: Archivo no encontrado: {$envPath}");
             self::$loaded = true;
             return;
         }
@@ -56,34 +102,39 @@ class EnvManager
 
             $key = trim($parts[0]);
             $value = trim($parts[1]);
-
             $value = trim($value, "\"'");
 
             self::$variables[$key] = $value;
 
-            // sincronizar con entorno real
-            putenv("$key=$value");
-            $_ENV[$key] = $value;
+            // Sincronizar con entorno real (sin sobrescribir si ya existe)
+            if (getenv($key) === false) {
+                putenv("$key=$value");
+            }
+            if (!isset($_ENV[$key])) {
+                $_ENV[$key] = $value;
+            }
+            if (!isset($_SERVER[$key])) {
+                $_SERVER[$key] = $value;
+            }
+        }
+
+        // Asegurar que APP_ENV no sea sobrescrito por el archivo
+        if ($appEnv === 'testing') {
+            putenv('APP_ENV=testing');
+            $_ENV['APP_ENV'] = 'testing';
+            $_SERVER['APP_ENV'] = 'testing';
         }
 
         self::$loaded = true;
+        error_log("EnvManager: Cargadas " . count(self::$variables) . " variables de entorno desde " . basename($envPath));
     }
-
     public static function get(string $key, $default = null)
     {
         if (!self::$loaded) {
             self::load();
         }
 
-        /**
-         *  NUEVA PRIORIDAD CORRECTA:
-         * 1. Variables del sistema (Render / Docker / Apache env)
-         * 2. getenv()
-         * 3. .env cargado local
-         * 4. $_ENV
-         * 5. default
-         */
-
+        // Prioridad: $_SERVER > getenv() > variables cargadas > $_ENV > default
         $value = $_SERVER[$key] ?? null;
         if ($value !== null) {
             return $value;
@@ -111,7 +162,6 @@ class EnvManager
             self::load();
         }
 
-        // fusionar también variables del sistema
         return array_merge($_ENV, self::$variables);
     }
 
@@ -151,17 +201,26 @@ class EnvManager
     public static function getDatabaseName(): string
     {
         if (self::isTesting()) {
-            return self::get('DB_NAME_TEST', self::get('DB_NAME'));
+            return self::get('DB_NAME', self::get('DB_NAME_TEST', 'test_bd_recrea_sys'));
         }
 
         return self::get('DB_NAME', 'bd_recrea_sys');
     }
-}
 
+    /**
+     * Obtiene la ruta del archivo .env cargado
+     */
+    public static function getLoadedFile(): string
+    {
+        return self::$envFileLoaded;
+    }
+}
 
 // Definir constantes útiles para acceso rápido
 if (!defined('APP_ENV')) {
-    define('APP_ENV', EnvManager::getEnvironment());
+    // Obtener APP_ENV de variables de entorno
+    $appEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'local';
+    define('APP_ENV', $appEnv);
 }
 
 if (!defined('APP_DEBUG')) {
@@ -172,7 +231,8 @@ if (!defined('APP_URL')) {
     define('APP_URL', EnvManager::get('APP_URL', 'http://localhost:8000'));
 }
 
-define('DB_HOST', EnvManager::get('DB_HOST'));
-define('DB_USER', EnvManager::get('DB_USER'));
-define('DB_PASS', EnvManager::get('DB_PASS'));
+// Definir constantes de base de datos
+define('DB_HOST', EnvManager::get('DB_HOST', 'localhost'));
+define('DB_USER', EnvManager::get('DB_USER', 'root'));
+define('DB_PASS', EnvManager::get('DB_PASS', ''));
 define('DB_NAME', EnvManager::getDatabaseName());

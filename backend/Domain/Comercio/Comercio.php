@@ -64,14 +64,28 @@ class Comercio
      */
     public static function fromArray(array $data): self
     {
+        // Extraer el ID de forma explícita, soportando ambos casos
+        $id = $data['ID_Comercio'] ?? $data['id'] ?? null;
+        if ($id === null) {
+            throw new \InvalidArgumentException('El ID del comercio es obligatorio para reconstruir la entidad.');
+        }
+
+        // Extraer el resto de campos, usando las claves en mayúscula de la DB como prioridad
+        $nombre = $data['Nombre'] ?? $data['nombre'] ?? '';
+        $tipo = $data['Tipo'] ?? $data['tipo'] ?? '';
+        $direccion = $data['Direccion'] ?? $data['direccion'] ?? '';
+        $telefono = $data['Telefono'] ?? $data['telefono'] ?? '';
+        $cantidadMaquinas = (int)($data['Cantidad_Maquinas'] ?? $data['cantidad_maquinas'] ?? 0);
+        $fechaRegistro = $data['Fecha_Registro'] ?? $data['fecha_registro'] ?? date('Y-m-d');
+
         return new self(
-            $data['ID_Comercio'],
-            $data['Nombre'] ?? $data['nombre'] ?? '',           //  Priorizar mayúscula
-            $data['Tipo'] ?? $data['tipo'] ?? '',               //  Priorizar mayúscula
-            $data['Direccion'] ?? $data['direccion'] ?? '',     //  Priorizar mayúscula
-            $data['Telefono'] ?? $data['telefono'] ?? '',       //  Priorizar mayúscula
-            (int)($data['cantidad_maquinas'] ?? $data['Cantidad_Maquinas'] ?? 0),
-            $data['fecha_registro'] ?? $data['Fecha_Registro'] ?? null
+            $id,
+            $nombre,
+            $tipo,
+            $direccion,
+            $telefono,
+            $cantidadMaquinas,
+            $fechaRegistro
         );
     }
 

@@ -120,7 +120,7 @@ class UsuarioCommandTest extends TestCase
         );
         $userId = $registrarHandler->handle($registrarCommand);
         
-        // NUEVO: Activar el usuario antes de hacer login
+        // Activar el usuario antes de hacer login
         $this->activarUsuario($userId);
         
         $usuario = $this->usuarioRepository->findById($userId);

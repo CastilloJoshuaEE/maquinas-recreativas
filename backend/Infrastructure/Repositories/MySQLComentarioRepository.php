@@ -1,11 +1,9 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLComentarioRepository.php
- * Migrado a PDO. TTL: 120s.
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use PDO;
 use maquinas_recreativas\Domain\Comentario\Comentario;
 use maquinas_recreativas\Domain\Comentario\ComentarioRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
@@ -13,16 +11,17 @@ use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
+use PDO;
 
 class MySQLComentarioRepository implements ComentarioRepository
 {
-    private Database       $db;
+    private Database $db;
     private CacheInterface $cache;
-    private int            $ttl = 120;
+    private int $ttl = 120;
 
     public function __construct(Database $db, ?CacheInterface $cache = null)
     {
-        $this->db    = $db;
+        $this->db = $db;
         $this->cache = $cache ?? CacheFactory::create();
     }
 
@@ -31,27 +30,24 @@ class MySQLComentarioRepository implements ComentarioRepository
         $conn = $this->db->getConnection();
         $data = $comentario->toArray();
 
-        $checkStmt = $conn->prepare("SELECT 1 FROM comentario WHERE ID_Comentario = ?");
-        $checkStmt->execute([$data['ID_Comentario']]);
-        $exists = (bool) $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $existing = $this->findById($comentario->id());
 
-        if ($exists) {
-            $sql = "UPDATE comentario
-                    SET comentario = ?, fecha_edicion = ?, eliminado = ?
-                    WHERE ID_Comentario = ?";
-            $stmt = $conn->prepare($sql);
+        if ($existing) {
+            $stmt = $conn->prepare("CALL sp_editar_comentario(?, ?, ?)");
             $fechaEdicion = date('Y-m-d H:i:s');
-            $eliminado = $data['eliminado'] ?? 0;
-            $stmt->execute([$data['comentario'], $fechaEdicion, $eliminado, $data['ID_Comentario']]);
+            $stmt->execute([$data['ID_Comentario'], $data['comentario'], $fechaEdicion]);
         } else {
-            $sql = "INSERT INTO comentario (ID_Comentario, ID_Reporte, ID_Usuario_Emisor, comentario, fecha_hora, fecha_edicion, eliminado)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
+            $stmt = $conn->prepare("CALL sp_insertar_comentario(?, ?, ?, ?, ?)");
             $stmt->execute([
-                $data['ID_Comentario'], $data['ID_Reporte'], $data['ID_Usuario_Emisor'],
-                $data['comentario'], $data['fecha_hora'], null, 0
+                $data['ID_Comentario'],
+                $data['ID_Reporte'],
+                $data['ID_Usuario_Emisor'],
+                $data['comentario'],
+                $data['fecha_hora']
             ]);
         }
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
             $this->cache->deleteByPattern("comentarios:reporte:{$data['ID_Reporte']}:*");
@@ -61,9 +57,12 @@ class MySQLComentarioRepository implements ComentarioRepository
     public function findById(Uuid $id): ?Comentario
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("SELECT * FROM comentario WHERE ID_Comentario = ?");
+        $stmt = $conn->prepare("CALL sp_buscar_comentario_por_id(?)");
         $stmt->execute([$id->value()]);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+        
         return $data ? Comentario::fromArray($data) : null;
     }
 
@@ -72,15 +71,9 @@ class MySQLComentarioRepository implements ComentarioRepository
         $cacheKey = "comentarios:reporte:{$idReporte->value()}:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idReporte, $idUsuario) {
             $conn = $this->db->getConnection();
-            $sql  = "SELECT c.*, u.nombre, u.apellido, u.email, u.tipo,
-                            CASE WHEN u.ID_Usuario = ? THEN 1 ELSE 0 END as es_propio
-                     FROM comentario c
-                     JOIN usuario u ON c.ID_Usuario_Emisor = u.ID_Usuario
-                     WHERE c.ID_Reporte = ?
-                     ORDER BY c.fecha_hora ASC";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$idUsuario->value(), $idReporte->value()]);
+            $stmt = $conn->prepare("CALL sp_comentarios_por_reporte(?, ?)");
+            $stmt->execute([$idReporte->value(), $idUsuario->value()]);
+            
             $comentarios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['email'])) {
@@ -88,6 +81,9 @@ class MySQLComentarioRepository implements ComentarioRepository
                 }
                 $comentarios[] = $row;
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+            
             return $comentarios;
         }, $this->ttl);
     }
@@ -97,19 +93,18 @@ class MySQLComentarioRepository implements ComentarioRepository
         $cacheKey = "comentarios:chat:{$emisorId->value()}:{$destinatarioId->value()}";
         return $this->cache->remember($cacheKey, function () use ($emisorId, $destinatarioId) {
             $conn = $this->db->getConnection();
-            $sql  = "SELECT c.*, u.nombre, u.apellido, u.email, u.tipo,
-                            r.ID_Usuario_Destinatario, r.ID_Usuario_Emisor
-                     FROM comentario c
-                     JOIN reporte r ON c.ID_Reporte = r.ID_Reporte
-                     JOIN usuario u ON c.ID_Usuario_Emisor = u.ID_Usuario
-                     WHERE (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
-                        OR (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
-                     ORDER BY c.fecha_hora ASC";
-
+            $sql = "SELECT c.*, u.nombre, u.apellido, u.email, u.tipo, 
+                           r.ID_Usuario_Destinatario, r.ID_Usuario_Emisor
+                    FROM comentario c 
+                    JOIN reporte r ON c.ID_Reporte = r.ID_Reporte
+                    JOIN usuario u ON c.ID_Usuario_Emisor = u.ID_Usuario
+                    WHERE (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
+                       OR (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
+                    ORDER BY c.fecha_hora ASC";
+            
             $stmt = $conn->prepare($sql);
-            $ev = $emisorId->value();
-            $dv = $destinatarioId->value();
-            $stmt->execute([$ev, $dv, $dv, $ev]);
+            $stmt->execute([$emisorId->value(), $destinatarioId->value(), $destinatarioId->value(), $emisorId->value()]);
+            
             $comentarios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['email'])) {
@@ -117,6 +112,9 @@ class MySQLComentarioRepository implements ComentarioRepository
                 }
                 $comentarios[] = $row;
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+            
             return $comentarios;
         }, $this->ttl);
     }
@@ -124,28 +122,32 @@ class MySQLComentarioRepository implements ComentarioRepository
     public function deleteByReporte(Uuid $idReporte): bool
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("DELETE FROM comentario WHERE ID_Reporte = ?");
-        $v = $idReporte->value();
-        $result = $stmt->execute([$v]);
+        $stmt = $conn->prepare("CALL sp_eliminar_comentarios_reporte(?)");
+        $result = $stmt->execute([$idReporte->value()]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("comentarios:reporte:{$v}:*");
+            $this->cache->deleteByPattern("comentarios:reporte:{$idReporte->value()}:*");
         }
+
         return $result;
     }
 
     public function delete(Uuid $id): bool
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("UPDATE comentario SET eliminado = 1 WHERE ID_Comentario = ?");
-        $v = $id->value();
-        $result = $stmt->execute([$v]);
+        $stmt = $conn->prepare("CALL sp_eliminar_comentario(?)");
+        $result = $stmt->execute([$id->value()]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
-        $this->cache->delete("comentario:id:{$v}");
+        $this->cache->delete("comentario:id:{$id->value()}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
             $this->cache->deleteByPattern("comentarios:reporte:*");
             $this->cache->deleteByPattern("comentarios:chat:*");
         }
+
         return $result;
     }
 }

@@ -573,7 +573,31 @@ Dependencies::register(BcryptPasswordHasher::class, function() {
 Dependencies::register(HistorialHelper::class, function() {
     return HistorialHelper::getInstance();
 });
-
+Dependencies::register(
+    \maquinas_recreativas\Domain\Usuario\UsuarioRepository::class,
+    function() {
+        return Dependencies::get(MySQLUsuarioRepository::class);
+    }
+);
+// Registrar la interfaz CacheInterface -> apunta a RedisCache o NullCache
+Dependencies::register(
+    \maquinas_recreativas\Infrastructure\Cache\CacheInterface::class,
+    function() {
+        // Intentar obtener RedisCache, si falla devolver NullCache
+        $redis = Dependencies::get(RedisCache::class);
+        if ($redis) {
+            return $redis;
+        }
+        // Si Redis no está disponible, usar NullCache
+        return new \maquinas_recreativas\Infrastructure\Cache\NullCache();
+    }
+);
+Dependencies::register(
+    \maquinas_recreativas\Infrastructure\Security\PasswordHasher::class,
+    function() {
+        return Dependencies::get(BcryptPasswordHasher::class);
+    }
+);
 // Repositories
 Dependencies::register(MySQLUsuarioRepository::class, function() use ($database) {
     return new MySQLUsuarioRepository($database);

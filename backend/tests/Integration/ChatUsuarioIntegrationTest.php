@@ -69,29 +69,33 @@ class ChatUsuarioIntegrationTest extends TestCase
             $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->usuario2Id, 'Activo'));
         }
     }
+  private function crearUsuariosPrueba(): void
+{
+    $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
     
-    private function crearUsuariosPrueba(): void
-    {
-        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
-        
-        // Usuario 1 (Administrador) - creado por admin handler (estado Activo)
-        $command1 = new RegistrarUsuarioAdminCommand(
-            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', null, 'Password123!', 'Administrador', 'Activo'
-        );
-        $usuario1 = $registrarAdminHandler->handle($command1);
-        $this->usuario1Id = $usuario1->getId();
-        
-        // Usuario 2 (Tecnico) - creado por admin handler (estado Activo)
-        $command2 = new RegistrarUsuarioAdminCommand(
-            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
-        );
-        $usuario2 = $registrarAdminHandler->handle($command2);
-        $this->usuario2Id = $usuario2->getId();
-        
-        $this->assertNotNull($this->usuario1Id);
-        $this->assertNotNull($this->usuario2Id);
-    }
+    $timestamp = time();
     
+    // Usuario 1 (Administrador)
+    $command1 = new RegistrarUsuarioAdminCommand(
+        'Usuario', 'Uno', '111111' . $timestamp, 
+        'usuario1_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Administrador', 'Activo'
+    );
+    $usuario1 = $registrarAdminHandler->handle($command1);
+    $this->usuario1Id = $usuario1->getId();
+    
+    // Usuario 2 (Tecnico)
+    $command2 = new RegistrarUsuarioAdminCommand(
+        'Usuario', 'Dos', '222222' . $timestamp, 
+        'usuario2_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
+    );
+    $usuario2 = $registrarAdminHandler->handle($command2);
+    $this->usuario2Id = $usuario2->getId();
+    
+    $this->assertNotNull($this->usuario1Id);
+    $this->assertNotNull($this->usuario2Id);
+}
     /**
      * @test
      * CPI-003: Comunicación entre usuarios vía comentarios en reporte

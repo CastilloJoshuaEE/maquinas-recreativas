@@ -148,7 +148,7 @@ $idComprobador  = $data['idComprobador'] ?? null;
 $command = new RegistrarMaquinaCommand(
     $data['nombre'], $data['tipo'], $data['idComercio'], $userId,
     $data['idPlaca'], $data['idCarcasa'],
-    $idEnsamblador, $idComprobador   // nuevos parámetros
+    $idEnsamblador, $idComprobador  
 );
         $idMaquina = $this->registrarMaquinaHandler->handle($command);
 

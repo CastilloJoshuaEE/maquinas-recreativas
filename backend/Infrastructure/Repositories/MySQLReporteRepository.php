@@ -1,11 +1,9 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLReporteRepository.php
- * Migrado a PDO. TTL: 120 s — chat/tiempo real.
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use PDO;
 use maquinas_recreativas\Domain\Reporte\Reporte;
 use maquinas_recreativas\Domain\Reporte\EstadoReporte;
 use maquinas_recreativas\Domain\Reporte\ReporteRepository;
@@ -14,16 +12,17 @@ use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
+use PDO;
 
 class MySQLReporteRepository implements ReporteRepository
 {
-    private Database       $db;
+    private Database $db;
     private CacheInterface $cache;
-    private int            $ttl = 120;
+    private int $ttl = 120;
 
     public function __construct(Database $db, ?CacheInterface $cache = null)
     {
-        $this->db    = $db;
+        $this->db = $db;
         $this->cache = $cache ?? CacheFactory::create();
     }
 
@@ -31,43 +30,25 @@ class MySQLReporteRepository implements ReporteRepository
     {
         $conn = $this->db->getConnection();
         $data = $reporte->toArray();
-        
+
         $idReporte = $data['ID_Reporte'];
         $idEmisor = $data['ID_Usuario_Emisor'];
         $idDestinatario = $data['ID_Usuario_Destinatario'] ?? '';
         $descripcion = $data['descripcion'];
         $fechaHora = $data['fecha_hora'];
         $estado = $data['estado'];
-        
+
         if (empty($idEmisor)) {
-            error_log("Error: ID_Usuario_Emisor es nulo o vacio para reporte $idReporte");
             throw new \Exception('El emisor del reporte no puede ser nulo');
         }
 
-        if ($this->db->isPostgres()) {
-            $sql = "INSERT INTO reporte (ID_Reporte, ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT (ID_Reporte) DO UPDATE SET
-                        estado = EXCLUDED.estado,
-                        descripcion = EXCLUDED.descripcion";
-        } else {
-            $sql = "INSERT INTO reporte (ID_Reporte, ID_Usuario_Emisor, ID_Usuario_Destinatario, descripcion, fecha_hora, estado)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE estado = VALUES(estado), descripcion = VALUES(descripcion)";
-        }
-        
-        $stmt = $conn->prepare($sql);
-        $params = [$idReporte, $idEmisor, $idDestinatario, $descripcion, $fechaHora, $estado];
-        
-        $result = $stmt->execute($params);
-        if (!$result) {
-            error_log("Error en insert de reporte: " . implode(" ", $stmt->errorInfo()));
-            throw new \Exception('Error al guardar el reporte en la base de datos');
-        }
+        $stmt = $conn->prepare("CALL sp_insertar_reporte(?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$idReporte, $idEmisor, $idDestinatario, $descripcion, $fechaHora, $estado]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
         $this->cache->delete("reporte:id:{$idReporte}");
         $this->cache->delete("reportes:usuario:{$idEmisor}");
-        
         if (!empty($idDestinatario)) {
             $this->cache->delete("reportes:usuario:{$idDestinatario}");
             $this->invalidateChat($idEmisor, $idDestinatario);
@@ -94,28 +75,23 @@ class MySQLReporteRepository implements ReporteRepository
         $cacheKey = "reporte:id:{$id->value()}";
         return $this->cache->remember($cacheKey, function () use ($id) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT r.*, e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
-                           d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
-                    FROM reporte r 
-                    JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
-                    LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario 
-                    WHERE r.ID_Reporte = ?";
-            
-            $stmt = $conn->prepare($sql);
+            $stmt = $conn->prepare("CALL sp_buscar_reporte_por_id(?)");
             $stmt->execute([$id->value()]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+
             if (!$data) {
                 return null;
             }
-            
+
             if (!empty($data['emisor_email'])) {
                 $data['emisor_email'] = CifradoHelper::desencriptar($data['emisor_email']);
             }
             if (!empty($data['destinatario_email'])) {
                 $data['destinatario_email'] = CifradoHelper::desencriptar($data['destinatario_email']);
             }
-            
+
             return Reporte::fromArray($data);
         }, $this->ttl);
     }
@@ -125,17 +101,8 @@ class MySQLReporteRepository implements ReporteRepository
         $cacheKey = "reportes:usuario:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT r.*, e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
-                           d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
-                    FROM reporte r 
-                    JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
-                    LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario
-                    WHERE r.ID_Usuario_Emisor = ? OR r.ID_Usuario_Destinatario = ? 
-                    ORDER BY r.fecha_hora DESC";
-            
-            $stmt = $conn->prepare($sql);
-            $v = $idUsuario->value();
-            $stmt->execute([$v, $v]);
+            $stmt = $conn->prepare("CALL sp_reportes_por_usuario(?)");
+            $stmt->execute([$idUsuario->value()]);
             
             $reportes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -147,6 +114,8 @@ class MySQLReporteRepository implements ReporteRepository
                 }
                 $reportes[] = Reporte::fromArray($row);
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
             
             return $reportes;
         }, $this->ttl);
@@ -157,19 +126,8 @@ class MySQLReporteRepository implements ReporteRepository
         $cacheKey = "reportes:chat:{$emisorId->value()}:{$destinatarioId->value()}";
         return $this->cache->remember($cacheKey, function () use ($emisorId, $destinatarioId) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT r.*, e.nombre as emisor_nombre, e.apellido as emisor_apellido, e.email as emisor_email,
-                           d.nombre as destinatario_nombre, d.apellido as destinatario_apellido, d.email as destinatario_email
-                    FROM reporte r 
-                    JOIN usuario e ON r.ID_Usuario_Emisor = e.ID_Usuario
-                    LEFT JOIN usuario d ON r.ID_Usuario_Destinatario = d.ID_Usuario
-                    WHERE (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
-                       OR (r.ID_Usuario_Emisor = ? AND r.ID_Usuario_Destinatario = ?)
-                    ORDER BY r.fecha_hora ASC";
-            
-            $stmt = $conn->prepare($sql);
-            $ev = $emisorId->value();
-            $dv = $destinatarioId->value();
-            $stmt->execute([$ev, $dv, $dv, $ev]);
+            $stmt = $conn->prepare("CALL sp_chat_entre_usuarios(?, ?)");
+            $stmt->execute([$emisorId->value(), $destinatarioId->value()]);
             
             $reportes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -181,6 +139,8 @@ class MySQLReporteRepository implements ReporteRepository
                 }
                 $reportes[] = Reporte::fromArray($row);
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
             
             return $reportes;
         }, $this->ttl);
@@ -191,17 +151,8 @@ class MySQLReporteRepository implements ReporteRepository
         $cacheKey = "reportes:usuarios_chat:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT DISTINCT u.* FROM usuario u
-                    WHERE u.ID_Usuario IN (
-                        SELECT DISTINCT ID_Usuario_Emisor FROM reporte WHERE ID_Usuario_Destinatario = ?
-                        UNION
-                        SELECT DISTINCT ID_Usuario_Destinatario FROM reporte WHERE ID_Usuario_Emisor = ?
-                    ) AND u.ID_Usuario != ? 
-                    ORDER BY u.nombre ASC";
-            
-            $stmt = $conn->prepare($sql);
-            $v = $idUsuario->value();
-            $stmt->execute([$v, $v, $v]);
+            $stmt = $conn->prepare("CALL sp_usuarios_chat(?)");
+            $stmt->execute([$idUsuario->value()]);
             
             $usuarios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -210,6 +161,8 @@ class MySQLReporteRepository implements ReporteRepository
                 }
                 $usuarios[] = $row;
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
             
             return $usuarios;
         }, $this->ttl);
@@ -218,15 +171,16 @@ class MySQLReporteRepository implements ReporteRepository
     public function updateEstado(Uuid $id, EstadoReporte $estado): bool
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("UPDATE reporte SET estado = ? WHERE ID_Reporte = ?");
-        $sv = $estado->value();
-        $iv = $id->value();
-        $result = $stmt->execute([$sv, $iv]);
-        
-        $this->cache->delete("reporte:id:{$iv}");
+        $stmt = $conn->prepare("CALL sp_actualizar_estado_reporte(?, ?)");
+        $result = $stmt->execute([$id->value(), $estado->value()]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+
+        $this->cache->delete("reporte:id:{$id->value()}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
             $this->cache->deleteByPattern("reportes:usuario:*");
         }
+
         return $result;
     }
 }

@@ -1,26 +1,25 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLTecnicoRepository.php
- * Migrado a PDO. TTL: 1800 s — datos estables.
  */
 declare(strict_types=1);
 
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use PDO;
 use maquinas_recreativas\Domain\Usuario\Tecnico;
 use maquinas_recreativas\Domain\Usuario\TecnicoRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
+use PDO;
 
 final class MySQLTecnicoRepository implements TecnicoRepository
 {
-    private Database              $db;
+    private Database $db;
     private MySQLUsuarioRepository $usuarioRepository;
-    private CacheInterface         $cache;
-    private int                    $ttl = 1800;
+    private CacheInterface $cache;
+    private int $ttl = 1800;
 
     public function __construct(Database $db, ?CacheInterface $cache = null)
     {
@@ -35,19 +34,13 @@ final class MySQLTecnicoRepository implements TecnicoRepository
 
         return $this->cache->remember($cacheKey, function () use ($especialidad) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                    FROM usuario u
-                    INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                    WHERE t.Especialidad = ?
-                    ORDER BY u.nombre ASC";
-            
-            $stmt = $conn->prepare($sql);
+            $stmt = $conn->prepare("CALL sp_tecnicos_por_especialidad(?)");
             $stmt->execute([$especialidad]);
             
-            $tecnicos = [];
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $tecnicos[] = $this->usuarioRepository->hydrate($row);
-            }
+            $tecnicos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+            
             return $tecnicos;
         }, $this->ttl);
     }
@@ -55,11 +48,11 @@ final class MySQLTecnicoRepository implements TecnicoRepository
     public function incrementarActividades(Uuid $tecnicoId): bool
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare(
-            "UPDATE Tecnico SET Cantidad_Actividades = Cantidad_Actividades + 1 WHERE ID_Tecnico = ?"
-        );
+        $stmt = $conn->prepare("CALL sp_incrementar_actividades_tecnico(?)");
         $v = $tecnicoId->value();
         $result = $stmt->execute([$v]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
         $this->cache->delete("usuario:id:{$v}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
@@ -70,27 +63,24 @@ final class MySQLTecnicoRepository implements TecnicoRepository
         return $result;
     }
 
-    public function findAvailableByEspecialidad(string $especialidad): array
-    {
-        $cacheKey = "tecnicos:disponibles:{$especialidad}";
+public function findAvailableByEspecialidad(string $especialidad): array
+{
+    $cacheKey = "tecnicos:disponibles:{$especialidad}";
 
-        return $this->cache->remember($cacheKey, function () use ($especialidad) {
-            $conn = $this->db->getConnection();
-            $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                    FROM usuario u
-                    INNER JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
-                    WHERE t.Especialidad = ? 
-                      AND u.estado = 'Activo'
-                    ORDER BY t.Cantidad_Actividades ASC";
-            
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$especialidad]);
-            
-            $tecnicos = [];
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $tecnicos[] = $this->usuarioRepository->hydrate($row);
-            }
-            return $tecnicos;
-        }, $this->ttl);
-    }
+    return $this->cache->remember($cacheKey, function () use ($especialidad) {
+        $conn = $this->db->getConnection();
+        $stmt = $conn->prepare("CALL sp_tecnicos_disponibles_por_especialidad(?)");
+        $stmt->execute([$especialidad]);
+
+        $tecnicos = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // NO desencriptar aquí: hydrate() ya lo hace internamente
+            $tecnicos[] = $this->usuarioRepository->hydrate($row);
+        }
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+
+        return $tecnicos;
+    }, $this->ttl);
+}
 }

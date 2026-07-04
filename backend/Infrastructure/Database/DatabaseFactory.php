@@ -27,7 +27,7 @@ class DatabaseFactory
     {
         $driver = self::$driver;
         $host = $_ENV['DB_HOST'] ?? 'localhost';
-        $port = $_ENV['DB_PORT'] ?? ($driver === 'pgsql' ? '5432' : '3306');
+        $port = $_ENV['DB_PORT'] ?? ($driver === 'pgsql' ? '6543' : '3306');
         $dbname = $_ENV['DB_NAME'] ?? '';
         $user = $_ENV['DB_USER'] ?? '';
         $pass = $_ENV['DB_PASS'] ?? '';

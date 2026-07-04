@@ -14,7 +14,7 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaHandler;
 use maquinas_recreativas\Application\Commands\Notificacion\CrearNotificacionMaquinaCommand;
-
+use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 final class RegistrarMaquinaHandler implements CommandHandler
 {
     private MaquinaRepository $maquinaRepository;
@@ -22,19 +22,23 @@ final class RegistrarMaquinaHandler implements CommandHandler
     private ComercioRepository $comercioRepository;
     private ComponenteRepository $componenteRepository;
     private ?CrearNotificacionMaquinaHandler $notificacionHandler;
+    private HistorialHelper $historialHelper; 
 
+    
     public function __construct(
         MaquinaRepository $maquinaRepository,
         UsuarioRepository $usuarioRepository,
         ComercioRepository $comercioRepository,
         ComponenteRepository $componenteRepository,
-        ?CrearNotificacionMaquinaHandler $notificacionHandler = null
+        ?CrearNotificacionMaquinaHandler $notificacionHandler = null,
+        ?HistorialHelper $historialHelper = null
     ) {
         $this->maquinaRepository = $maquinaRepository;
         $this->usuarioRepository = $usuarioRepository;
         $this->comercioRepository = $comercioRepository;
         $this->componenteRepository = $componenteRepository;
         $this->notificacionHandler = $notificacionHandler;
+        $this->historialHelper = $historialHelper ?? HistorialHelper::getInstance();
     }
 
     public function handle(Command $command): string
@@ -103,7 +107,22 @@ final class RegistrarMaquinaHandler implements CommandHandler
         );
 
         $this->maquinaRepository->save($maquina);
-        
+        try {
+            $usuario = $this->usuarioRepository->findById(new Uuid($command->idUsuarioLogistica()));
+            if ($usuario) {
+                $this->historialHelper->registrar(
+                    $maquina->id()->value(),
+                    $command->idUsuarioLogistica(),
+                    'Logistica',
+                    'Registro',
+                    "Máquina registrada: {$command->nombre()}"
+                );
+            } else {
+                error_log("Usuario no encontrado para historial: {$command->idUsuarioLogistica()}");
+            }
+        } catch (\Exception $e) {
+            error_log("Error registrando historial: " . $e->getMessage());
+        }
         // Crear notificaciones SOLO si el handler fue inyectado
         if ($this->notificacionHandler !== null) {
             try {
@@ -135,7 +154,6 @@ final class RegistrarMaquinaHandler implements CommandHandler
         } else {
             error_log("Notificaciones desactivadas - no se crearon notificaciones para la máquina");
         }
-        
         return $maquina->id()->value();
     }
 }

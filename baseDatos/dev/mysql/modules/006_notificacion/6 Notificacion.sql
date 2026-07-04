@@ -50,14 +50,13 @@ END //
 CREATE PROCEDURE sp_crear_notificacion_reporte(
     IN p_id_reporte CHAR(36),
     IN p_id_usuario CHAR(36),
-    IN p_mensaje TEXT
+    IN p_mensaje TEXT,
+    IN p_mensaje    TEXT,
+    IN p_fecha      DATETIME
 )
 BEGIN
-    INSERT INTO notificaciones (
-        ID_Notificaciones, ID_Reporte, ID_Usuario, mensaje, fecha_hora, leida
-    ) VALUES (
-        UUID(), p_id_reporte, p_id_usuario, p_mensaje, NOW(), 0
-    );
+INSERT INTO notificaciones (ID_Notificaciones, ID_Reporte, ID_Usuario, mensaje, fecha_hora, leida)
+    VALUES (p_id, p_id_reporte, p_id_usuario, p_mensaje, p_fecha, FALSE);
 END //
 
 -- Procedimiento para obtener notificaciones por usuario con UUID

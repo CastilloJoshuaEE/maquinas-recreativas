@@ -12,4 +12,5 @@ return [
         'handler' => [\maquinas_recreativas\Interfaces\Http\Controllers\HealthController::class, 'testDb'],
         'middleware' => []
     ],
+    
 ];

@@ -205,8 +205,18 @@ public function logout(Request $request): Response
     if ($userId) {
         $command = new LogoutCommand(new Uuid($userId));
         $this->logoutHandler->handle($command);
-        session_destroy();
     }
+
+    // <--- (NUEVO) Limpiar la sesión correctamente
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    session_destroy();
 
     return (new Response())->json(['success' => true, 'message' => 'Sesión cerrada']);
 }

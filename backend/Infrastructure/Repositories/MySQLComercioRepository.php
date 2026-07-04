@@ -1,26 +1,27 @@
 <?php
 /**
  * Infrastructure/Repositories/MySQLComercioRepository.php
- * Migrado a PDO. TTL: 1800s.
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
-use PDO;
 use maquinas_recreativas\Domain\Comercio\Comercio;
 use maquinas_recreativas\Domain\Comercio\ComercioRepository;
+use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Infrastructure\Database\Database;
+use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
+use PDO;
 
 class MySQLComercioRepository implements ComercioRepository
 {
-    private Database       $db;
+    private Database $db;
     private CacheInterface $cache;
-    private int            $ttl = 1800;
+    private int $ttl = 1800;
 
     public function __construct(Database $db, ?CacheInterface $cache = null)
     {
-        $this->db    = $db;
+        $this->db = $db;
         $this->cache = $cache ?? CacheFactory::create();
     }
 
@@ -28,128 +29,134 @@ class MySQLComercioRepository implements ComercioRepository
     {
         $conn = $this->db->getConnection();
         $data = $comercio->toArray();
+        $idValue = $data['id'];
 
-        $checkStmt = $conn->prepare("SELECT COUNT(*) as total FROM Comercio WHERE ID_Comercio=?");
-        $idValue   = $data['id'];
-        $checkStmt->execute([$idValue]);
-        $exists = $checkStmt->fetch(PDO::FETCH_ASSOC)['total'] > 0;
+        $existing = $this->buscarPorId($idValue);
 
-        if ($exists) {
-            $sql  = "UPDATE Comercio SET Nombre=?,Tipo=?,Direccion=?,Telefono=? WHERE ID_Comercio=?";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$data['nombre'], $data['tipo'], $data['direccion'], $data['telefono'], $idValue]);
+        if ($existing) {
+            $stmt = $conn->prepare("CALL sp_actualizar_comercio(?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $idValue,
+                $data['nombre'],
+                $data['tipo'],
+                $data['direccion'],
+                $data['telefono']
+            ]);
         } else {
-            $sql  = "INSERT INTO Comercio (ID_Comercio,Nombre,Tipo,Direccion,Telefono,Fecha_Registro) VALUES (?,?,?,?,?,?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$idValue, $data['nombre'], $data['tipo'], $data['direccion'], $data['telefono'], $data['fecha_registro']]);
+            $stmt = $conn->prepare("CALL sp_insertar_comercio(?, ?, ?, ?, ?, ?)");
+            $fechaRegistro = $data['fecha_registro'] ?? date('Y-m-d');
+            $stmt->execute([
+                $idValue,
+                $data['nombre'],
+                $data['tipo'],
+                $data['direccion'],
+                $data['telefono'],
+                $fechaRegistro
+            ]);
         }
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
         $this->cache->delete("comercio:id:{$idValue}");
         $this->cache->delete("comercio:nombre:" . md5($data['nombre']));
         $this->invalidateListados();
     }
 
-    public function buscarPorId(string $id): ?Comercio
-    {
-        $cacheKey = "comercio:id:{$id}";
-        return $this->cache->remember($cacheKey, function () use ($id) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("SELECT * FROM Comercio WHERE ID_Comercio=?");
-            $stmt->execute([$id]);
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+public function buscarPorId(string $id): ?Comercio
+{
+    $cacheKey = "comercio:id:{$id}";
+    return $this->cache->remember($cacheKey, function () use ($id) {
+        $conn = $this->db->getConnection();
+        $stmt = $conn->prepare("CALL sp_buscar_comercio_por_id(?)");
+        $stmt->execute([$id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
 
-            if (!$data) return null;
+        if (!$data) {
+            return null;
+        }
 
-            $data['nombre']            = $data['Nombre']            ?? '';
-            $data['tipo']              = $data['Tipo']              ?? '';
-            $data['direccion']         = $data['Direccion']         ?? '';
-            $data['telefono']          = $data['Telefono']          ?? '';
-            $data['cantidad_maquinas'] = $data['Cantidad_Maquinas'] ?? 0;
-            $data['fecha_registro']    = $data['Fecha_Registro']    ?? date('Y-m-d');
-            return Comercio::fromArray($data);
-        }, $this->ttl);
-    }
+        // La función fromArray ahora espera las claves mayúsculas de la DB de manera explícita.
+        return Comercio::fromArray($data);
+    }, $this->ttl);
+}
 
     public function buscarPorNombre(string $nombre): ?Comercio
     {
         $cacheKey = "comercio:nombre:" . md5($nombre);
         return $this->cache->remember($cacheKey, function () use ($nombre) {
             $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("SELECT ID_Comercio FROM Comercio WHERE Nombre=?");
+            $stmt = $conn->prepare("CALL sp_buscar_comercio_por_nombre(?)");
             $stmt->execute([$nombre]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $row ? $this->buscarPorId($row['ID_Comercio']) : null;
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+
+            return $data ? $this->buscarPorId($data['ID_Comercio']) : null;
         }, $this->ttl);
     }
 
     public function obtenerTodos(array $criterios = []): array
     {
         $cacheKey = "comercios:all:" . md5(serialize($criterios));
-
+        
         return $this->cache->remember($cacheKey, function () use ($criterios) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT ID_Comercio, Nombre, Tipo, Direccion, Telefono, Fecha_Registro
-                    FROM Comercio
-                    WHERE 1=1";
-            $params = [];
+            $tipo = $criterios['tipo'] ?? null;
+            $nombre = $criterios['nombre'] ?? null;
+            $limit = 1000;
+            $offset = 0;
 
-            if (!empty($criterios['tipo'])) {
-                $sql .= " AND Tipo = ?";
-                $params[] = $criterios['tipo'];
-            }
-            if (!empty($criterios['nombre'])) {
-                $sql .= " AND Nombre LIKE ?";
-                $params[] = "%{$criterios['nombre']}%";
-            }
-
-            $sql .= " ORDER BY Nombre ASC";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->execute($params);
-
+            $stmt = $conn->prepare("CALL sp_listar_comercios(?, ?, ?, ?)");
+            $stmt->execute([$tipo, $nombre, $limit, $offset]);
+            
             $comercios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $row['cantidad_maquinas'] = 0;
-                $comercios[] = Comercio::fromArray($row);
+                $comercios[] = Comercio::fromArray([
+                    'id' => $row['ID_Comercio'],
+                    'nombre' => $row['Nombre'] ?? '',
+                    'tipo' => $row['Tipo'] ?? '',
+                    'direccion' => $row['Direccion'] ?? '',
+                    'telefono' => $row['Telefono'] ?? '',
+                    'cantidad_maquinas' => $row['Cantidad_Maquinas'] ?? 0,
+                    'fecha_registro' => $row['Fecha_Registro'] ?? date('Y-m-d'),
+                ]);
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+            
             return $comercios;
         }, $this->ttl);
     }
 
     public function findAll(array $filtros = [], int $offset = 0, int $limit = 10, string $orderBy = 'nombre', string $direction = 'ASC'): array
     {
-        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $orderBy   = in_array($orderBy, ['nombre','tipo','fecha_registro']) ? $orderBy : 'nombre';
-        $cacheKey  = "comercios:list:" . md5(serialize([$filtros,$offset,$limit,$orderBy,$direction]));
-
-        return $this->cache->remember($cacheKey, function () use ($filtros, $offset, $limit, $orderBy, $direction) {
+        $cacheKey = "comercios:list:" . md5(serialize([$filtros, $offset, $limit, $orderBy, $direction]));
+        
+        return $this->cache->remember($cacheKey, function () use ($filtros, $offset, $limit) {
             $conn = $this->db->getConnection();
-            $sql = "SELECT ID_Comercio, Nombre, Tipo, Direccion, Telefono, Fecha_Registro
-                    FROM Comercio
-                    WHERE 1=1";
-            $params = [];
+            $tipo = $filtros['tipo'] ?? null;
+            $nombre = $filtros['nombre'] ?? null;
 
-            if (!empty($filtros['tipo'])) {
-                $sql .= " AND Tipo=?";
-                $params[] = $filtros['tipo'];
-            }
-            if (!empty($filtros['nombre'])) {
-                $sql .= " AND Nombre LIKE ?";
-                $params[] = "%{$filtros['nombre']}%";
-            }
-
-            $sql .= " ORDER BY {$orderBy} {$direction} LIMIT ? OFFSET ?";
-            $params[] = $limit;
-            $params[] = $offset;
-
-            $stmt = $conn->prepare($sql);
-            $stmt->execute($params);
-
+            $stmt = $conn->prepare("CALL sp_listar_comercios(?, ?, ?, ?)");
+            $stmt->execute([$tipo, $nombre, $limit, $offset]);
+            
             $comercios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $row['cantidad_maquinas'] = 0;
-                $comercios[] = Comercio::fromArray($row);
+                $comercios[] = Comercio::fromArray([
+                    'id' => $row['ID_Comercio'],
+                    'nombre' => $row['Nombre'] ?? '',
+                    'tipo' => $row['Tipo'] ?? '',
+                    'direccion' => $row['Direccion'] ?? '',
+                    'telefono' => $row['Telefono'] ?? '',
+                    'cantidad_maquinas' => $row['Cantidad_Maquinas'] ?? 0,
+                    'fecha_registro' => $row['Fecha_Registro'] ?? date('Y-m-d'),
+                ]);
             }
+            $stmt->closeCursor();
+            $this->db->clearPendingResults();
+            
             return $comercios;
         }, $this->ttl);
     }
@@ -157,18 +164,11 @@ class MySQLComercioRepository implements ComercioRepository
     public function eliminar(string $id): void
     {
         $conn = $this->db->getConnection();
-        try {
-            $conn->beginTransaction();
-            if ($this->tieneMaquinas($id)) {
-                throw new \RuntimeException('No se puede eliminar el comercio porque tiene máquinas asociadas');
-            }
-            $stmt = $conn->prepare("DELETE FROM Comercio WHERE ID_Comercio=?");
-            $stmt->execute([$id]);
-            $conn->commit();
-        } catch (\Exception $e) {
-            if ($conn->inTransaction()) $conn->rollBack();
-            throw new \RuntimeException("Error al eliminar comercio: " . $e->getMessage(), 0, $e);
-        }
+        $stmt = $conn->prepare("CALL sp_eliminar_comercio(?)");
+        $stmt->execute([$id]);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+
         $this->cache->delete("comercio:id:{$id}");
         $this->invalidateListados();
     }
@@ -176,46 +176,52 @@ class MySQLComercioRepository implements ComercioRepository
     public function existePorNombre(string $nombre, ?string $excluirId = null): bool
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT COUNT(*) as total FROM Comercio WHERE Nombre=?";
+        $sql = "SELECT COUNT(*) as total FROM Comercio WHERE Nombre = ?";
         $params = [$nombre];
         if ($excluirId) {
-            $sql .= " AND ID_Comercio!=?";
+            $sql .= " AND ID_Comercio != ?";
             $params[] = $excluirId;
         }
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+        
         return $row['total'] > 0;
     }
 
     public function tieneMaquinas(string $id): bool
     {
         $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM MaquinaRecreativa WHERE ID_Comercio=?");
+        $stmt = $conn->prepare("CALL sp_comercio_tiene_maquinas(?, @tiene)");
         $stmt->execute([$id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row['total'] > 0;
+        $stmt->closeCursor();
+        
+        $result = $conn->query("SELECT @tiene as tiene");
+        $row = $result->fetch(PDO::FETCH_ASSOC);
+        $result->closeCursor();
+        $this->db->clearPendingResults();
+        
+        return (bool)($row['tiene'] ?? 0);
     }
 
     public function contar(array $criterios = []): int
     {
         $conn = $this->db->getConnection();
-        $sql = "SELECT COUNT(*) as total FROM Comercio WHERE 1=1";
-        $params = [];
-
-        if (!empty($criterios['tipo'])) {
-            $sql .= " AND Tipo=?";
-            $params[] = $criterios['tipo'];
-        }
-        if (!empty($criterios['nombre'])) {
-            $sql .= " AND Nombre LIKE ?";
-            $params[] = "%{$criterios['nombre']}%";
-        }
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int)$row['total'];
+        $tipo = $criterios['tipo'] ?? null;
+        $nombre = $criterios['nombre'] ?? null;
+        
+        $stmt = $conn->prepare("CALL sp_contar_comercios(?, ?, @total)");
+        $stmt->execute([$tipo, $nombre]);
+        $stmt->closeCursor();
+        
+        $result = $conn->query("SELECT @total as total");
+        $row = $result->fetch(PDO::FETCH_ASSOC);
+        $result->closeCursor();
+        $this->db->clearPendingResults();
+        
+        return (int)($row['total'] ?? 0);
     }
 
     public function count(array $filtros = []): int

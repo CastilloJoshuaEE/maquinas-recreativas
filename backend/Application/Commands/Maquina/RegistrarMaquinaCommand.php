@@ -44,7 +44,7 @@ final class RegistrarMaquinaCommand implements Command
     public function idPlaca(): string { return $this->idPlaca; }
     public function idCarcasa(): string { return $this->idCarcasa; }
     
-    // Nuevos getters
+    
     public function idEnsamblador(): ?string { return $this->idEnsamblador; }
     public function idComprobador(): ?string { return $this->idComprobador; }
 }

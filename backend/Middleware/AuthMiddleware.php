@@ -28,6 +28,7 @@ class AuthMiddleware{
 '/usuarios/por-tipo',
     '/reportes/crear',
     '/maquina/all',
+        '/reset-rate-limits',  
 
     ];
     /**

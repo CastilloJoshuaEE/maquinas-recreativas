@@ -52,7 +52,7 @@ class UsuarioQueryTest extends TestCase
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosDePrueba();
-        $this->activarTecnicos(); // NUEVO: Activar técnicos para que aparezcan en las consultas
+        $this->activarTecnicos(); // Activar técnicos para que aparezcan en las consultas
     }
     
     private function activarTecnicos(): void
