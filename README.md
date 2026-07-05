@@ -1,32 +1,35 @@
 Autores:
 
-Buenaventura Gutierrez Andrea
+**Acosta Sarco Diego Maberik,**
+
+**Buenaventura Gutierrez Andrea.**
 
 **Castillo
 Merejildo Joshúa Javier.**
 
 **Castro Murillo Jean
-Fernando**
+Fernando.**
+
+**Faria Loor Jean Carlos.**
 
 **Gabino
 Villao Joel Fabian.**
 
-**Sabando
-Barberán Edú.**
+**Ordoñez Alava Harry Asier.**
 
 **Quiroz
 Gómez Euro Johann.**
 
-Y otros autores
+**Sabando
+Barberán Edú.**
 
-Probar api en swggaer: http://localhost/maquinas-recreativas/backend/public/docs/
 
-
+Probar api en swggaer en local: http://localhost/maquinas-recreativas/backend/public/docs/
 
 ## Estructura del Proyecto
 
-| Sección                 | Acceso                                          |
-| ------------------------ | ----------------------------------------------- |
+| Sección                 | Acceso                                            |
+| ------------------------ | ------------------------------------------------- |
 | Análisis de requisitos  | [Ver](Documentacion/1_Analisis_requisitos/)        |
 | Planificación           | [Ver](Documentacion/2_Planificacion/)              |
 | Diseño                  | [Ver](Documentacion/3_Diseño/)                    |
@@ -38,12 +41,11 @@ Probar api en swggaer: http://localhost/maquinas-recreativas/backend/public/docs
 | Bitácora de actividades | [Ver](Documentacion/2_Planificacion/)              |
 | Demostraciones           | [Ver](Documentacion/Demostraciones/)               |
 | Manuales                 | [Ver](Documentacion/Manuales/)                     |
-|                          |                                                 |
-|                          |                                                 |
-|                          |                                                 |
-|                          |                                                 |
-|                          |                                                 |
-|                          |                                                 |
-
+|                          |                                                   |
+|                          |                                                   |
+|                          |                                                   |
+|                          |                                                   |
+|                          |                                                   |
+|                          |                                                   |
 
 DIAGRAMAS EN DRAW.IO: [https://drive.google.com/file/d/12LkuHaN7a_HYcdnUtRFZWKbIm756j73r/view?usp=sharing](https://drive.google.com/file/d/12LkuHaN7a_HYcdnUtRFZWKbIm756j73r/view?usp=sharing)

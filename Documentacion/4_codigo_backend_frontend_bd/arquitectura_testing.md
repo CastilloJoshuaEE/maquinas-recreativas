@@ -1,10 +1,12 @@
 asegurarse de tener en la raiz del proyecto de backend el .env comentada la de APP_ENV=development y descomentar la de APP_ENV=testing
 
+o en el simbolo del sistema de windows poner APP_ENV=testing php -S localhost:8000 -t public
+
 DESARROLLO LOCAL:
 
 DB_HOST=127.0.0.1
 
-Procurar usar el 
+Procurar usar el
 
 ```
    set APP_ENV=testing en la consola de windows antes de las pruebas

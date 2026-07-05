@@ -49,7 +49,7 @@ class EnvManager
             $basePath = dirname(__DIR__);
             
             // Verificar nuevamente APP_ENV (puede haber cambiado)
-            $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'local';
+            $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'testing';
             
             error_log("EnvManager: APP_ENV actual = '{$currentAppEnv}'");
             
