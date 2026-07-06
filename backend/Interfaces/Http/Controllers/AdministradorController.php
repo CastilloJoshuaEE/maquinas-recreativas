@@ -530,7 +530,7 @@ public function updateUser(Request $request, string $id): Response
     {
         // Las estadísticas se cachean 300 s en el repositorio (admin:estadisticas).
         // Aquí se reconstruyen desde los usuarios para mantener compatibilidad
-        // con implementaciones que no usen MySQLAdministradorRepository directamente.
+        // con implementaciones que no usen PDOAdministradorRepository directamente.
         $query    = new ObtenerTodosUsuariosQuery(null, null, null, 1000, 0);
         $usuarios = $this->obtenerTodosUsuariosHandler->handle($query);
 

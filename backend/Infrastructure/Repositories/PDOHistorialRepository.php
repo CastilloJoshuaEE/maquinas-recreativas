@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLHistorialRepository.php
+ * Infrastructure/Repositories/PDOHistorialRepository.php
  * 
  * Versión con PDO para procedimientos almacenados
  */
@@ -15,7 +15,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLHistorialRepository implements HistorialRepository
+class PDOHistorialRepository implements HistorialRepository
 {
     private Database $db;
     private CacheInterface $cache;

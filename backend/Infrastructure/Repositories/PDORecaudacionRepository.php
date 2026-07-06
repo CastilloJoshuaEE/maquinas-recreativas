@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLRecaudacionRepository.php
+ * Infrastructure/Repositories/PDORecaudacionRepository.php
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -15,7 +15,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLRecaudacionRepository implements RecaudacionRepository
+class PDORecaudacionRepository implements RecaudacionRepository
 {
     private Database $db;
     private CacheInterface $cache;

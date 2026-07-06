@@ -171,8 +171,27 @@ public function register(Request $request): Response
 public function login(Request $request): Response
 {
     $data = $request->json();
-    if (!isset($data['usuario_asignado'], $data['contrasena'])) {
-        throw new DomainException('Usuario y contraseña son requeridos', 400);
+    
+    // Log para depuración
+    error_log("Login request data: " . json_encode($data));
+    
+    if (!isset($data['usuario_asignado'])) {
+        error_log("Login error: usuario_asignado no proporcionado");
+        throw new DomainException('Usuario es requerido', 400);
+    }
+    
+    if (!isset($data['contrasena'])) {
+        error_log("Login error: contrasena no proporcionada");
+        throw new DomainException('Contraseña es requerida', 400);
+    }
+
+    // Si usuario_asignado o contraseña están vacíos
+    if (empty(trim($data['usuario_asignado']))) {
+        throw new DomainException('Usuario es requerido', 400);
+    }
+    
+    if (empty(trim($data['contrasena']))) {
+        throw new DomainException('Contraseña es requerida', 400);
     }
 
     $ip        = $request->getClientIp();
@@ -186,11 +205,11 @@ public function login(Request $request): Response
     $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
     $_SESSION['rol']              = $usuario['tipo'];
     
-    // Log para depuración
     error_log("Login exitoso - Usuario: {$usuario['usuario_asignado']}, Rol: {$usuario['tipo']}");
 
     return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
 }
+
     #[OA\Post(
         path: "/v1/usuario/logout",
         summary: "Cerrar sesión",
@@ -201,14 +220,20 @@ public function login(Request $request): Response
     )]
 public function logout(Request $request): Response
 {
+    // Asegurar que la sesión está activa antes de manipularla
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
     $userId = $_SESSION['ID_Usuario'] ?? null;
     if ($userId) {
         $command = new LogoutCommand(new Uuid($userId));
         $this->logoutHandler->handle($command);
     }
 
-    // <--- (NUEVO) Limpiar la sesión correctamente
     $_SESSION = [];
+        session_unset();
+
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000,
@@ -217,6 +242,7 @@ public function logout(Request $request): Response
         );
     }
     session_destroy();
+    session_write_close();
 
     return (new Response())->json(['success' => true, 'message' => 'Sesión cerrada']);
 }
@@ -233,25 +259,41 @@ public function logout(Request $request): Response
             new OA\Response(response: 400, description: "ID no proporcionado o inválido")
         ]
     )]
-    public function getProfile(Request $request, ?string $id = null): Response
-    {
-        if (!$id) {
-            $id = $request->query('id');
-        }
-        if (!$id) {
-            throw new DomainException('ID de usuario no proporcionado', 400);
-        }
-        if (!ValidationHelper::isValidUUID($id)) {
-            throw new DomainException('ID de usuario inválido', 400);
-        }
-
-        $includeSensitive = in_array($_SESSION['rol'] ?? '', ['Administrador', 'Contabilidad', 'Tecnico', 'Logistico'])
-    || ($_SESSION['ID_Usuario'] ?? '') === $id;
-        $query   = new ObtenerUsuarioPorIdQuery($id, $includeSensitive);
-        $usuario = $this->obtenerUsuarioPorIdHandler->handle($query);
-
-        return (new Response())->json(['success' => true, 'usuario' => $usuario]);
+public function getProfile(Request $request, ?string $id = null): Response
+{
+    
+    if (!isset($_SESSION['ID_Usuario'])) {
+        return (new Response())->json([
+            'success' => false,
+            'message' => 'No autorizado - Debe iniciar sesión'
+        ], 401);
     }
+
+    // Si no hay ID en la URL, intentar obtener de la sesión
+    if (!$id) {
+        $id = $request->query('id');
+    }
+    
+    if (!$id && isset($_SESSION['ID_Usuario'])) {
+        $id = $_SESSION['ID_Usuario'];
+    }
+    
+    if (!$id) {
+        throw new DomainException('ID de usuario no proporcionado', 400);
+    }
+    
+    if (!ValidationHelper::isValidUUID($id)) {
+        throw new DomainException('ID de usuario invalido', 400);
+    }
+
+    $includeSensitive = in_array($_SESSION['rol'] ?? '', ['Administrador', 'Contabilidad', 'Tecnico', 'Logistica'])
+        || ($_SESSION['ID_Usuario'] ?? '') === $id;
+    
+    $query = new ObtenerUsuarioPorIdQuery($id, $includeSensitive);
+    $usuario = $this->obtenerUsuarioPorIdHandler->handle($query);
+
+    return (new Response())->json(['success' => true, 'usuario' => $usuario]);
+}
 
     #[OA\Post(
         path: "/v1/usuario/actualizar-perfil",

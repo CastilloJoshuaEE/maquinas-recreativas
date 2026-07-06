@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLComercioRepository.php
+ * Infrastructure/Repositories/PDOComercioRepository.php
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -13,7 +13,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLComercioRepository implements ComercioRepository
+class PDOComercioRepository implements ComercioRepository
 {
     private Database $db;
     private CacheInterface $cache;

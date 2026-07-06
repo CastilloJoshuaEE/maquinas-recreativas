@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLMaquinaRepository.php
+ * Infrastructure/Repositories/PDOMaquinaRepository.php
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -16,7 +16,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLMaquinaRepository implements MaquinaRepository
+class PDOMaquinaRepository implements MaquinaRepository
 {
     private Database $db;
     private CacheInterface $cache;

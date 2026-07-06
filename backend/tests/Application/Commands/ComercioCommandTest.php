@@ -7,8 +7,8 @@ namespace maquinas_recreativas\Tests\Application\Commands;
 
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComercioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
@@ -23,8 +23,8 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 class ComercioCommandTest extends TestCase
 {
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLComercioRepository $comercioRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOComercioRepository $comercioRepository;
     private BcryptPasswordHasher $passwordHasher;
     private HistorialHelper $historialHelper;
     private Uuid $logisticaId;
@@ -44,8 +44,8 @@ class ComercioCommandTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->comercioRepository = new MySQLComercioRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->comercioRepository = new PDOComercioRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         $this->historialHelper = HistorialHelper::getInstance();
         

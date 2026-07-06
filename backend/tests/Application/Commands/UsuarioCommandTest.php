@@ -7,7 +7,7 @@ namespace maquinas_recreativas\Tests\Application\Commands;
 
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\LoginCommand;
 use maquinas_recreativas\Application\Commands\Usuario\LoginHandler;
@@ -27,7 +27,7 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 class UsuarioCommandTest extends TestCase
 {
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
+    private PDOUsuarioRepository $usuarioRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     protected function setUp(): void
@@ -35,7 +35,7 @@ class UsuarioCommandTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
     }
     

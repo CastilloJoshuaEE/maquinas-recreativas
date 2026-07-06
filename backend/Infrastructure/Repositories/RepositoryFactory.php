@@ -39,13 +39,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de usuarios
      */
-    public static function getUsuarioRepository(?CacheInterface $cache = null): MySQLUsuarioRepository
+    public static function getUsuarioRepository(?CacheInterface $cache = null): PDOUsuarioRepository
     {
         $key = 'usuario_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLUsuarioRepository($db, $cache);
+            self::$instances[$key] = new PDOUsuarioRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -53,13 +53,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de administradores
      */
-    public static function getAdministradorRepository(?CacheInterface $cache = null): MySQLAdministradorRepository
+    public static function getAdministradorRepository(?CacheInterface $cache = null): PDOAdministradorRepository
     {
         $key = 'admin_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLAdministradorRepository($db, $cache);
+            self::$instances[$key] = new PDOAdministradorRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -67,13 +67,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de comercios
      */
-    public static function getComercioRepository(?CacheInterface $cache = null): MySQLComercioRepository
+    public static function getComercioRepository(?CacheInterface $cache = null): PDOComercioRepository
     {
         $key = 'comercio_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLComercioRepository($db, $cache);
+            self::$instances[$key] = new PDOComercioRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -81,13 +81,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de máquinas
      */
-    public static function getMaquinaRepository(?CacheInterface $cache = null): MySQLMaquinaRepository
+    public static function getMaquinaRepository(?CacheInterface $cache = null): PDOMaquinaRepository
     {
         $key = 'maquina_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLMaquinaRepository($db, $cache);
+            self::$instances[$key] = new PDOMaquinaRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -95,13 +95,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de componentes
      */
-    public static function getComponenteRepository(?CacheInterface $cache = null): MySQLComponenteRepository
+    public static function getComponenteRepository(?CacheInterface $cache = null): PDOComponenteRepository
     {
         $key = 'componente_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLComponenteRepository($db, $cache);
+            self::$instances[$key] = new PDOComponenteRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -109,13 +109,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de recaudaciones
      */
-    public static function getRecaudacionRepository(?CacheInterface $cache = null): MySQLRecaudacionRepository
+    public static function getRecaudacionRepository(?CacheInterface $cache = null): PDORecaudacionRepository
     {
         $key = 'recaudacion_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLRecaudacionRepository($db, $cache);
+            self::$instances[$key] = new PDORecaudacionRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -123,13 +123,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de reportes
      */
-    public static function getReporteRepository(?CacheInterface $cache = null): MySQLReporteRepository
+    public static function getReporteRepository(?CacheInterface $cache = null): PDOReporteRepository
     {
         $key = 'reporte_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLReporteRepository($db, $cache);
+            self::$instances[$key] = new PDOReporteRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -137,13 +137,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de comentarios
      */
-    public static function getComentarioRepository(?CacheInterface $cache = null): MySQLComentarioRepository
+    public static function getComentarioRepository(?CacheInterface $cache = null): PDOComentarioRepository
     {
         $key = 'comentario_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLComentarioRepository($db, $cache);
+            self::$instances[$key] = new PDOComentarioRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -151,13 +151,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de notificaciones
      */
-    public static function getNotificacionRepository(?CacheInterface $cache = null): MySQLNotificacionRepository
+    public static function getNotificacionRepository(?CacheInterface $cache = null): PDONotificacionRepository
     {
         $key = 'notificacion_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLNotificacionRepository($db, $cache);
+            self::$instances[$key] = new PDONotificacionRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -165,13 +165,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de distribución
      */
-    public static function getDistribucionRepository(?CacheInterface $cache = null): MySQLDistribucionRepository
+    public static function getDistribucionRepository(?CacheInterface $cache = null): PDODistribucionRepository
     {
         $key = 'distribucion_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLDistribucionRepository($db, $cache);
+            self::$instances[$key] = new PDODistribucionRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -179,13 +179,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de historial
      */
-    public static function getHistorialRepository(?CacheInterface $cache = null): MySQLHistorialRepository
+    public static function getHistorialRepository(?CacheInterface $cache = null): PDOHistorialRepository
     {
         $key = 'historial_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLHistorialRepository($db, $cache);
+            self::$instances[$key] = new PDOHistorialRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -193,13 +193,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de técnicos
      */
-    public static function getTecnicoRepository(?CacheInterface $cache = null): MySQLTecnicoRepository
+    public static function getTecnicoRepository(?CacheInterface $cache = null): PDOTecnicoRepository
     {
         $key = 'tecnico_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLTecnicoRepository($db, $cache);
+            self::$instances[$key] = new PDOTecnicoRepository($db, $cache);
         }
         return self::$instances[$key];
     }
@@ -207,13 +207,13 @@ class RepositoryFactory
     /**
      * Obtiene el repositorio de montaje
      */
-    public static function getMontajeRepository(?CacheInterface $cache = null): MySQLMontajeRepository
+    public static function getMontajeRepository(?CacheInterface $cache = null): PDOMontajeRepository
     {
         $key = 'montaje_repo';
         if (!isset(self::$instances[$key])) {
             $db = self::getDatabase();
             $cache = $cache ?? self::getCache();
-            self::$instances[$key] = new MySQLMontajeRepository($db, $cache);
+            self::$instances[$key] = new PDOMontajeRepository($db, $cache);
         }
         return self::$instances[$key];
     }

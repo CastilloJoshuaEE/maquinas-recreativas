@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLUsuarioRepository.php
+ * Infrastructure/Repositories/PDOUsuarioRepository.php
  * 
  * Versión con PDO para procedimientos almacenados
  */
@@ -22,7 +22,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLUsuarioRepository implements UsuarioRepository
+class PDOUsuarioRepository implements UsuarioRepository
 {
     private Database $db;
     private CacheInterface $cache;

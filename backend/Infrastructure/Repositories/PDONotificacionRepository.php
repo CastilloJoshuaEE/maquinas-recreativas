@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLNotificacionRepository.php
+ * Infrastructure/Repositories/PDONotificacionRepository.php
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -13,7 +13,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLNotificacionRepository implements NotificacionRepository
+class PDONotificacionRepository implements NotificacionRepository
 {
     private Database $db;
     private CacheInterface $cache;

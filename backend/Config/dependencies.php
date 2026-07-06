@@ -118,18 +118,18 @@ require_once __DIR__ . '/../Infrastructure/Database/Database.php';
 // =============================================
 // INFRASTRUCTURE - REPOSITORY IMPLEMENTATIONS
 // =============================================
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLUsuarioRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLAdministradorRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComercioRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLMaquinaRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComponenteRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLMontajeRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLHistorialRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLDistribucionRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLRecaudacionRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLNotificacionRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLReporteRepository.php';
-require_once __DIR__ . '/../Infrastructure/Repositories/MySQLComentarioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOUsuarioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOAdministradorRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOComercioRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOMaquinaRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOComponenteRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOMontajeRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOHistorialRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDODistribucionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDORecaudacionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDONotificacionRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOReporteRepository.php';
+require_once __DIR__ . '/../Infrastructure/Repositories/PDOComentarioRepository.php';
 
 // =============================================
 // INFRASTRUCTURE - SECURITY
@@ -377,17 +377,17 @@ require_once __DIR__ . '/../Infrastructure/Services/Email/BrevoEmailService.php'
 // =============================================
 // USE STATEMENTS PARA CLASES COMUNES
 // =============================================
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMaquinaRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComponenteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLRecaudacionRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMaquinaRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComponenteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOHistorialRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMontajeRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDODistribucionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDORecaudacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDONotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComentarioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 
@@ -576,7 +576,7 @@ Dependencies::register(HistorialHelper::class, function() {
 Dependencies::register(
     \maquinas_recreativas\Domain\Usuario\UsuarioRepository::class,
     function() {
-        return Dependencies::get(MySQLUsuarioRepository::class);
+        return Dependencies::get(PDOUsuarioRepository::class);
     }
 );
 // Registrar la interfaz CacheInterface -> apunta a RedisCache o NullCache
@@ -599,48 +599,48 @@ Dependencies::register(
     }
 );
 // Repositories
-Dependencies::register(MySQLUsuarioRepository::class, function() use ($database) {
-    return new MySQLUsuarioRepository($database);
+Dependencies::register(PDOUsuarioRepository::class, function() use ($database) {
+    return new PDOUsuarioRepository($database);
 });
 
-Dependencies::register(MySQLComercioRepository::class, function() use ($database) {
-    return new MySQLComercioRepository($database);
+Dependencies::register(PDOComercioRepository::class, function() use ($database) {
+    return new PDOComercioRepository($database);
 });
 
-Dependencies::register(MySQLMaquinaRepository::class, function() use ($database) {
-    return new MySQLMaquinaRepository($database);
+Dependencies::register(PDOMaquinaRepository::class, function() use ($database) {
+    return new PDOMaquinaRepository($database);
 });
 
-Dependencies::register(MySQLComponenteRepository::class, function() use ($database) {
-    return new MySQLComponenteRepository($database);
+Dependencies::register(PDOComponenteRepository::class, function() use ($database) {
+    return new PDOComponenteRepository($database);
 });
 
-Dependencies::register(MySQLHistorialRepository::class, function() use ($database) {
-    return new MySQLHistorialRepository($database);
+Dependencies::register(PDOHistorialRepository::class, function() use ($database) {
+    return new PDOHistorialRepository($database);
 });
 
-Dependencies::register(MySQLMontajeRepository::class, function() use ($database) {
-    return new MySQLMontajeRepository($database);
+Dependencies::register(PDOMontajeRepository::class, function() use ($database) {
+    return new PDOMontajeRepository($database);
 });
 
-Dependencies::register(MySQLDistribucionRepository::class, function() use ($database) {
-    return new MySQLDistribucionRepository($database);
+Dependencies::register(PDODistribucionRepository::class, function() use ($database) {
+    return new PDODistribucionRepository($database);
 });
 
-Dependencies::register(MySQLRecaudacionRepository::class, function() use ($database) {
-    return new MySQLRecaudacionRepository($database);
+Dependencies::register(PDORecaudacionRepository::class, function() use ($database) {
+    return new PDORecaudacionRepository($database);
 });
 
-Dependencies::register(MySQLNotificacionRepository::class, function() use ($database) {
-    return new MySQLNotificacionRepository($database);
+Dependencies::register(PDONotificacionRepository::class, function() use ($database) {
+    return new PDONotificacionRepository($database);
 });
 
-Dependencies::register(MySQLReporteRepository::class, function() use ($database) {
-    return new MySQLReporteRepository($database);
+Dependencies::register(PDOReporteRepository::class, function() use ($database) {
+    return new PDOReporteRepository($database);
 });
 
-Dependencies::register(MySQLComentarioRepository::class, function() use ($database) {
-    return new MySQLComentarioRepository($database);
+Dependencies::register(PDOComentarioRepository::class, function() use ($database) {
+    return new PDOComentarioRepository($database);
 });
 
 // =============================================
@@ -649,235 +649,235 @@ Dependencies::register(MySQLComentarioRepository::class, function() use ($databa
 
 // Handlers de Usuario
 Dependencies::register(LoginHandler::class, function() {
-    return new LoginHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new LoginHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 Dependencies::register(RegistrarUsuarioHandler::class, function() {
-    return new RegistrarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
+    return new RegistrarUsuarioHandler(Dependencies::get(PDOUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(RegistrarUsuarioAdminHandler::class, function() {
-    return new RegistrarUsuarioAdminHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new RegistrarUsuarioAdminHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ActualizarUsuarioHandler::class, function() {
-    return new ActualizarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
+    return new ActualizarUsuarioHandler(Dependencies::get(PDOUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(CambiarEstadoUsuarioHandler::class, function() {
-    return new CambiarEstadoUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new CambiarEstadoUsuarioHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(EliminarUsuarioHandler::class, function() {
-    return new EliminarUsuarioHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new EliminarUsuarioHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ActualizarPerfilHandler::class, function() {
-    return new ActualizarPerfilHandler(Dependencies::get(MySQLUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
+    return new ActualizarPerfilHandler(Dependencies::get(PDOUsuarioRepository::class), Dependencies::get(BcryptPasswordHasher::class));
 });
 
 Dependencies::register(RecuperarContrasenaHandler::class, function() {
-    return new RecuperarContrasenaHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new RecuperarContrasenaHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ActualizarUsuarioAsignadoHandler::class, function() {
-    return new ActualizarUsuarioAsignadoHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ActualizarUsuarioAsignadoHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(LogoutHandler::class, function() {
-    return new LogoutHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new LogoutHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(RegistrarActividadHandler::class, function() {
-    return new RegistrarActividadHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new RegistrarActividadHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 // Queries de Usuario
 Dependencies::register(ObtenerUsuarioPorIdHandler::class, function() {
-    return new ObtenerUsuarioPorIdHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ObtenerUsuarioPorIdHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ObtenerTodosUsuariosHandler::class, function() {
-    return new ObtenerTodosUsuariosHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ObtenerTodosUsuariosHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ObtenerTecnicosPorEspecialidadHandler::class, function() {
-    return new ObtenerTecnicosPorEspecialidadHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ObtenerTecnicosPorEspecialidadHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ObtenerUsuariosPorTipoHandler::class, function() {
-    return new ObtenerUsuariosPorTipoHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ObtenerUsuariosPorTipoHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(BuscarPorEmailHandler::class, function() {
-    return new BuscarPorEmailHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new BuscarPorEmailHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 Dependencies::register(ObtenerHistorialActividadesHandler::class, function() {
-    return new ObtenerHistorialActividadesHandler(Dependencies::get(MySQLUsuarioRepository::class));
+    return new ObtenerHistorialActividadesHandler(Dependencies::get(PDOUsuarioRepository::class));
 });
 
 // Handlers de Comercio
 Dependencies::register(RegistrarComercioHandler::class, function() {
-    return new RegistrarComercioHandler(Dependencies::get(MySQLComercioRepository::class), Dependencies::get(HistorialHelper::class));
+    return new RegistrarComercioHandler(Dependencies::get(PDOComercioRepository::class), Dependencies::get(HistorialHelper::class));
 });
 
 Dependencies::register(ObtenerComerciosHandler::class, function() {
-    return new ObtenerComerciosHandler(Dependencies::get(MySQLComercioRepository::class));
+    return new ObtenerComerciosHandler(Dependencies::get(PDOComercioRepository::class));
 });
 Dependencies::register(ActualizarComercioHandler::class, function() {
-    return new ActualizarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+    return new ActualizarComercioHandler(Dependencies::get(PDOComercioRepository::class));
 });
 
 Dependencies::register(EliminarComercioHandler::class, function() {
-    return new EliminarComercioHandler(Dependencies::get(MySQLComercioRepository::class));
+    return new EliminarComercioHandler(Dependencies::get(PDOComercioRepository::class));
 });
 // Handlers de Componente
 Dependencies::register(UsarComponenteHandler::class, function() {
     return new UsarComponenteHandler(
-        Dependencies::get(MySQLComponenteRepository::class),
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLMontajeRepository::class)
+        Dependencies::get(PDOComponenteRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOMontajeRepository::class)
     );
 });
 
 Dependencies::register(LiberarComponenteHandler::class, function() {
-    return new LiberarComponenteHandler(Dependencies::get(MySQLComponenteRepository::class));
+    return new LiberarComponenteHandler(Dependencies::get(PDOComponenteRepository::class));
 });
 
 Dependencies::register(AsignarCarcasaHandler::class, function() {
-    return new AsignarCarcasaHandler(Dependencies::get(MySQLComponenteRepository::class));
+    return new AsignarCarcasaHandler(Dependencies::get(PDOComponenteRepository::class));
 });
 
 Dependencies::register(LiberarComponentesCancelacionHandler::class, function() {
-    return new LiberarComponentesCancelacionHandler(Dependencies::get(MySQLComponenteRepository::class));
+    return new LiberarComponentesCancelacionHandler(Dependencies::get(PDOComponenteRepository::class));
 });
 
 Dependencies::register(ObtenerComponentesHandler::class, function() {
-    return new ObtenerComponentesHandler(Dependencies::get(MySQLComponenteRepository::class));
+    return new ObtenerComponentesHandler(Dependencies::get(PDOComponenteRepository::class));
 });
 
 Dependencies::register(ObtenerComponentesDisponiblesHandler::class, function() {
-    return new ObtenerComponentesDisponiblesHandler(Dependencies::get(MySQLComponenteRepository::class));
+    return new ObtenerComponentesDisponiblesHandler(Dependencies::get(PDOComponenteRepository::class));
 });
 
 Dependencies::register(ObtenerComponentesEnUsoHandler::class, function() {
     return new ObtenerComponentesEnUsoHandler(
-        Dependencies::get(MySQLComponenteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOComponenteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 // Handlers de Maquina
 Dependencies::register(RegistrarMaquinaHandler::class, function() {
     return new RegistrarMaquinaHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLComercioRepository::class),
-        Dependencies::get(MySQLComponenteRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOComercioRepository::class),
+        Dependencies::get(PDOComponenteRepository::class)
     );
 });
 Dependencies::register(ObtenerTodasMaquinasHandler::class, function() {
     return new ObtenerTodasMaquinasHandler(
-        Dependencies::get(MySQLMaquinaRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class)
     );
 });
 Dependencies::register(GenerarPlacaHandler::class, function() {
     return new GenerarPlacaHandler(
-        Dependencies::get(MySQLComponenteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOComponenteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 
 Dependencies::register(ActualizarMaquinaHandler::class, function() {
     return new ActualizarMaquinaHandler(
-        Dependencies::get(MySQLMaquinaRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class)
     );
 });
 
 
 Dependencies::register(RegistrarMontajeHandler::class, function() {
     return new RegistrarMontajeHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLComponenteRepository::class),
-        Dependencies::get(MySQLMontajeRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOComponenteRepository::class),
+        Dependencies::get(PDOMontajeRepository::class),
+        Dependencies::get(PDOHistorialRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(MandarAComprobacionHandler::class, function() {
     return new MandarAComprobacionHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class)
     );
 });
 
 Dependencies::register(MandarAReensamblarHandler::class, function() {
     return new MandarAReensamblarHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class)
     );
 });
 
 Dependencies::register(MandarADistribucionHandler::class, function() {
     return new MandarADistribucionHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLComercioRepository::class),
-        Dependencies::get(MySQLDistribucionRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOComercioRepository::class),
+        Dependencies::get(PDODistribucionRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class)
     );
 });
 
 Dependencies::register(PonerOperativaHandler::class, function() {
     return new PonerOperativaHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLDistribucionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDODistribucionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class)
     );
 });
 
 Dependencies::register(DarMantenimientoHandler::class, function() {
     return new DarMantenimientoHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLComercioRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLDistribucionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOComercioRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDODistribucionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class)
     );
 });
 
 Dependencies::register(FinalizarMantenimientoHandler::class, function() {
     return new FinalizarMantenimientoHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLHistorialRepository::class),
-        Dependencies::get(MySQLDistribucionRepository::class) 
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOHistorialRepository::class),
+        Dependencies::get(PDODistribucionRepository::class) 
     );
 });
 
 // Queries de Maquina
 Dependencies::register(ObtenerMaquinasPorTecnicoEnsambladorHandler::class, function() {
     return new ObtenerMaquinasPorTecnicoEnsambladorHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLComercioRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOComercioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerMaquinasPorTecnicoComprobadorHandler::class, function() {
     return new ObtenerMaquinasPorTecnicoComprobadorHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 // Registrar RoleMiddleware
@@ -886,238 +886,238 @@ Dependencies::register(\maquinas_recreativas\Middleware\RoleMiddleware::class, f
 });
 Dependencies::register(ObtenerMaquinasPorTecnicoMantenimientoHandler::class, function() {
     return new ObtenerMaquinasPorTecnicoMantenimientoHandler(
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerMaquinasPorEstadoHandler::class, function() {
-    return new ObtenerMaquinasPorEstadoHandler(Dependencies::get(MySQLMaquinaRepository::class));
+    return new ObtenerMaquinasPorEstadoHandler(Dependencies::get(PDOMaquinaRepository::class));
 });
 
 Dependencies::register(ObtenerMaquinasPorEtapaHandler::class, function() {
-    return new ObtenerMaquinasPorEtapaHandler(Dependencies::get(MySQLMaquinaRepository::class));
+    return new ObtenerMaquinasPorEtapaHandler(Dependencies::get(PDOMaquinaRepository::class));
 });
 
 Dependencies::register(ObtenerMaquinasParaDistribucionHandler::class, function() {
-    return new ObtenerMaquinasParaDistribucionHandler(Dependencies::get(MySQLMaquinaRepository::class));
+    return new ObtenerMaquinasParaDistribucionHandler(Dependencies::get(PDOMaquinaRepository::class));
 });
 
 Dependencies::register(ObtenerComponentesMaquinaHandler::class, function() {
-    return new ObtenerComponentesMaquinaHandler(Dependencies::get(MySQLMaquinaRepository::class));
+    return new ObtenerComponentesMaquinaHandler(Dependencies::get(PDOMaquinaRepository::class));
 });
 
 // Handlers de Notificacion
 Dependencies::register(CrearNotificacionMaquinaHandler::class, function() {
     return new CrearNotificacionMaquinaHandler(
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class),
-        Dependencies::get(MySQLMaquinaRepository::class)
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class)
     );
 });
 
 Dependencies::register(CrearNotificacionReporteHandler::class, function() {
     return new CrearNotificacionReporteHandler(
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(MarcarComoLeidaHandler::class, function() {
-    return new MarcarComoLeidaHandler(Dependencies::get(MySQLNotificacionRepository::class));
+    return new MarcarComoLeidaHandler(Dependencies::get(PDONotificacionRepository::class));
 });
 
 Dependencies::register(MarcarTodasComoLeidasHandler::class, function() {
-    return new MarcarTodasComoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+    return new MarcarTodasComoLeidasHandler(Dependencies::get(PDONotificacionRepository::class));
 });
 
 // Queries de Notificacion
 Dependencies::register(ObtenerNotificacionesMaquinaHandler::class, function() {
     return new ObtenerNotificacionesMaquinaHandler(
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerNotificacionesReporteHandler::class, function() {
     return new ObtenerNotificacionesReporteHandler(
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerCantidadNoLeidasHandler::class, function() {
-    return new ObtenerCantidadNoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+    return new ObtenerCantidadNoLeidasHandler(Dependencies::get(PDONotificacionRepository::class));
 });
 
 Dependencies::register(ObtenerNoLeidasHandler::class, function() {
-    return new ObtenerNoLeidasHandler(Dependencies::get(MySQLNotificacionRepository::class));
+    return new ObtenerNoLeidasHandler(Dependencies::get(PDONotificacionRepository::class));
 });
 
 // Handlers de Recaudacion
 Dependencies::register(RegistrarRecaudacionHandler::class, function() {
     return new RegistrarRecaudacionHandler(
-        Dependencies::get(MySQLRecaudacionRepository::class),
-        Dependencies::get(MySQLMaquinaRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDORecaudacionRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ActualizarRecaudacionHandler::class, function() {
     return new ActualizarRecaudacionHandler(
-        Dependencies::get(MySQLRecaudacionRepository::class),
-        Dependencies::get(MySQLMaquinaRepository::class)
+        Dependencies::get(PDORecaudacionRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class)
     );
 });
 
 Dependencies::register(EliminarRecaudacionHandler::class, function() {
-    return new EliminarRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new EliminarRecaudacionHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 Dependencies::register(GuardarInformeHandler::class, function() {
     return new GuardarInformeHandler(
-        Dependencies::get(MySQLRecaudacionRepository::class),
-        Dependencies::get(MySQLComponenteRepository::class)
+        Dependencies::get(PDORecaudacionRepository::class),
+        Dependencies::get(PDOComponenteRepository::class)
     );
 });
 
 // Queries de Recaudacion
 Dependencies::register(ObtenerRecaudacionesHandler::class, function() {
-    return new ObtenerRecaudacionesHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new ObtenerRecaudacionesHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 Dependencies::register(ObtenerResumenRecaudacionesHandler::class, function() {
-    return new ObtenerResumenRecaudacionesHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new ObtenerResumenRecaudacionesHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 Dependencies::register(ObtenerRecaudacionPorIdHandler::class, function() {
-    return new ObtenerRecaudacionPorIdHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new ObtenerRecaudacionPorIdHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 Dependencies::register(ObtenerMaquinasRecaudacionHandler::class, function() {
-    return new ObtenerMaquinasRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new ObtenerMaquinasRecaudacionHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 Dependencies::register(ObtenerMaquinasOperativasPorComercioHandler::class, function() {
     return new ObtenerMaquinasOperativasPorComercioHandler(
-        Dependencies::get(MySQLRecaudacionRepository::class),
-        Dependencies::get(MySQLComercioRepository::class)
+        Dependencies::get(PDORecaudacionRepository::class),
+        Dependencies::get(PDOComercioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerComercioRecaudacionHandler::class, function() {
-    return new ObtenerComercioRecaudacionHandler(Dependencies::get(MySQLComercioRepository::class));
+    return new ObtenerComercioRecaudacionHandler(Dependencies::get(PDOComercioRepository::class));
 });
 
 Dependencies::register(ObtenerInformePorRecaudacionHandler::class, function() {
-    return new ObtenerInformePorRecaudacionHandler(Dependencies::get(MySQLRecaudacionRepository::class));
+    return new ObtenerInformePorRecaudacionHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
 // Handlers de Reporte
 Dependencies::register(CrearReporteHandler::class, function() {
     return new CrearReporteHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ActualizarEstadoReporteHandler::class, function() {
     return new ActualizarEstadoReporteHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDONotificacionRepository::class)
     );
 });
 
 // Queries de Reporte
 Dependencies::register(ObtenerReportesPorUsuarioHandler::class, function() {
     return new ObtenerReportesPorUsuarioHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerChatHandler::class, function() {
     return new ObtenerChatHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerUsuariosChatHandler::class, function() {
     return new ObtenerUsuariosChatHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerChatCompletoHandler::class, function() {
     return new ObtenerChatCompletoHandler(
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLComentarioRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOComentarioRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerReportePorIdHandler::class, function() {
-    return new ObtenerReportePorIdHandler(Dependencies::get(MySQLReporteRepository::class));
+    return new ObtenerReportePorIdHandler(Dependencies::get(PDOReporteRepository::class));
 });
 
 // Handlers de Comentario
 Dependencies::register(CrearComentarioHandler::class, function() {
     return new CrearComentarioHandler(
-        Dependencies::get(MySQLComentarioRepository::class),
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLNotificacionRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOComentarioRepository::class),
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDONotificacionRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 Dependencies::register(EditarComentarioHandler::class, function() {
     return new EditarComentarioHandler(
-        Dependencies::get(MySQLComentarioRepository::class)
+        Dependencies::get(PDOComentarioRepository::class)
     );
 });
 
 Dependencies::register(EliminarComentarioHandler::class, function() {
     return new EliminarComentarioHandler(
-        Dependencies::get(MySQLComentarioRepository::class)
+        Dependencies::get(PDOComentarioRepository::class)
     );
 });
 Dependencies::register(ObtenerComentariosPorReporteHandler::class, function() {
     return new ObtenerComentariosPorReporteHandler(
-        Dependencies::get(MySQLComentarioRepository::class),
-        Dependencies::get(MySQLReporteRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOComentarioRepository::class),
+        Dependencies::get(PDOReporteRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 // Handlers de Historial
 Dependencies::register(ObtenerHistorialPorMaquinaHandler::class, function() {
     return new ObtenerHistorialPorMaquinaHandler(
-        Dependencies::get(MySQLHistorialRepository::class),
-        Dependencies::get(MySQLMaquinaRepository::class)
+        Dependencies::get(PDOHistorialRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class)
     );
 });
 
 Dependencies::register(ObtenerHistorialPorUsuarioHandler::class, function() {
     return new ObtenerHistorialPorUsuarioHandler(
-        Dependencies::get(MySQLHistorialRepository::class),
-        Dependencies::get(MySQLUsuarioRepository::class)
+        Dependencies::get(PDOHistorialRepository::class),
+        Dependencies::get(PDOUsuarioRepository::class)
     );
 });
 
 Dependencies::register(ObtenerHistorialGeneralHandler::class, function() {
-    return new ObtenerHistorialGeneralHandler(Dependencies::get(MySQLHistorialRepository::class));
+    return new ObtenerHistorialGeneralHandler(Dependencies::get(PDOHistorialRepository::class));
 });
 
 Dependencies::register(ObtenerResumenRecienteHandler::class, function() {
-    return new ObtenerResumenRecienteHandler(Dependencies::get(MySQLHistorialRepository::class));
+    return new ObtenerResumenRecienteHandler(Dependencies::get(PDOHistorialRepository::class));
 });
 
 // Handlers de Distribucion
 Dependencies::register(ObtenerInformesDistribucionHandler::class, function() {
-    return new ObtenerInformesDistribucionHandler(Dependencies::get(MySQLDistribucionRepository::class));
+    return new ObtenerInformesDistribucionHandler(Dependencies::get(PDODistribucionRepository::class));
 });
 
 Dependencies::register(BrevoEmailService::class, function () {

@@ -1,8 +1,8 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLAdministradorRepository.php
+ * Infrastructure/Repositories/PDOAdministradorRepository.php
  * 
- * Extiende MySQLUsuarioRepository y usa sus SPs
+ * Extiende PDOUsuarioRepository y usa sus SPs
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -14,7 +14,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLAdministradorRepository extends MySQLUsuarioRepository implements AdministradorRepository
+class PDOAdministradorRepository extends PDOUsuarioRepository implements AdministradorRepository
 {
     private Database $db;
     private CacheInterface $cache;

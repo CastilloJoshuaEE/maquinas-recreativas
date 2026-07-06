@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLTecnicoRepository.php
+ * Infrastructure/Repositories/PDOTecnicoRepository.php
  */
 declare(strict_types=1);
 
@@ -14,10 +14,10 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-final class MySQLTecnicoRepository implements TecnicoRepository
+final class PDOTecnicoRepository implements TecnicoRepository
 {
     private Database $db;
-    private MySQLUsuarioRepository $usuarioRepository;
+    private PDOUsuarioRepository $usuarioRepository;
     private CacheInterface $cache;
     private int $ttl = 1800;
 
@@ -25,7 +25,7 @@ final class MySQLTecnicoRepository implements TecnicoRepository
     {
         $this->db = $db;
         $this->cache = $cache ?? CacheFactory::create();
-        $this->usuarioRepository = new MySQLUsuarioRepository($db, $this->cache);
+        $this->usuarioRepository = new PDOUsuarioRepository($db, $this->cache);
     }
 
     public function findByEspecialidad(string $especialidad): array

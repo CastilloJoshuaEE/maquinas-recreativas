@@ -24,7 +24,6 @@ class AuthMiddleware{
             '/usuario/tecnicos/Ensamblador',
     '/usuario/tecnicos/Comprobador',
     '/usuario/tecnicos/Mantenimiento',
-'/usuario/perfil', 
 '/usuarios/por-tipo',
     '/reportes/crear',
     '/maquina/all',
@@ -68,27 +67,16 @@ class AuthMiddleware{
      * @return bool
      */
     private function isPublicRoute(string $path): bool
-{
-    // Coincidencia exacta
-    if (in_array($path, $this->publicRoutes)) {
-        return true;
-    }
-    
-    // Permitir rutas como /usuario/tecnicos/Ensamblador
-    if (strpos($path, '/usuario/tecnicos/') === 0) {
-        return true;
-    }
-    
-    // Coincidencia por patrón (ej: /usuario/profile/:uuid)
-    foreach ($this->publicRoutes as $route) {
-        if (strpos($route, ':') !== false) {
-            $pattern = str_replace(':uuid', '[a-f0-9-]+', preg_quote($route, '#'));
-            if (preg_match('#^' . $pattern . '$#', $path)) {
-                return true;
-            }
+    {
+        if (in_array($path, $this->publicRoutes)) {
+            return true;
         }
+
+        //  SOLO rutas de técnicos son públicas (por ejemplo, listado de técnicos)
+        if (strpos($path, '/usuario/tecnicos/') === 0) {
+            return true;
+        }
+
+        return false;
     }
-    
-    return false;
-}  
 }

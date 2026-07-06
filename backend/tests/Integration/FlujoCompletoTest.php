@@ -9,13 +9,13 @@ namespace maquinas_recreativas\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMaquinaRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComponenteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMaquinaRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComponenteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDONotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComentarioRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
@@ -37,9 +37,9 @@ use maquinas_recreativas\Application\Commands\Reporte\CrearReporteCommand;
 use maquinas_recreativas\Application\Commands\Reporte\CrearReporteHandler;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioCommand;
 use maquinas_recreativas\Application\Commands\Comentario\CrearComentarioHandler;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLDistribucionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMontajeRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOHistorialRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDODistribucionRepository;
 use maquinas_recreativas\Infrastructure\Security\HistorialHelper;
 use maquinas_recreativas\Domain\Componente\Componente;
 use maquinas_recreativas\Domain\Componente\TipoComponente;
@@ -50,13 +50,13 @@ use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 class FlujoCompletoTest extends TestCase
 {
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLComercioRepository $comercioRepository;
-    private MySQLMaquinaRepository $maquinaRepository;
-    private MySQLComponenteRepository $componenteRepository;
-    private MySQLNotificacionRepository $notificacionRepository;
-    private MySQLReporteRepository $reporteRepository;
-    private MySQLComentarioRepository $comentarioRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOComercioRepository $comercioRepository;
+    private PDOMaquinaRepository $maquinaRepository;
+    private PDOComponenteRepository $componenteRepository;
+    private PDONotificacionRepository $notificacionRepository;
+    private PDOReporteRepository $reporteRepository;
+    private PDOComentarioRepository $comentarioRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     private Uuid $logisticaId;
@@ -69,13 +69,13 @@ class FlujoCompletoTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->comercioRepository = new MySQLComercioRepository($this->testDb);
-        $this->maquinaRepository = new MySQLMaquinaRepository($this->testDb);
-        $this->componenteRepository = new MySQLComponenteRepository($this->testDb);
-        $this->notificacionRepository = new MySQLNotificacionRepository($this->testDb);
-        $this->reporteRepository = new MySQLReporteRepository($this->testDb);
-        $this->comentarioRepository = new MySQLComentarioRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->comercioRepository = new PDOComercioRepository($this->testDb);
+        $this->maquinaRepository = new PDOMaquinaRepository($this->testDb);
+        $this->componenteRepository = new PDOComponenteRepository($this->testDb);
+        $this->notificacionRepository = new PDONotificacionRepository($this->testDb);
+        $this->reporteRepository = new PDOReporteRepository($this->testDb);
+        $this->comentarioRepository = new PDOComentarioRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuarios();
@@ -172,8 +172,8 @@ $registrarMaquina = new RegistrarMaquinaHandler(
         // 4. Registrar montaje
         $registrarMontaje = new RegistrarMontajeHandler(
             $this->maquinaRepository, $this->componenteRepository, 
-            new MySQLMontajeRepository($this->testDb),
-            new MySQLHistorialRepository($this->testDb),
+            new PDOMontajeRepository($this->testDb),
+            new PDOHistorialRepository($this->testDb),
             $this->usuarioRepository
         );
         
@@ -192,7 +192,7 @@ $registrarMaquina = new RegistrarMaquinaHandler(
         // 5. Enviar a comprobación
         $mandarAComprobacion = new MandarAComprobacionHandler(
             $this->maquinaRepository, $this->usuarioRepository, $this->notificacionRepository,
-            new MySQLHistorialRepository($this->testDb)
+            new PDOHistorialRepository($this->testDb)
         );
         
         $comprobacionCommand = new MandarAComprobacionCommand(
@@ -205,9 +205,9 @@ $registrarMaquina = new RegistrarMaquinaHandler(
         // 6. Enviar a distribución
         $mandarADistribucion = new MandarADistribucionHandler(
             $this->maquinaRepository, $this->usuarioRepository, $this->comercioRepository,
-            new MySQLDistribucionRepository($this->testDb),
+            new PDODistribucionRepository($this->testDb),
             $this->notificacionRepository,
-            new MySQLHistorialRepository($this->testDb)
+            new PDOHistorialRepository($this->testDb)
         );
         
         $distribucionCommand = new MandarADistribucionCommand(
@@ -220,8 +220,8 @@ $registrarMaquina = new RegistrarMaquinaHandler(
         // 7. Poner operativa
         $ponerOperativa = new PonerOperativaHandler(
             $this->maquinaRepository,
-            new MySQLDistribucionRepository($this->testDb),
-            new MySQLHistorialRepository($this->testDb)
+            new PDODistribucionRepository($this->testDb),
+            new PDOHistorialRepository($this->testDb)
         );
         
         $operativaCommand = new PonerOperativaCommand($maquinaIdString);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Infrastructure/Repositories/MySQLComentarioRepository.php
+ * Infrastructure/Repositories/PDOComentarioRepository.php
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -13,7 +13,7 @@ use maquinas_recreativas\Infrastructure\Cache\CacheInterface;
 use maquinas_recreativas\Infrastructure\Cache\CacheFactory;
 use PDO;
 
-class MySQLComentarioRepository implements ComentarioRepository
+class PDOComentarioRepository implements ComentarioRepository
 {
     private Database $db;
     private CacheInterface $cache;

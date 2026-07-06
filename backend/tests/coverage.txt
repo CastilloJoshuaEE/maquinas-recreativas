@@ -1,10 +1,20 @@
 
 
-[1;37;40mCode Coverage Report:     [0m
-[1;37;40m  2026-07-04 03:42:28     [0m
-[1;37;40m                          [0m
-[1;37;40m Summary:                 [0m
-[37;41m  Classes:  0.00% (0/25)  [0m
-[37;41m  Methods:  0.00% (0/192) [0m
-[37;41m  Lines:    0.00% (0/2267)[0m
+[1;37;40mCode Coverage Report:       [0m
+[1;37;40m  2026-07-06 16:37:47       [0m
+[1;37;40m                            [0m
+[1;37;40m Summary:                   [0m
+[37;41m  Classes:  4.55% (1/22)    [0m
+[37;41m  Methods:  8.93% (15/168)  [0m
+[37;41m  Lines:   14.56% (269/1848)[0m
 
+SmokeAuthTest
+  [37;41mMethods:  40.00% ( 2/ 5)[0m   [30;43mLines:  89.74% (105/117)[0m
+SmokeComercioTest
+  [37;41mMethods:   0.00% ( 0/ 2)[0m   [30;43mLines:  80.95% ( 17/ 21)[0m
+SmokeHealthTest
+  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 35/ 35)[0m
+SmokeReporteTest
+  [37;41mMethods:  16.67% ( 1/ 6)[0m   [30;43mLines:  50.85% ( 30/ 59)[0m
+SmokeTestCase
+  [37;41mMethods:  50.00% ( 7/14)[0m   [30;43mLines:  62.12% ( 82/132)[0m

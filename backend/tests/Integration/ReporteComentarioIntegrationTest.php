@@ -10,10 +10,10 @@ namespace maquinas_recreativas\Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
 use maquinas_recreativas\Tests\TestDatabaseInjectionTrait;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComentarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDONotificacionRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
@@ -32,10 +32,10 @@ class ReporteComentarioIntegrationTest extends TestCase
     use TestDatabaseInjectionTrait;
     
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLReporteRepository $reporteRepository;
-    private MySQLComentarioRepository $comentarioRepository;
-    private MySQLNotificacionRepository $notificacionRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOReporteRepository $reporteRepository;
+    private PDOComentarioRepository $comentarioRepository;
+    private PDONotificacionRepository $notificacionRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     private Uuid $usuario1Id;
@@ -46,10 +46,10 @@ class ReporteComentarioIntegrationTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->reporteRepository = new MySQLReporteRepository($this->testDb);
-        $this->comentarioRepository = new MySQLComentarioRepository($this->testDb);
-        $this->notificacionRepository = new MySQLNotificacionRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->reporteRepository = new PDOReporteRepository($this->testDb);
+        $this->comentarioRepository = new PDOComentarioRepository($this->testDb);
+        $this->notificacionRepository = new PDONotificacionRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosPrueba();

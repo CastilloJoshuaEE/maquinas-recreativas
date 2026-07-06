@@ -49,8 +49,8 @@ class EnvManager
             $basePath = dirname(__DIR__);
             
             // Verificar nuevamente APP_ENV (puede haber cambiado)
-            //            $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'testing'
-            $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'development';
+                       $currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'testing';
+            //$currentAppEnv = getenv('APP_ENV') ?: $_ENV['APP_ENV'] ?? 'development';
             
             error_log("EnvManager: APP_ENV actual = '{$currentAppEnv}'");
             
@@ -180,7 +180,7 @@ class EnvManager
 
     public static function getEnvironment(): string
     {
-        return self::get('APP_ENV', 'local');
+        return self::get('APP_ENV', 'development');
     }
 
     public static function isDevelopment(): bool
