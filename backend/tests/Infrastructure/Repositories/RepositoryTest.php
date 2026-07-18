@@ -9,9 +9,9 @@ namespace maquinas_recreativas\Tests\Infrastructure\Repositories;
 
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComponenteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComponenteRepository;
 use maquinas_recreativas\Domain\Usuario\Usuario;
 use maquinas_recreativas\Domain\Usuario\TipoUsuario;
 use maquinas_recreativas\Domain\Usuario\EstadoUsuario;
@@ -25,18 +25,18 @@ use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 class RepositoryTest extends TestCase
 {
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLComercioRepository $comercioRepository;
-    private MySQLComponenteRepository $componenteRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOComercioRepository $comercioRepository;
+    private PDOComponenteRepository $componenteRepository;
     
     protected function setUp(): void
     {
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->comercioRepository = new MySQLComercioRepository($this->testDb);
-        $this->componenteRepository = new MySQLComponenteRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->comercioRepository = new PDOComercioRepository($this->testDb);
+        $this->componenteRepository = new PDOComponenteRepository($this->testDb);
     }
     
     /**

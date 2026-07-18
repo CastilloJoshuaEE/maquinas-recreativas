@@ -5,7 +5,7 @@
 
 export const environment = {
   production: true,
-  apiUrl: 'https://recreasys.infinityfree.me/api/public',
+  apiUrl: 'https://maquinas-recreativas1.onrender.com/api/public',
   appName: 'Recrea Sys',
   version: '2.0.0'
 };

@@ -79,18 +79,18 @@ backend/
 │   │   ├── Database.php
 │   │   └── Inserter.php
 │   ├── Repositories/
-│   │   ├── MySQLAdministradorRepository.php
-│   │   ├── MySQLComentarioRepository.php
-│   │   ├── MySQLComercioRepository.php
-│   │   ├── MySQLComponenteRepository.php
-│   │   ├── MySQLDistribucionRepository.php
-│   │   ├── MySQLHistorialRepository.php
-│   │   ├── MySQLMaquinaRepository.php
-│   │   ├── MySQLMontajeRepository.php
-│   │   ├── MySQLNotificacionRepository.php
-│   │   ├── MySQLRecaudacionRepository.php
-│   │   ├── MySQLReporteRepository.php
-│   │   └── MySQLUsuarioRepository.php
+│   │   ├── PDOAdministradorRepository.php
+│   │   ├── PDOComentarioRepository.php
+│   │   ├── PDOComercioRepository.php
+│   │   ├── PDOComponenteRepository.php
+│   │   ├── PDODistribucionRepository.php
+│   │   ├── PDOHistorialRepository.php
+│   │   ├── PDOMaquinaRepository.php
+│   │   ├── PDOMontajeRepository.php
+│   │   ├── PDONotificacionRepository.php
+│   │   ├── PDORecaudacionRepository.php
+│   │   ├── PDOReporteRepository.php
+│   │   └── PDOUsuarioRepository.php
 │   ├── Security/
 │   │   ├── BcryptPasswordHasher.php
 │   │   ├── CifradoHelper.php

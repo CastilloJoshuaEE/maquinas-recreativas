@@ -139,44 +139,56 @@ class SmokeTestCase extends TestCase
      * Registrar y loguear un usuario usando el endpoint de administrador (estado Activo)
      */
     protected function registerAndLoginTestUser(): bool
-    {
-        // Primero, login como administrador del sistema
-        if (!$this->loginAsAdmin()) {
-            $this->markTestSkipped('No se pudo iniciar sesión como administrador');
-            return false;
+{
+    // Primero, login como administrador del sistema
+    if (!$this->loginAsAdmin()) {
+        $this->markTestSkipped('No se pudo iniciar sesión como administrador');
+        return false;
+    }
+    
+    $userData = $this->createTestUserData();
+    
+    // Registrar usuario usando endpoint de administrador
+    $registerResponse = $this->makeRequest('POST', '/administrador/usuarios', $userData);
+    
+    if (!$this->isSuccessResponse($registerResponse)) {
+        $this->markTestSkipped('No se pudo registrar usuario de prueba: ' . json_encode($registerResponse));
+        return false;
+    }
+    
+    $this->testUserId = $registerResponse['id'] ?? null;
+    
+    // Obtener el usuario_asignado del usuario creado (NO viene en la respuesta del POST)
+    $usersResponse = $this->makeRequest('GET', '/administrador/usuarios');
+    if ($this->isSuccessResponse($usersResponse)) {
+        $usuarios = $usersResponse['usuarios'] ?? [];
+        foreach ($usuarios as $usuario) {
+            if ($usuario['id'] === $this->testUserId) {
+                $this->testUserUsername = $usuario['usuario_asignado'] ?? null;
+                break;
+            }
         }
-        
-        $userData = $this->createTestUserData();
-        
-        // Registrar usuario usando endpoint de administrador
-        $registerResponse = $this->makeRequest('POST', '/administrador/usuarios', $userData);
-        
-        if (!$this->isSuccessResponse($registerResponse)) {
-            $this->markTestSkipped('No se pudo registrar usuario de prueba: ' . json_encode($registerResponse));
-            return false;
-        }
-        
-        $this->testUserId = $registerResponse['id'] ?? null;
-        $this->testUserUsername = $registerResponse['usuario_asignado'] ?? null;
-        
-        // Cerrar sesión de admin
-        $this->makeRequest('POST', '/usuario/logout', []);
-        $this->clearCookies();
-        
-        // Login como el nuevo usuario
+    }
+    
+    // Cerrar sesión de admin
+    $this->makeRequest('POST', '/usuario/logout', []);
+    $this->clearCookies();
+    
+    // Login como el nuevo usuario
+    if ($this->testUserUsername) {
         $loginResponse = $this->makeRequest('POST', '/usuario/login', [
             'usuario_asignado' => $this->testUserUsername,
             'contrasena' => 'Password123!'
         ]);
         
-        if (!$this->isSuccessResponse($loginResponse)) {
-            $this->markTestSkipped('No se pudo loguear usuario de prueba: ' . json_encode($loginResponse));
-            return false;
+        if ($this->isSuccessResponse($loginResponse)) {
+            return true;
         }
-        
-        return true;
     }
     
+    $this->markTestSkipped('No se pudo loguear usuario de prueba');
+    return false;
+}
     /**
      * Login como administrador del sistema
      */

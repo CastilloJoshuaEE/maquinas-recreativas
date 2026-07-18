@@ -10,9 +10,9 @@ namespace maquinas_recreativas\Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
 use maquinas_recreativas\Tests\TestDatabaseInjectionTrait;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDONotificacionRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioAdminHandler;
@@ -33,9 +33,9 @@ class NotificacionIntegrationTest extends TestCase
     use TestDatabaseInjectionTrait;
     
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLReporteRepository $reporteRepository;
-    private MySQLNotificacionRepository $notificacionRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOReporteRepository $reporteRepository;
+    private PDONotificacionRepository $notificacionRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     private Uuid $emisorId;
@@ -46,9 +46,9 @@ class NotificacionIntegrationTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->reporteRepository = new MySQLReporteRepository($this->testDb);
-        $this->notificacionRepository = new MySQLNotificacionRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->reporteRepository = new PDOReporteRepository($this->testDb);
+        $this->notificacionRepository = new PDONotificacionRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosPrueba();
@@ -67,28 +67,33 @@ class NotificacionIntegrationTest extends TestCase
         }
     }
     
-    private function crearUsuariosPrueba(): void
-    {
-        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
-        
-        // Usuario Emisor (Administrador)
-        $command1 = new RegistrarUsuarioAdminCommand(
-            'Emisor', 'Test', '1111111111', 'emisor@test.com', null, 'Password123!', 'Administrador', 'Activo'
-        );
-        $usuario1 = $registrarAdminHandler->handle($command1);
-        $this->emisorId = $usuario1->getId();
-        
-        // Usuario Destinatario (Tecnico)
-        $command2 = new RegistrarUsuarioAdminCommand(
-            'Destinatario', 'Test', '2222222222', 'destinatario@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
-        );
-        $usuario2 = $registrarAdminHandler->handle($command2);
-        $this->destinatarioId = $usuario2->getId();
-        
-        $this->assertNotNull($this->emisorId);
-        $this->assertNotNull($this->destinatarioId);
-    }
+private function crearUsuariosPrueba(): void
+{
+    $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
     
+    $timestamp = time();
+    
+    // Usuario Emisor (Administrador)
+    $command1 = new RegistrarUsuarioAdminCommand(
+        'Emisor', 'Test', '111111' . $timestamp, 
+        'emisor_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Administrador', 'Activo'
+    );
+    $usuario1 = $registrarAdminHandler->handle($command1);
+    $this->emisorId = $usuario1->getId();
+    
+    // Usuario Destinatario (Tecnico)
+    $command2 = new RegistrarUsuarioAdminCommand(
+        'Destinatario', 'Test', '222222' . $timestamp, 
+        'destinatario_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
+    );
+    $usuario2 = $registrarAdminHandler->handle($command2);
+    $this->destinatarioId = $usuario2->getId();
+    
+    $this->assertNotNull($this->emisorId);
+    $this->assertNotNull($this->destinatarioId);
+}
     /**
      * @test
      * CPI-004: Obtener notificaciones por usuario
