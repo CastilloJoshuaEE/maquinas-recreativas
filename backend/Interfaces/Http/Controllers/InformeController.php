@@ -480,41 +480,45 @@ public function obtenerMaquinasOperativasPorComercio(Request $request): Response
         $response->json(['success' => true, 'message' => 'Informe guardado exitosamente', 'idInforme' => $idInforme], 201);
         return $response;
     }
-
-    #[OA\Get(
-        path: "/v1/contabilidad/informe/{uuid}",
-        summary: "Obtener informe asociado a una recaudación",
-        tags: ["Contabilidad"],
-        security: [["bearerAuth" => []]],
-        parameters: [
-            new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
-        ],
-        responses: [
-            new OA\Response(response: 200, description: "Informe y componentes asociados"),
-            new OA\Response(response: 400, description: "UUID inválido"),
-            new OA\Response(response: 404, description: "No encontrado"),
-            new OA\Response(response: 401, description: "No autorizado")
-        ]
-    )]
-    public function obtenerInformePorRecaudacion(Request $request, string $idRecaudacion): Response
-    {
-        if (!ValidationHelper::isValidUUID($idRecaudacion)) {
-            throw new DomainException('ID de recaudación inválido', 400);
-        }
-
-        $userId = $_SESSION['ID_Usuario'] ?? null;
-        if (!$userId) {
-            throw new DomainException('Usuario no autenticado', 401);
-        }
-
-        $query  = new ObtenerInformePorRecaudacionQuery($idRecaudacion);
-        $result = $this->obtenerInformePorRecaudacionHandler->handle($query);
-
-        $response = new Response();
-        $response->json(['success' => true, 'informe' => $result['informe'], 'componentes' => $result['componentes']]);
-        return $response;
+#[OA\Get(
+    path: "/v1/contabilidad/informe/{uuid}",
+    summary: "Obtener informe asociado a una recaudación",
+    tags: ["Contabilidad"],
+    security: [["bearerAuth" => []]],
+    parameters: [
+        new OA\Parameter(name: "uuid", in: "path", required: true, schema: new OA\Schema(type: "string", format: "uuid"))
+    ],
+    responses: [
+        new OA\Response(response: 200, description: "Informe y componentes asociados"),
+        new OA\Response(response: 400, description: "UUID inválido"),
+        new OA\Response(response: 404, description: "No encontrado"),
+        new OA\Response(response: 401, description: "No autorizado")
+    ]
+)]
+public function obtenerInformePorRecaudacion(Request $request, string $idRecaudacion): Response
+{
+    if (!ValidationHelper::isValidUUID($idRecaudacion)) {
+        throw new DomainException('ID de recaudación inválido', 400);
     }
 
+    $userId = $_SESSION['ID_Usuario'] ?? null;
+    if (!$userId) {
+        throw new DomainException('Usuario no autenticado', 401);
+    }
+
+    $query  = new ObtenerInformePorRecaudacionQuery($idRecaudacion);
+    $result = $this->obtenerInformePorRecaudacionHandler->handle($query);
+
+    $response = new Response();
+    $response->json([
+        'success' => true, 
+        'informe' => $result['informe'], 
+        'componentes' => $result['componentes'],
+        'tecnicos' => $result['tecnicos'] ?? []  // ← Agregar técnicos
+    ]);
+    return $response;
+}
+    
     /**
      * @deprecated Este método está obsoleto. Usar obtenerMaquinasRecaudacion() en su lugar.
      */

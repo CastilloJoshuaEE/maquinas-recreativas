@@ -70,12 +70,14 @@ final class DarMantenimientoHandler implements CommandHandler
             throw new DomainException('No hay técnicos de mantenimiento disponibles');
         }
 
-        //  $tecnicosMantenimiento[0] es un array, no un objeto
+        // =============================================================
+        //  CORREGIDO: Usar 'ID_Usuario' en lugar de 'id'
+        // =============================================================
         $primerTecnico = $tecnicosMantenimiento[0];
         
         if (is_array($primerTecnico)) {
-            // Es un array, obtener el ID de la clave 'id'
-            $tecnicoId = new Uuid($primerTecnico['id']);
+            // La consulta SQL devuelve 'ID_Usuario', no 'id'
+            $tecnicoId = new Uuid($primerTecnico['ID_Usuario'] ?? $primerTecnico['id'] ?? null);
             $tecnicoNombre = $primerTecnico['nombre'] ?? '';
             $tecnicoApellido = $primerTecnico['apellido'] ?? '';
         } else {
@@ -83,6 +85,11 @@ final class DarMantenimientoHandler implements CommandHandler
             $tecnicoId = $primerTecnico->getId();
             $tecnicoNombre = $primerTecnico->getNombre();
             $tecnicoApellido = $primerTecnico->getApellido();
+        }
+
+        // Validar que se obtuvo el ID correctamente
+        if (!$tecnicoId) {
+            throw new DomainException('No se pudo obtener el ID del técnico de mantenimiento');
         }
 
         $comercio = $this->comercioRepository->buscarPorId($maquina->idComercio()->value());

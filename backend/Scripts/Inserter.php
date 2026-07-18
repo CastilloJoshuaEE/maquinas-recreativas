@@ -1,9 +1,9 @@
 <?php
 /**
- * backend/infrastructure/database/Inserter.php
+ * backend/Scripts/Inserter.php
  */
 
-namespace maquinas_recreativas\Infrastructure\Database;
+namespace maquinas_recreativas\Scripts;
 
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
@@ -104,14 +104,9 @@ class Inserter {
         
         $query = "SELECT ID_Usuario FROM usuario WHERE email = ? OR ci = ?";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("ss", $emailEnc, $ciEnc);
-        $stmt->execute();
-        $stmt->store_result();
+        $stmt->execute([$emailEnc, $ciEnc]);
         
-        $existe = $stmt->num_rows > 0;
-        $stmt->close();
-        
-        return $existe;
+        return $stmt->rowCount() > 0;
     }
 
     private function insertarUsuario($datos) {
@@ -119,15 +114,15 @@ class Inserter {
         $emailEnc = CifradoHelper::encriptar($datos['email']);
         $contrasenaHash = password_hash($datos['contrasena'], PASSWORD_BCRYPT);
 
-        $uuidResult = $this->connection->query("SELECT UUID() as uuid");
-        $uuidRow = $uuidResult->fetch_assoc();
+        // Generar UUID con PDO
+        $stmtUuid = $this->connection->query("SELECT UUID() as uuid");
+        $uuidRow = $stmtUuid->fetch(\PDO::FETCH_ASSOC);
         $userId = $uuidRow['uuid'];
-        $uuidResult->close();
 
         $query = "INSERT INTO usuario (ID_Usuario, nombre, apellido, ci, email, contrasena, tipo, usuario_asignado, estado)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("sssssssss", 
+        $stmt->execute([
             $userId,
             $datos['nombre'],
             $datos['apellido'],
@@ -137,23 +132,20 @@ class Inserter {
             $datos['tipo'],
             $datos['usuario_asignado'],
             $datos['estado']
-        );
-        
-        if (!$stmt->execute()) {
-            error_log("Error al insertar usuario: " . $stmt->error);
-            $stmt->close();
-            return false;
-        }
-        $stmt->close();
+        ]);
+
+        echo "  ✓ Usuario {$datos['usuario_asignado']} creado correctamente\n";
 
         switch ($datos['tipo']) {
             case 'Tecnico':
                 if (isset($datos['especialidad'])) {
                     $this->insertarTecnico($userId, $datos['especialidad']);
+                    echo "    Especialidad: {$datos['especialidad']}\n";
                 }
                 break;
             case 'Logistica':
                 $this->insertarLogistica($userId);
+                echo "    Registrado como logistica\n";
                 break;
         }
 
@@ -161,22 +153,14 @@ class Inserter {
     }
 
     private function insertarTecnico($userId, $especialidad) {
-        $query = "INSERT INTO Tecnico (ID_Tecnico, Especialidad) VALUES (?, ?)";
+        $query = "INSERT INTO Tecnico (ID_Tecnico, Especialidad, Cantidad_Actividades) VALUES (?, ?, 0)";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("ss", $userId, $especialidad);
-        if (!$stmt->execute()) {
-            error_log("Error al insertar técnico: " . $stmt->error);
-        }
-        $stmt->close();
+        $stmt->execute([$userId, $especialidad]);
     }
 
     private function insertarLogistica($userId) {
         $query = "INSERT INTO Logistica (ID_Logistica) VALUES (?)";
         $stmt = $this->connection->prepare($query);
-        $stmt->bind_param("s", $userId);
-        if (!$stmt->execute()) {
-            error_log("Error al insertar logística: " . $stmt->error);
-        }
-        $stmt->close();
+        $stmt->execute([$userId]);
     }
 }

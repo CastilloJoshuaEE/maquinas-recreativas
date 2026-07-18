@@ -267,7 +267,70 @@ class PDORecaudacionRepository implements RecaudacionRepository
             return $row ? $row['Nombre_Maquina'] : null;
         }, $this->ttl);
     }
-
+public function findTecnicosByRecaudacion(Uuid $idRecaudacion): array
+{
+    $cacheKey = "recaudacion:tecnicos:{$idRecaudacion->value()}";
+    return $this->cache->remember($cacheKey, function () use ($idRecaudacion) {
+        $conn = $this->db->getConnection();
+        
+        // Obtener los técnicos de la máquina asociada a la recaudación
+        $stmt = $conn->prepare("
+            SELECT 
+                te.ID_Usuario AS id_ensamblador,
+                te.nombre AS nombre_ensamblador,
+                te.apellido AS apellido_ensamblador,
+                tc.ID_Usuario AS id_comprobador,
+                tc.nombre AS nombre_comprobador,
+                tc.apellido AS apellido_comprobador,
+                tm.ID_Usuario AS id_mantenimiento,
+                tm.nombre AS nombre_mantenimiento,
+                tm.apellido AS apellido_mantenimiento
+            FROM recaudaciones r
+            INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+            LEFT JOIN usuario te ON m.ID_Tecnico_Ensamblador = te.ID_Usuario
+            LEFT JOIN usuario tc ON m.ID_Tecnico_Comprobador = tc.ID_Usuario
+            LEFT JOIN usuario tm ON m.ID_Tecnico_Mantenimiento = tm.ID_Usuario
+            WHERE r.ID_Recaudacion = ?
+        ");
+        $stmt->execute([$idRecaudacion->value()]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->closeCursor();
+        $this->db->clearPendingResults();
+        
+        // Formatear la salida
+        $tecnicos = [];
+        
+        if ($result) {
+            if (!empty($result['id_ensamblador'])) {
+                $tecnicos[] = [
+                    'id' => $result['id_ensamblador'],
+                    'nombre' => $result['nombre_ensamblador'] ?? '',
+                    'apellido' => $result['apellido_ensamblador'] ?? '',
+                    'especialidad' => 'Ensamblador'
+                ];
+            }
+            if (!empty($result['id_comprobador'])) {
+                $tecnicos[] = [
+                    'id' => $result['id_comprobador'],
+                    'nombre' => $result['nombre_comprobador'] ?? '',
+                    'apellido' => $result['apellido_comprobador'] ?? '',
+                    'especialidad' => 'Comprobador'
+                ];
+            }
+            if (!empty($result['id_mantenimiento'])) {
+                $tecnicos[] = [
+                    'id' => $result['id_mantenimiento'],
+                    'nombre' => $result['nombre_mantenimiento'] ?? '',
+                    'apellido' => $result['apellido_mantenimiento'] ?? '',
+                    'especialidad' => 'Mantenimiento'
+                ];
+            }
+        }
+        
+        return $tecnicos;
+    }, $this->ttl);
+}
     private function invalidateListados(): void
     {
         $this->cache->delete("recaudaciones:resumen:all");

@@ -4,6 +4,12 @@
  * 
  * Ejecutar: php backend/scripts/resetear-usuarios.php
  */
+
+// =============================================
+// CARGAR AUTOLOAD DE COMPOSER
+// =============================================
+require_once __DIR__ . '/../vendor/autoload.php';
+
 // Cargar el EnvManager
 require_once __DIR__ . '/../Config/env.php';
 
@@ -27,8 +33,6 @@ if ($isTest) {
 if (!$dbName) {
     die(" No se ha definido DB_NAME en el .env\n");
 }
-
-
 
 require_once __DIR__ . '/../Infrastructure/Security/CifradoHelper.php';
 require_once __DIR__ . '/../Infrastructure/Database/Database.php';
@@ -57,7 +61,7 @@ if (file_exists($lockFile)) {
 }
 
 // Eliminar usuarios (en orden inverso por restricciones de clave foránea)
-echo "\n🗑️  Eliminando usuarios existentes...\n";
+echo "\n  Eliminando usuarios existentes...\n";
 
 $tables = [
     'comentario',

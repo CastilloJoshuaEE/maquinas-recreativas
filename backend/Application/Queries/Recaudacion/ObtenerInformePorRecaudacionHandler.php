@@ -1,10 +1,6 @@
 <?php
 /**
  * application/queries/recaudacion/ObtenerInformePorRecaudacionHandler.php
- *
- * Manejador del query ObtenerInformePorRecaudacion.
- *
- * @package maquinas_recreativas\Application\Queries\Recaudacion
  */
 
 namespace maquinas_recreativas\Application\Queries\Recaudacion;
@@ -13,9 +9,6 @@ use maquinas_recreativas\Domain\Recaudacion\RecaudacionRepository;
 use maquinas_recreativas\Domain\Shared\ValueObjects\Uuid;
 use maquinas_recreativas\Domain\Shared\Exceptions\DomainException;
 
-/**
- * Class ObtenerInformePorRecaudacionHandler
- */
 final class ObtenerInformePorRecaudacionHandler
 {
     private RecaudacionRepository $recaudacionRepository;
@@ -25,13 +18,6 @@ final class ObtenerInformePorRecaudacionHandler
         $this->recaudacionRepository = $recaudacionRepository;
     }
 
-    /**
-     * Maneja el query de obtener informe por recaudación.
-     *
-     * @param ObtenerInformePorRecaudacionQuery $query
-     * @return array
-     * @throws DomainException
-     */
     public function handle(ObtenerInformePorRecaudacionQuery $query): array
     {
         $idRecaudacion = new Uuid($query->getIdRecaudacion());
@@ -43,6 +29,9 @@ final class ObtenerInformePorRecaudacionHandler
 
         $informe = $this->recaudacionRepository->findInformeByRecaudacion($idRecaudacion);
         $componentes = $informe ? $this->recaudacionRepository->findDetallesByInforme($informe->id()) : [];
+
+        // Obtener los técnicos de la máquina
+        $tecnicos = $this->recaudacionRepository->findTecnicosByRecaudacion($idRecaudacion);
 
         return [
             'informe' => $informe ? [
@@ -60,7 +49,8 @@ final class ObtenerInformePorRecaudacionHandler
                 'empresa_nombre' => $informe->empresaNombre(),
                 'empresa_descripcion' => $informe->empresaDescripcion()
             ] : null,
-            'componentes' => $componentes
+            'componentes' => $componentes,
+            'tecnicos' => $tecnicos  // ← Agregar técnicos
         ];
     }
 }

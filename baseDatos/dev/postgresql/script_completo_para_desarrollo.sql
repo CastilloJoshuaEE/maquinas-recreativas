@@ -1285,52 +1285,76 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 4.9 Máquinas por estado
-CREATE OR REPLACE FUNCTION sp_maquinas_por_estado(p_estado VARCHAR(50))
+CREATE OR REPLACE FUNCTION sp_maquinas_por_estado(p_estado VARCHAR)
 RETURNS TABLE(
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR(100),
-    Tipo VARCHAR(50),
-    Fecha_Registro DATE,
-    Estado VARCHAR(50),
-    Etapa VARCHAR(50),
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
     ID_Comercio UUID,
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
     ID_Tecnico_Mantenimiento UUID,
-    NombreComercio VARCHAR(100),
+    Fecha_Registro DATE,
+    NombreComercio VARCHAR,
     DireccionComercio TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio
-    FROM MaquinaRecreativa m
-    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio
+    FROM "MaquinaRecreativa" m
+    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Estado = p_estado
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
 
 -- 4.10 Máquinas por etapa
-CREATE OR REPLACE FUNCTION sp_maquinas_por_etapa(p_etapa VARCHAR(50))
+CREATE OR REPLACE FUNCTION sp_maquinas_por_etapa(p_etapa VARCHAR)
 RETURNS TABLE(
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR(100),
-    Tipo VARCHAR(50),
-    Fecha_Registro DATE,
-    Estado VARCHAR(50),
-    Etapa VARCHAR(50),
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
     ID_Comercio UUID,
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
     ID_Tecnico_Mantenimiento UUID,
-    NombreComercio VARCHAR(100),
+    Fecha_Registro DATE,
+    NombreComercio VARCHAR,
     DireccionComercio TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio
-    FROM MaquinaRecreativa m
-    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio
+    FROM "MaquinaRecreativa" m
+    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Etapa = p_etapa
     ORDER BY m.Fecha_Registro DESC;
 END;
@@ -1340,15 +1364,16 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_todas_las_maquinas()
 RETURNS TABLE(
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR(100),
-    Tipo VARCHAR(50),
-    Estado VARCHAR(50),
-    Etapa VARCHAR(50),
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
     ID_Comercio UUID,
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
+    ID_Tecnico_Mantenimiento UUID,
     Fecha_Registro DATE,
-    NombreComercio VARCHAR(100),
+    NombreComercio VARCHAR,
     DireccionComercio TEXT
 ) AS $$
 BEGIN
@@ -1362,11 +1387,12 @@ BEGIN
         m.ID_Comercio,
         m.ID_Tecnico_Ensamblador,
         m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
         m.Fecha_Registro,
         c.Nombre AS NombreComercio,
         c.Direccion AS DireccionComercio
-    FROM MaquinaRecreativa m
-    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+    FROM "MaquinaRecreativa" m
+    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
@@ -1375,20 +1401,30 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_maquinas_operativas_por_comercio(p_id_comercio UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR(100),
-    Tipo VARCHAR(50),
-    Fecha_Registro DATE,
-    Estado VARCHAR(50),
-    Etapa VARCHAR(50),
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
     ID_Comercio UUID,
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
-    ID_Tecnico_Mantenimiento UUID
+    ID_Tecnico_Mantenimiento UUID,
+    Fecha_Registro DATE
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.*
-    FROM MaquinaRecreativa m
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
+        m.Fecha_Registro
+    FROM "MaquinaRecreativa" m
     WHERE m.ID_Comercio = p_id_comercio
       AND m.Estado = 'Operativa'
       AND m.Etapa = 'Recaudacion'
@@ -2229,35 +2265,39 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 10.4 Buscar recaudación por ID
-CREATE OR REPLACE FUNCTION sp_buscar_recaudacion_por_id(p_id UUID)
+CREATE OR REPLACE FUNCTION sp_buscar_maquina_por_id(p_id UUID)
 RETURNS TABLE(
-    ID_Recaudacion UUID,
-    Tipo_Comercio VARCHAR(20),
     ID_Maquina UUID,
-    ID_Usuario UUID,
-    Monto_Total DECIMAL(10,2),
-    Monto_Empresa DECIMAL(10,2),
-    Monto_Comercio DECIMAL(10,2),
-    Porcentaje_Comercio DECIMAL(5,2),
-    fecha TIMESTAMP,
-    detalle TEXT,
-    Nombre_Maquina VARCHAR(100),
-    Nombre_Comercio VARCHAR(100),
-    nombre_usuario VARCHAR(50),
-    apellido_usuario VARCHAR(50)
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
+    ID_Comercio UUID,
+    ID_Tecnico_Ensamblador UUID,
+    ID_Tecnico_Comprobador UUID,
+    ID_Tecnico_Mantenimiento UUID,
+    Fecha_Registro DATE,
+    NombreComercio VARCHAR,
+    DireccionComercio TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT r.*,
-           m.Nombre_Maquina,
-           c.Nombre AS Nombre_Comercio,
-           u.nombre AS nombre_usuario,
-           u.apellido AS apellido_usuario
-    FROM recaudaciones r
-    INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
-    INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-    INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
-    WHERE r.ID_Recaudacion = p_id
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio
+    FROM "MaquinaRecreativa" m
+    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    WHERE m.ID_Maquina = p_id
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
@@ -2348,27 +2388,41 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sp_maquinas_operativas_recaudacion()
 RETURNS TABLE(
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR(100),
-    Tipo VARCHAR(50),
-    Fecha_Registro DATE,
-    Estado VARCHAR(50),
-    Etapa VARCHAR(50),
+    Nombre_Maquina VARCHAR,
+    Tipo VARCHAR,
+    Estado VARCHAR,
+    Etapa VARCHAR,
     ID_Comercio UUID,
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
     ID_Tecnico_Mantenimiento UUID,
-    NombreComercio VARCHAR(100),
+    Fecha_Registro DATE,
+    NombreComercio VARCHAR,
     DireccionComercio TEXT,
-    TelefonoComercio VARCHAR(15),
-    TipoComercio VARCHAR(20)
+    TelefonoComercio VARCHAR,
+    TipoComercio VARCHAR
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio,
-           c.Telefono AS TelefonoComercio, c.Tipo AS TipoComercio
-    FROM MaquinaRecreativa m
-    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-    WHERE m.Etapa = 'Recaudacion' AND m.Estado = 'Operativa'
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio,
+        c.Telefono AS TelefonoComercio,
+        c.Tipo AS TipoComercio
+    FROM "MaquinaRecreativa" m
+    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    WHERE m.Etapa = 'Recaudacion' 
+      AND m.Estado = 'Operativa'
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;

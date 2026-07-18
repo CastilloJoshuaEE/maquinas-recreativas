@@ -991,10 +991,14 @@ Dependencies::register(ObtenerResumenRecaudacionesHandler::class, function() {
     return new ObtenerResumenRecaudacionesHandler(Dependencies::get(PDORecaudacionRepository::class));
 });
 
-Dependencies::register(ObtenerRecaudacionPorIdHandler::class, function() {
-    return new ObtenerRecaudacionPorIdHandler(Dependencies::get(PDORecaudacionRepository::class));
-});
+// dependencies.php - Buscar esta sección y reemplazarla
 
+Dependencies::register(ObtenerRecaudacionPorIdHandler::class, function() {
+    return new ObtenerRecaudacionPorIdHandler(
+        Dependencies::get(PDORecaudacionRepository::class),
+        Dependencies::get(PDOMaquinaRepository::class)  // ← AÑADIR ESTO
+    );
+});
 Dependencies::register(ObtenerMaquinasRecaudacionHandler::class, function() {
     return new ObtenerMaquinasRecaudacionHandler(Dependencies::get(PDORecaudacionRepository::class));
 });

@@ -620,17 +620,27 @@ BEGIN
       AND m.Estado = 'No operativa'
     ORDER BY m.Fecha_Registro DESC;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_maquinas_por_estado $$
 CREATE PROCEDURE sp_maquinas_por_estado(IN p_estado VARCHAR(50))
 BEGIN
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,  -- ← AÑADIR ESTE CAMPO
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio
     FROM MaquinaRecreativa m
     LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Estado = p_estado
     ORDER BY m.Fecha_Registro DESC;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_maquinas_por_etapa $$
 CREATE PROCEDURE sp_maquinas_por_etapa(IN p_etapa VARCHAR(50))
 BEGIN
@@ -640,7 +650,6 @@ BEGIN
     WHERE m.Etapa = p_etapa
     ORDER BY m.Fecha_Registro DESC;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_todas_las_maquinas $$
 CREATE PROCEDURE sp_todas_las_maquinas()
 BEGIN
@@ -653,6 +662,7 @@ BEGIN
         m.ID_Comercio,
         m.ID_Tecnico_Ensamblador,
         m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,  -- ← Añadir este campo
         m.Fecha_Registro,
         c.Nombre AS NombreComercio,
         c.Direccion AS DireccionComercio
@@ -660,15 +670,24 @@ BEGIN
     LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     ORDER BY m.Fecha_Registro DESC;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_maquinas_operativas_por_comercio $$
 CREATE PROCEDURE sp_maquinas_operativas_por_comercio(IN p_id_comercio CHAR(36))
 BEGIN
-    SELECT m.*
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,  -- ← Añadir este campo
+        m.Fecha_Registro
     FROM MaquinaRecreativa m
     WHERE m.ID_Comercio = p_id_comercio
       AND m.Estado = 'Operativa'
-      AND m.Etapa  = 'Recaudacion'
+      AND m.Etapa = 'Recaudacion'
     ORDER BY m.Nombre_Maquina ASC;
 END $$
 
@@ -1242,15 +1261,32 @@ END $$
 DROP PROCEDURE IF EXISTS sp_buscar_recaudacion_por_id $$
 CREATE PROCEDURE sp_buscar_recaudacion_por_id(IN p_id CHAR(36))
 BEGIN
-    SELECT r.*,
-           m.Nombre_Maquina,
-           c.Nombre AS Nombre_Comercio,
-           u.nombre AS nombre_usuario,
-           u.apellido AS apellido_usuario
+    SELECT
+        r.*,
+        m.Nombre_Maquina,
+        c.Nombre AS Nombre_Comercio,
+        c.Direccion AS Direccion_Comercio,
+        c.Telefono AS Telefono_Comercio,
+        u.nombre AS nombre_usuario,
+        u.apellido AS apellido_usuario,
+        -- Técnicos involucrados
+        te.nombre AS nombre_ensamblador,
+        te.apellido AS apellido_ensamblador,
+        tc.nombre AS nombre_comprobador,
+        tc.apellido AS apellido_comprobador,
+        tm.nombre AS nombre_mantenimiento,
+        tm.apellido AS apellido_mantenimiento,
+        -- IDs de técnicos
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento
     FROM recaudaciones r
     INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
     INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+    LEFT JOIN usuario te ON m.ID_Tecnico_Ensamblador = te.ID_Usuario
+    LEFT JOIN usuario tc ON m.ID_Tecnico_Comprobador = tc.ID_Usuario
+    LEFT JOIN usuario tm ON m.ID_Tecnico_Mantenimiento = tm.ID_Usuario
     WHERE r.ID_Recaudacion = p_id
     LIMIT 1;
 END $$
@@ -1309,15 +1345,28 @@ BEGIN
         LIMIT p_limit;
     END IF;
 END $$
-
 DROP PROCEDURE IF EXISTS sp_maquinas_operativas_recaudacion $$
 CREATE PROCEDURE sp_maquinas_operativas_recaudacion()
 BEGIN
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio,
-           c.Telefono AS TelefonoComercio, c.Tipo AS TipoComercio
+    SELECT 
+        m.ID_Maquina,
+        m.Nombre_Maquina,
+        m.Tipo,
+        m.Estado,
+        m.Etapa,
+        m.ID_Comercio,
+        m.ID_Tecnico_Ensamblador,
+        m.ID_Tecnico_Comprobador,
+        m.ID_Tecnico_Mantenimiento,  -- ← Añadir este campo
+        m.Fecha_Registro,
+        c.Nombre AS NombreComercio,
+        c.Direccion AS DireccionComercio,
+        c.Telefono AS TelefonoComercio,
+        c.Tipo AS TipoComercio
     FROM MaquinaRecreativa m
     LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-    WHERE m.Etapa = 'Recaudacion' AND m.Estado = 'Operativa'
+    WHERE m.Etapa = 'Recaudacion' 
+      AND m.Estado = 'Operativa'
     ORDER BY m.Fecha_Registro DESC;
 END $$
 

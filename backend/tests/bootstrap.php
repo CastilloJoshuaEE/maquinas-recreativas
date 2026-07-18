@@ -83,7 +83,7 @@ if (!defined('SECRET_KEY')) {
     define('SECRET_KEY', getenv('SECRET_KEY') ?: 'clave_super_segura_cambiar_en_produccion_2024');
 }
 if (!defined('SECRET_IV')) {
-    define('SECRET_IV', getenv('SECRET_IV') ?: 'vector_inicial_16');
+    define('SECRET_IV', getenv('SECRET_IV') ?: 'vector_inicial_16_abcdefghijk');
 }
 
 // =============================================

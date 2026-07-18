@@ -41,7 +41,7 @@ define('SECRET_KEY', 'clave_super_segura_cambiar_en_produccion_2024');
  * @var string VECTOR DE INICIALIZACIÓN
  * IV para encriptación (16 bytes)
  */
-define('SECRET_IV', 'vector_inicial_16');
+define('SECRET_IV', 'vector_inicial_16_abcdefghijk');
 
 // =============================================
 // CONFIGURACIÓN DE SESIÓN

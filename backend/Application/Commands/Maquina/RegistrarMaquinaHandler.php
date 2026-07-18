@@ -69,7 +69,8 @@ final class RegistrarMaquinaHandler implements CommandHandler
             }
             $primerEnsamblador = $ensambladores[0];
             if (is_array($primerEnsamblador)) {
-                $idEnsamblador = new Uuid($primerEnsamblador['id']);
+                // Usar 'ID_Usuario' que es lo que devuelve la consulta SQL
+                $idEnsamblador = new Uuid($primerEnsamblador['ID_Usuario'] ?? $primerEnsamblador['id'] ?? null);
             } else {
                 $idEnsamblador = $primerEnsamblador->getId();
             }
@@ -88,12 +89,13 @@ final class RegistrarMaquinaHandler implements CommandHandler
             if (empty($comprobadores)) {
                 throw new DomainException('No hay técnicos comprobadores disponibles');
             }
-            $primerComprobador = $comprobadores[0];
-            if (is_array($primerComprobador)) {
-                $idComprobador = new Uuid($primerComprobador['id']);
-            } else {
-                $idComprobador = $primerComprobador->getId();
-            }
+$primerComprobador = $comprobadores[0];
+if (is_array($primerComprobador)) {
+    // Usar 'ID_Usuario' que es lo que devuelve la consulta SQL
+    $idComprobador = new Uuid($primerComprobador['ID_Usuario'] ?? $primerComprobador['id'] ?? null);
+} else {
+    $idComprobador = $primerComprobador->getId();
+}
         }
         
         error_log("Asignando técnicos - Ensamblador: {$idEnsamblador->value()}, Comprobador: {$idComprobador->value()}");

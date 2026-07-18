@@ -32,4 +32,6 @@ interface RecaudacionRepository
     public function findMaquinasOperativasPorComercio(Comercio $comercio): array;
     public function findNombreMaquinaById(Uuid $idMaquina): ?string;
     public function delete(Uuid $id): bool;
-}
+    public function findTecnicosByRecaudacion(Uuid $idRecaudacion): array;
+
+    }
