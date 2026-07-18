@@ -117,6 +117,7 @@ abstract class HttpTestCase {
             sleep(pow(2,$retry)*2);
             return $this->request($method,$endpoint,$data,$headers,$retry+1);
         }
+        
         return $this->lastResponse;
     }
     

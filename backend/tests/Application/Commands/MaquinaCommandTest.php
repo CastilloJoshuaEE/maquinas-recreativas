@@ -7,12 +7,12 @@ namespace maquinas_recreativas\Tests\Application\Commands;
 
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComercioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMaquinaRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComponenteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLMontajeRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLHistorialRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComercioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMaquinaRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComponenteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOMontajeRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOHistorialRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
@@ -33,12 +33,12 @@ use maquinas_recreativas\Domain\Componente\TipoComponente;
 class MaquinaCommandTest extends TestCase
 {
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLComercioRepository $comercioRepository;
-    private MySQLMaquinaRepository $maquinaRepository;
-    private MySQLComponenteRepository $componenteRepository;
-    private MySQLMontajeRepository $montajeRepository;
-    private MySQLHistorialRepository $historialRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOComercioRepository $comercioRepository;
+    private PDOMaquinaRepository $maquinaRepository;
+    private PDOComponenteRepository $componenteRepository;
+    private PDOMontajeRepository $montajeRepository;
+    private PDOHistorialRepository $historialRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     private Uuid $logisticaId;
@@ -63,12 +63,12 @@ class MaquinaCommandTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->comercioRepository = new MySQLComercioRepository($this->testDb);
-        $this->maquinaRepository = new MySQLMaquinaRepository($this->testDb);
-        $this->componenteRepository = new MySQLComponenteRepository($this->testDb);
-        $this->montajeRepository = new MySQLMontajeRepository($this->testDb);
-        $this->historialRepository = new MySQLHistorialRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->comercioRepository = new PDOComercioRepository($this->testDb);
+        $this->maquinaRepository = new PDOMaquinaRepository($this->testDb);
+        $this->componenteRepository = new PDOComponenteRepository($this->testDb);
+        $this->montajeRepository = new PDOMontajeRepository($this->testDb);
+        $this->historialRepository = new PDOHistorialRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearDatosBase();
@@ -166,29 +166,35 @@ class MaquinaCommandTest extends TestCase
     /**
      * @test
      */
-        public function testRegistrarMaquinaValida(): void
-    {
-        $registrarMaquina = new RegistrarMaquinaHandler(
-            $this->maquinaRepository, 
-            $this->usuarioRepository, 
-            $this->comercioRepository, 
-            $this->componenteRepository,
-            null  // <-- AÑADIR EL 5to PARÁMETRO (notificacionHandler)
-        );
-        
-        $maquinaCommand = new RegistrarMaquinaCommand(
-            'Máquina Test', 'Tipo A', $this->comercioId, $this->logisticaId->value(),
-            $this->placaId, $this->carcasaId
-        );
-        
-        $maquinaId = $registrarMaquina->handle($maquinaCommand);
-        
-        $this->assertNotEmpty($maquinaId);
-        
-        $maquina = $this->maquinaRepository->findById(new Uuid($maquinaId));
-        $this->assertNotNull($maquina);
-        $this->assertEquals('Máquina Test', $maquina->nombre());
-    }
+public function testRegistrarMaquinaValida(): void
+{
+    $registrarMaquina = new RegistrarMaquinaHandler(
+        $this->maquinaRepository, 
+        $this->usuarioRepository, 
+        $this->comercioRepository, 
+        $this->componenteRepository,
+        null
+    );
+    
+    $maquinaCommand = new RegistrarMaquinaCommand(
+        'Máquina Test', 
+        'Tipo A', 
+        $this->comercioId, 
+        $this->logisticaId->value(),
+        $this->placaId, 
+        $this->carcasaId,
+        $this->ensambladorId->value(),   
+        $this->comprobadorId->value()   
+    );
+    
+    $maquinaId = $registrarMaquina->handle($maquinaCommand);
+    
+    $this->assertNotEmpty($maquinaId);
+    
+    $maquina = $this->maquinaRepository->findById(new Uuid($maquinaId));
+    $this->assertNotNull($maquina);
+    $this->assertEquals('Máquina Test', $maquina->nombre());
+}
     
     /**
      * @test
@@ -220,18 +226,24 @@ class MaquinaCommandTest extends TestCase
         $this->componenteRepository->save($componente);
         
         // Registrar máquina
-        $registrarMaquina = new RegistrarMaquinaHandler(
-            $this->maquinaRepository, 
-            $this->usuarioRepository, 
-            $this->comercioRepository, 
-            $this->componenteRepository,
-            null  // <-- AÑADIR EL 5to PARÁMETRO
-        );
-        
-        $maquinaCommand = new RegistrarMaquinaCommand(
-            'Máquina Montaje', 'Tipo A', $this->comercioId, $this->logisticaId->value(),
-            $this->placaId, $this->carcasaId
-        );
+    $registrarMaquina = new RegistrarMaquinaHandler(
+        $this->maquinaRepository, 
+        $this->usuarioRepository, 
+        $this->comercioRepository, 
+        $this->componenteRepository,
+        null
+    );
+    
+    $maquinaCommand = new RegistrarMaquinaCommand(
+        'Máquina Montaje', 
+        'Tipo A', 
+        $this->comercioId, 
+        $this->logisticaId->value(),
+        $this->placaId, 
+        $this->carcasaId,
+        $this->ensambladorId->value(),  
+        $this->comprobadorId->value()   
+    );
         $maquinaId = $registrarMaquina->handle($maquinaCommand);
         
         // Registrar montaje

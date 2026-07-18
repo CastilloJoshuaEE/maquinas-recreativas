@@ -1,10 +1,9 @@
 # ususarios iniciales rPOSE ELIMINA LA IOMAGEN QUE SE CREO DEL PROYECTO PARA SERUIR USANDO EL
 
-| `DB_HOST=mysql` no se resuelve | Cambiar a `DB_HOST=127.0.0.1` |
-| -------------------------------- | ------------------------------- |
+| `DB_HOST=mysql` no se resuelve | Cambiar a`DB_HOST=127.0.0.1` |
+| -------------------------------- | ------------------------------ |
 
 # si funciono docker no olvidar ejecutar los usuarios iniciales
-
 
 ## Usar PowerShell para ejecutar el script en el contenedor directamente
 
@@ -14,8 +13,6 @@
 # Desde PowerShell/CMD en Windows
 docker exec -it maquinas_recreativas_php php /var/www/html/backend/Scripts/insertar-usuarios-iniciales.php
 ```
-
-
 
 PS C:\Windows\system32> D:
 PS D:\> cd D:\xampp\htdocs\maquinas-recreativas\docker
@@ -60,9 +57,6 @@ RESUMEN DE USUARIOS INSERTADOS:
 What's next:
 
 D:\xampp\htdocs\maquinas-recreativas\docker>docker logs -f maquinas_recreativas_php usa ese comando si quieres saber como va tu programa usando docker
-
-
-
 
 # SI ES LA PRIMERA VEZ:
 

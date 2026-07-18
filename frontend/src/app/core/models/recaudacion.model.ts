@@ -36,6 +36,10 @@ export interface Recaudacion {
   ID_Usuario?: string;
   /** ID del informe asociado */
   ID_Informe?: string;
+    // IDs de técnicos
+  ID_Tecnico_Ensamblador?: string;
+  ID_Tecnico_Comprobador?: string;
+  ID_Tecnico_Mantenimiento?: string;
 }
 
 /**

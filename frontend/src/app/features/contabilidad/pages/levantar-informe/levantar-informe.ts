@@ -2,9 +2,6 @@
  * @fileoverview Levantar Informe de Recaudación
  * @description Genera y guarda el informe completo de una recaudación
  * @component LevantarInformeComponent
- *
- * FIX: el backend devuelve claves en minúsculas (id_maquina, nombre_maquina, etc.)
- * y el comercio/técnicos no se cargaban porque se usaban claves PascalCase.
  */
 
 import { Component, OnInit, inject } from '@angular/core';
@@ -17,8 +14,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AdminHeaderComponent } from '@shared/ui/admin-header/admin-header';
 import { ContabilidadService } from '../../services/contabilidad';
-import { Recaudacion, Comercio } from '@core/models/recaudacion.model';
-import { Maquina } from '@core/models/maquina.model';
 import { Componente } from '@core/models/componente.model';
 import { User } from '@core/models/user.model';
 import { AuthService } from '@core/services/auth';
@@ -40,7 +35,8 @@ export class LevantarInformeComponent implements OnInit {
   private apiService = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   private userService = inject(UserService);
-  recaudacion: any = null;   // any para manejar claves minúsculas del backend
+  
+  recaudacion: any = null;
   maquina: any = null;
   comercio: any = null;
   componentes: Componente[] = [];
@@ -140,84 +136,81 @@ export class LevantarInformeComponent implements OnInit {
     });
   }
 
-  /**
-   * Obtiene la máquina por ID desde cualquier fuente disponible.
-   * Prioriza: 1) listado de máquinas operativas, 2) listado de máquinas en recaudación, 3) objeto mínimo.
-   */
   private cargarMaquinaCompleta(idMaquina: string): void {
-    // 1. Intentar obtener la máquina desde el endpoint de máquinas operativas (sin filtro de etapa)
+    // Usar el ID de recaudación para obtener todos los datos incluyendo técnicos
+    const idRec = this.route.snapshot.params['idRecaudacion'];
+    
+  if (this.recaudacion) {
+    const rec = this.recaudacion;
+    // Verificar si la recaudación ya tiene los IDs de técnicos
+    const idEnsamblador = rec.ID_Tecnico_Ensamblador || rec.id_tecnico_ensamblador || null;
+    const idComprobador = rec.ID_Tecnico_Comprobador || rec.id_tecnico_comprobador || null;
+    const idMantenimiento = rec.ID_Tecnico_Mantenimiento || rec.id_tecnico_mantenimiento || null;
+    
+    if (idEnsamblador || idComprobador || idMantenimiento) {
+      // Ya tenemos los IDs, crear el objeto maquina y cargar técnicos directamente
+      this.maquina = {
+        ID_Maquina: idMaquina,
+        Nombre_Maquina: rec.nombre_maquina || rec.Nombre_Maquina || 'Máquina',
+        ID_Comercio: this.recaudacion?.id_comercio || this.recaudacion?.ID_Comercio || '', 
+        ID_Tecnico_Ensamblador: idEnsamblador,
+        ID_Tecnico_Comprobador: idComprobador,
+        ID_Tecnico_Mantenimiento: idMantenimiento
+      };
+      this.cargandoMaquina = false;
+      const idCom = this.maquina.ID_Comercio || '';
+      if (idCom) this.cargarComercio(idCom);
+      else this.cargandoComercio = false;
+      this.cargarTecnicos(this.maquina);
+      return;
+    }
+  }
+
+    // Fallback: intentar obtener del endpoint de máquinas
     this.apiService.get('/maquina/estado/Operativa').subscribe({
-      next: (resp: any) => {
-        const todas = resp?.maquinas || [];
-        const encontrada = todas.find((m: any) => (m.ID_Maquina || m.id_maquina) === idMaquina);
-        if (encontrada) {
-          this.maquina = encontrada;
-          this.cargandoMaquina = false;
-          const idCom = encontrada.ID_Comercio || encontrada.id_comercio || '';
-          if (idCom) this.cargarComercio(idCom);
-          else this.cargandoComercio = false;
-          this.cargarTecnicos(encontrada);
-        } else {
-          // 2. No se encontró en operativas, intentar en recaudación
-          this.contabilidadService.getMaquinasRecaudacion().subscribe({
-            next: (maquinas: any[]) => {
-              const encontrada2 = maquinas.find(m => (m.ID_Maquina || m.id_maquina) === idMaquina);
-              if (encontrada2) {
-                this.maquina = encontrada2;
+        next: (resp: any) => {
+            const todas = resp?.maquinas || [];
+            const encontrada = todas.find((m: any) => (m.ID_Maquina || m.id_maquina) === idMaquina);
+            if (encontrada) {
+                console.log('Máquina encontrada:', encontrada);
+                console.log('ID_Tecnico_Mantenimiento:', encontrada.ID_Tecnico_Mantenimiento || encontrada.id_tecnico_mantenimiento);
+                this.maquina = encontrada;
                 this.cargandoMaquina = false;
-                const idCom = encontrada2.ID_Comercio || encontrada2.id_comercio || '';
+                const idCom = encontrada.ID_Comercio || encontrada.id_comercio || '';
                 if (idCom) this.cargarComercio(idCom);
                 else this.cargandoComercio = false;
-                this.cargarTecnicos(encontrada2);
-              } else {
-                // 3. Último recurso: crear objeto mínimo
+                this.cargarTecnicos(encontrada);
+            } else {
+                // Crear objeto mínimo con los datos de la recaudación
                 this.maquina = {
-                  ID_Maquina: idMaquina,
-                  Nombre_Maquina: (this.recaudacion as any)?.nombre_maquina || (this.recaudacion as any)?.Nombre_Maquina || 'Máquina'
+                    ID_Maquina: idMaquina,
+                    Nombre_Maquina: this.recaudacion?.nombre_maquina || this.recaudacion?.Nombre_Maquina || 'Máquina',
+                    ID_Comercio: this.recaudacion?.id_comercio || this.recaudacion?.ID_Comercio || '',
+                    ID_Tecnico_Ensamblador: this.recaudacion?.ID_Tecnico_Ensamblador || this.recaudacion?.id_tecnico_ensamblador || null,
+                    ID_Tecnico_Comprobador: this.recaudacion?.ID_Tecnico_Comprobador || this.recaudacion?.id_tecnico_comprobador || null,
+                    ID_Tecnico_Mantenimiento: this.recaudacion?.ID_Tecnico_Mantenimiento || this.recaudacion?.id_tecnico_mantenimiento || null
                 };
                 this.cargandoMaquina = false;
                 this.cargandoComercio = false;
-                this.cargandoTecnicos = false;
-              }
-            },
-            error: () => {
-              this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
-              this.cargandoMaquina = false;
-              this.cargandoComercio = false;
-              this.cargandoTecnicos = false;
+                this.cargarTecnicos(this.maquina);
             }
-          });
-        }
-      },
-      error: () => {
-        // Fallback: intentar en recaudación
-        this.contabilidadService.getMaquinasRecaudacion().subscribe({
-          next: (maquinas: any[]) => {
-            const encontrada = maquinas.find(m => (m.ID_Maquina || m.id_maquina) === idMaquina);
-            if (encontrada) {
-              this.maquina = encontrada;
-              this.cargandoMaquina = false;
-              const idCom = encontrada.ID_Comercio || encontrada.id_comercio || '';
-              if (idCom) this.cargarComercio(idCom);
-              else this.cargandoComercio = false;
-              this.cargarTecnicos(encontrada);
-            } else {
-              this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
-              this.cargandoMaquina = false;
-              this.cargandoComercio = false;
-              this.cargandoTecnicos = false;
-            }
-          },
-          error: () => {
-            this.maquina = { ID_Maquina: idMaquina, Nombre_Maquina: 'Máquina' };
+        },
+        error: () => {
+            // Fallback: usar datos de la recaudación
+            this.maquina = {
+                ID_Maquina: idMaquina,
+                Nombre_Maquina: this.recaudacion?.nombre_maquina || this.recaudacion?.Nombre_Maquina || 'Máquina',
+                ID_Comercio: this.recaudacion?.id_comercio || this.recaudacion?.ID_Comercio || '',
+                ID_Tecnico_Ensamblador: this.recaudacion?.ID_Tecnico_Ensamblador || this.recaudacion?.id_tecnico_ensamblador || null,
+                ID_Tecnico_Comprobador: this.recaudacion?.ID_Tecnico_Comprobador || this.recaudacion?.id_tecnico_comprobador || null,
+                ID_Tecnico_Mantenimiento: this.recaudacion?.ID_Tecnico_Mantenimiento || this.recaudacion?.id_tecnico_mantenimiento || null
+            };
             this.cargandoMaquina = false;
             this.cargandoComercio = false;
-            this.cargandoTecnicos = false;
-          }
-        });
-      }
+            this.cargarTecnicos(this.maquina);
+        }
     });
-  }
+}
 
   private cargarComercio(idComercio: string): void {
     if (!idComercio) {
@@ -232,61 +225,73 @@ export class LevantarInformeComponent implements OnInit {
       error: () => { this.cargandoComercio = false; }
     });
   }
-private cargarTecnicos(maquina: any): void {
-  const ids = {
-    ensamblador: maquina.ID_Tecnico_Ensamblador || maquina.id_tecnico_ensamblador || null,
-    comprobador: maquina.ID_Tecnico_Comprobador || maquina.id_tecnico_comprobador || null,
-    mantenimiento: maquina.ID_Tecnico_Mantenimiento || maquina.id_tecnico_mantenimiento || null,
-  };
 
-  // Obtener listas completas de técnicos por especialidad
-  Promise.all([
-    this.userService.getTecnicosByEspecialidad('Ensamblador').toPromise(),
-    this.userService.getTecnicosByEspecialidad('Comprobador').toPromise(),
-    this.userService.getTecnicosByEspecialidad('Mantenimiento').toPromise()
-  ]).then(([ensambladores, comprobadores, mantenedores]) => {
-    this.tecnicos = {
-      ensamblador: ensambladores?.find(t => t.id === ids.ensamblador) || null,
-      comprobador: comprobadores?.find(t => t.id === ids.comprobador) || null,
-      mantenimiento: mantenedores?.find(t => t.id === ids.mantenimiento) || null
+  // =============================================================
+  //  CORREGIDO: Usar 'id' en lugar de 'ID_Usuario'
+  // =============================================================
+  private cargarTecnicos(maquina: any): void {
+    const ids = {
+      ensamblador: maquina.ID_Tecnico_Ensamblador || maquina.id_tecnico_ensamblador || null,
+      comprobador: maquina.ID_Tecnico_Comprobador || maquina.id_tecnico_comprobador || null,
+      mantenimiento: maquina.ID_Tecnico_Mantenimiento || maquina.id_tecnico_mantenimiento || null,
     };
-    this.cargandoTecnicos = false;
-  }).catch(err => {
-    console.error('Error cargando técnicos:', err);
-    this.cargandoTecnicos = false;
-  });
-}
-// En levantar-informe.ts - Modifica cargarComponentes
-private cargarComponentes(idMaquina: string): void {
+
+    console.log('IDs de técnicos a buscar:', ids);
+
+    // Obtener listas completas de técnicos por especialidad
+    Promise.all([
+      this.userService.getTecnicosByEspecialidad('Ensamblador').toPromise(),
+      this.userService.getTecnicosByEspecialidad('Comprobador').toPromise(),
+      this.userService.getTecnicosByEspecialidad('Mantenimiento').toPromise()
+    ]).then(([ensambladores, comprobadores, mantenedores]) => {
+      console.log('Ensambladores recibidos:', ensambladores);
+      console.log('Comprobadores recibidos:', comprobadores);
+      console.log('Mantenedores recibidos:', mantenedores);
+
+      // Buscar por 'id' (que es la propiedad que tiene User)
+      this.tecnicos = {
+        ensamblador: ensambladores?.find(t => t.id === ids.ensamblador) || null,
+        comprobador: comprobadores?.find(t => t.id === ids.comprobador) || null,
+        mantenimiento: mantenedores?.find(t => t.id === ids.mantenimiento) || null
+      };
+      
+      console.log('Técnicos encontrados:', this.tecnicos);
+      this.cargandoTecnicos = false;
+    }).catch(err => {
+      console.error('Error cargando técnicos:', err);
+      this.cargandoTecnicos = false;
+    });
+  }
+
+  private cargarComponentes(idMaquina: string): void {
     this.cargandoComponentes = true;
     
-    // Usar el endpoint de componentes por máquina
     this.apiService.get(`/maquina/componentes/${idMaquina}`).subscribe({
-        next: (response: any) => {
-            console.log('Respuesta componentes desde endpoint maquina/componentes:', response);
-            
-            let componentesData = [];
-            if (response?.success && response?.componentes) {
-                componentesData = response.componentes;
-            }
-            
-            this.componentes = componentesData.map((comp: any) => ({
-                ID_Componente: comp.ID_Componente || comp.id,
-                nombre: comp.nombre,
-                tipo: comp.tipo,
-                precio: comp.precio || 0
-            }));
-            
-            console.log('Componentes cargados:', this.componentes.length);
-            this.cargandoComponentes = false;
-        },
-        error: (err) => {
-            console.error('Error cargando componentes desde /maquina/componentes:', err);
-            this.componentes = [];
-            this.cargandoComponentes = false;
+      next: (response: any) => {
+        console.log('Respuesta componentes:', response);
+        
+        let componentesData = [];
+        if (response?.success && response?.componentes) {
+          componentesData = response.componentes;
         }
+        
+        this.componentes = componentesData.map((comp: any) => ({
+          ID_Componente: comp.ID_Componente || comp.id,
+          nombre: comp.nombre || '',
+          tipo: comp.tipo || '',
+          precio: comp.precio || 0
+        }));
+        
+        console.log('Componentes cargados:', this.componentes.length);
+        this.cargandoComponentes = false;
+      },
+      error: (err) => {
+        console.error('Error cargando componentes:', err);
+        this.componentes = [];
+        this.cargandoComponentes = false;
+      }
     });
-}
+  }
 
   ngOnInit(): void { this.cargarDatos(); }
 
@@ -303,81 +308,71 @@ private cargarComponentes(idMaquina: string): void {
 
   // ── Acciones ──────────────────────────────────────────────────────────────
   imprimirInforme(): void { setTimeout(() => window.print(), 300); }
-guardarInforme(): void {
-  if (!this.recaudacion) return;
-  this.guardando = true;
-  
-  // Obtener el usuario actual completo
-  const currentUser = this.authService.getCurrentUser();
-  
-  // Intentar obtener CI de múltiples fuentes
-  let ciUsuario = '';
-  
-  if (currentUser) {
-    // Prioridad 1: CI directa
-    ciUsuario = currentUser.ci || '';
+
+  guardarInforme(): void {
+    if (!this.recaudacion) return;
+    this.guardando = true;
     
-    // Prioridad 2: Si la CI parece encriptada o es muy larga, obtenerla del backend
-    if (!ciUsuario || ciUsuario.length > 20 || ciUsuario.includes('***')) {
-      console.warn('CI no válida en currentUser, obteniendo del backend...');
-      
-      // Obtener el perfil completo del backend (que debería desencriptar la CI)
-      this.userService.getProfile(currentUser.id || currentUser.id).subscribe({
-        next: (user) => {
-          if (user && user.ci) {
-            this.guardarInformeConCI(user.ci);
-          } else {
-            // Fallback: usar ID de usuario como identificador
-            this.guardarInformeConCI(currentUser.id || currentUser.id || 'SISTEMA');
+    const currentUser = this.authService.getCurrentUser();
+    let ciUsuario = '';
+    
+    if (currentUser) {
+      ciUsuario = currentUser.ci || '';
+      if (!ciUsuario || ciUsuario.length > 20 || ciUsuario.includes('***')) {
+        this.userService.getProfile(currentUser.id).subscribe({
+          next: (user) => {
+            if (user && user.ci) {
+              this.guardarInformeConCI(user.ci);
+            } else {
+              this.guardarInformeConCI(currentUser.id || 'SISTEMA');
+            }
+          },
+          error: () => {
+            this.guardarInformeConCI(currentUser.id || 'SISTEMA');
           }
-        },
-        error: () => {
-          this.guardarInformeConCI(currentUser.id || currentUser.id || 'SISTEMA');
-        }
-      });
-      return;
-    }
-  } else {
-    // Si no hay usuario, usar ID de sesión
-    ciUsuario = sessionStorage.getItem('userId') || 'SISTEMA';
-  }
-  
-  this.guardarInformeConCI(ciUsuario);
-}
-
-private guardarInformeConCI(ciUsuario: string): void {
-  const informeData = {
-    idRecaudacion:     this.idRecaudacion,
-    idComercio:        this.idComercio,
-    ciUsuario:         ciUsuario,  // Usar el valor obtenido
-    nombreMaquina:     this.maquinaNombre,
-    nombreComercio:    this.comercioNombre,
-    direccionComercio: this.comercioDireccion,
-    telefonoComercio:  this.comercioTelefono,
-    pagoEnsamblador:   this.tecnicos.ensamblador  ? 400 : 0,
-    pagoComprobador:   this.tecnicos.comprobador  ? 400 : 0,
-    pagoMantenimiento: this.tecnicos.mantenimiento ? 400 : 0,
-    componentes:       this.componentes.map(c => ({ ID_Componente: c.ID_Componente })),
-    montoTotal:        this.montoTotal
-  };
-
-  this.contabilidadService.guardarInforme(informeData).subscribe({
-    next: (response) => {
-      if (response.success) {
-        this.success = true;
-        this.snackBar.open('Informe guardado correctamente', 'Cerrar', { duration: 3000 });
-        setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
-      } else {
-        this.snackBar.open(response.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+        });
+        return;
       }
-      this.guardando = false;
-    },
-    error: (err) => {
-      this.snackBar.open(err.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
-      this.guardando = false;
+    } else {
+      ciUsuario = sessionStorage.getItem('userId') || 'SISTEMA';
     }
-  });
-}
+    
+    this.guardarInformeConCI(ciUsuario);
+  }
+
+  private guardarInformeConCI(ciUsuario: string): void {
+    const informeData = {
+      idRecaudacion:     this.idRecaudacion,
+      idComercio:        this.idComercio,
+      ciUsuario:         ciUsuario,
+      nombreMaquina:     this.maquinaNombre,
+      nombreComercio:    this.comercioNombre,
+      direccionComercio: this.comercioDireccion,
+      telefonoComercio:  this.comercioTelefono,
+      pagoEnsamblador:   this.tecnicos.ensamblador  ? 400 : 0,
+      pagoComprobador:   this.tecnicos.comprobador  ? 400 : 0,
+      pagoMantenimiento: this.tecnicos.mantenimiento ? 400 : 0,
+      componentes:       this.componentes.map(c => ({ ID_Componente: c.ID_Componente })),
+      montoTotal:        this.montoTotal
+    };
+
+    this.contabilidadService.guardarInforme(informeData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.success = true;
+          this.snackBar.open('Informe guardado correctamente', 'Cerrar', { duration: 3000 });
+          setTimeout(() => this.router.navigate(['/contabilidad/consultar-recaudaciones']), 2000);
+        } else {
+          this.snackBar.open(response.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+        }
+        this.guardando = false;
+      },
+      error: (err) => {
+        this.snackBar.open(err.message || 'Error al guardar informe', 'Cerrar', { duration: 3000 });
+        this.guardando = false;
+      }
+    });
+  }
 
   regresar(): void { this.router.navigate(['/contabilidad/consultar-recaudaciones']); }
 }

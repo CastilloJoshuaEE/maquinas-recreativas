@@ -1,28 +1,30 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-apache
 
-# Instalar dependencias del sistema
-RUN apk add --no-cache \
+# Instalar dependencias del sistema (usando apt para Debian)
+RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
     libzip-dev \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
     autoconf \
     g++ \
     make \
-    linux-headers \
-    mysql-client \
+    default-mysql-client \
+    postgresql-client \
+    libpq-dev \
     netcat-openbsd \
-    fcgi
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensiones PHP
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_mysql \
+    pdo_pgsql \
     mysqli \
     zip \
     gd \
@@ -63,8 +65,17 @@ RUN composer install --no-interaction --optimize-autoloader
 RUN chown -R www-data:www-data /var/www/html/backend \
     && chmod -R 775 /var/www/html/backend/storage
 
-# Verificar que PHP-FPM está configurado correctamente
-RUN php-fpm -t
+# Configurar Apache para apuntar al directorio public
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
+    sed -i 's!/var/www/html!/var/www/html/backend/public!g' /etc/apache2/sites-available/000-default.conf && \
+    sed -i 's!/var/www/html!/var/www/html/backend/public!g' /etc/apache2/conf-available/docker-php.conf
+
+# Habilitar el módulo de reescritura de Apache
+RUN a2enmod rewrite headers
+
+# Copiar configuración de Apache personalizada si existe
+COPY apache.conf /etc/apache2/conf-available/custom.conf
+RUN a2enconf custom || true
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["php-fpm", "-F"]
+CMD ["apache2-foreground"]

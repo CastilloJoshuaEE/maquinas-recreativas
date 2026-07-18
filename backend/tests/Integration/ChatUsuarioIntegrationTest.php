@@ -10,10 +10,10 @@ namespace maquinas_recreativas\Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use maquinas_recreativas\Tests\TestDatabase;
 use maquinas_recreativas\Tests\TestDatabaseInjectionTrait;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLUsuarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLReporteRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLComentarioRepository;
-use maquinas_recreativas\Infrastructure\Repositories\MySQLNotificacionRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOUsuarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOReporteRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDOComentarioRepository;
+use maquinas_recreativas\Infrastructure\Repositories\PDONotificacionRepository;
 use maquinas_recreativas\Infrastructure\Security\BcryptPasswordHasher;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioCommand;
 use maquinas_recreativas\Application\Commands\Usuario\RegistrarUsuarioHandler;
@@ -34,10 +34,10 @@ class ChatUsuarioIntegrationTest extends TestCase
     use TestDatabaseInjectionTrait;
     
     private TestDatabase $testDb;
-    private MySQLUsuarioRepository $usuarioRepository;
-    private MySQLReporteRepository $reporteRepository;
-    private MySQLComentarioRepository $comentarioRepository;
-    private MySQLNotificacionRepository $notificacionRepository;
+    private PDOUsuarioRepository $usuarioRepository;
+    private PDOReporteRepository $reporteRepository;
+    private PDOComentarioRepository $comentarioRepository;
+    private PDONotificacionRepository $notificacionRepository;
     private BcryptPasswordHasher $passwordHasher;
     
     private Uuid $usuario1Id;
@@ -48,10 +48,10 @@ class ChatUsuarioIntegrationTest extends TestCase
         $this->testDb = TestDatabase::getInstance();
         $this->testDb->cleanDatabase();
         
-        $this->usuarioRepository = new MySQLUsuarioRepository($this->testDb);
-        $this->reporteRepository = new MySQLReporteRepository($this->testDb);
-        $this->comentarioRepository = new MySQLComentarioRepository($this->testDb);
-        $this->notificacionRepository = new MySQLNotificacionRepository($this->testDb);
+        $this->usuarioRepository = new PDOUsuarioRepository($this->testDb);
+        $this->reporteRepository = new PDOReporteRepository($this->testDb);
+        $this->comentarioRepository = new PDOComentarioRepository($this->testDb);
+        $this->notificacionRepository = new PDONotificacionRepository($this->testDb);
         $this->passwordHasher = new BcryptPasswordHasher();
         
         $this->crearUsuariosPrueba();
@@ -69,29 +69,33 @@ class ChatUsuarioIntegrationTest extends TestCase
             $cambiarEstadoHandler->handle(new CambiarEstadoUsuarioCommand($this->usuario2Id, 'Activo'));
         }
     }
+  private function crearUsuariosPrueba(): void
+{
+    $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
     
-    private function crearUsuariosPrueba(): void
-    {
-        $registrarAdminHandler = new RegistrarUsuarioAdminHandler($this->usuarioRepository);
-        
-        // Usuario 1 (Administrador) - creado por admin handler (estado Activo)
-        $command1 = new RegistrarUsuarioAdminCommand(
-            'Usuario', 'Uno', '1111111111', 'usuario1@test.com', null, 'Password123!', 'Administrador', 'Activo'
-        );
-        $usuario1 = $registrarAdminHandler->handle($command1);
-        $this->usuario1Id = $usuario1->getId();
-        
-        // Usuario 2 (Tecnico) - creado por admin handler (estado Activo)
-        $command2 = new RegistrarUsuarioAdminCommand(
-            'Usuario', 'Dos', '2222222222', 'usuario2@test.com', null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
-        );
-        $usuario2 = $registrarAdminHandler->handle($command2);
-        $this->usuario2Id = $usuario2->getId();
-        
-        $this->assertNotNull($this->usuario1Id);
-        $this->assertNotNull($this->usuario2Id);
-    }
+    $timestamp = time();
     
+    // Usuario 1 (Administrador)
+    $command1 = new RegistrarUsuarioAdminCommand(
+        'Usuario', 'Uno', '111111' . $timestamp, 
+        'usuario1_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Administrador', 'Activo'
+    );
+    $usuario1 = $registrarAdminHandler->handle($command1);
+    $this->usuario1Id = $usuario1->getId();
+    
+    // Usuario 2 (Tecnico)
+    $command2 = new RegistrarUsuarioAdminCommand(
+        'Usuario', 'Dos', '222222' . $timestamp, 
+        'usuario2_' . $timestamp . '@test.com', 
+        null, 'Password123!', 'Tecnico', 'Activo', 'Ensamblador'
+    );
+    $usuario2 = $registrarAdminHandler->handle($command2);
+    $this->usuario2Id = $usuario2->getId();
+    
+    $this->assertNotNull($this->usuario1Id);
+    $this->assertNotNull($this->usuario2Id);
+}
     /**
      * @test
      * CPI-003: Comunicación entre usuarios vía comentarios en reporte

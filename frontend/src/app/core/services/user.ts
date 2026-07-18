@@ -60,13 +60,25 @@ registrarActividad(userId: string, descripcion: string): Observable<boolean> {
       map(response => response.success && response['historial'] ? response['historial'] : [])
     );
   }
-
-  getTecnicosByEspecialidad(especialidad: string): Observable<User[]> {
-    return this.apiService.get<{ tecnicos: User[] }>(`/usuario/tecnicos/${especialidad}`).pipe(
-      map(response => response.success && response['tecnicos'] ? response['tecnicos'] : [])
-    );
-  }
-
+// user.ts - Método getTecnicosByEspecialidad
+getTecnicosByEspecialidad(especialidad: string): Observable<User[]> {
+  return this.apiService.get<any>(`/usuario/tecnicos/${especialidad}`).pipe(
+    map(response => {
+      // Usar notación de corchetes para propiedades dinámicas
+      if (!response || !response.success || !response['tecnicos']) return [];
+      return response['tecnicos'].map((t: any) => ({
+        id: t.ID_Usuario || t.id,
+        nombre: t.nombre || '',
+        apellido: t.apellido || '',
+        usuario_asignado: t.usuario_asignado || '',
+        tipo: t.tipo || '',
+        estado: t.estado || '',
+        especialidad: t.especialidad || '',
+        cantidad_actividades: t.cantidad_actividades || 0
+      }));
+    })
+  );
+}
 getUsersByTipo(tipo: string, excluirId?: string): Observable<User[]> {
   return this.apiService.get<{ usuarios: User[] }>('/usuarios/por-tipo', { tipo, excluirId }).pipe(
     map(response => response.success && response['usuarios'] ? response['usuarios'] : [])

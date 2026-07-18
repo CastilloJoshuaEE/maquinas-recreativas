@@ -55,44 +55,56 @@ registrarRecaudacion(data: any): Observable<{ success: boolean; message?: string
  * @param id - ID de la recaudación
  * @returns Observable con la recaudación
  */
-getRecaudacionById(id: string): Observable<Recaudacion | null> {
-    return this.apiService.get<{ recaudacion: any }>(API_ENDPOINTS.RECAUDACION_BY_ID(id)).pipe(
-        map(response => {
-            console.log('Respuesta getRecaudacionById:', response);
-            
-            if (!response || !response.success) {
-                return null;
-            }
-            
-            const data = response['recaudacion'] || response;
-            
-            if (!data) {
-                return null;
-            }
-            
-            // Mapear correctamente las propiedades
-            return {
-                ID_Recaudacion: data.id || data.ID_Recaudacion,
-                ID_Maquina: data.id_maquina || data.ID_Maquina,
-                ID_Comercio: data.id_comercio || data.ID_Comercio,
-                Nombre_Comercio: data.nombre_comercio || data.Nombre_Comercio,
-                Nombre_Maquina: data.nombre_maquina || data.Nombre_Maquina,
-                Tipo_Comercio: data.tipo_comercio || data.Tipo_Comercio,
-                Monto_Total: data.monto_total || data.Monto_Total,
-                Monto_Empresa: data.monto_empresa || data.Monto_Empresa,
-                Monto_Comercio: data.monto_comercio || data.Monto_Comercio,
-                Porcentaje_Comercio: data.porcentaje_comercio || data.Porcentaje_Comercio,
-                fecha: data.fecha,
-                detalle: data.detalle || ''
-            } as Recaudacion;
-        }),
-        catchError(error => {
-            console.error('Error en getRecaudacionById:', error);
-            return of(null);
-        })
-    );
-}
+// contabilidad.service.ts - Modificar getRecaudacionById
 
+getRecaudacionById(id: string): Observable<Recaudacion | null> {
+  return this.apiService.get<{ recaudacion: any }>(API_ENDPOINTS.RECAUDACION_BY_ID(id)).pipe(
+    map(response => {
+      console.log('Respuesta getRecaudacionById:', response);
+      
+      if (!response || !response.success) {
+        return null;
+      }
+      
+      const data = response['recaudacion'] || response;
+      
+      if (!data) {
+        return null;
+      }
+      
+      // Mapear correctamente las propiedades incluyendo los técnicos
+      return {
+        ID_Recaudacion: data.id || data.ID_Recaudacion,
+        ID_Maquina: data.id_maquina || data.ID_Maquina,
+        ID_Comercio: data.id_comercio || data.ID_Comercio,
+        Nombre_Comercio: data.nombre_comercio || data.Nombre_Comercio,
+        Nombre_Maquina: data.nombre_maquina || data.Nombre_Maquina,
+        Tipo_Comercio: data.tipo_comercio || data.Tipo_Comercio,
+        Monto_Total: data.monto_total || data.Monto_Total,
+        Monto_Empresa: data.monto_empresa || data.Monto_Empresa,
+        Monto_Comercio: data.monto_comercio || data.Monto_Comercio,
+        Porcentaje_Comercio: data.porcentaje_comercio || data.Porcentaje_Comercio,
+        fecha: data.fecha,
+        detalle: data.detalle || '',
+        // ← AÑADIR LOS IDs DE TÉCNICOS
+        ID_Tecnico_Ensamblador: data.ID_Tecnico_Ensamblador || data.id_tecnico_ensamblador || null,
+        ID_Tecnico_Comprobador: data.ID_Tecnico_Comprobador || data.id_tecnico_comprobador || null,
+        ID_Tecnico_Mantenimiento: data.ID_Tecnico_Mantenimiento || data.id_tecnico_mantenimiento || null,
+        // También añadir los nombres para depuración
+        nombre_ensamblador: data.nombre_ensamblador || null,
+        nombre_comprobador: data.nombre_comprobador || null,
+        nombre_mantenimiento: data.nombre_mantenimiento || null,
+        apellido_ensamblador: data.apellido_ensamblador || null,
+        apellido_comprobador: data.apellido_comprobador || null,
+        apellido_mantenimiento: data.apellido_mantenimiento || null
+      } as any;
+    }),
+    catchError(error => {
+      console.error('Error en getRecaudacionById:', error);
+      return of(null);
+    })
+  );
+}
   /**
    * Actualiza una recaudación
    * @param data - Datos actualizados
