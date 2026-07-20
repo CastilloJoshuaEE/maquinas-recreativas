@@ -107,4 +107,52 @@ class Response
     {
         return $this->content;
     }
+    /**
+     * Respuesta de error estandarizada para el frontend
+     */
+    public function error(string $message, int $statusCode = 400, ?string $errorCode = null): self
+    {
+        $data = [
+            'success' => false,
+            'message' => $message,
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+
+        if ($errorCode) {
+            $data['error_code'] = $errorCode;
+        }
+
+        // En desarrollo, agregar detalles adicionales
+        if (getenv('APP_ENV') === 'development' && !empty($errorCode)) {
+            $data['debug'] = $this->getErrorDebugInfo($errorCode);
+        }
+
+        return $this->json($data, $statusCode);
+    }   
+    /**
+     * Mapeo de errores a mensajes amigables
+     */
+    private function getErrorDebugInfo(string $errorCode): ?array
+    {
+        $debugInfo = [
+            'USER_NOT_FOUND_BY_EMAIL' => [
+                'technical' => 'Usuario no encontrado con ese email',
+                'suggestion' => 'Verifica que el email esté registrado en el sistema'
+            ],
+            'USER_USERNAME_EXISTS' => [
+                'technical' => 'Nombre de usuario ya está en uso',
+                'suggestion' => 'Prueba con otro nombre de usuario'
+            ],
+            'USER_USERNAME_TOO_SHORT' => [
+                'technical' => 'El nombre de usuario debe tener al menos 3 caracteres',
+                'suggestion' => 'Elige un nombre más largo'
+            ],
+            'USER_INVALID_EMAIL' => [
+                'technical' => 'Formato de email inválido',
+                'suggestion' => 'Ejemplo: usuario@correo.com'
+            ]
+        ];
+
+        return $debugInfo[$errorCode] ?? null;
+    } 
 }
