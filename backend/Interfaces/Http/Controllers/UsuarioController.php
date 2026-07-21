@@ -168,47 +168,77 @@ public function register(Request $request): Response
             new OA\Response(response: 401, description: "Credenciales incorrectas")
         ]
     )]
-public function login(Request $request): Response
-{
-    $data = $request->json();
-    
-    // Log para depuración
-    error_log("Login request data: " . json_encode($data));
-    
-    if (!isset($data['usuario_asignado'])) {
-        error_log("Login error: usuario_asignado no proporcionado");
-        throw new DomainException('Usuario es requerido', 400);
+ public function login(Request $request): Response
+    {
+        try {
+            $data = $request->json();
+            
+            error_log("Login request data: " . json_encode($data));
+            
+            if (!isset($data['usuario_asignado'])) {
+                error_log("Login error: usuario_asignado no proporcionado");
+                throw new DomainException('Usuario es requerido', 400);
+            }
+            
+            if (!isset($data['contrasena'])) {
+                error_log("Login error: contrasena no proporcionada");
+                throw new DomainException('Contraseña es requerida', 400);
+            }
+
+            if (empty(trim($data['usuario_asignado']))) {
+                throw new DomainException('Usuario es requerido', 400);
+            }
+            
+            if (empty(trim($data['contrasena']))) {
+                throw new DomainException('Contraseña es requerida', 400);
+            }
+
+            $ip        = $request->getClientIp();
+            $userAgent = $request->header('USER_AGENT');
+
+            $command = new LoginCommand($data['usuario_asignado'], $data['contrasena'], $ip, $userAgent);
+            $usuario = $this->loginHandler->handle($command);
+
+            session_regenerate_id(true);
+            $_SESSION['ID_Usuario']       = $usuario['id'];
+            $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
+            $_SESSION['rol']              = $usuario['tipo'];
+            
+            error_log("Login exitoso - Usuario: {$usuario['usuario_asignado']}, Rol: {$usuario['tipo']}");
+
+            return (new Response())->json([
+                'success' => true, 
+                'message' => '¡Bienvenido! Inicio de sesión exitoso.', 
+                'usuario' => $usuario
+            ]);
+
+        } catch (DomainException $e) {
+            //  Error de dominio - mensaje amigable
+            error_log("Login DomainException: " . $e->getMessage());
+            $statusCode = $this->getStatusCodeForError($e->getCode() ?: $e->getMessage());
+            
+            //  Mensaje amigable para credenciales
+            $message = $e->getMessage();
+            if (strpos($message, 'Credenciales') !== false || strpos($message, 'inválidas') !== false) {
+                $message = 'Usuario o contraseña incorrectos. Por favor, verifica tus datos.';
+            }
+            
+            return (new Response())->json([
+                'success' => false,
+                'message' => $message,
+                'error_code' => $e->getCode() ?: 'LOGIN_ERROR'
+            ], $statusCode);
+            
+        } catch (\Exception $e) {
+            //  Error inesperado
+            error_log("Login Exception: " . $e->getMessage());
+            return (new Response())->json([
+                'success' => false,
+                'message' => 'Ha ocurrido un error inesperado. Por favor, intenta de nuevo.',
+                'error_code' => 'INTERNAL_ERROR'
+            ], 500);
+        }
     }
-    
-    if (!isset($data['contrasena'])) {
-        error_log("Login error: contrasena no proporcionada");
-        throw new DomainException('Contraseña es requerida', 400);
-    }
-
-    // Si usuario_asignado o contraseña están vacíos
-    if (empty(trim($data['usuario_asignado']))) {
-        throw new DomainException('Usuario es requerido', 400);
-    }
-    
-    if (empty(trim($data['contrasena']))) {
-        throw new DomainException('Contraseña es requerida', 400);
-    }
-
-    $ip        = $request->getClientIp();
-    $userAgent = $request->header('USER_AGENT');
-
-    $command = new LoginCommand($data['usuario_asignado'], $data['contrasena'], $ip, $userAgent);
-    $usuario = $this->loginHandler->handle($command);
-
-    session_regenerate_id(true);
-    $_SESSION['ID_Usuario']       = $usuario['id'];
-    $_SESSION['usuario_asignado'] = $usuario['usuario_asignado'];
-    $_SESSION['rol']              = $usuario['tipo'];
-    
-    error_log("Login exitoso - Usuario: {$usuario['usuario_asignado']}, Rol: {$usuario['tipo']}");
-
-    return (new Response())->json(['success' => true, 'message' => 'Inicio de sesión exitoso', 'usuario' => $usuario]);
-}
 
     #[OA\Post(
         path: "/v1/usuario/logout",
@@ -389,17 +419,53 @@ public function getProfile(Request $request, ?string $id = null): Response
             new OA\Response(response: 400, description: "Datos requeridos faltantes")
         ]
     )]
-    public function resetPassword(Request $request): Response
+   public function resetPassword(Request $request): Response
     {
-        $data = $request->json();
-        if (!isset($data['email'], $data['nueva_contrasena'])) {
-            throw new DomainException('Email y nueva contraseña requeridos', 400);
+        try {
+            $data = $request->json();
+            
+            if (!isset($data['email']) || empty(trim($data['email']))) {
+                return (new Response())->json([
+                    'success' => false,
+                    'message' => 'Por favor, ingresa tu correo electrónico.',
+                    'error_code' => 'MISSING_EMAIL'
+                ], 400);
+            }
+            
+            if (!isset($data['nueva_contrasena']) || empty(trim($data['nueva_contrasena']))) {
+                return (new Response())->json([
+                    'success' => false,
+                    'message' => 'Por favor, ingresa una nueva contraseña.',
+                    'error_code' => 'MISSING_PASSWORD'
+                ], 400);
+            }
+
+            $command = new RecuperarContrasenaCommand($data['email'], $data['nueva_contrasena']);
+            $this->recuperarContrasenaHandler->handle($command);
+
+            return (new Response())->json([
+                'success' => true, 
+                'message' => '¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión con tu nueva contraseña.'
+            ]);
+
+        } catch (DomainException $e) {
+            error_log("resetPassword DomainException: " . $e->getMessage());
+            $statusCode = $this->getStatusCodeForError($e->getCode() ?: $e->getMessage());
+            
+            return (new Response())->json([
+                'success' => false,
+                'message' => $this->getFriendlyMessage($e),
+                'error_code' => $e->getCode() ?: 'DOMAIN_ERROR'
+            ], $statusCode);
+            
+        } catch (\Exception $e) {
+            error_log("resetPassword Exception: " . $e->getMessage());
+            return (new Response())->json([
+                'success' => false,
+                'message' => 'Ha ocurrido un error inesperado. Por favor, intenta de nuevo.',
+                'error_code' => 'INTERNAL_ERROR'
+            ], 500);
         }
-
-        $command = new RecuperarContrasenaCommand($data['email'], $data['nueva_contrasena']);
-        $this->recuperarContrasenaHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Contraseña actualizada']);
     }
 
     #[OA\Post(
@@ -421,17 +487,66 @@ public function getProfile(Request $request, ?string $id = null): Response
             new OA\Response(response: 400, description: "Datos requeridos faltantes")
         ]
     )]
-    public function updateUsername(Request $request): Response
+ public function updateUsername(Request $request): Response
     {
-        $data = $request->json();
-        if (!isset($data['email'], $data['nuevo_usuario'])) {
-            throw new DomainException('Email y nuevo nombre de usuario requeridos', 400);
+        try {
+            $data = $request->json();
+            
+            //  Validación mejorada
+            if (!isset($data['email']) || empty(trim($data['email']))) {
+                return (new Response())->json([
+                    'success' => false,
+                    'message' => 'Por favor, ingresa tu correo electrónico.',
+                    'error_code' => 'MISSING_EMAIL'
+                ], 400);
+            }
+            
+            if (!isset($data['nuevo_usuario']) || empty(trim($data['nuevo_usuario']))) {
+                return (new Response())->json([
+                    'success' => false,
+                    'message' => 'Por favor, ingresa un nuevo nombre de usuario.',
+                    'error_code' => 'MISSING_USERNAME'
+                ], 400);
+            }
+
+            //  Validar formato de email
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                return (new Response())->json([
+                    'success' => false,
+                    'message' => 'El formato del correo electrónico no es válido. Ejemplo: usuario@correo.com',
+                    'error_code' => 'INVALID_EMAIL'
+                ], 400);
+            }
+
+            $command = new ActualizarUsuarioAsignadoCommand($data['email'], $data['nuevo_usuario']);
+            $this->actualizarUsuarioAsignadoHandler->handle($command);
+
+            return (new Response())->json([
+                'success' => true, 
+                'message' => '¡Excelente! Tu nombre de usuario ha sido actualizado correctamente.',
+                'usuario' => $data['nuevo_usuario']
+            ]);
+
+        } catch (DomainException $e) {
+            //  Error de dominio - mensaje amigable
+            error_log("updateUsername DomainException: " . $e->getMessage());
+            $statusCode = $this->getStatusCodeForError($e->getCode() ?: $e->getMessage());
+            
+            return (new Response())->json([
+                'success' => false,
+                'message' => $this->getFriendlyMessage($e),
+                'error_code' => $e->getCode() ?: 'DOMAIN_ERROR'
+            ], $statusCode);
+            
+        } catch (\Exception $e) {
+            //  Error inesperado
+            error_log("updateUsername Exception: " . $e->getMessage());
+            return (new Response())->json([
+                'success' => false,
+                'message' => 'Ha ocurrido un error inesperado. Nuestro equipo ya está trabajando en ello.',
+                'error_code' => 'INTERNAL_ERROR'
+            ], 500);
         }
-
-        $command = new ActualizarUsuarioAsignadoCommand($data['email'], $data['nuevo_usuario']);
-        $this->actualizarUsuarioAsignadoHandler->handle($command);
-
-        return (new Response())->json(['success' => true, 'message' => 'Nombre de usuario actualizado']);
     }
     #[OA\Get(
         path: "/v1/usuario/tecnicos/{especialidad}",
@@ -613,4 +728,87 @@ public function getAdministradores(Request $request): Response
         'administradores' => $usuarios
     ]);
 }
+   /**
+     * Obtiene el código HTTP según el error
+     */
+    private function getStatusCodeForError(string $errorCode): int
+    {
+        $map = [
+            'USER_NOT_FOUND_BY_EMAIL' => 404,
+            'USER_USERNAME_EXISTS' => 409,
+            'USER_USERNAME_TOO_SHORT' => 422,
+            'USER_INVALID_EMAIL' => 400,
+            'INVALID_CREDENTIALS' => 401,
+            'USER_INACTIVE' => 403,
+            'MISSING_EMAIL' => 400,
+            'MISSING_USERNAME' => 400,
+            'MISSING_PASSWORD' => 400,
+            'MISSING_FIELDS' => 400,
+            'LOGIN_ERROR' => 401,
+            'INTERNAL_ERROR' => 500
+        ];
+        
+        return $map[$errorCode] ?? 400;
+    }
+
+    /**
+     * Obtiene mensaje amigable para el usuario
+     */
+    private function getFriendlyMessage(\Exception $e): string
+    {
+        $errorCode = $e->getCode();
+        
+        $messages = [
+            'USER_NOT_FOUND_BY_EMAIL' => 'No encontramos una cuenta con este correo electrónico. Verifica que esté registrado.',
+            'USER_USERNAME_EXISTS' => 'Este nombre de usuario ya está en uso. Por favor, elige otro.',
+            'USER_USERNAME_TOO_SHORT' => 'El nombre de usuario debe tener al menos 3 caracteres.',
+            'USER_INVALID_EMAIL' => 'El formato del correo electrónico no es válido. Ejemplo: usuario@correo.com',
+            'INVALID_CREDENTIALS' => 'Usuario o contraseña incorrectos. Por favor, verifica tus datos.',
+            'USER_INACTIVE' => 'Esta cuenta está desactivada. Contacta al administrador.',
+            'MISSING_EMAIL' => 'Por favor, ingresa tu correo electrónico.',
+            'MISSING_USERNAME' => 'Por favor, ingresa un nombre de usuario.',
+            'MISSING_PASSWORD' => 'Por favor, ingresa una contraseña.',
+            'MISSING_FIELDS' => 'Por favor, completa todos los campos requeridos.'
+        ];
+        
+        // Si el mensaje ya es amigable, usarlo
+        if (isset($messages[$errorCode])) {
+            return $messages[$errorCode];
+        }
+        
+        // Si el mensaje de la excepción no es técnico, usarlo
+        $message = $e->getMessage();
+        if (!$this->isTechnicalMessage($message)) {
+            return $message;
+        }
+        
+        // Mensaje por defecto
+        return 'Ha ocurrido un error. Por favor, intenta de nuevo.';
+    }
+
+    /**
+     * Detecta si un mensaje es técnico
+     */
+    private function isTechnicalMessage(string $message): bool
+    {
+        $patterns = [
+            '/SQLSTATE/',
+            '/PDOException/',
+            '/en D:\\\\/',
+            '/Stack trace/',
+            '/#\d+/',
+            '/\/var\/www/',
+            '/vendor\//',
+            '/No se encontró un usuario/',
+            '/Credenciales inválidas/'
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $message)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
