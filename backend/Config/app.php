@@ -94,10 +94,16 @@ if ($allowedOrigins) {
     $allowedOriginsArray = explode(',', $allowedOrigins);
 } else {
     $allowedOriginsArray = [
-        'http://localhost:4200',
+         'http://localhost:4200',
         'http://localhost:8000',
-        'http://127.0.0.1:4200',
+        'http://localhost:3000',
+            'http://127.0.0.1:4200',
         'http://127.0.0.1:8000',
+        'http://127.0.0.1',
+        'http://localhost',
+        'http://127.0.0.1:8080',
+        'http://localhost:8080',
+        'https://maquinas-recreativas.vercel.app',
         'https://maquinas-recreativas1.onrender.com',
     ];
 }

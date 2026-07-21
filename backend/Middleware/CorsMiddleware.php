@@ -16,7 +16,7 @@ class CorsMiddleware
         'http://localhost',
         'http://127.0.0.1:8080',
         'http://localhost:8080',
-        'https://maquinas-recreativas.vercel.app/',
+        'https://maquinas-recreativas.vercel.app',
         'https://maquinas-recreativas1.onrender.com',
     ];
 
