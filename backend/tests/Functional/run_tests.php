@@ -23,7 +23,7 @@ require_once __DIR__ . '/AdminFlowsTest.php';
 require_once __DIR__ . '/ReporteFlowsTest.php';
 require_once __DIR__ . '/../bootstrap.php'; 
 echo "Verificando servidor backend...\n";
-$ch = curl_init('http://localhost:8000/health');
+$ch = curl_init('http://localhost:8000/api/public/health');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 $body = curl_exec($ch);

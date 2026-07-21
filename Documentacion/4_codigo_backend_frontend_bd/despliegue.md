@@ -155,7 +155,7 @@ docker exec -it maquinas_recreativas_php composer install
 
 ir a (usando postman o el navegador de internet)
 
-http://localhost:8000/health
+http://localhost:8000/api/public/health
 
 {"success":true,"status":"ok","message":"API de Máquinas Recreativas funcionando correctamente","timestamp":"2026-04-29 00:19:25","version":"1.0.0","cache":"redis"}
 

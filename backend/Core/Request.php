@@ -20,6 +20,7 @@ class Request
     private array $files;
     private array $headers;
     private ?array $jsonData = null;
+    private ?string $cachedPath = null;
     
     public function __construct()
     {
@@ -58,8 +59,17 @@ class Request
         return $this->server['REQUEST_URI'] ?? '/';
     }
     
+    /**
+     * Obtiene la ruta de la petición
+     *  CORREGIDO: Ya no elimina el prefijo
+     */
     public function getPath(): string
     {
+        //  Usar cache para no procesar múltiples veces
+        if ($this->cachedPath !== null) {
+            return $this->cachedPath;
+        }
+        
         $uri = $this->getUri();
         $path = parse_url($uri, PHP_URL_PATH);
         
@@ -68,17 +78,10 @@ class Request
         error_log("Original URI: " . $uri);
         error_log("Parsed path: " . $path);
         
-        // Eliminar base path si existe
-        $basePath = '/api/public';
-        if (strpos($path, $basePath) === 0) {
-            $path = substr($path, strlen($basePath));
-            error_log("After removing basePath: " . $path);
-        }
-        
-        // Eliminar /index.php
+        //  Eliminar /index.php si existe
         $path = str_replace('/index.php', '', $path);
         
-        // Normalizar
+        //  Normalizar: eliminar barra final
         $path = rtrim($path, '/');
         
         // Si está vacío, usar /
@@ -87,6 +90,10 @@ class Request
         }
         
         error_log("Final path: " . $path);
+        
+        //  Guardar en cache
+        $this->cachedPath = $path;
+        
         return $path;
     }
     

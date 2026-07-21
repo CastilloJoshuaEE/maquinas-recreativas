@@ -36,7 +36,7 @@ echo "ENTORNO: " . APP_ENV . "\n";
 echo "BASE DE DATOS: " . getenv('DB_NAME') . "\n\n";
 // Verificar que el backend está corriendo
 echo "Verificando servidor backend...\n";
-$ch = curl_init('http://localhost:8000/health');
+$ch = curl_init('http://localhost:8000/api/public/health');
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 $response = curl_exec($ch);

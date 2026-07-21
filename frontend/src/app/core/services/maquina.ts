@@ -18,7 +18,7 @@ export interface HistorialEvento {
   accion: string;
   descripcion: string;
   estado_anterior: string;
-  estado_nuevo: string;
+  estado_ string;
   etapa_anterior: string;
   etapa_nueva: string;
   fecha_hora: string;

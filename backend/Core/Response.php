@@ -17,6 +17,11 @@ class Response
     private int $statusCode = 200;
     private bool $sent = false;
     
+    public function isSent(): bool
+    {
+        return $this->sent;
+    }
+    
     public function header(string $name, string $value): self
     {
         $this->headers[$name] = $value;
@@ -56,6 +61,10 @@ class Response
         $this->status($statusCode);
         $this->header('Content-Type', 'application/json; charset=utf-8');
         
+        if (is_array($data) && !isset($data['success'])) {
+            $data['success'] = $statusCode >= 200 && $statusCode < 300;
+        }
+        
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
             error_log("JSON encode error: " . json_last_error_msg());
@@ -76,83 +85,35 @@ class Response
         }
         $this->sent = true;
 
-        // Limpiar cualquier salida previa
-        if (ob_get_level() > 0) {
-            ob_clean();
+        // ✅ Limpiar buffers de salida
+        while (ob_get_level() > 0) {
+            ob_end_clean();
         }
 
-        // Aplicar código de estado
+        // ✅ Aplicar código de estado
         http_response_code($this->statusCode);
 
-        // Enviar headers
+        // ✅ Enviar headers
         foreach ($this->headers as $name => $value) {
             if (!headers_sent()) {
                 header("{$name}: {$value}");
             }
         }
 
-        // Enviar contenido
+        // ✅ Enviar contenido
         if ($this->content !== null) {
             echo $this->content;
         }
-
-        // Finalizar el buffer
-        if (ob_get_level() > 0) {
-            ob_end_flush();
-        }
-        exit;
+        
+        // ✅ Forzar flush
+        flush();
+        
+        // ✅ No llamar a exit() aquí para permitir que el controlador continúe
+        // exit;
     }
     
     public function getContent(): mixed
     {
         return $this->content;
     }
-    /**
-     * Respuesta de error estandarizada para el frontend
-     */
-    public function error(string $message, int $statusCode = 400, ?string $errorCode = null): self
-    {
-        $data = [
-            'success' => false,
-            'message' => $message,
-            'timestamp' => date('Y-m-d H:i:s')
-        ];
-
-        if ($errorCode) {
-            $data['error_code'] = $errorCode;
-        }
-
-        // En desarrollo, agregar detalles adicionales
-        if (getenv('APP_ENV') === 'development' && !empty($errorCode)) {
-            $data['debug'] = $this->getErrorDebugInfo($errorCode);
-        }
-
-        return $this->json($data, $statusCode);
-    }   
-    /**
-     * Mapeo de errores a mensajes amigables
-     */
-    private function getErrorDebugInfo(string $errorCode): ?array
-    {
-        $debugInfo = [
-            'USER_NOT_FOUND_BY_EMAIL' => [
-                'technical' => 'Usuario no encontrado con ese email',
-                'suggestion' => 'Verifica que el email esté registrado en el sistema'
-            ],
-            'USER_USERNAME_EXISTS' => [
-                'technical' => 'Nombre de usuario ya está en uso',
-                'suggestion' => 'Prueba con otro nombre de usuario'
-            ],
-            'USER_USERNAME_TOO_SHORT' => [
-                'technical' => 'El nombre de usuario debe tener al menos 3 caracteres',
-                'suggestion' => 'Elige un nombre más largo'
-            ],
-            'USER_INVALID_EMAIL' => [
-                'technical' => 'Formato de email inválido',
-                'suggestion' => 'Ejemplo: usuario@correo.com'
-            ]
-        ];
-
-        return $debugInfo[$errorCode] ?? null;
-    } 
 }

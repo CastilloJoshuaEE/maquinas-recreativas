@@ -10,7 +10,7 @@ export interface HistorialMaquina {
   accion: string;
   descripcion: string;
   estado_anterior: string | null;
-  estado_nuevo: string | null;
+  estado_ string | null;
   etapa_anterior: string | null;
   etapa_nueva: string | null;
   ip_address: string | null;

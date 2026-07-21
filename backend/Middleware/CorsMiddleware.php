@@ -6,45 +6,28 @@ use maquinas_recreativas\Core\Response;
 
 class CorsMiddleware
 {
-    private array $allowedOrigins = [
-        'http://localhost:4200',
-        'http://localhost:8000',
-        'http://localhost:3000',
-            'http://127.0.0.1:4200',
-        'http://127.0.0.1:8000',
-        'http://127.0.0.1',
-        'http://localhost',
-        'http://127.0.0.1:8080',
-        'http://localhost:8080',
-        'https://maquinas-recreativas.vercel.app',
-        'https://maquinas-recreativas1.onrender.com',
-    ];
+    /**
+     * Usa CORS_ALLOWED_ORIGINS definida en backend/bootstrap/cors.php.
+     * No define su propia lista de origenes.
+     */
+    public function handle(Request $request, callable $next): ?Response
+    {
+        $origin = $request->header('ORIGIN', '');
+        $allowedOrigins = defined('CORS_ALLOWED_ORIGINS') ? CORS_ALLOWED_ORIGINS : [];
 
-    private array $publicEndpoints = [
-        '/health',
-        '/test-db'
-    ];
+        if (in_array($origin, $allowedOrigins, true) || !$origin) {
+            header("Access-Control-Allow-Origin: " . ($origin ?: 'http://localhost:4200'));
+        }
 
-public function handle(Request $request, callable $next): ?Response
-{
-    $origin = $request->header('ORIGIN', '');
-    
-    // Permitir origen
-    if (in_array($origin, $this->allowedOrigins, true) || !$origin) {
-        header("Access-Control-Allow-Origin: " . ($origin ?: 'http://localhost:4200'));
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+
+        if ($request->getMethod() === 'OPTIONS') {
+            (new Response())->status(204)->send();
+            return null;
+        }
+
+        return $next($request);
     }
-    
-    // Permitir credenciales para cookies de sesión
-    header("Access-Control-Allow-Credentials: true");
-    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-    
-    // Manejar preflight
-    if ($request->getMethod() === 'OPTIONS') {
-        (new Response())->status(204)->send();
-        return null;
-    }
-    
-    return $next($request);
-}
 }

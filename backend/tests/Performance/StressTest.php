@@ -28,6 +28,10 @@ class StressTest extends HttpStressTestCase {
     private $carcasaId;
     private $maquinaData;
     
+    // Almacenar sesiones por tipo de usuario
+    private $userSessions = [];
+    private $sessionCookieFile;
+    
     private $loadPhases = [
         ['users' => 5,  'duration' => 15, 'description' => 'Carga muy ligera'],
         ['users' => 10, 'duration' => 15, 'description' => 'Carga ligera'],
@@ -90,6 +94,9 @@ class StressTest extends HttpStressTestCase {
             'contrasena' => 'Password123!',
             'tipo' => 'Contabilidad'
         ];
+        
+        // Crear archivo de sesión compartido
+        $this->sessionCookieFile = sys_get_temp_dir() . '/stress_session_' . uniqid() . '.txt';
     }
     
     public function init() {
@@ -118,6 +125,12 @@ class StressTest extends HttpStressTestCase {
             return;
         }
         
+        // Autenticar todos los tipos de usuario para tener sesiones activas
+        if (!$this->autenticarTodosLosUsuarios()) {
+            echo "Error crítico: No se pudieron autenticar los usuarios. Abortando.\n";
+            return;
+        }
+        
         echo "\nSETUP COMPLETADO. Iniciando fases de carga...\n";
         
         foreach ($this->loadPhases as $index => $phase) {
@@ -127,6 +140,71 @@ class StressTest extends HttpStressTestCase {
         }
         
         $this->mostrarResumen();
+    }
+    
+    /**
+     * Autentica todos los tipos de usuario y guarda sus sesiones
+     */
+    private function autenticarTodosLosUsuarios(): bool {
+        echo "PASO 4: Autenticando usuarios para pruebas...\n";
+        echo str_repeat("-", 40) . "\n";
+        
+        $users = [
+            'ensamblador' => [
+                'usuario' => $this->ensambladorUsuarioAsignado,
+                'password' => $this->ensambladorUser['contrasena']
+            ],
+            'comprobador' => [
+                'usuario' => $this->comprobadorUsuarioAsignado,
+                'password' => $this->comprobadorUser['contrasena']
+            ],
+            'mantenimiento' => [
+                'usuario' => $this->mantenimientoUsuarioAsignado,
+                'password' => $this->mantenimientoUser['contrasena']
+            ],
+            'logistica' => [
+                'usuario' => $this->logisticaUsuarioAsignado,
+                'password' => $this->logisticaUser['contrasena']
+            ],
+            'contabilidad' => [
+                'usuario' => $this->contabilidadUsuarioAsignado,
+                'password' => $this->contabilidadUser['contrasena']
+            ]
+        ];
+        
+        foreach ($users as $type => $credentials) {
+            echo "   Autenticando {$type}...\n";
+            
+            // Usar un cliente separado para cada tipo de usuario
+            $sessionFile = sys_get_temp_dir() . '/stress_session_' . $type . '_' . uniqid() . '.txt';
+            
+            $ch = curl_init('http://localhost:8000/api/public/usuario/login');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $sessionFile);
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $sessionFile);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'usuario_asignado' => $credentials['usuario'],
+                'contrasena' => $credentials['password']
+            ]));
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode === 200) {
+                $this->userSessions[$type] = $sessionFile;
+                echo "      ✓ {$type} autenticado correctamente\n";
+            } else {
+                echo "      ✗ Error autenticando {$type} (HTTP {$httpCode})\n";
+                return false;
+            }
+        }
+        
+        echo "   ✓ Todos los usuarios autenticados\n\n";
+        return true;
     }
     
     private function loginDefaultAdmin(): bool {
@@ -153,9 +231,6 @@ class StressTest extends HttpStressTestCase {
         return null;
     }
     
-    /**
-     * Obtener un usuario completo por su ID (incluyendo usuario_asignado)
-     */
     private function obtenerUsuarioPorId(string $userId): ?array {
         $response = $this->request('GET', '/administrador/usuarios');
         if (!$this->assertResponseSuccess('Error obtener usuarios')) {
@@ -175,7 +250,6 @@ class StressTest extends HttpStressTestCase {
         echo "\nPASO 2: Creando usuarios de prueba...\n";
         echo str_repeat("-", 40) . "\n";
         
-        // Crear Ensamblador
         echo "   2.1 Creando técnico ensamblador...\n";
         $respEns = $this->crearUsuarioAdmin($this->ensambladorUser);
         if (!$respEns) return false;
@@ -183,7 +257,6 @@ class StressTest extends HttpStressTestCase {
         echo "       Ensamblador ID: {$this->ensambladorId}\n";
         sleep(1);
         
-        // Crear Comprobador
         echo "   2.2 Creando técnico comprobador...\n";
         $respComp = $this->crearUsuarioAdmin($this->comprobadorUser);
         if (!$respComp) return false;
@@ -191,7 +264,6 @@ class StressTest extends HttpStressTestCase {
         echo "       Comprobador ID: {$this->comprobadorId}\n";
         sleep(1);
         
-        // Crear Mantenimiento
         echo "   2.3 Creando técnico mantenimiento...\n";
         $respMant = $this->crearUsuarioAdmin($this->mantenimientoUser);
         if (!$respMant) return false;
@@ -199,7 +271,6 @@ class StressTest extends HttpStressTestCase {
         echo "       Mantenimiento ID: {$this->mantenimientoId}\n";
         sleep(1);
         
-        // Crear Logística
         echo "   2.4 Creando usuario logística...\n";
         $respLog = $this->crearUsuarioAdmin($this->logisticaUser);
         if (!$respLog) return false;
@@ -207,7 +278,6 @@ class StressTest extends HttpStressTestCase {
         echo "       Logística ID: {$this->logisticaId}\n";
         sleep(1);
         
-        // Crear Contabilidad
         echo "   2.5 Creando usuario contabilidad...\n";
         $respCont = $this->crearUsuarioAdmin($this->contabilidadUser);
         if (!$respCont) return false;
@@ -215,7 +285,6 @@ class StressTest extends HttpStressTestCase {
         echo "       Contabilidad ID: {$this->contabilidadId}\n";
         sleep(1);
         
-        // Obtener usuario_asignado de cada usuario (consultando la lista)
         echo "\n   Obteniendo datos de usuarios...\n";
         
         $ensUsuario = $this->obtenerUsuarioPorId($this->ensambladorId);
@@ -224,12 +293,20 @@ class StressTest extends HttpStressTestCase {
         $compUsuario = $this->obtenerUsuarioPorId($this->comprobadorId);
         $this->comprobadorUsuarioAsignado = $compUsuario['usuario_asignado'] ?? null;
         
+        $mantUsuario = $this->obtenerUsuarioPorId($this->mantenimientoId);
+        $this->mantenimientoUsuarioAsignado = $mantUsuario['usuario_asignado'] ?? null;
+        
         $logUsuario = $this->obtenerUsuarioPorId($this->logisticaId);
         $this->logisticaUsuarioAsignado = $logUsuario['usuario_asignado'] ?? null;
         
+        $contUsuario = $this->obtenerUsuarioPorId($this->contabilidadId);
+        $this->contabilidadUsuarioAsignado = $contUsuario['usuario_asignado'] ?? null;
+        
         echo "      Ensamblador usuario: {$this->ensambladorUsuarioAsignado}\n";
         echo "      Comprobador usuario: {$this->comprobadorUsuarioAsignado}\n";
+        echo "      Mantenimiento usuario: {$this->mantenimientoUsuarioAsignado}\n";
         echo "      Logística usuario: {$this->logisticaUsuarioAsignado}\n";
+        echo "      Contabilidad usuario: {$this->contabilidadUsuarioAsignado}\n";
         
         echo "\n   ✓ Todos los usuarios creados exitosamente\n\n";
         return true;
@@ -242,7 +319,6 @@ class StressTest extends HttpStressTestCase {
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        // 3.1 Login como logística
         echo "   3.1 Iniciando sesión como logística...\n";
         $loginResp = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->logisticaUsuarioAsignado,
@@ -254,7 +330,6 @@ class StressTest extends HttpStressTestCase {
         }
         echo "       Login exitoso\n";
         
-        // 3.2 Crear comercio
         echo "   3.2 Creando comercio...\n";
         $comercioData = [
             'nombre' => 'Comercio Stress ' . time(),
@@ -269,11 +344,9 @@ class StressTest extends HttpStressTestCase {
         $this->comercioId = $comercioResp['idComercio'] ?? null;
         echo "       Comercio ID: {$this->comercioId}\n";
         
-        // 3.3 Logout
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        // 3.4 Login como ensamblador
         echo "   3.4 Iniciando sesión como ensamblador...\n";
         $loginResp = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->ensambladorUsuarioAsignado,
@@ -284,7 +357,6 @@ class StressTest extends HttpStressTestCase {
         }
         echo "       Login exitoso\n";
         
-        // 3.5 Generar placa
         echo "   3.5 Generando placa...\n";
         $placaResp = $this->request('POST', '/maquina/generar-placa', []);
         if (!$this->assertResponseSuccess('Error al generar placa')) {
@@ -293,7 +365,6 @@ class StressTest extends HttpStressTestCase {
         $this->placaId = $placaResp['idComponente'] ?? null;
         echo "       Placa ID: {$this->placaId}\n";
         
-        // 3.6 Generar carcasa
         echo "   3.6 Generando carcasa...\n";
         $carcasaResp = $this->request('POST', '/maquina/generar-placa', []);
         if (!$this->assertResponseSuccess('Error al generar carcasa')) {
@@ -302,11 +373,9 @@ class StressTest extends HttpStressTestCase {
         $this->carcasaId = $carcasaResp['idComponente'] ?? null;
         echo "       Carcasa ID: {$this->carcasaId}\n";
         
-        // 3.7 Logout
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
-        // 3.8 Login como logística nuevamente
         echo "   3.8 Iniciando sesión como logística...\n";
         $loginResp = $this->request('POST', '/usuario/login', [
             'usuario_asignado' => $this->logisticaUsuarioAsignado,
@@ -317,7 +386,6 @@ class StressTest extends HttpStressTestCase {
         }
         echo "       Login exitoso\n";
         
-        // 3.9 Registrar máquina
         echo "   3.9 Registrando máquina...\n";
         $maquinaData = [
             'nombre' => 'Máquina Stress ' . time(),
@@ -342,7 +410,6 @@ class StressTest extends HttpStressTestCase {
         $this->maquinaId = $maquinaResp['idMaquina'] ?? null;
         echo "       Máquina registrada: {$this->maquinaData['nombre']} (ID: {$this->maquinaId})\n";
         
-        // 3.10 Logout
         $this->request('POST', '/usuario/logout', []);
         $this->clearCookies();
         
@@ -375,7 +442,7 @@ class StressTest extends HttpStressTestCase {
             $userType = $userTypes[array_rand($userTypes)];
             
             $requestStart = microtime(true);
-            $success = $this->ejecutarRequestSimulado($userType);
+            $success = $this->ejecutarRequestConSesion($userType);
             $requestTime = (microtime(true) - $requestStart) * 1000;
             
             $requests++;
@@ -422,7 +489,10 @@ class StressTest extends HttpStressTestCase {
         return true;
     }
     
-    private function ejecutarRequestSimulado($userType) {
+    /**
+     * Ejecuta una request usando la sesión del tipo de usuario especificado
+     */
+    private function ejecutarRequestConSesion($userType) {
         $publicEndpoints = ['/health', '/test-db'];
         
         $endpoints = [
@@ -436,17 +506,56 @@ class StressTest extends HttpStressTestCase {
         $rand = mt_rand(1, 100);
         if ($rand <= 30) {
             $endpoint = $publicEndpoints[array_rand($publicEndpoints)];
+            // Para endpoints públicos no necesitamos sesión
+            return $this->ejecutarRequestPublica($endpoint);
         } else {
             $userEndpoints = $endpoints[$userType] ?? $publicEndpoints;
             $endpoint = $userEndpoints[array_rand($userEndpoints)];
+            return $this->ejecutarRequestConSesionEspecifica($userType, $endpoint);
         }
+    }
+    
+    /**
+     * Ejecuta una request pública (sin autenticación)
+     */
+    private function ejecutarRequestPublica($endpoint) {
+        $ch = curl_init('http://localhost:8000/api/public' . $endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_HEADER, true);
         
-        try {
-            $this->request('GET', $endpoint, []);
-            return $this->lastHttpCode < 400;
-        } catch (Exception $e) {
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        $this->lastHttpCode = $httpCode;
+        return $httpCode < 400;
+    }
+    
+    /**
+     * Ejecuta una request usando la sesión guardada de un tipo de usuario
+     */
+    private function ejecutarRequestConSesionEspecifica($userType, $endpoint) {
+        if (!isset($this->userSessions[$userType])) {
             return false;
         }
+        
+        $sessionFile = $this->userSessions[$userType];
+        
+        $ch = curl_init('http://localhost:8000/api/public' . $endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $sessionFile);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        $this->lastHttpCode = $httpCode;
+        return $httpCode < 400;
     }
     
     private function mostrarResumen() {
@@ -473,6 +582,18 @@ class StressTest extends HttpStressTestCase {
         }
         
         $this->guardarResultados();
+        $this->limpiarSesiones();
+    }
+    
+    private function limpiarSesiones() {
+        foreach ($this->userSessions as $sessionFile) {
+            if (file_exists($sessionFile)) {
+                @unlink($sessionFile);
+            }
+        }
+        if (file_exists($this->sessionCookieFile)) {
+            @unlink($this->sessionCookieFile);
+        }
     }
     
     private function guardarResultados() {
@@ -490,5 +611,10 @@ class StressTest extends HttpStressTestCase {
             if ($result['error_rate'] >= 10 || $result['p95'] > 3000) return $result['users'];
         }
         return null;
+    }
+    
+    public function __destruct() {
+        $this->limpiarSesiones();
+        parent::__destruct();
     }
 }

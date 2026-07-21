@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../Config/constants.php';
 require_once __DIR__ . '/../../Infrastructure/Security/CifradoHelper.php';
 
 abstract class HttpTestCase {
-    protected $baseUrl = 'http://localhost:8000';
+    protected $baseUrl = 'http://localhost:8000/api/public';
     protected $cookies = [];
     protected $lastResponse;
     protected $lastHttpCode;

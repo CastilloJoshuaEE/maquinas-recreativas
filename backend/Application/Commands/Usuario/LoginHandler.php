@@ -80,7 +80,7 @@ class LoginHandler implements CommandHandler
         
         //  MANTIENE la estructura original + AÑADE success y message
         return [
-            // 🔥 NUEVO: Para compatibilidad con frontend
+            // 🔥  Para compatibilidad con frontend
             'success' => true,
             'message' => '¡Bienvenido! Inicio de sesión exitoso.',
             

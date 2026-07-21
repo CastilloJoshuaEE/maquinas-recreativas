@@ -42,7 +42,9 @@ define('SECRET_KEY', 'clave_super_segura_cambiar_en_produccion_2024');
  * IV para encriptación (16 bytes)
  */
 define('SECRET_IV', 'vector_inicial_16_abcdefghijk');
-
+if (!defined('API_BASE_PATH')) {
+    define('API_BASE_PATH', '/api/public');
+}
 // =============================================
 // CONFIGURACIÓN DE SESIÓN
 // =============================================
