@@ -16,57 +16,48 @@ class HealthController
     public function __construct(?CacheInterface $cache = null)
     {
         $this->cache = $cache ?? CacheFactory::create();
-       
     }
 
     public function check(): Response
-    {
-        $this->incrementMetric('health_check');
-        
-        return (new Response())->json([
-            'success'   => true,
-            'status'    => 'ok',
-            'message'   => 'API de Máquinas Recreativas funcionando correctamente',
-            'timestamp' => date('Y-m-d H:i:s'),
-            'version'   => '1.0.0',
-            'cache'     => $this->cache->isAvailable() ? 'redis' : 'disabled',
-        ]);
-    }
+{
+    $this->incrementMetric('health_check');
 
-    public function testDb(): Response
-    {
-        $this->incrementMetric('db_check');
-        $startTime = microtime(true);
+    return (new Response())->json([
+        'success'   => true,
+        'status'    => 'ok',
+        'message'   => 'API de Máquinas Recreativas funcionando correctamente',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'version'   => '1.0.0',
+        'cache'     => $this->cache->isAvailable() ? 'redis' : 'disabled',
+    ]);
+}
 
-        try {
-            $db     = new \maquinas_recreativas\Infrastructure\Database\Database();
-            $conn   = $db->getConnection();
-            $result = $conn->query("SELECT 1 as test");
+public function testDb(): Response
+{
+    $this->incrementMetric('db_check');
+    $startTime = microtime(true);
 
-            $duration = (microtime(true) - $startTime) * 1000;
-            $this->recordDuration('db_check', $duration);
+    try {
+        $db     = new \maquinas_recreativas\Infrastructure\Database\Database();
+        $conn   = $db->getConnection();
+        $result = $conn->query("SELECT 1 as test");
+        $duration = (microtime(true) - $startTime) * 1000;
+        $this->recordDuration('db_check', $duration);
 
-            if ($result) {
-                return (new Response())->json([
-                    'success'  => true,
-                    'message'  => 'Conexión a base de datos exitosa',
-                    'database' => DB_NAME ?? 'unknown',
-                    'duration_ms' => round($duration, 2),
-                ]);
-            }
-
+        if ($result) {
             return (new Response())->json([
-                'success' => false,
-                'message' => 'Error en la consulta de prueba',
-            ], 500);
-        } catch (\Exception $e) {
-            return (new Response())->json([
-                'success' => false,
-                'message' => 'Error de conexión: ' . $e->getMessage(),
-            ], 500);
+                'success'     => true,
+                'message'     => 'Conexión a base de datos exitosa',
+                'database'    => DB_NAME ?? 'unknown',
+                'duration_ms' => round($duration, 2),
+            ]);
         }
-    }
 
+        return (new Response())->json(['success' => false, 'message' => 'Error en la consulta de prueba'], 500);
+    } catch (\Exception $e) {
+        return (new Response())->json(['success' => false, 'message' => 'Error de conexión: ' . $e->getMessage()], 500);
+    }
+}
     private function incrementMetric(string $endpoint): void
     {
         if (!isset(self::$metrics['http_requests_total'][$endpoint])) {

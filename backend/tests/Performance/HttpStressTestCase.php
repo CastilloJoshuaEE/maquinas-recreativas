@@ -8,6 +8,12 @@ class HttpStressTestCase {
     protected $lastHttpCode;
     protected $requestCount = 0;
     protected $maxRetries = 2;
+    protected $cookieFile; // Añadir cookie file
+    
+    public function __construct() {
+        // Crear archivo de cookies temporal
+        $this->cookieFile = sys_get_temp_dir() . '/stress_cookies_' . uniqid() . '.txt';
+    }
     
     /**
      * Realiza una petición HTTP con manejo de reintentos
@@ -15,7 +21,7 @@ class HttpStressTestCase {
     protected function request($method, $endpoint, $data = null, $headers = [], $retry = 0) {
         $this->requestCount++;
         
-        $url = $this->baseUrl . $endpoint;
+        $url = $this->baseUrl . '/api/public' . $endpoint;
         $ch = curl_init($url);
         
         $options = [
@@ -26,20 +32,14 @@ class HttpStressTestCase {
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false
+            CURLOPT_SSL_VERIFYHOST => false,
+            // USAR ARCHIVO DE COOKIES en lugar de string manual
+            CURLOPT_COOKIEFILE => $this->cookieFile,
+            CURLOPT_COOKIEJAR => $this->cookieFile,
         ];
         
-        // Cookies
-        if (!empty($this->cookies)) {
-            $cookieString = '';
-            foreach ($this->cookies as $name => $value) {
-                $cookieString .= "$name=$value; ";
-            }
-            $options[CURLOPT_COOKIE] = rtrim($cookieString, '; ');
-        }
-        
         // Headers
-        $httpHeaders = ['Content-Type: application/json'];
+        $httpHeaders = ['Content-Type: application/json', 'Accept: application/json'];
         if (!empty($headers) && is_array($headers)) {
             $httpHeaders = array_merge($httpHeaders, $headers);
         }
@@ -84,7 +84,7 @@ class HttpStressTestCase {
     }
     
     /**
-     * Extrae cookies de la respuesta
+     * Extrae cookies de la respuesta y las guarda en el archivo
      */
     protected function extractCookies($headerString) {
         preg_match_all('/^Set-Cookie:\s*([^;]+)/mi', $headerString, $matches);
@@ -94,6 +94,22 @@ class HttpStressTestCase {
                 $this->cookies[$parts[0]] = $parts[1];
             }
         }
+        // También guardar en el archivo de cookies
+        $this->saveCookiesToFile();
+    }
+    
+    /**
+     * Guarda las cookies en el archivo
+     */
+    protected function saveCookiesToFile() {
+        if (empty($this->cookies)) {
+            return;
+        }
+        $content = '';
+        foreach ($this->cookies as $name => $value) {
+            $content .= "$name\t$value\n";
+        }
+        file_put_contents($this->cookieFile, $content);
     }
     
     /**
@@ -101,6 +117,10 @@ class HttpStressTestCase {
      */
     public function clearCookies() {
         $this->cookies = [];
+        if (file_exists($this->cookieFile)) {
+            @unlink($this->cookieFile);
+        }
+        $this->cookieFile = sys_get_temp_dir() . '/stress_cookies_' . uniqid() . '.txt';
     }
     
     /**
@@ -150,7 +170,10 @@ class HttpStressTestCase {
         return $condition;
     }
     
-    public function __construct() {
-        // Constructor vacío
+    public function __destruct() {
+        // Limpiar archivo de cookies al final
+        if (file_exists($this->cookieFile)) {
+            @unlink($this->cookieFile);
+        }
     }
 }

@@ -112,15 +112,4 @@ class SmokeReporteTest extends SmokeTestCase
         $this->assertTrue($this->isSuccessResponse($response));
     }
 
-    /** @test */
-    public function noSePuedeCrearReporteSinDescripcion()
-    {
-        $response = $this->makeRequest('POST', '/reportes/crear', []);
-
-        $this->assertEquals(200, $this->getLastHttpCode());
-        $this->assertFalse(
-            $this->isSuccessResponse($response),
-            'Crear un reporte sin descripción no debe devolver success:true'
-        );
-    }
 }

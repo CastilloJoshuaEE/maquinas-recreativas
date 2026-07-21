@@ -89,24 +89,7 @@ define('API_BASE_PATH', EnvManager::get('API_BASE_PATH', '/api/public'));
 // CONFIGURACIÓN DE CORS (sobrescribe si es necesario)
 // =============================================
 
-$allowedOrigins = EnvManager::get('CORS_ALLOWED_ORIGINS', '');
-if ($allowedOrigins) {
-    $allowedOriginsArray = explode(',', $allowedOrigins);
-} else {
-    $allowedOriginsArray = [
-         'http://localhost:4200',
-        'http://localhost:8000',
-        'http://localhost:3000',
-            'http://127.0.0.1:4200',
-        'http://127.0.0.1:8000',
-        'http://127.0.0.1',
-        'http://localhost',
-        'http://127.0.0.1:8080',
-        'http://localhost:8080',
-        'https://maquinas-recreativas.vercel.app',
-        'https://maquinas-recreativas1.onrender.com',
-    ];
-}
+require_once __DIR__ . '/../bootstrap/cors.php';
 
 define('CORS_ALLOWED_ORIGINS', $allowedOriginsArray);
 define('CORS_ALLOWED_METHODS', EnvManager::get('CORS_ALLOWED_METHODS', 'GET, POST, PUT, PATCH, DELETE, OPTIONS'));

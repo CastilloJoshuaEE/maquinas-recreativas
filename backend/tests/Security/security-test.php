@@ -34,7 +34,7 @@ use maquinas_recreativas\Infrastructure\Database\Database;
 use maquinas_recreativas\Infrastructure\Security\CifradoHelper;
 
 class APISecurityTest {
-    private $baseUrl = 'http://localhost:8000';
+    private $baseUrl = 'http://localhost:8000/api/public';
     private $testResults = [];
     private $db;
     private $lastHttpCode;
@@ -390,9 +390,9 @@ class APISecurityTest {
         $this->log("\n TEST: Endpoints Públicos", 'TEST');
         
         $publicEndpoints = [
-            '/health',
-            '/usuario/login',
-            '/usuario/register'
+            '/api/public/health',
+            '/api/public/usuario/login',
+            '/api/public/usuario/register'
         ];
         
         foreach ($publicEndpoints as $endpoint) {
@@ -445,7 +445,7 @@ class APISecurityTest {
      * Realizar petición HTTP
      */
     private function makeRequest($method, $endpoint, $data = null) {
-        $url = $this->baseUrl . $endpoint;
+        $url = $this->baseUrl . '/api/public' . $endpoint;
         $ch = curl_init($url);
         
         $options = [

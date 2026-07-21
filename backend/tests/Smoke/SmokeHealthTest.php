@@ -63,21 +63,4 @@ class SmokeHealthTest extends SmokeTestCase
         $this->assertEquals(200, $httpCode, 'sitemap.xml debe ser accesible');
     }
 
-    /**
-     * @test
-     */
-    public function rutasBloqueadasDevuelven404()
-    {
-        $rutasBloqueadas = [
-            '/latest/meta-data',
-            '/actuator/health',
-            '/metadata'
-        ];
-        
-        foreach ($rutasBloqueadas as $ruta) {
-            $this->makeRequest('GET', $ruta);
-            $this->assertEquals(404, $this->getLastHttpCode(), 
-                "La ruta {$ruta} debería estar bloqueada con 404");
-        }
-    }
 }

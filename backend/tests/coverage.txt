@@ -1,20 +1,18 @@
 
 
 [1;37;40mCode Coverage Report:       [0m
-[1;37;40m  2026-07-20 18:34:09       [0m
+[1;37;40m  2026-07-20 21:15:08       [0m
 [1;37;40m                            [0m
 [1;37;40m Summary:                   [0m
-[37;41m  Classes:  4.55% (1/22)    [0m
-[37;41m  Methods: 10.24% (17/166)  [0m
-[37;41m  Lines:   12.07% (217/1798)[0m
+[37;41m  Classes:  9.09% (2/22)    [0m
+[37;41m  Methods: 10.37% (17/164)  [0m
+[37;41m  Lines:   21.74% (389/1789)[0m
 
-SmokeAuthTest
-  [30;43mMethods:  66.67% ( 2/ 3)[0m   [30;42mLines:  94.03% ( 63/ 67)[0m
-SmokeComercioTest
-  [37;41mMethods:   0.00% ( 0/ 2)[0m   [30;43mLines:  80.95% ( 17/ 21)[0m
-SmokeHealthTest
-  [30;42mMethods: 100.00% ( 5/ 5)[0m   [30;42mLines: 100.00% ( 35/ 35)[0m
-SmokeTestCase
-  [37;41mMethods:  50.00% ( 7/14)[0m   [30;43mLines:  62.12% ( 82/132)[0m
-SmokeUsuarioTest
-  [30;43mMethods:  75.00% ( 3/ 4)[0m   [30;42mLines:  95.24% ( 20/ 21)[0m
+maquinas_recreativas\Tests\Integration\ChatUsuarioIntegrationTest
+  [30;42mMethods: 100.00% ( 4/ 4)[0m   [30;42mLines: 100.00% ( 77/ 77)[0m
+maquinas_recreativas\Tests\Integration\FlujoCompletoTest
+  [30;43mMethods:  80.00% ( 4/ 5)[0m   [30;43mLines:  88.10% (148/168)[0m
+maquinas_recreativas\Tests\Integration\NotificacionIntegrationTest
+  [30;42mMethods: 100.00% ( 6/ 6)[0m   [30;42mLines: 100.00% ( 96/ 96)[0m
+maquinas_recreativas\Tests\Integration\ReporteComentarioIntegrationTest
+  [30;43mMethods:  75.00% ( 3/ 4)[0m   [30;42mLines:  97.14% ( 68/ 70)[0m

@@ -28,7 +28,7 @@ class SmokeTestCase extends TestCase
 
     protected static function resetServerRateLimits(): void
     {
-        $ch = curl_init('http://localhost:8000/reset-rate-limits');
+        $ch = curl_init('http://localhost:8000/api/public/reset-rate-limits');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_exec($ch);
@@ -56,7 +56,7 @@ class SmokeTestCase extends TestCase
 
     protected function isServerRunning(): bool
     {
-        $ch = curl_init($this->baseUrl . '/health');
+        $ch = curl_init($this->baseUrl . '/api/public/health');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         curl_setopt($ch, CURLOPT_NOBODY, true);
@@ -205,7 +205,7 @@ class SmokeTestCase extends TestCase
 
     protected function makeRequest(string $method, string $endpoint, ?array $data = null): array
     {
-        $url = $this->baseUrl . $endpoint;
+        $url = $this->baseUrl .'/api/public'. $endpoint;
         $ch  = curl_init($url);
 
         $options = [
