@@ -85,7 +85,6 @@ class App
     {
         $this->pipeline->add('cors', \maquinas_recreativas\Middleware\CorsMiddleware::class);
         $this->pipeline->add('rate-limit', \maquinas_recreativas\Middleware\RateLimitMiddleware::class);
-        $this->pipeline->add('auth', \maquinas_recreativas\Middleware\AuthMiddleware::class);
         $this->pipeline->add('json-response', \maquinas_recreativas\Middleware\JsonResponseMiddleware::class);
     }
 
