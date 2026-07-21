@@ -1,257 +1,190 @@
--- =============================================
--- SCRIPT PARA INSERTAR USUARIOS INICIALES EN POSTGRESQL/SUPABASE
--- =============================================
+-- ============================================================
+-- USUARIOS INICIALES (VERSIÓN CORREGIDA)
+-- ============================================================
 
--- 1. PRIMERO, CREAMOS LA FUNCIÓN PARA GENERAR UUID (si no existe)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- 1. ADMINISTRADOR
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Jean',
+    'Castro',
+    '1111111111',
+    'jean@admin.com',
+    crypt('12345678', gen_salt('bf')),
+    'Administrador',
+    'admin1',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
--- 2. INSERTAR USUARIOS CON DATOS ENCRIPTADOS Y CONTRASEÑAS HASHEADAS
--- NOTA: Los valores encriptados se generan con el mismo método que PHP:
--- AES-256-CBC con SHA256 para key e IV
+-- 2. CONTABILIDAD
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Sebastian',
+    'Ramirez',
+    '0987765499',
+    'sebas@admin.com',
+    crypt('12345678', gen_salt('bf')),
+    'Contabilidad',
+    'sebas',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
-DO $$
-DECLARE
-    v_user_id UUID;
-    -- Definir constantes para encriptación (deben coincidir con PHP)
-    v_encrypt_key TEXT := 'sha256(''tu_secret_key_aqui'')'; -- Reemplazar con SECRET_KEY real
-    v_encrypt_iv TEXT := 'sha256(''tu_secret_iv_aqui'')';   -- Reemplazar con SECRET_IV real
-BEGIN
-    -- =============================================
-    -- ADMINISTRADOR: Jean Castro
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Jean',
-        'Castro',
-        -- CI encriptado: '1111111111' (ejemplo, usar encriptación real)
-        encode(encrypt(
-            '1111111111'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        -- Email encriptado: 'jean@admin.com' (ejemplo)
-        encode(encrypt(
-            'jean@admin.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        -- Contraseña hasheada con BCRYPT (costo 10)
-        crypt('12345678', gen_salt('bf', 10)),
-        'Administrador',
-        'admin1',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
+-- 3. LOGISTICA
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Edu',
+    'Sabando',
+    '1316789914',
+    'esb@gmail.com',
+    crypt('12345678', gen_salt('bf')),
+    'Logistica',
+    'esb',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
-    -- =============================================
-    -- CONTABILIDAD: Sebastián Ramírez
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Sebastián',
-        'Ramírez',
-        encode(encrypt(
-            '0987765499'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        encode(encrypt(
-            'sebas@admin.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        crypt('12345678', gen_salt('bf', 10)),
-        'Contabilidad',
-        'sebas',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
+-- 4. TECNICO ENSAMBLADOR
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Joshua',
+    'Castillo',
+    '0987654321',
+    'joshua@gmail.com',
+    crypt('12345678', gen_salt('bf')),
+    'Tecnico',
+    'joshua',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
-    -- =============================================
-    -- LOGÍSTICA: Edú Sabando
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Edú',
-        'Sabando',
-        encode(encrypt(
-            '1316789914'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        encode(encrypt(
-            'esb@gmail.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        crypt('12345678', gen_salt('bf', 10)),
-        'Logistica',
-        'esb',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
+-- 5. TECNICO COMPROBADOR
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Euro',
+    'Quiroz',
+    '0987667890',
+    'euro@gmail.com',
+    crypt('12345678', gen_salt('bf')),
+    'Tecnico',
+    'euro',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
-    -- Insertar en tabla Logistica
-    INSERT INTO Logistica (ID_Logistica) VALUES (v_user_id);
+-- 6. TECNICO MANTENIMIENTO
+INSERT INTO usuario (
+    ID_Usuario,
+    nombre,
+    apellido,
+    ci,
+    email,
+    contrasena,
+    tipo,
+    usuario_asignado,
+    estado,
+    fecha_registro
+) VALUES (
+    gen_random_uuid(),
+    'Joel',
+    'Gabino',
+    '0980980987',
+    'joel@gmail.com',
+    crypt('12345678', gen_salt('bf')),
+    'Tecnico',
+    'joel',
+    'Activo',
+    NOW()
+) ON CONFLICT (usuario_asignado) DO NOTHING;
 
-    -- =============================================
-    -- TÉCNICO: Joshúa Castillo (Ensamblador)
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Joshúa',
-        'Castillo',
-        encode(encrypt(
-            '0987654321'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        encode(encrypt(
-            'joshua@gmail.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        crypt('12345678', gen_salt('bf', 10)),
-        'Tecnico',
-        'joshua',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
+-- Insertar tecnicos
+INSERT INTO Tecnico (ID_Tecnico, Especialidad, Cantidad_Actividades)
+SELECT ID_Usuario, 
+       CASE usuario_asignado
+           WHEN 'joshua' THEN 'Ensamblador'
+           WHEN 'euro' THEN 'Comprobador'
+           WHEN 'joel' THEN 'Mantenimiento'
+       END,
+       0
+FROM usuario
+WHERE usuario_asignado IN ('joshua', 'euro', 'joel')
+ON CONFLICT (ID_Tecnico) DO NOTHING;
 
-    -- Insertar en tabla Tecnico
-    INSERT INTO Tecnico (ID_Tecnico, Especialidad) 
-    VALUES (v_user_id, 'Ensamblador');
+-- Insertar logistica
+INSERT INTO Logistica (ID_Logistica)
+SELECT ID_Usuario
+FROM usuario
+WHERE usuario_asignado = 'esb'
+ON CONFLICT (ID_Logistica) DO NOTHING;
 
-    -- =============================================
-    -- TÉCNICO: Euro Quiroz (Comprobador)
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Euro',
-        'Quiroz',
-        encode(encrypt(
-            '0987667890'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        encode(encrypt(
-            'euro@gmail.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        crypt('12345678', gen_salt('bf', 10)),
-        'Tecnico',
-        'euro',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
-
-    -- Insertar en tabla Tecnico
-    INSERT INTO Tecnico (ID_Tecnico, Especialidad) 
-    VALUES (v_user_id, 'Comprobador');
-
-    -- =============================================
-    -- TÉCNICO: Joel Gabino (Mantenimiento)
-    -- =============================================
-    v_user_id := uuid_generate_v4();
-    INSERT INTO usuario (
-        ID_Usuario,
-        nombre,
-        apellido,
-        ci,
-        email,
-        contrasena,
-        tipo,
-        usuario_asignado,
-        estado,
-        fecha_registro
-    ) VALUES (
-        v_user_id,
-        'Joel',
-        'Gabino',
-        encode(encrypt(
-            '0980980987'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        encode(encrypt(
-            'joel@gmail.com'::bytea,
-            digest('tu_secret_key_aqui'::text, 'sha256'),
-            'aes-cbc/pad:pkcs'
-        ), 'base64'),
-        crypt('12345678', gen_salt('bf', 10)),
-        'Tecnico',
-        'joel',
-        'Activo',
-        CURRENT_TIMESTAMP
-    );
-
-    -- Insertar en tabla Tecnico
-    INSERT INTO Tecnico (ID_Tecnico, Especialidad) 
-    VALUES (v_user_id, 'Mantenimiento');
-
-    -- =============================================
-    -- VERIFICAR INSERCIÓN
-    -- =============================================
-    RAISE NOTICE 'Usuarios insertados correctamente';
-END $$;
+-- Verificar
+SELECT 
+    usuario_asignado,
+    nombre,
+    apellido,
+    tipo,
+    CASE 
+        WHEN tipo = 'Tecnico' THEN (
+            SELECT Especialidad 
+            FROM Tecnico 
+            WHERE ID_Tecnico = usuario.ID_Usuario
+        )
+        ELSE NULL
+    END AS especialidad
+FROM usuario
+WHERE usuario_asignado IN ('admin1', 'sebas', 'esb', 'joshua', 'euro', 'joel');

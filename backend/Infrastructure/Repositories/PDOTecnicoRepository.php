@@ -33,54 +33,48 @@ final class PDOTecnicoRepository implements TecnicoRepository
         $cacheKey = "tecnicos:especialidad:{$especialidad}";
 
         return $this->cache->remember($cacheKey, function () use ($especialidad) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_tecnicos_por_especialidad(?)");
+            $stmt = $this->db->prepareCall('CALL sp_tecnicos_por_especialidad(?)');
             $stmt->execute([$especialidad]);
-            
+
             $tecnicos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $tecnicos;
         }, $this->ttl);
     }
 
     public function incrementarActividades(Uuid $tecnicoId): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_incrementar_actividades_tecnico(?)");
         $v = $tecnicoId->value();
+        $stmt = $this->db->prepareCall('CALL sp_incrementar_actividades_tecnico(?)');
         $result = $stmt->execute([$v]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("usuario:id:{$v}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("tecnicos:especialidad:*");
-            $this->cache->deleteByPattern("tecnicos:disponibles:*");
+            $this->cache->deleteByPattern('tecnicos:especialidad:*');
+            $this->cache->deleteByPattern('tecnicos:disponibles:*');
         }
 
         return $result;
     }
 
-public function findAvailableByEspecialidad(string $especialidad): array
-{
-    $cacheKey = "tecnicos:disponibles:{$especialidad}";
+    public function findAvailableByEspecialidad(string $especialidad): array
+    {
+        $cacheKey = "tecnicos:disponibles:{$especialidad}";
 
-    return $this->cache->remember($cacheKey, function () use ($especialidad) {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_tecnicos_disponibles_por_especialidad(?)");
-        $stmt->execute([$especialidad]);
+        return $this->cache->remember($cacheKey, function () use ($especialidad) {
+            $stmt = $this->db->prepareCall('CALL sp_tecnicos_disponibles_por_especialidad(?)');
+            $stmt->execute([$especialidad]);
 
-        $tecnicos = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // NO desencriptar aquí: hydrate() ya lo hace internamente
-            $tecnicos[] = $this->usuarioRepository->hydrate($row);
-        }
-        $stmt->closeCursor();
-        $this->db->clearPendingResults();
+            $tecnicos = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                // NO desencriptar aqui: hydrate() ya lo hace internamente
+                $tecnicos[] = $this->usuarioRepository->hydrate($row);
+            }
+            $stmt->closeCursor();
 
-        return $tecnicos;
-    }, $this->ttl);
-}
+            return $tecnicos;
+        }, $this->ttl);
+    }
 }

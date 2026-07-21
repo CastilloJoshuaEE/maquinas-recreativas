@@ -1,8 +1,10 @@
 <?php
 /**
  * Infrastructure/Repositories/PDOUsuarioRepository.php
- * 
- * Versión con PDO para procedimientos almacenados
+ *
+ * Version compatible con MySQL (procedimientos, CALL) y PostgreSQL
+ * (funciones, SELECT / SELECT * FROM), a traves de Database::prepareCall()
+ * y Database::callScalarProcedure().
  */
 declare(strict_types=1);
 
@@ -35,12 +37,11 @@ class PDOUsuarioRepository implements UsuarioRepository
     }
 
     // =========================================================================
-    // ESCRITURA - Usando SPs
+    // ESCRITURA
     // =========================================================================
 
     public function save(Usuario $usuario): void
     {
-        $conn = $this->db->getConnection();
         $id = $usuario->getId()->value();
         $nombre = $usuario->getNombre();
         $apellido = $usuario->getApellido();
@@ -55,42 +56,41 @@ class PDOUsuarioRepository implements UsuarioRepository
             $existing = $this->searchById($usuario->getId());
 
             if ($existing) {
-                $stmt = $conn->prepare("CALL sp_actualizar_usuario(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepareCall('CALL sp_actualizar_usuario(?, ?, ?, ?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$id, $nombre, $apellido, $ciEncriptada, $emailEncriptado, $username, $contrasenaHash, $tipo, $estado]);
             } else {
-                $stmt = $conn->prepare("CALL sp_insertar_usuario(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt = $this->db->prepareCall('CALL sp_insertar_usuario(?, ?, ?, ?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$id, $nombre, $apellido, $ciEncriptada, $emailEncriptado, $username, $contrasenaHash, $tipo, $estado]);
             }
             $stmt->closeCursor();
 
-            $this->saveSpecificUserData($conn, $usuario);
-
+            $this->saveSpecificUserData($usuario);
         } catch (\Exception $e) {
-            throw new \RuntimeException("Error al guardar usuario: " . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Error al guardar usuario: ' . $e->getMessage(), 0, $e);
         }
 
         $this->invalidateUser($id, $username, $usuario->getEmail()->value(), $tipo);
     }
 
-    private function saveSpecificUserData(\PDO $conn, Usuario $usuario): void
+    private function saveSpecificUserData(Usuario $usuario): void
     {
         $id = $usuario->getId()->value();
+        $conn = $this->db->getConnection();
 
         if ($usuario instanceof Tecnico) {
             $esp = $usuario->getEspecialidad();
             $cnt = $usuario->getCantidadActividades();
-            $stmt = $conn->prepare("CALL sp_insertar_tecnico(?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_insertar_tecnico(?, ?, ?)');
             $stmt->execute([$id, $esp, $cnt]);
             $stmt->closeCursor();
-
         } elseif ($usuario instanceof Logistica) {
-            $check = $conn->prepare("SELECT ID_Logistica FROM Logistica WHERE ID_Logistica = ?");
+            $check = $conn->prepare('SELECT ID_Logistica FROM Logistica WHERE ID_Logistica = ?');
             $check->execute([$id]);
             $exists = $check->fetchColumn() > 0;
             $check->closeCursor();
 
             if (!$exists) {
-                $stmt = $conn->prepare("INSERT INTO Logistica (ID_Logistica) VALUES (?)");
+                $stmt = $conn->prepare('INSERT INTO Logistica (ID_Logistica) VALUES (?)');
                 $stmt->execute([$id]);
                 $stmt->closeCursor();
             }
@@ -100,9 +100,8 @@ class PDOUsuarioRepository implements UsuarioRepository
     public function delete(Uuid $id): void
     {
         $usuario = $this->searchById($id);
-        $conn = $this->db->getConnection();
 
-        $stmt = $conn->prepare("CALL sp_eliminar_usuario(?)");
+        $stmt = $this->db->prepareCall('CALL sp_eliminar_usuario(?)');
         $stmt->execute([$id->value()]);
         $stmt->closeCursor();
 
@@ -119,7 +118,7 @@ class PDOUsuarioRepository implements UsuarioRepository
     }
 
     // =========================================================================
-    // LECTURA - Usando SPs
+    // LECTURA
     // =========================================================================
 
     public function searchById(Uuid $id): ?Usuario
@@ -127,12 +126,10 @@ class PDOUsuarioRepository implements UsuarioRepository
         $cacheKey = "usuario:id:{$id->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($id) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_buscar_usuario_por_id(?)");
+            $stmt = $this->db->prepareCall('CALL sp_buscar_usuario_por_id(?)');
             $stmt->execute([$id->value()]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
             return $row ? $this->hydrate($row) : null;
         }, $this->ttl);
     }
@@ -144,15 +141,13 @@ class PDOUsuarioRepository implements UsuarioRepository
 
     public function searchByEmail(string $email): ?Usuario
     {
-        $cacheKey = "usuario:email:" . md5($email);
+        $cacheKey = 'usuario:email:' . md5($email);
 
         return $this->cache->remember($cacheKey, function () use ($email) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_buscar_usuario_por_email(?)");
+            $stmt = $this->db->prepareCall('CALL sp_buscar_usuario_por_email(?)');
             $stmt->execute([$email]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
             return $row ? $this->hydrate($row) : null;
         }, $this->ttl);
     }
@@ -167,12 +162,10 @@ class PDOUsuarioRepository implements UsuarioRepository
         $cacheKey = "usuario:username:{$usuarioAsignado}";
 
         return $this->cache->remember($cacheKey, function () use ($usuarioAsignado) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_buscar_usuario_por_username(?)");
+            $stmt = $this->db->prepareCall('CALL sp_buscar_usuario_por_username(?)');
             $stmt->execute([$usuarioAsignado]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
 
             if (!$row) {
                 error_log("Usuario no encontrado con usuario_asignado: {$usuarioAsignado}");
@@ -183,232 +176,163 @@ class PDOUsuarioRepository implements UsuarioRepository
     }
 
     public function findAll(array $filtros = []): array
-{
-    $cacheKey = "usuarios:all:" . md5(serialize($filtros));
+    {
+        $cacheKey = 'usuarios:all:' . md5(serialize($filtros));
 
-    return $this->cache->remember($cacheKey, function () use ($filtros) {
-        $conn = $this->db->getConnection();
+        return $this->cache->remember($cacheKey, function () use ($filtros) {
+            $tipo = $filtros['tipo'] ?? null;
+            $estado = $filtros['estado'] ?? null;
+            $ci = isset($filtros['ci']) ? CifradoHelper::encriptar($filtros['ci']) : null;
+            $limit = (int) ($filtros['limit'] ?? 100);
+            $offset = (int) ($filtros['offset'] ?? 0);
 
-        $tipo = $filtros['tipo'] ?? null;
-        $estado = $filtros['estado'] ?? null;
-        $ci = isset($filtros['ci']) ? CifradoHelper::encriptar($filtros['ci']) : null;
-        $limit = (int)($filtros['limit'] ?? 100);
-        $offset = (int)($filtros['offset'] ?? 0);
+            $stmt = $this->db->prepareCall('CALL sp_listar_usuarios(?, ?, ?, ?, ?)');
+            $stmt->execute([$tipo, $estado, $ci, $limit, $offset]);
 
-        $stmt = $conn->prepare("CALL sp_listar_usuarios(?, ?, ?, ?, ?)");
-        $stmt->execute([$tipo, $estado, $ci, $limit, $offset]);
+            $usuarios = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $usuarios[] = $this->hydrate($row);
+            }
+            $stmt->closeCursor();
 
-        $usuarios = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // NO desencriptar aquí: hydrate() ya lo hace
-            $usuarios[] = $this->hydrate($row);
-        }
-        $stmt->closeCursor();
-        $this->db->clearPendingResults();
-
-        return $usuarios;
-    }, $this->ttl);
-}
+            return $usuarios;
+        }, $this->ttl);
+    }
 
     public function findByTipo(string $tipo, ?Uuid $excluirId = null): array
-{
-    $excluirStr = $excluirId ? $excluirId->value() : null;
-    $cacheKey = "usuarios:tipo:{$tipo}:excluir:" . ($excluirStr ?? 'none');
+    {
+        $excluirStr = $excluirId ? $excluirId->value() : null;
+        $cacheKey = "usuarios:tipo:{$tipo}:excluir:" . ($excluirStr ?? 'none');
 
-    return $this->cache->remember($cacheKey, function () use ($tipo, $excluirStr) {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_listar_usuarios_por_tipo(?, ?)");
-        $stmt->execute([$tipo, $excluirStr]);
+        return $this->cache->remember($cacheKey, function () use ($tipo, $excluirStr) {
+            $stmt = $this->db->prepareCall('CALL sp_listar_usuarios_por_tipo(?, ?)');
+            $stmt->execute([$tipo, $excluirStr]);
 
-        $usuarios = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // NO desencriptar aquí tampoco
-            $usuarios[] = $this->hydrate($row);
-        }
-        $stmt->closeCursor();
-        $this->db->clearPendingResults();
+            $usuarios = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $usuarios[] = $this->hydrate($row);
+            }
+            $stmt->closeCursor();
 
-        return $usuarios;
-    }, $this->ttl);
-}
+            return $usuarios;
+        }, $this->ttl);
+    }
 
     public function findTecnicosByEspecialidad(string $especialidad): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_tecnicos_por_especialidad(?)");
+        $stmt = $this->db->prepareCall('CALL sp_tecnicos_por_especialidad(?)');
         $stmt->execute([$especialidad]);
-        
+
         $tecnicos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $tecnicos;
     }
 
     // =========================================================================
-    // EXISTS / COUNT - Usando SPs con OUT parameters
+    // EXISTS / COUNT
     // =========================================================================
 
     public function existsByEmail(string $emailEncriptado): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_existe_email(?, @existe)");
-        $stmt->execute([$emailEncriptado]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @existe as existe");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (bool)($row['existe'] ?? 0);
+        return (bool) $this->db->callScalarProcedure('sp_existe_email', [$emailEncriptado]);
     }
 
     public function existsByCi(string $ciEncriptada): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_existe_ci(?, @existe)");
-        $stmt->execute([$ciEncriptada]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @existe as existe");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (bool)($row['existe'] ?? 0);
+        return (bool) $this->db->callScalarProcedure('sp_existe_ci', [$ciEncriptada]);
     }
 
     public function existsByUsuarioAsignado(string $usuarioAsignado): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_existe_username(?, @existe)");
-        $stmt->execute([$usuarioAsignado]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @existe as existe");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (bool)($row['existe'] ?? 0);
+        return (bool) $this->db->callScalarProcedure('sp_existe_username', [$usuarioAsignado]);
     }
 
     public function existsByUsuarioAsignadoAndNotId(string $usuarioAsignado, Uuid $id): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_existe_username_excluyendo_id(?, ?, @existe)");
-        $stmt->execute([$usuarioAsignado, $id->value()]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @existe as existe");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (bool)($row['existe'] ?? 0);
+        return (bool) $this->db->callScalarProcedure('sp_existe_username_excluyendo_id', [$usuarioAsignado, $id->value()]);
     }
 
     public function hasMachinesAssigned(Uuid $id): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_usuario_tiene_maquinas(?, @tiene)");
-        $stmt->execute([$id->value()]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @tiene as tiene");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (bool)($row['tiene'] ?? 0);
+        return (bool) $this->db->callScalarProcedure('sp_usuario_tiene_maquinas', [$id->value()]);
     }
 
     // =========================================================================
-    // SESIÓN / HISTORIAL - Usando SPs
+    // SESION / HISTORIAL
     // =========================================================================
 
     public function registrarLogout(Uuid $id): void
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_registrar_logout(?)");
+        $stmt = $this->db->prepareCall('CALL sp_registrar_logout(?)');
         $stmt->execute([$id->value()]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
     }
 
     public function registrarActividad(Uuid $id, string $descripcion): void
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_registrar_actividad(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_registrar_actividad(?, ?)');
         $stmt->execute([$id->value(), $descripcion]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
     }
 
     public function obtenerHistorialActividades(Uuid $id): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_obtener_historial_actividades(?, 50)");
+        $stmt = $this->db->prepareCall('CALL sp_obtener_historial_actividades(?, 50)');
         $stmt->execute([$id->value()]);
-        
+
         $actividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $actividades;
     }
 
     // =========================================================================
-    // MÉTODOS ADICIONALES PARA ADMINISTRADOR
+    // METODOS ADICIONALES PARA ADMINISTRADOR
     // =========================================================================
 
     public function getEstadisticas(): array
     {
-        $cacheKey = "admin:estadisticas";
+        $cacheKey = 'admin:estadisticas';
 
         return $this->cache->remember($cacheKey, function () {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_estadisticas_usuarios()");
+            $stmt = $this->db->prepareCall('CALL sp_estadisticas_usuarios()');
             $stmt->execute();
-            
+
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return [
-                'total' => (int)($data['total'] ?? 0),
+                'total' => (int) ($data['total'] ?? 0),
                 'por_tipo' => [
-                    'Administrador' => (int)($data['administradores'] ?? 0),
-                    'Tecnico' => (int)($data['tecnicos'] ?? 0),
-                    'Logistica' => (int)($data['logistica'] ?? 0),
-                    'Contabilidad' => (int)($data['contabilidad'] ?? 0),
-                    'Usuario' => (int)($data['usuarios_normales'] ?? 0),
+                    'Administrador' => (int) ($data['administradores'] ?? 0),
+                    'Tecnico' => (int) ($data['tecnicos'] ?? 0),
+                    'Logistica' => (int) ($data['logistica'] ?? 0),
+                    'Contabilidad' => (int) ($data['contabilidad'] ?? 0),
+                    'Usuario' => (int) ($data['usuarios_normales'] ?? 0),
                 ],
                 'por_estado' => [
-                    'Activo' => (int)($data['activos'] ?? 0),
-                    'Inhabilitado' => (int)($data['inhabilitados'] ?? 0),
-                    'Pendiente de asignacion' => (int)($data['pendientes'] ?? 0),
-                ]
+                    'Activo' => (int) ($data['activos'] ?? 0),
+                    'Inhabilitado' => (int) ($data['inhabilitados'] ?? 0),
+                    'Pendiente de asignacion' => (int) ($data['pendientes'] ?? 0),
+                ],
             ];
         }, 300);
     }
 
     public function updateEstado(Uuid $usuarioId, string $nuevoEstado): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_cambiar_estado_usuario(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_cambiar_estado_usuario(?, ?)');
         $result = $stmt->execute([$usuarioId->value(), $nuevoEstado]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $v = $usuarioId->value();
         $this->cache->delete("usuario:id:{$v}");
-        $this->cache->delete("admin:estadisticas");
+        $this->cache->delete('admin:estadisticas');
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("admin:usuarios:filters:*");
-            $this->cache->deleteByPattern("usuarios:all:*");
-            $this->cache->deleteByPattern("usuarios:tipo:*");
+            $this->cache->deleteByPattern('admin:usuarios:filters:*');
+            $this->cache->deleteByPattern('usuarios:all:*');
+            $this->cache->deleteByPattern('usuarios:tipo:*');
         }
 
         return $result;
@@ -416,11 +340,9 @@ class PDOUsuarioRepository implements UsuarioRepository
 
     public function cambiarContrasena(Uuid $usuarioId, string $nuevaContrasena): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_cambiar_contrasena_usuario(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_cambiar_contrasena_usuario(?, ?)');
         $result = $stmt->execute([$usuarioId->value(), $nuevaContrasena]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("usuario:id:{$usuarioId->value()}");
 
@@ -429,11 +351,9 @@ class PDOUsuarioRepository implements UsuarioRepository
 
     public function actualizarUsername(Uuid $usuarioId, string $nuevoUsername): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_actualizar_username(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_actualizar_username(?, ?)');
         $result = $stmt->execute([$usuarioId->value(), $nuevoUsername]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $v = $usuarioId->value();
         $this->cache->delete("usuario:id:{$v}");
@@ -443,24 +363,24 @@ class PDOUsuarioRepository implements UsuarioRepository
     }
 
     // =========================================================================
-    // INVALIDACIÓN HELPER
+    // INVALIDACION HELPER
     // =========================================================================
 
     private function invalidateUser(string $id, string $username, string $emailPlain, string $tipo): void
     {
         $this->cache->delete("usuario:id:{$id}");
         $this->cache->delete("usuario:username:{$username}");
-        $this->cache->delete("usuario:email:" . md5($emailPlain));
+        $this->cache->delete('usuario:email:' . md5($emailPlain));
         $this->cache->delete("usuarios:tipo:{$tipo}:excluir:none");
         $this->cache->delete("usuarios:tipo:{$tipo}:excluir:{$id}");
-        $this->cache->delete("admin:estadisticas");
-        
+        $this->cache->delete('admin:estadisticas');
+
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("usuarios:all:*");
+            $this->cache->deleteByPattern('usuarios:all:*');
             if ($tipo === 'Tecnico') {
-                $this->cache->deleteByPattern("tecnicos:especialidad:*");
+                $this->cache->deleteByPattern('tecnicos:especialidad:*');
             }
-            $this->cache->deleteByPattern("admin:usuarios:filters:*");
+            $this->cache->deleteByPattern('admin:usuarios:filters:*');
         }
     }
 
@@ -492,13 +412,13 @@ class PDOUsuarioRepository implements UsuarioRepository
             case TipoUsuario::TECNICO:
                 $esp = $row['Especialidad'] ?? null;
                 if (empty($esp)) {
-                    error_log("AVISO: Técnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
+                    error_log("AVISO: Tecnico {$row['ID_Usuario']} sin fila en tabla Tecnico.");
                     return new Usuario($id, $row['nombre'], $row['apellido'], $ci, $email,
                         $row['usuario_asignado'], $row['contrasena'], $tipo, $estado);
                 }
                 return new Tecnico($id, $row['nombre'], $row['apellido'], $ci, $email,
                     $row['usuario_asignado'], $row['contrasena'], $estado,
-                    $esp, (int)($row['Cantidad_Actividades'] ?? 0));
+                    $esp, (int) ($row['Cantidad_Actividades'] ?? 0));
 
             case TipoUsuario::LOGISTICA:
                 return new Logistica($id, $row['nombre'], $row['apellido'], $ci, $email,

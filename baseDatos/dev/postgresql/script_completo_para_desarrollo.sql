@@ -414,12 +414,12 @@ INSERT INTO componente (tipo, nombre, precio) VALUES
 -- =============================================
 SELECT tipo, COUNT(*) as cantidad FROM componente GROUP BY tipo;
 -- ============================================================
--- STORED PROCEDURES Y TRIGGERS - PostgreSQL/Supabase
+-- STORED FUNCTIONS Y TRIGGERS - PostgreSQL/Supabase
 -- Compatibles con PostgreSQL 14+
 -- ============================================================
 
 -- ==============================================================
--- 1. MÓDULO USUARIO
+-- 1. MODULO USUARIO
 -- ==============================================================
 
 -- 1.1 Buscar usuario por usuario_asignado
@@ -598,7 +598,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 1.7 Cambiar contraseña
+-- 1.7 Cambiar contrasena
 CREATE OR REPLACE FUNCTION sp_cambiar_contrasena_usuario(
     p_id UUID,
     p_contrasena VARCHAR(255)
@@ -773,7 +773,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 1.16 Estadísticas de usuarios
+-- 1.16 Estadisticas de usuarios
 CREATE OR REPLACE FUNCTION sp_estadisticas_usuarios()
 RETURNS TABLE(
     total BIGINT,
@@ -832,6 +832,7 @@ BEGIN
     LIMIT p_limite;
 END;
 $$ LANGUAGE plpgsql;
+
 -- 1.19 Registrar logout
 CREATE OR REPLACE FUNCTION sp_registrar_logout(p_id_usuario UUID)
 RETURNS VOID AS $$
@@ -848,11 +849,12 @@ BEGIN
       );
 END;
 $$ LANGUAGE plpgsql;
+
 -- ==============================================================
--- 2. MÓDULO TÉCNICO
+-- 2. MODULO TECNICO
 -- ==============================================================
 
--- 2.1 Insertar técnico
+-- 2.1 Insertar tecnico
 CREATE OR REPLACE FUNCTION sp_insertar_tecnico(
     p_id UUID,
     p_especialidad VARCHAR(20),
@@ -868,7 +870,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2.2 Incrementar actividades de técnico
+-- 2.2 Incrementar actividades de tecnico
 CREATE OR REPLACE FUNCTION sp_incrementar_actividades_tecnico(p_id UUID)
 RETURNS VOID AS $$
 BEGIN
@@ -878,7 +880,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2.3 Técnicos por especialidad
+-- 2.3 Tecnicos por especialidad
 CREATE OR REPLACE FUNCTION sp_tecnicos_por_especialidad(p_especialidad VARCHAR(20))
 RETURNS TABLE(
     ID_Usuario UUID,
@@ -909,7 +911,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2.4 Técnicos disponibles por especialidad
+-- 2.4 Tecnicos disponibles por especialidad
 CREATE OR REPLACE FUNCTION sp_tecnicos_disponibles_por_especialidad(p_especialidad VARCHAR(20))
 RETURNS TABLE(
     ID_Usuario UUID,
@@ -937,7 +939,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 3. MÓDULO COMERCIO
+-- 3. MODULO COMERCIO
 -- ==============================================================
 
 -- 3.1 Insertar comercio
@@ -985,7 +987,7 @@ BEGIN
     FROM MaquinaRecreativa WHERE ID_Comercio = p_id;
 
     IF v_maquinas > 0 THEN
-        RAISE EXCEPTION 'No se puede eliminar: el comercio tiene máquinas asociadas';
+        RAISE EXCEPTION 'No se puede eliminar: el comercio tiene maquinas asociadas';
     END IF;
 
     DELETE FROM Comercio WHERE ID_Comercio = p_id;
@@ -1087,7 +1089,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 3.8 Verificar si comercio tiene máquinas
+-- 3.8 Verificar si comercio tiene maquinas
 CREATE OR REPLACE FUNCTION sp_comercio_tiene_maquinas(p_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
@@ -1100,10 +1102,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 4. MÓDULO MÁQUINA RECREATIVA
+-- 4. MODULO MAQUINA RECREATIVA
 -- ==============================================================
 
--- 4.1 Insertar máquina
+-- 4.1 Insertar maquina
 CREATE OR REPLACE FUNCTION sp_insertar_maquina(
     p_id UUID,
     p_nombre VARCHAR(100),
@@ -1130,7 +1132,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.2 Actualizar estado y etapa de máquina
+-- 4.2 Actualizar estado y etapa de maquina
 CREATE OR REPLACE FUNCTION sp_actualizar_estado_maquina(
     p_id UUID,
     p_estado VARCHAR(50),
@@ -1145,7 +1147,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.3 Actualizar datos de máquina
+-- 4.3 Actualizar datos de maquina
 CREATE OR REPLACE FUNCTION sp_actualizar_maquina(
     p_id UUID,
     p_nombre VARCHAR(100),
@@ -1166,7 +1168,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.4 Asignar técnico de mantenimiento
+-- 4.4 Asignar tecnico de mantenimiento
 CREATE OR REPLACE FUNCTION sp_asignar_tecnico_mantenimiento(
     p_id_maquina UUID,
     p_id_tecnico UUID
@@ -1180,7 +1182,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.5 Buscar máquina por ID
+-- 4.5 Buscar maquina por ID
 CREATE OR REPLACE FUNCTION sp_buscar_maquina_por_id(p_id UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1216,7 +1218,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.6 Máquinas por técnico ensamblador
+-- 4.6 Maquinas por tecnico ensamblador
 CREATE OR REPLACE FUNCTION sp_maquinas_por_tecnico_ensamblador(p_id_tecnico UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1242,7 +1244,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.7 Máquinas por técnico comprobador
+-- 4.7 Maquinas por tecnico comprobador
 CREATE OR REPLACE FUNCTION sp_maquinas_por_tecnico_comprobador(p_id_tecnico UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1269,7 +1271,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.8 Máquinas por técnico mantenimiento
+-- 4.8 Maquinas por tecnico mantenimiento
 CREATE OR REPLACE FUNCTION sp_maquinas_por_tecnico_mantenimiento(p_id_tecnico UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1296,7 +1298,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.9 Máquinas por estado
+-- 4.9 Maquinas por estado
 CREATE OR REPLACE FUNCTION sp_maquinas_por_estado(p_estado VARCHAR)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1327,14 +1329,14 @@ BEGIN
         m.Fecha_Registro,
         c.Nombre AS NombreComercio,
         c.Direccion AS DireccionComercio
-    FROM "MaquinaRecreativa" m
-    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    FROM MaquinaRecreativa m
+    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Estado = p_estado
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.10 Máquinas por etapa
+-- 4.10 Maquinas por etapa
 CREATE OR REPLACE FUNCTION sp_maquinas_por_etapa(p_etapa VARCHAR)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1365,14 +1367,14 @@ BEGIN
         m.Fecha_Registro,
         c.Nombre AS NombreComercio,
         c.Direccion AS DireccionComercio
-    FROM "MaquinaRecreativa" m
-    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    FROM MaquinaRecreativa m
+    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Etapa = p_etapa
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.11 Todas las máquinas
+-- 4.11 Todas las maquinas
 CREATE OR REPLACE FUNCTION sp_todas_las_maquinas()
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1403,13 +1405,13 @@ BEGIN
         m.Fecha_Registro,
         c.Nombre AS NombreComercio,
         c.Direccion AS DireccionComercio
-    FROM "MaquinaRecreativa" m
-    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    FROM MaquinaRecreativa m
+    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.12 Máquinas operativas por comercio
+-- 4.12 Maquinas operativas por comercio
 CREATE OR REPLACE FUNCTION sp_maquinas_operativas_por_comercio(p_id_comercio UUID)
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1436,7 +1438,7 @@ BEGIN
         m.ID_Tecnico_Comprobador,
         m.ID_Tecnico_Mantenimiento,
         m.Fecha_Registro
-    FROM "MaquinaRecreativa" m
+    FROM MaquinaRecreativa m
     WHERE m.ID_Comercio = p_id_comercio
       AND m.Estado = 'Operativa'
       AND m.Etapa = 'Recaudacion'
@@ -1444,7 +1446,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.13 Máquinas en distribución
+-- 4.13 Maquinas en distribucion
 CREATE OR REPLACE FUNCTION sp_maquinas_para_distribucion()
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -1471,7 +1473,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.14 Componentes por máquina (via montaje)
+-- 4.14 Componentes por maquina (via montaje)
 CREATE OR REPLACE FUNCTION sp_componentes_por_maquina(p_id_maquina UUID)
 RETURNS TABLE(
     ID_Componente UUID,
@@ -1491,7 +1493,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.15 Componentes en uso por máquina
+-- 4.15 Componentes en uso por maquina
 CREATE OR REPLACE FUNCTION sp_componentes_en_uso_por_maquina(p_id_maquina UUID)
 RETURNS TABLE(
     ID_Componente UUID,
@@ -1511,7 +1513,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 4.16 Verificar si usuario tiene máquinas asignadas
+-- 4.16 Verificar si usuario tiene maquinas asignadas
 CREATE OR REPLACE FUNCTION sp_usuario_tiene_maquinas(p_id_usuario UUID)
 RETURNS INTEGER AS $$
 DECLARE
@@ -1527,7 +1529,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 5. MÓDULO COMPONENTE
+-- 5. MODULO COMPONENTE
 -- ==============================================================
 
 -- 5.1 Listar componentes
@@ -1680,7 +1682,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 5.7 Generar número de placa
+-- 5.7 Generar numero de placa
 CREATE OR REPLACE FUNCTION sp_generar_numero_placa()
 RETURNS VARCHAR(20) AS $$
 DECLARE
@@ -1718,7 +1720,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 6. MÓDULO MONTAJE
+-- 6. MODULO MONTAJE
 -- ==============================================================
 
 -- 6.1 Insertar montaje
@@ -1737,7 +1739,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6.2 Montajes por máquina
+-- 6.2 Montajes por maquina
 CREATE OR REPLACE FUNCTION sp_montajes_por_maquina(p_id_maquina UUID)
 RETURNS TABLE(
     ID_Montaje UUID,
@@ -1769,7 +1771,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6.4 Montajes por técnico
+-- 6.4 Montajes por tecnico
 CREATE OR REPLACE FUNCTION sp_montajes_por_tecnico(p_id_tecnico UUID)
 RETURNS TABLE(
     ID_Montaje UUID,
@@ -1786,10 +1788,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 7. MÓDULO NOTIFICACIONES
+-- 7. MODULO NOTIFICACIONES
 -- ==============================================================
 
--- 7.1 Crear notificación de máquina
+-- 7.1 Crear notificacion de maquina
 CREATE OR REPLACE FUNCTION sp_crear_notificacion_maquina(
     p_id UUID,
     p_remitente UUID,
@@ -1811,7 +1813,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.2 Notificaciones de máquina por destinatario
+-- 7.2 Notificaciones de maquina por destinatario
 CREATE OR REPLACE FUNCTION sp_notificaciones_maquina_por_destinatario(p_id_destinatario UUID)
 RETURNS TABLE(
     ID_Notificacion UUID,
@@ -1845,7 +1847,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.3 Marcar notificación de máquina como leída
+-- 7.3 Marcar notificacion de maquina como leida
 CREATE OR REPLACE FUNCTION sp_marcar_leida_maquina(p_id UUID)
 RETURNS VOID AS $$
 BEGIN
@@ -1854,7 +1856,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.4 Contar no leídas de máquina
+-- 7.4 Contar no leidas de maquina
 CREATE OR REPLACE FUNCTION sp_contar_no_leidas_maquina(p_id_destinatario UUID)
 RETURNS INTEGER AS $$
 DECLARE
@@ -1867,7 +1869,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.5 Crear notificación de reporte
+-- 7.5 Crear notificacion de reporte
 CREATE OR REPLACE FUNCTION sp_crear_notificacion_reporte(
     p_id UUID,
     p_id_reporte UUID,
@@ -1903,7 +1905,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.7 Marcar notificación de reporte como leída
+-- 7.7 Marcar notificacion de reporte como leida
 CREATE OR REPLACE FUNCTION sp_marcar_leida_reporte(
     p_id_notificacion UUID,
     p_id_usuario UUID
@@ -1916,7 +1918,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.8 Marcar todas las notificaciones de reporte como leídas
+-- 7.8 Marcar todas las notificaciones de reporte como leidas
 CREATE OR REPLACE FUNCTION sp_marcar_todas_leidas_reporte(p_id_usuario UUID)
 RETURNS VOID AS $$
 BEGIN
@@ -1924,7 +1926,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7.9 Contar no leídas de reporte
+-- 7.9 Contar no leidas de reporte
 CREATE OR REPLACE FUNCTION sp_contar_no_leidas_reporte(p_id_usuario UUID)
 RETURNS INTEGER AS $$
 DECLARE
@@ -1938,7 +1940,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 8. MÓDULO REPORTE / CHAT
+-- 8. MODULO REPORTE / CHAT
 -- ==============================================================
 
 -- 8.1 Insertar reporte
@@ -2103,7 +2105,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 9. MÓDULO COMENTARIO
+-- 9. MODULO COMENTARIO
 -- ==============================================================
 
 -- 9.1 Insertar comentario
@@ -2205,10 +2207,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 10. MÓDULO RECAUDACIÓN
+-- 10. MODULO RECAUDACION
 -- ==============================================================
 
--- 10.1 Insertar recaudación
+-- 10.1 Insertar recaudacion
 CREATE OR REPLACE FUNCTION sp_insertar_recaudacion(
     p_id UUID,
     p_tipo_comercio VARCHAR(20),
@@ -2235,7 +2237,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.2 Actualizar recaudación
+-- 10.2 Actualizar recaudacion
 CREATE OR REPLACE FUNCTION sp_actualizar_recaudacion(
     p_id UUID,
     p_tipo_comercio VARCHAR(20),
@@ -2262,7 +2264,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.3 Eliminar recaudación
+-- 10.3 Eliminar recaudacion
 CREATE OR REPLACE FUNCTION sp_eliminar_recaudacion(p_id UUID)
 RETURNS VOID AS $$
 BEGIN
@@ -2276,7 +2278,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.4 Buscar recaudación por ID
+-- 10.4 Buscar recaudacion por ID
 CREATE OR REPLACE FUNCTION sp_buscar_recaudacion_por_id(p_id UUID)
 RETURNS TABLE(
     ID_Recaudacion UUID,
@@ -2325,17 +2327,18 @@ BEGIN
         m.ID_Tecnico_Ensamblador,
         m.ID_Tecnico_Comprobador,
         m.ID_Tecnico_Mantenimiento
-    FROM Recaudacion r
+    FROM recaudaciones r
     INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
     INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-    INNER JOIN Usuario u ON r.ID_Usuario = u.ID_Usuario
-    LEFT JOIN Usuario te ON m.ID_Tecnico_Ensamblador = te.ID_Usuario
-    LEFT JOIN Usuario tc ON m.ID_Tecnico_Comprobador = tc.ID_Usuario
-    LEFT JOIN Usuario tm ON m.ID_Tecnico_Mantenimiento = tm.ID_Usuario
+    INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+    LEFT JOIN usuario te ON m.ID_Tecnico_Ensamblador = te.ID_Usuario
+    LEFT JOIN usuario tc ON m.ID_Tecnico_Comprobador = tc.ID_Usuario
+    LEFT JOIN usuario tm ON m.ID_Tecnico_Mantenimiento = tm.ID_Usuario
     WHERE r.ID_Recaudacion = p_id
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
+
 -- 10.5 Listar recaudaciones
 CREATE OR REPLACE FUNCTION sp_listar_recaudaciones(
     p_fecha_inicio DATE,
@@ -2410,7 +2413,8 @@ BEGIN
                COUNT(*) AS TotalRecaudaciones,
                SUM(r.Monto_Total) AS TotalRecaudado,
                SUM(r.Monto_Empresa) AS TotalEmpresa,
-               SUM(r.Monto_Comercio) AS TotalComercio        FROM recaudaciones r
+               SUM(r.Monto_Comercio) AS TotalComercio
+        FROM recaudaciones r
         GROUP BY r.Tipo_Comercio
         ORDER BY TotalRecaudado DESC
         LIMIT p_limit;
@@ -2418,7 +2422,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.7 Máquinas operativas para recaudación
+-- 10.7 Maquinas operativas para recaudacion
 CREATE OR REPLACE FUNCTION sp_maquinas_operativas_recaudacion()
 RETURNS TABLE(
     ID_Maquina UUID,
@@ -2453,15 +2457,15 @@ BEGIN
         c.Direccion AS DireccionComercio,
         c.Telefono AS TelefonoComercio,
         c.Tipo AS TipoComercio
-    FROM "MaquinaRecreativa" m
-    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
+    FROM MaquinaRecreativa m
+    LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
     WHERE m.Etapa = 'Recaudacion' 
       AND m.Estado = 'Operativa'
     ORDER BY m.Fecha_Registro DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.8 Guardar informe de recaudación
+-- 10.8 Guardar informe de recaudacion
 CREATE OR REPLACE FUNCTION sp_guardar_informe_recaudacion(
     p_id UUID,
     p_id_recaudacion UUID,
@@ -2513,7 +2517,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10.10 Obtener informe por recaudación
+-- 10.10 Obtener informe por recaudacion
 CREATE OR REPLACE FUNCTION sp_obtener_informe_por_recaudacion(p_id_recaudacion UUID)
 RETURNS TABLE(
     ID_Informe UUID,
@@ -2554,10 +2558,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 11. MÓDULO DISTRIBUCIÓN
+-- 11. MODULO DISTRIBUCION
 -- ==============================================================
 
--- 11.1 Guardar informe de distribución
+-- 11.1 Guardar informe de distribucion
 CREATE OR REPLACE FUNCTION sp_guardar_informe_distribucion(
     p_id UUID,
     p_id_maquina UUID,
@@ -2579,7 +2583,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 11.2 Actualizar estado de distribución
+-- 11.2 Actualizar estado de distribucion
 CREATE OR REPLACE FUNCTION sp_actualizar_estado_distribucion(
     p_id_maquina UUID,
     p_estado VARCHAR(20)
@@ -2593,7 +2597,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 11.3 Buscar distribución por máquina
+-- 11.3 Buscar distribucion por maquina
 CREATE OR REPLACE FUNCTION sp_buscar_distribucion_por_maquina(p_id_maquina UUID)
 RETURNS TABLE(
     ID_Distribucion UUID,
@@ -2610,7 +2614,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 11.4 Listar informes de distribución
+-- 11.4 Listar informes de distribucion
 CREATE OR REPLACE FUNCTION sp_listar_distribuciones(
     p_estado VARCHAR(20),
     p_id_comercio UUID,
@@ -2682,7 +2686,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================================
--- 12. MÓDULO HISTORIAL DE MÁQUINAS
+-- 12. MODULO HISTORIAL DE MAQUINAS
 -- ==============================================================
 
 -- 12.1 Insertar historial
@@ -2713,7 +2717,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 12.2 Historial por máquina
+-- 12.2 Historial por maquina
 CREATE OR REPLACE FUNCTION sp_historial_por_maquina(
     p_id_maquina UUID,
     p_limit INT,
@@ -2958,7 +2962,7 @@ $$ LANGUAGE plpgsql;
 -- TRIGGERS
 -- ==============================================================
 
--- Trigger 1: Crear/Actualizar informe de distribución
+-- Trigger 1: Crear/Actualizar informe de distribucion
 CREATE OR REPLACE FUNCTION after_maquina_distribucion_trigger()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -3005,7 +3009,7 @@ AFTER UPDATE ON MaquinaRecreativa
 FOR EACH ROW
 EXECUTE FUNCTION after_maquina_distribucion_trigger();
 
--- Trigger 2: Actualizar estado del informe de distribución
+-- Trigger 2: Actualizar estado del informe de distribucion
 CREATE OR REPLACE FUNCTION after_maquina_estado_change_trigger()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -3026,3 +3030,13 @@ CREATE TRIGGER after_maquina_estado_change
 AFTER UPDATE ON MaquinaRecreativa
 FOR EACH ROW
 EXECUTE FUNCTION after_maquina_estado_change_trigger();
+
+-- ==============================================================
+-- VERIFICACION FINAL
+-- ==============================================================
+
+-- Listar todas las funciones creadas
+SELECT proname, pronargs 
+FROM pg_proc 
+WHERE proname LIKE 'sp_%' 
+ORDER BY proname;

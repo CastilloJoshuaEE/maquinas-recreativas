@@ -28,7 +28,6 @@ class PDOReporteRepository implements ReporteRepository
 
     public function save(Reporte $reporte): void
     {
-        $conn = $this->db->getConnection();
         $data = $reporte->toArray();
 
         $idReporte = $data['ID_Reporte'];
@@ -42,10 +41,9 @@ class PDOReporteRepository implements ReporteRepository
             throw new \Exception('El emisor del reporte no puede ser nulo');
         }
 
-        $stmt = $conn->prepare("CALL sp_insertar_reporte(?, ?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_insertar_reporte(?, ?, ?, ?, ?, ?)');
         $stmt->execute([$idReporte, $idEmisor, $idDestinatario, $descripcion, $fechaHora, $estado]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("reporte:id:{$idReporte}");
         $this->cache->delete("reportes:usuario:{$idEmisor}");
@@ -54,7 +52,7 @@ class PDOReporteRepository implements ReporteRepository
             $this->invalidateChat($idEmisor, $idDestinatario);
         } else {
             if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-                $this->cache->deleteByPattern("reportes:usuario:*");
+                $this->cache->deleteByPattern('reportes:usuario:*');
             }
         }
     }
@@ -74,12 +72,10 @@ class PDOReporteRepository implements ReporteRepository
     {
         $cacheKey = "reporte:id:{$id->value()}";
         return $this->cache->remember($cacheKey, function () use ($id) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_buscar_reporte_por_id(?)");
+            $stmt = $this->db->prepareCall('CALL sp_buscar_reporte_por_id(?)');
             $stmt->execute([$id->value()]);
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
 
             if (!$data) {
                 return null;
@@ -100,10 +96,9 @@ class PDOReporteRepository implements ReporteRepository
     {
         $cacheKey = "reportes:usuario:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_reportes_por_usuario(?)");
+            $stmt = $this->db->prepareCall('CALL sp_reportes_por_usuario(?)');
             $stmt->execute([$idUsuario->value()]);
-            
+
             $reportes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['emisor_email'])) {
@@ -115,8 +110,7 @@ class PDOReporteRepository implements ReporteRepository
                 $reportes[] = Reporte::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $reportes;
         }, $this->ttl);
     }
@@ -125,10 +119,9 @@ class PDOReporteRepository implements ReporteRepository
     {
         $cacheKey = "reportes:chat:{$emisorId->value()}:{$destinatarioId->value()}";
         return $this->cache->remember($cacheKey, function () use ($emisorId, $destinatarioId) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_chat_entre_usuarios(?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_chat_entre_usuarios(?, ?)');
             $stmt->execute([$emisorId->value(), $destinatarioId->value()]);
-            
+
             $reportes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['emisor_email'])) {
@@ -140,8 +133,7 @@ class PDOReporteRepository implements ReporteRepository
                 $reportes[] = Reporte::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $reportes;
         }, $this->ttl);
     }
@@ -150,10 +142,9 @@ class PDOReporteRepository implements ReporteRepository
     {
         $cacheKey = "reportes:usuarios_chat:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_usuarios_chat(?)");
+            $stmt = $this->db->prepareCall('CALL sp_usuarios_chat(?)');
             $stmt->execute([$idUsuario->value()]);
-            
+
             $usuarios = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['email'])) {
@@ -162,23 +153,20 @@ class PDOReporteRepository implements ReporteRepository
                 $usuarios[] = $row;
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $usuarios;
         }, $this->ttl);
     }
 
     public function updateEstado(Uuid $id, EstadoReporte $estado): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_actualizar_estado_reporte(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_actualizar_estado_reporte(?, ?)');
         $result = $stmt->execute([$id->value(), $estado->value()]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("reporte:id:{$id->value()}");
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("reportes:usuario:*");
+            $this->cache->deleteByPattern('reportes:usuario:*');
         }
 
         return $result;

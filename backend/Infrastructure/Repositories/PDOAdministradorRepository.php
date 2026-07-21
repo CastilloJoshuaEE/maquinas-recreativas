@@ -1,8 +1,8 @@
 <?php
 /**
  * Infrastructure/Repositories/PDOAdministradorRepository.php
- * 
- * Extiende PDOUsuarioRepository y usa sus SPs
+ *
+ * Extiende PDOUsuarioRepository y usa sus llamadas a funciones/SP
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -28,20 +28,18 @@ class PDOAdministradorRepository extends PDOUsuarioRepository implements Adminis
 
     public function findAllWithFilters(array $filters = []): array
     {
-        $cacheKey = "admin:usuarios:filters:" . md5(serialize($filters));
+        $cacheKey = 'admin:usuarios:filters:' . md5(serialize($filters));
 
         return $this->cache->remember($cacheKey, function () use ($filters) {
-            $conn = $this->db->getConnection();
-            
             $tipo = $filters['tipo'] ?? null;
             $estado = $filters['estado'] ?? null;
             $ci = isset($filters['ci']) ? CifradoHelper::encriptar($filters['ci']) : null;
-            $limit = (int)($filters['limit'] ?? 100);
-            $offset = (int)($filters['offset'] ?? 0);
+            $limit = (int) ($filters['limit'] ?? 100);
+            $offset = (int) ($filters['offset'] ?? 0);
 
-            $stmt = $conn->prepare("CALL sp_listar_usuarios(?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_listar_usuarios(?, ?, ?, ?, ?)');
             $stmt->execute([$tipo, $estado, $ci, $limit, $offset]);
-            
+
             $rows = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (!empty($row['email'])) {
@@ -53,8 +51,7 @@ class PDOAdministradorRepository extends PDOUsuarioRepository implements Adminis
                 $rows[] = $row;
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $rows;
         }, 1800);
     }
@@ -71,17 +68,16 @@ class PDOAdministradorRepository extends PDOUsuarioRepository implements Adminis
 
     public function buscarPorNombre(string $termino, int $limit = 10): array
     {
-        // Búsqueda dinámica - sin caché
         $conn = $this->db->getConnection();
         $like = "%{$termino}%";
-        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades 
-                FROM usuario u 
-                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico 
+        $sql = "SELECT u.*, t.Especialidad, t.Cantidad_Actividades
+                FROM usuario u
+                LEFT JOIN Tecnico t ON u.ID_Usuario = t.ID_Tecnico
                 WHERE u.nombre LIKE ? OR u.apellido LIKE ?
                 ORDER BY u.nombre ASC LIMIT ?";
         $stmt = $conn->prepare($sql);
         $stmt->execute([$like, $like, $limit]);
-        
+
         $rows = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             if (!empty($row['email'])) {
@@ -93,18 +89,17 @@ class PDOAdministradorRepository extends PDOUsuarioRepository implements Adminis
             $rows[] = $row;
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $rows;
     }
 
     public function invalidateAdminCaches(): void
     {
-        $this->cache->delete("admin:estadisticas");
+        $this->cache->delete('admin:estadisticas');
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("admin:usuarios:filters:*");
-            $this->cache->deleteByPattern("usuarios:all:*");
-            $this->cache->deleteByPattern("usuarios:tipo:*");
+            $this->cache->deleteByPattern('admin:usuarios:filters:*');
+            $this->cache->deleteByPattern('usuarios:all:*');
+            $this->cache->deleteByPattern('usuarios:tipo:*');
         }
     }
 }

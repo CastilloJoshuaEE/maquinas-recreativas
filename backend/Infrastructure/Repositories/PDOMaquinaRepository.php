@@ -29,7 +29,7 @@ class PDOMaquinaRepository implements MaquinaRepository
     }
 
     // -------------------------------------------------------------------------
-    // REGISTRO COMPLETO DE MÁQUINA (usando SP)
+    // REGISTRO COMPLETO DE MAQUINA
     // -------------------------------------------------------------------------
 
     public function registrarMaquinaCompleta(
@@ -42,24 +42,14 @@ class PDOMaquinaRepository implements MaquinaRepository
         string $idEnsamblador,
         string $idComprobador
     ): string {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_registrar_maquina_completa(?, ?, ?, ?, ?, ?, ?, ?, @id_maquina)");
-        $stmt->execute([
+        return (string) $this->db->callScalarProcedure('sp_registrar_maquina_completa', [
             $nombre, $tipo, $idComercio, $idUsuarioCreador,
-            $idPlaca, $idCarcasa, $idEnsamblador, $idComprobador
+            $idPlaca, $idCarcasa, $idEnsamblador, $idComprobador,
         ]);
-        $stmt->closeCursor();
-
-        $result = $conn->query("SELECT @id_maquina as id_maquina");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-
-        return $row['id_maquina'] ?? '';
     }
 
     // -------------------------------------------------------------------------
-    // LECTURA con SPs
+    // LECTURA
     // -------------------------------------------------------------------------
 
     public function findById(Uuid $id): ?MaquinaRecreativa
@@ -67,72 +57,52 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquina:id:{$id->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($id) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_buscar_maquina_por_id(?)");
+            $stmt = $this->db->prepareCall('CALL sp_buscar_maquina_por_id(?)');
             $stmt->execute([$id->value()]);
-            
+
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $data ? MaquinaRecreativa::fromArray($data) : null;
         }, $this->ttl);
     }
 
     public function findAllWithComercio(): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_todas_las_maquinas()");
+        $stmt = $this->db->prepareCall('CALL sp_todas_las_maquinas()');
         $stmt->execute();
-        
+
         $maquinas = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
     public function findByTecnicoEnsamblador(Uuid $idTecnico): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_ensamblador(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_ensamblador(?)');
         $stmt->execute([$idTecnico->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $maquinas[] = MaquinaRecreativa::fromArray($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
     public function findByTecnicoEnsambladorWithComercio(Uuid $idTecnico): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_ensamblador(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_ensamblador(?)');
         $stmt->execute([$idTecnico->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = [
-                'ID_Maquina' => $row['ID_Maquina'],
-                'Nombre_Maquina' => $row['Nombre_Maquina'],
-                'Tipo' => $row['Tipo'],
-                'Estado' => $row['Estado'],
-                'Etapa' => $row['Etapa'],
-                'ID_Comercio' => $row['ID_Comercio'],
-                'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
-                'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
-                'Fecha_Registro' => $row['Fecha_Registro'],
-                'NombreComercio' => $row['NombreComercio'] ?? '',
-                'DireccionComercio' => $row['DireccionComercio'] ?? ''
-            ];
+            $maquinas[] = $this->mapMaquinaConComercio($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
@@ -141,46 +111,30 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:comprobador:{$idTecnico->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($idTecnico) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_comprobador(?)");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_comprobador(?)');
             $stmt->execute([$idTecnico->value()]);
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
 
     public function findByTecnicoComprobadorWithComercio(Uuid $idTecnico): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_comprobador(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_comprobador(?)');
         $stmt->execute([$idTecnico->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = [
-                'ID_Maquina' => $row['ID_Maquina'],
-                'Nombre_Maquina' => $row['Nombre_Maquina'],
-                'Tipo' => $row['Tipo'],
-                'Estado' => $row['Estado'],
-                'Etapa' => $row['Etapa'],
-                'ID_Comercio' => $row['ID_Comercio'],
-                'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
-                'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
-                'Fecha_Registro' => $row['Fecha_Registro'],
-                'NombreComercio' => $row['NombreComercio'] ?? '',
-                'DireccionComercio' => $row['DireccionComercio'] ?? ''
-            ];
+            $maquinas[] = $this->mapMaquinaConComercio($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
@@ -189,46 +143,30 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:mantenimiento:{$idTecnico->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($idTecnico) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_mantenimiento(?)");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_mantenimiento(?)');
             $stmt->execute([$idTecnico->value()]);
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
 
     public function findByTecnicoMantenimientoWithComercio(Uuid $idTecnico): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_tecnico_mantenimiento(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_tecnico_mantenimiento(?)');
         $stmt->execute([$idTecnico->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = [
-                'ID_Maquina' => $row['ID_Maquina'],
-                'Nombre_Maquina' => $row['Nombre_Maquina'],
-                'Tipo' => $row['Tipo'],
-                'Estado' => $row['Estado'],
-                'Etapa' => $row['Etapa'],
-                'ID_Comercio' => $row['ID_Comercio'],
-                'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
-                'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
-                'Fecha_Registro' => $row['Fecha_Registro'],
-                'NombreComercio' => $row['NombreComercio'] ?? '',
-                'DireccionComercio' => $row['DireccionComercio'] ?? ''
-            ];
+            $maquinas[] = $this->mapMaquinaConComercio($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
@@ -237,46 +175,30 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:estado:{$estado->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($estado) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_por_estado(?)");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_por_estado(?)');
             $stmt->execute([$estado->value()]);
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
 
     public function findByEstadoWithComercio(EstadoMaquina $estado): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_estado(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_estado(?)');
         $stmt->execute([$estado->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = [
-                'ID_Maquina' => $row['ID_Maquina'],
-                'Nombre_Maquina' => $row['Nombre_Maquina'],
-                'Tipo' => $row['Tipo'],
-                'Estado' => $row['Estado'],
-                'Etapa' => $row['Etapa'],
-                'ID_Comercio' => $row['ID_Comercio'],
-                'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
-                'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
-                'Fecha_Registro' => $row['Fecha_Registro'],
-                'NombreComercio' => $row['NombreComercio'] ?? '',
-                'DireccionComercio' => $row['DireccionComercio'] ?? ''
-            ];
+            $maquinas[] = $this->mapMaquinaConComercio($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
@@ -285,65 +207,47 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:etapa:{$etapa->value()}";
 
         return $this->cache->remember($cacheKey, function () use ($etapa) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_por_etapa(?)");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_por_etapa(?)');
             $stmt->execute([$etapa->value()]);
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
 
     public function findByEtapaWithComercio(EtapaMaquina $etapa): array
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_maquinas_por_etapa(?)");
+        $stmt = $this->db->prepareCall('CALL sp_maquinas_por_etapa(?)');
         $stmt->execute([$etapa->value()]);
-        
+
         $maquinas = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $maquinas[] = [
-                'ID_Maquina' => $row['ID_Maquina'],
-                'Nombre_Maquina' => $row['Nombre_Maquina'],
-                'Tipo' => $row['Tipo'],
-                'Estado' => $row['Estado'],
-                'Etapa' => $row['Etapa'],
-                'ID_Comercio' => $row['ID_Comercio'],
-                'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
-                'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
-                'Fecha_Registro' => $row['Fecha_Registro'],
-                'NombreComercio' => $row['NombreComercio'] ?? '',
-                'DireccionComercio' => $row['DireccionComercio'] ?? ''
-            ];
+            $maquinas[] = $this->mapMaquinaConComercio($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $maquinas;
     }
 
     public function findParaDistribucion(): array
     {
-        $cacheKey = "maquinas:distribucion";
+        $cacheKey = 'maquinas:distribucion';
 
         return $this->cache->remember($cacheKey, function () {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_para_distribucion()");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_para_distribucion()');
             $stmt->execute();
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
@@ -354,17 +258,15 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:operativas_comercio:{$cid}";
 
         return $this->cache->remember($cacheKey, function () use ($cid) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_maquinas_operativas_por_comercio(?)");
+            $stmt = $this->db->prepareCall('CALL sp_maquinas_operativas_por_comercio(?)');
             $stmt->execute([$cid]);
-            
+
             $maquinas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $maquinas[] = MaquinaRecreativa::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $maquinas;
         }, $this->ttl);
     }
@@ -375,17 +277,15 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:componentes_montaje:{$mid}";
 
         return $this->cache->remember($cacheKey, function () use ($mid) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_componentes_por_maquina(?)");
+            $stmt = $this->db->prepareCall('CALL sp_componentes_por_maquina(?)');
             $stmt->execute([$mid]);
-            
+
             $componentes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $componentes[] = Componente::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $componentes;
         }, $this->ttl);
     }
@@ -396,50 +296,47 @@ class PDOMaquinaRepository implements MaquinaRepository
         $cacheKey = "maquinas:componentes_en_uso:{$mid}";
 
         return $this->cache->remember($cacheKey, function () use ($mid) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_componentes_en_uso_por_maquina(?)");
+            $stmt = $this->db->prepareCall('CALL sp_componentes_en_uso_por_maquina(?)');
             $stmt->execute([$mid]);
-            
+
             $componentes = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $componentes[] = [
                     'ID_Componente' => $row['ID_Componente'],
                     'tipo' => $row['tipo'],
                     'nombre' => $row['nombre'],
-                    'precio' => (float)$row['precio'],
-                    'fecha_asignacion' => $row['fecha_asignacion']
+                    'precio' => (float) $row['precio'],
+                    'fecha_asignacion' => $row['fecha_asignacion'],
                 ];
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $componentes;
         }, 600);
     }
 
     // -------------------------------------------------------------------------
-    // ESCRITURA - Usando SPs
+    // ESCRITURA
     // -------------------------------------------------------------------------
 
     public function save(MaquinaRecreativa $maquina): void
     {
-        $conn = $this->db->getConnection();
         $data = $maquina->toArray();
 
         $existing = $this->findById($maquina->id());
 
         if ($existing) {
-            $stmt = $conn->prepare("CALL sp_actualizar_maquina(?, ?, ?, ?, ?,?)");
+            $stmt = $this->db->prepareCall('CALL sp_actualizar_maquina(?, ?, ?, ?, ?, ?)');
             $stmt->execute([
                 $data['ID_Maquina'],
                 $data['Nombre_Maquina'],
                 $data['Tipo'],
                 $data['ID_Comercio'],
                 $data['Estado'],
-                $data['Etapa']
+                $data['Etapa'],
             ]);
         } else {
-            $stmt = $conn->prepare("CALL sp_insertar_maquina(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_insertar_maquina(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([
                 $data['ID_Maquina'],
                 $data['Nombre_Maquina'],
@@ -450,18 +347,16 @@ class PDOMaquinaRepository implements MaquinaRepository
                 $data['ID_Comercio'],
                 $data['ID_Tecnico_Ensamblador'],
                 $data['ID_Tecnico_Comprobador'],
-                $data['ID_Tecnico_Mantenimiento']
+                $data['ID_Tecnico_Mantenimiento'],
             ]);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
-        // Invalidar caché
         $id = $data['ID_Maquina'];
         $this->cache->delete("maquina:id:{$id}");
         $this->cache->delete("maquinas:estado:{$data['Estado']}");
         $this->cache->delete("maquinas:etapa:{$data['Etapa']}");
-        $this->cache->delete("maquinas:distribucion");
+        $this->cache->delete('maquinas:distribucion');
         if (!empty($data['ID_Tecnico_Ensamblador'])) {
             $this->cache->delete("maquinas:ensamblador:{$data['ID_Tecnico_Ensamblador']}");
         }
@@ -479,11 +374,9 @@ class PDOMaquinaRepository implements MaquinaRepository
 
     public function actualizarEstadoYEtapa(Uuid $idMaquina, string $estado, string $etapa): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_actualizar_estado_maquina(?, ?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_actualizar_estado_maquina(?, ?, ?)');
         $result = $stmt->execute([$idMaquina->value(), $estado, $etapa]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("maquina:id:{$idMaquina->value()}");
         $this->cache->delete("maquinas:estado:{$estado}");
@@ -494,15 +387,30 @@ class PDOMaquinaRepository implements MaquinaRepository
 
     public function asignarTecnicoMantenimiento(Uuid $idMaquina, Uuid $idTecnico): bool
     {
-        $conn = $this->db->getConnection();
-        $stmt = $conn->prepare("CALL sp_asignar_tecnico_mantenimiento(?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_asignar_tecnico_mantenimiento(?, ?)');
         $result = $stmt->execute([$idMaquina->value(), $idTecnico->value()]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("maquina:id:{$idMaquina->value()}");
         $this->cache->delete("maquinas:mantenimiento:{$idTecnico->value()}");
 
         return $result;
+    }
+
+    private function mapMaquinaConComercio(array $row): array
+    {
+        return [
+            'ID_Maquina' => $row['ID_Maquina'],
+            'Nombre_Maquina' => $row['Nombre_Maquina'],
+            'Tipo' => $row['Tipo'],
+            'Estado' => $row['Estado'],
+            'Etapa' => $row['Etapa'],
+            'ID_Comercio' => $row['ID_Comercio'],
+            'ID_Tecnico_Ensamblador' => $row['ID_Tecnico_Ensamblador'],
+            'ID_Tecnico_Comprobador' => $row['ID_Tecnico_Comprobador'],
+            'Fecha_Registro' => $row['Fecha_Registro'],
+            'NombreComercio' => $row['NombreComercio'] ?? '',
+            'DireccionComercio' => $row['DireccionComercio'] ?? '',
+        ];
     }
 }

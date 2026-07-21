@@ -1,8 +1,6 @@
 <?php
 /**
  * Infrastructure/Repositories/PDOHistorialRepository.php
- * 
- * Versión con PDO para procedimientos almacenados
  */
 namespace maquinas_recreativas\Infrastructure\Repositories;
 
@@ -30,10 +28,9 @@ class PDOHistorialRepository implements HistorialRepository
     // ---- ESCRITURA ----
     public function save(HistorialMaquina $historial): void
     {
-        $conn = $this->db->getConnection();
         $data = $historial->toArray();
 
-        $stmt = $conn->prepare("CALL sp_insertar_historial_maquina(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $this->db->prepareCall('CALL sp_insertar_historial_maquina(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([
             $data['ID_Maquina'],
             $data['ID_Usuario'],
@@ -45,17 +42,15 @@ class PDOHistorialRepository implements HistorialRepository
             $data['etapa_anterior'],
             $data['etapa_nueva'],
             $data['ip_address'],
-            $data['detalles_adicionales']
+            $data['detalles_adicionales'],
         ]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
-        // Invalidar caché
         $this->cache->delete("historial:maquina:{$data['ID_Maquina']}:1:50");
         $this->cache->delete("historial:usuario:{$data['ID_Usuario']}:1:50");
-        $this->cache->delete("historial:resumen:20");
+        $this->cache->delete('historial:resumen:20');
         if ($this->cache instanceof \maquinas_recreativas\Infrastructure\Cache\RedisCache) {
-            $this->cache->deleteByPattern("historial:general:*");
+            $this->cache->deleteByPattern('historial:general:*');
         }
     }
 
@@ -64,10 +59,9 @@ class PDOHistorialRepository implements HistorialRepository
         $conn = $this->db->getConnection();
         $data = $actividad->toArray();
 
-        $stmt = $conn->prepare("INSERT INTO historial_actividades (ID_Usuario, descripcion, fecha_registro) VALUES (?, ?, ?)");
+        $stmt = $conn->prepare('INSERT INTO historial_actividades (ID_Usuario, descripcion, fecha_registro) VALUES (?, ?, ?)');
         $stmt->execute([$data['ID_Usuario'], $data['descripcion'], $data['fecha_registro']]);
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
 
         $this->cache->delete("historial:actividades:{$data['ID_Usuario']}");
     }
@@ -77,17 +71,15 @@ class PDOHistorialRepository implements HistorialRepository
     {
         $cacheKey = "historial:maquina:{$idMaquina->value()}:{$limit}:{$offset}";
         return $this->cache->remember($cacheKey, function () use ($idMaquina, $limit, $offset) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_historial_por_maquina(?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_historial_por_maquina(?, ?, ?)');
             $stmt->execute([$idMaquina->value(), $limit, $offset]);
-            
+
             $historial = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $historial[] = HistorialMaquina::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $historial;
         }, $this->ttl);
     }
@@ -96,37 +88,33 @@ class PDOHistorialRepository implements HistorialRepository
     {
         $cacheKey = "historial:usuario:{$idUsuario->value()}:{$limit}:{$offset}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario, $limit, $offset) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_historial_por_usuario(?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_historial_por_usuario(?, ?, ?)');
             $stmt->execute([$idUsuario->value(), $limit, $offset]);
-            
+
             $historial = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $historial[] = HistorialMaquina::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $historial;
         }, $this->ttl);
     }
 
     public function findByAccion(string $accion, int $limit = 100, int $offset = 0): array
     {
-        // Búsqueda dinámica - sin caché
         $conn = $this->db->getConnection();
         $like = "%{$accion}%";
-        $sql = "SELECT * FROM historial_maquinas WHERE accion LIKE ? ORDER BY fecha_hora DESC LIMIT ? OFFSET ?";
+        $sql = 'SELECT * FROM historial_maquinas WHERE accion LIKE ? ORDER BY fecha_hora DESC LIMIT ? OFFSET ?';
         $stmt = $conn->prepare($sql);
         $stmt->execute([$like, $limit, $offset]);
-        
+
         $historial = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $historial[] = HistorialMaquina::fromArray($row);
         }
         $stmt->closeCursor();
-        $this->db->clearPendingResults();
-        
+
         return $historial;
     }
 
@@ -140,14 +128,12 @@ class PDOHistorialRepository implements HistorialRepository
         int $limit = 100,
         int $offset = 0
     ): array {
-        $cacheKey = "historial:general:" . md5(serialize(func_get_args()));
+        $cacheKey = 'historial:general:' . md5(serialize(func_get_args()));
         return $this->cache->remember($cacheKey, function () use ($idMaquina, $idUsuario, $tipoUsuario, $accion, $fechaInicio, $fechaFin, $limit, $offset) {
-            $conn = $this->db->getConnection();
-            
             $idMaquinaVal = $idMaquina ? $idMaquina->value() : null;
             $idUsuarioVal = $idUsuario ? $idUsuario->value() : null;
 
-            $stmt = $conn->prepare("CALL sp_historial_general(?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepareCall('CALL sp_historial_general(?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([
                 $idMaquinaVal,
                 $idUsuarioVal,
@@ -156,16 +142,15 @@ class PDOHistorialRepository implements HistorialRepository
                 $fechaInicio,
                 $fechaFin,
                 $limit,
-                $offset
+                $offset,
             ]);
-            
+
             $historial = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $historial[] = HistorialMaquina::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $historial;
         }, $this->ttl);
     }
@@ -178,28 +163,17 @@ class PDOHistorialRepository implements HistorialRepository
         ?string $fechaInicio = null,
         ?string $fechaFin = null
     ): int {
-        $conn = $this->db->getConnection();
-        
         $idMaquinaVal = $idMaquina ? $idMaquina->value() : null;
         $idUsuarioVal = $idUsuario ? $idUsuario->value() : null;
 
-        $stmt = $conn->prepare("CALL sp_contar_historial(?, ?, ?, ?, ?, ?, @total)");
-        $stmt->execute([
+        return (int) $this->db->callScalarProcedure('sp_contar_historial', [
             $idMaquinaVal,
             $idUsuarioVal,
             $tipoUsuario,
             $accion,
             $fechaInicio,
-            $fechaFin
+            $fechaFin,
         ]);
-        $stmt->closeCursor();
-        
-        $result = $conn->query("SELECT @total as total");
-        $row = $result->fetch(PDO::FETCH_ASSOC);
-        $result->closeCursor();
-        $this->db->clearPendingResults();
-        
-        return (int)($row['total'] ?? 0);
     }
 
     public function findActividadesByUsuario(Uuid $idUsuario, int $limit = 50): array
@@ -207,16 +181,15 @@ class PDOHistorialRepository implements HistorialRepository
         $cacheKey = "historial:actividades:{$idUsuario->value()}";
         return $this->cache->remember($cacheKey, function () use ($idUsuario, $limit) {
             $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("SELECT * FROM historial_actividades WHERE ID_Usuario = ? ORDER BY fecha_registro DESC LIMIT ?");
+            $stmt = $conn->prepare('SELECT * FROM historial_actividades WHERE ID_Usuario = ? ORDER BY fecha_registro DESC LIMIT ?');
             $stmt->execute([$idUsuario->value(), $limit]);
-            
+
             $actividades = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $actividades[] = HistorialActividad::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
-            
+
             return $actividades;
         }, $this->ttl);
     }
@@ -225,16 +198,14 @@ class PDOHistorialRepository implements HistorialRepository
     {
         $cacheKey = "historial:resumen:{$limite}";
         return $this->cache->remember($cacheKey, function () use ($limite) {
-            $conn = $this->db->getConnection();
-            $stmt = $conn->prepare("CALL sp_resumen_historial_reciente(?)");
+            $stmt = $this->db->prepareCall('CALL sp_resumen_historial_reciente(?)');
             $stmt->execute([$limite]);
-            
+
             $historial = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $historial[] = HistorialMaquina::fromArray($row);
             }
             $stmt->closeCursor();
-            $this->db->clearPendingResults();
 
             $resumen = ['total' => count($historial), 'por_accion' => [], 'recientes' => []];
             foreach ($historial as $item) {
