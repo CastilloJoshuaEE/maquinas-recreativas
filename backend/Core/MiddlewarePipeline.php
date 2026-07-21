@@ -47,21 +47,20 @@ class MiddlewarePipeline
      * @param callable $final Handler final
      * @return void
      */
-    public function handle(Request $request, callable $final): void
-    {
-        $pipeline = array_reverse($this->middlewares);
-        
-        $next = $final;
-        
-        foreach ($pipeline as $middlewareClass) {
-            $next = function($request) use ($middlewareClass, $next) {
-                $middleware = $this->resolveMiddleware($middlewareClass);
-                return $middleware->handle($request, $next);
-            };
-        }
-        
-        $next($request);
+public function handle(Request $request, callable $final): ?Response
+{
+    $pipeline = array_reverse($this->middlewares);
+    $next = $final;
+
+    foreach ($pipeline as $middlewareClass) {
+        $next = function ($request) use ($middlewareClass, $next) {
+            $middleware = $this->resolveMiddleware($middlewareClass);
+            return $middleware->handle($request, $next);
+        };
     }
+
+    return $next($request);
+}
     
     /**
      * Resuelve una instancia de middleware

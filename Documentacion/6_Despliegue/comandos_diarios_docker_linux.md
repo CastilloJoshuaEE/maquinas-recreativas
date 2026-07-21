@@ -65,7 +65,7 @@ stop.bat
 | Servicio           | URL                                                                                 |
 | ------------------ | ----------------------------------------------------------------------------------- |
 | API                | [http://localhost:8000](http://localhost:8000/)                                        |
-| API Health Check   | [http://localhost:8000/health](http://localhost:8000/health)                           |
+| API Health Check   | [http://localhost:8000/api/public/health](http://localhost:8000/api/public/health)                           |
 | PHPMyAdmin         | [http://localhost:8080](http://localhost:8080/)                                        |
 | MailHog (emails)   | [http://localhost:8025](http://localhost:8025/)                                        |
 | Cobertura de tests | [http://localhost:8000/coverage/index.html](http://localhost:8000/coverage/index.html) |

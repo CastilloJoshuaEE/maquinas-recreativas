@@ -654,7 +654,35 @@ END",
             // ==============================================================
             // 4. MÓDULO MÁQUINA RECREATIVA
             // ==============================================================
-
+            'sp_listar_recaudaciones' => "
+            CREATE PROCEDURE sp_listar_recaudaciones(
+                IN p_fecha_inicio  DATE,
+                IN p_fecha_fin     DATE,
+                IN p_id_maquina    CHAR(36),
+                IN p_tipo_comercio VARCHAR(20),
+                IN p_limit         INT,
+                IN p_offset        INT
+            )
+            BEGIN
+                SELECT
+                    r.ID_Recaudacion, r.Tipo_Comercio, r.ID_Maquina, r.ID_Usuario,
+                    r.Monto_Total, r.Monto_Empresa, r.Monto_Comercio, r.Porcentaje_Comercio,
+                    r.fecha, r.detalle,
+                    c.Nombre AS Nombre_Comercio,
+                    m.Nombre_Maquina,
+                    u.nombre AS nombre_usuario,
+                    u.apellido AS apellido_usuario
+                FROM recaudaciones r
+                INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+                INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+                INNER JOIN usuario u ON r.ID_Usuario = u.ID_Usuario
+                WHERE (p_fecha_inicio IS NULL OR DATE(r.fecha) >= p_fecha_inicio)
+                AND (p_fecha_fin    IS NULL OR DATE(r.fecha) <= p_fecha_fin)
+                AND (p_id_maquina   IS NULL OR r.ID_Maquina  = p_id_maquina)
+                AND (p_tipo_comercio IS NULL OR r.Tipo_Comercio = p_tipo_comercio)
+                ORDER BY r.fecha DESC
+                LIMIT p_limit OFFSET p_offset;
+            END",
             'sp_actualizar_estado_distribucion' => "
 CREATE PROCEDURE sp_actualizar_estado_distribucion(
     IN p_id_maquina CHAR(36),

@@ -257,7 +257,7 @@ docker ps
 ### **2. Verificar Backend**
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8000/api/public/health
 # Respuesta: {"status":"ok"}
 ```
 
@@ -299,7 +299,7 @@ docker ps
 ### **2. Verificar Backend**
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8000/api/public/health
 # Respuesta: {"status":"ok"}
 ```
 

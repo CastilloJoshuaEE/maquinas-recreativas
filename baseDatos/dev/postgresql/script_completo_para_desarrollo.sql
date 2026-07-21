@@ -832,7 +832,6 @@ BEGIN
     LIMIT p_limite;
 END;
 $$ LANGUAGE plpgsql;
-
 -- 1.19 Registrar logout
 CREATE OR REPLACE FUNCTION sp_registrar_logout(p_id_usuario UUID)
 RETURNS VOID AS $$
@@ -841,11 +840,14 @@ BEGIN
     SET fecha_ultima_sesion = CURRENT_TIMESTAMP
     WHERE ID_Usuario = p_id_usuario
       AND fecha_ultima_sesion IS NULL
-    ORDER BY fecha_inicio DESC
-    LIMIT 1;
+      AND fecha_inicio = (
+          SELECT MAX(fecha_inicio)
+          FROM inicio_sesion
+          WHERE ID_Usuario = p_id_usuario
+            AND fecha_ultima_sesion IS NULL
+      );
 END;
 $$ LANGUAGE plpgsql;
-
 -- ==============================================================
 -- 2. MÓDULO TÉCNICO
 -- ==============================================================
@@ -1196,11 +1198,21 @@ RETURNS TABLE(
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT m.*, c.Nombre AS NombreComercio, c.Direccion AS DireccionComercio
+    SELECT m.ID_Maquina,
+           m.Nombre_Maquina,
+           m.Tipo,
+           m.Fecha_Registro,
+           m.Estado,
+           m.Etapa,
+           m.ID_Comercio,
+           m.ID_Tecnico_Ensamblador,
+           m.ID_Tecnico_Comprobador,
+           m.ID_Tecnico_Mantenimiento,
+           c.Nombre AS NombreComercio,
+           c.Direccion AS DireccionComercio
     FROM MaquinaRecreativa m
     LEFT JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
-    WHERE m.ID_Maquina = p_id
-    LIMIT 1;
+    WHERE m.ID_Maquina = p_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -2265,43 +2277,65 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 10.4 Buscar recaudación por ID
-CREATE OR REPLACE FUNCTION sp_buscar_maquina_por_id(p_id UUID)
+CREATE OR REPLACE FUNCTION sp_buscar_recaudacion_por_id(p_id UUID)
 RETURNS TABLE(
+    ID_Recaudacion UUID,
     ID_Maquina UUID,
-    Nombre_Maquina VARCHAR,
-    Tipo VARCHAR,
-    Estado VARCHAR,
-    Etapa VARCHAR,
-    ID_Comercio UUID,
+    ID_Usuario UUID,
+    Fecha_Recaudacion TIMESTAMP,
+    Monto DECIMAL(10,2),
+    Descripcion TEXT,
+    Nombre_Maquina VARCHAR(100),
+    Nombre_Comercio VARCHAR(100),
+    Direccion_Comercio TEXT,
+    Telefono_Comercio VARCHAR(20),
+    nombre_usuario VARCHAR(50),
+    apellido_usuario VARCHAR(50),
+    nombre_ensamblador VARCHAR(50),
+    apellido_ensamblador VARCHAR(50),
+    nombre_comprobador VARCHAR(50),
+    apellido_comprobador VARCHAR(50),
+    nombre_mantenimiento VARCHAR(50),
+    apellido_mantenimiento VARCHAR(50),
     ID_Tecnico_Ensamblador UUID,
     ID_Tecnico_Comprobador UUID,
-    ID_Tecnico_Mantenimiento UUID,
-    Fecha_Registro DATE,
-    NombreComercio VARCHAR,
-    DireccionComercio TEXT
+    ID_Tecnico_Mantenimiento UUID
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        m.ID_Maquina,
+        r.ID_Recaudacion,
+        r.ID_Maquina,
+        r.ID_Usuario,
+        r.Fecha_Recaudacion,
+        r.Monto,
+        r.Descripcion,
         m.Nombre_Maquina,
-        m.Tipo,
-        m.Estado,
-        m.Etapa,
-        m.ID_Comercio,
+        c.Nombre AS Nombre_Comercio,
+        c.Direccion AS Direccion_Comercio,
+        c.Telefono AS Telefono_Comercio,
+        u.nombre AS nombre_usuario,
+        u.apellido AS apellido_usuario,
+        te.nombre AS nombre_ensamblador,
+        te.apellido AS apellido_ensamblador,
+        tc.nombre AS nombre_comprobador,
+        tc.apellido AS apellido_comprobador,
+        tm.nombre AS nombre_mantenimiento,
+        tm.apellido AS apellido_mantenimiento,
         m.ID_Tecnico_Ensamblador,
         m.ID_Tecnico_Comprobador,
-        m.ID_Tecnico_Mantenimiento,
-        m.Fecha_Registro,
-        c.Nombre AS NombreComercio,
-        c.Direccion AS DireccionComercio
-    FROM "MaquinaRecreativa" m
-    LEFT JOIN "Comercio" c ON m.ID_Comercio = c.ID_Comercio
-    WHERE m.ID_Maquina = p_id
+        m.ID_Tecnico_Mantenimiento
+    FROM Recaudacion r
+    INNER JOIN MaquinaRecreativa m ON r.ID_Maquina = m.ID_Maquina
+    INNER JOIN Comercio c ON m.ID_Comercio = c.ID_Comercio
+    INNER JOIN Usuario u ON r.ID_Usuario = u.ID_Usuario
+    LEFT JOIN Usuario te ON m.ID_Tecnico_Ensamblador = te.ID_Usuario
+    LEFT JOIN Usuario tc ON m.ID_Tecnico_Comprobador = tc.ID_Usuario
+    LEFT JOIN Usuario tm ON m.ID_Tecnico_Mantenimiento = tm.ID_Usuario
+    WHERE r.ID_Recaudacion = p_id
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;
-
 -- 10.5 Listar recaudaciones
 CREATE OR REPLACE FUNCTION sp_listar_recaudaciones(
     p_fecha_inicio DATE,

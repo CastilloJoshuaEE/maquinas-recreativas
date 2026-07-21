@@ -47,7 +47,7 @@ public function handle(Command $command): void
 
    error_log("=== ACTUALIZANDO RECAUDACIÓN ===");
     error_log("ID: " . $command->idRecaudacion());
-    error_log("Detalle nuevo: " . $command->detalle());
+    error_log("Detalle  " . $command->detalle());
     error_log("Fecha nueva: " . $command->fecha());
 
     $fecha = !empty($command->fecha()) 

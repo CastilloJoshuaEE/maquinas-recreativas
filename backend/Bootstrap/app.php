@@ -46,6 +46,7 @@ require_once $autoloadPath;
 // 4. CONSTANTES GLOBALES
 // =============================================
 require_once __DIR__ . '/../Config/constants.php';
+require_once __DIR__ . '/cors.php';
 
 // =============================================
 // 5. CONFIGURACIÓN DE SESIÓN
