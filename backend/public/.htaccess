@@ -1,26 +1,20 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
+
     # Opciones
     Options -Indexes +FollowSymLinks
-    
-    # PERMITIR CORS
-    <IfModule mod_headers.c>
-        Header set Access-Control-Allow-Origin "*"
-        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-        Header set Access-Control-Allow-Credentials "true"
-    </IfModule>
-    
-    # MANEJAR OPTIONS (preflight)
-    RewriteCond %{REQUEST_METHOD} OPTIONS
-    RewriteRule ^(.*)$ $1 [R=200,L]
-    
+
+    # CORS se maneja exclusivamente en PHP (App::handleCors / cors.php).
+    # NO duplicar headers de CORS aca: Apache pisa con "Header set" lo que
+    # PHP ya calculo correctamente por origen, y ademas rompe la combinacion
+    # Origin "*" + Credentials true (invalida por spec cuando hay cookies/sesion).
+
     # No redirigir archivos existentes
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    
-    # Redirigir todo a index.php (manteniendo el path completo)
+
+    # Redirigir todo a index.php (incluye OPTIONS: index.php -> App::handleCors()
+    # ya responde 200 con los headers correctos y hace exit(0))
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
